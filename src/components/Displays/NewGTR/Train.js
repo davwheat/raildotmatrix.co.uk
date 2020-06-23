@@ -11,6 +11,7 @@ export default function Train(props) {
     status,
     betweenStations,
     leftCallback,
+    isCancelled,
   } = props
 
   let currentStatus = "",
@@ -40,6 +41,8 @@ export default function Train(props) {
       currentStatus = "Arrived"
     } else if (expectedTime === scheduledTime) {
       currentStatus = "On time"
+    } else if (isCancelled) {
+      currentStatus = "Cancelled"
     } else {
       currentStatus =
         expectedTime === "On time"

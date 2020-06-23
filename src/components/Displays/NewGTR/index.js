@@ -24,7 +24,7 @@ export default function NewGTR({ station }) {
   // update every 30s
   useInterval(() => {
     updateData()
-  }, 45 * 1000)
+  }, 4500 * 1000)
 
   if (TrainData === null) updateData()
 
@@ -46,6 +46,7 @@ export default function NewGTR({ station }) {
         position={i + 1}
         scheduledTime={train.std}
         destination={train.destination[0].locationName}
+        isCancelled={train.isCancelled}
         intermediaryStops={
           train.subsequentCallingPointsList
             ? train.subsequentCallingPointsList[0].subsequentCallingPoints.reduce(

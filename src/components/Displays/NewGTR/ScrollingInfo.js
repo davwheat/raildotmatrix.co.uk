@@ -62,7 +62,9 @@ export default function ScrollingInfo({ trainData: train }) {
 
   if (betweenStations && !shouldLeave) {
     if (betweenStations.length > 1)
-      location = `This train is currently between ${betweenStations[0]} and ${betweenStations[1]}.`
+      location = `This train ${
+        train.isCancelled ? "was" : "is"
+      } currently between ${betweenStations[0]} and ${betweenStations[1]}.`
     else if (betweenStations.length === 1)
       location = `This train is currently at ${betweenStations[0]}.`
   }
@@ -130,10 +132,12 @@ export default function ScrollingInfo({ trainData: train }) {
               : "0s",
         }}
       >
-        This is a {toc} service
+        This {train.isCancelled ? "was" : "is"} a {toc} service
         {coachCount && ` formed of ${coachCount} coaches`}.{location}{" "}
         {otherMessages}{" "}
-        {departureStation && `This is the service from ${departureStation}.`}
+        {train.isCancelled &&
+          departureStation &&
+          `This is the service from ${departureStation}.`}
       </p>
       {intermediaryStops && (
         <p
@@ -148,31 +152,42 @@ export default function ScrollingInfo({ trainData: train }) {
                 : `0s`,
             transform:
               activeAnimation === "callingAt__intro"
-                ? `translateX(calc(100vw - 48px - 9.75ch))`
+                ? `translateX(calc(100vw - 48px - ${
+                    train.isCancelled ? `13.75ch` : `9.75ch`
+                  }))`
                 : null,
           }}
         >
           <span className="train--details__calling-at" ref={callingAtTextRef}>
-            Calling at:
+            {train.isCancelled ? `Was calling at:` : `Calling at:`}
           </span>
           <span className="train--details__intermediary-stop-list">
             {intermediaryStops.length > 1 ? (
               <>
                 {intermediaryStops
                   .slice(0, intermediaryStops.length - 1)
-                  .map(stop => `${stop.location} (${stop.eta}), `)}{" "}
+                  .map(
+                    stop =>
+                      `${stop.location}${
+                        train.isCancelled ? "" : ` (${stop.eta})`
+                      }, `
+                  )}{" "}
                 and{" "}
                 {intermediaryStops[
                   intermediaryStops.length - 1
                 ].location.toUpperCase()}{" "}
-                ({intermediaryStops[intermediaryStops.length - 1].eta})
+                {train.isCancelled
+                  ? ""
+                  : ` (${intermediaryStops[intermediaryStops.length - 1].eta})`}
               </>
             ) : (
               `${intermediaryStops[
                 intermediaryStops.length - 1
-              ].location.toUpperCase()} ONLY (${
-                intermediaryStops[intermediaryStops.length - 1].eta
-              })`
+              ].location.toUpperCase()} ONLY ${
+                train.isCancelled
+                  ? ""
+                  : ` (${intermediaryStops[intermediaryStops.length - 1].eta})`
+              }`
             )}
           </span>
         </p>
