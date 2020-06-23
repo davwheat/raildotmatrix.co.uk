@@ -10,6 +10,7 @@ export default function Train(props) {
     expectedTime,
     status,
     betweenStations,
+    leftCallback,
   } = props
 
   let currentStatus = "",
@@ -22,9 +23,15 @@ export default function Train(props) {
   if (detailsOnLastRender !== props) {
     setShouldLeave(false)
     setDetailsOnLastRender(props)
+    leftCallback(false)
   }
 
-  if (intermediaryStops[0].eta === null && !shouldLeave) setShouldLeave(true)
+  if (intermediaryStops[0].eta === null && !shouldLeave) {
+    setShouldLeave(true)
+    leftCallback(true)
+  }
+
+  let date = new Date()
 
   if (status) {
     currentStatus = status
@@ -93,4 +100,12 @@ Train.propTypes = {
   toc: PropTypes.string.isRequired,
   coachCount: PropTypes.number,
   departureStation: PropTypes.string,
+}
+
+function padZero(input) {
+  if (input < 10) {
+    return `0${input}`
+  } else {
+    return `${input}`
+  }
 }

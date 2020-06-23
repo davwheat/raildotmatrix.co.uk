@@ -13,8 +13,7 @@ export default function ScrollingInfo({ trainData: train }) {
 
   let departureStation = "",
     location = null,
-    otherMessages = null,
-    status = null
+    otherMessages = null
 
   train.origin.forEach((origin, i) => {
     if (i) departureStation += ` and ${origin.locationName}`
@@ -82,12 +81,11 @@ export default function ScrollingInfo({ trainData: train }) {
     }, trainInfoScrollTime * 1000)
   }, callingAtScrollTime * 1000 + callingAtScrollDelay + trainInfoScrollTime * 1000)
 
-  if (train.isCancelled || train.cancelReason) {
-    status = "Cancelled"
-    otherMessages = train.cancelReason
+  if (train.isCancelled) {
+    if (train.cancelReason) otherMessages = train.cancelReason
 
     if (otherMessages && !otherMessages.endsWith(".")) otherMessages += "."
-  } else if (train.delayReason) {
+  } else if (train.delayReason && train.etd !== "On time") {
     otherMessages = train.delayReason
 
     if (otherMessages && !otherMessages.endsWith(".")) otherMessages += "."

@@ -13,6 +13,7 @@ import ScrollingInfo from "./ScrollingInfo"
 
 export default function NewGTR({ station }) {
   const [TrainData, setTrainData] = useState(null)
+  const [shouldShowScrollingInfo, setShouldShowScrollingInfo] = useState(true)
 
   async function updateData() {
     GetNextTrainsAtStation(station, { minOffset: 0 }).then(res => {
@@ -29,6 +30,47 @@ export default function NewGTR({ station }) {
 
   const Services = TrainData ? TrainData.trainServices : null
 
+  function GetTrain(Services, i) {
+    const train = Services[i]
+
+    if (!train) return null
+
+    function leftCallback(left) {
+      if (left) setShouldShowScrollingInfo(false)
+      else setShouldShowScrollingInfo(true)
+    }
+
+    return (
+      <Train
+        leftCallback={i === 0 ? leftCallback : () => {}}
+        position={i + 1}
+        scheduledTime={train.std}
+        destination={train.destination[0].locationName}
+        intermediaryStops={
+          train.subsequentCallingPointsList
+            ? train.subsequentCallingPointsList[0].subsequentCallingPoints.reduce(
+                (stops, thisStop) => {
+                  return [
+                    ...stops,
+                    {
+                      location: thisStop.locationName,
+                      eta:
+                        thisStop.et === "On time" ? thisStop.st : thisStop.et,
+                    },
+                  ]
+                },
+                []
+              )
+            : null
+        }
+        expectedTime={train.etd || "Delayed"}
+        toc={train.operator}
+        coachCount={train.length}
+        departureStation={train.origin.locationName}
+      />
+    )
+  }
+
   return (
     <section className="dot-matrix">
       <div className="decoration">
@@ -44,7 +86,7 @@ export default function NewGTR({ station }) {
       {Services && (
         <>
           {GetTrain(Services, 0)}
-          <ScrollingInfo trainData={Services[0]} />
+          {shouldShowScrollingInfo && <ScrollingInfo trainData={Services[0]} />}
           <div className="train--alternate-between">
             {GetTrain(Services, 1)}
             {GetTrain(Services, 2)}
@@ -53,53 +95,5 @@ export default function NewGTR({ station }) {
       )}
       <Time />
     </section>
-  )
-}
-
-function GetTrain(Services, i) {
-  const train = Services[i]
-
-  if (!train) return null
-
-  let status = null,
-    otherMessages = null
-
-  if (train.isCancelled || train.cancelReason) {
-    status = "Cancelled"
-    otherMessages = train.cancelReason
-
-    if (otherMessages && !otherMessages.endsWith(".")) otherMessages += "."
-  } else if (train.delayReason) {
-    otherMessages = train.delayReason
-
-    if (otherMessages && !otherMessages.endsWith(".")) otherMessages += "."
-  }
-  return (
-    <Train
-      position={i + 1}
-      scheduledTime={train.std}
-      destination={train.destination[0].locationName}
-      intermediaryStops={
-        train.subsequentCallingPointsList
-          ? train.subsequentCallingPointsList[0].subsequentCallingPoints.reduce(
-              (stops, thisStop) => {
-                return [
-                  ...stops,
-                  {
-                    location: thisStop.locationName,
-                    eta: thisStop.et === "On time" ? thisStop.st : thisStop.et,
-                  },
-                ]
-              },
-              []
-            )
-          : null
-      }
-      expectedTime={train.etd || "Delayed"}
-      toc={train.operator}
-      otherMessages={otherMessages}
-      coachCount={train.length}
-      departureStation={train.origin.locationName}
-    />
   )
 }
