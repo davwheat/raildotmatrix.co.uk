@@ -2,12 +2,35 @@ import React, { useState, useRef } from "react"
 
 import useInterval from "../../../hooks/useInterval"
 
+const UseCallingAtFixed = false
+
 export default function ScrollingInfo({ trainData: train }) {
   const [activeAnimation, setActiveAnimation] = useState(null)
   const [shouldLeave, setShouldLeave] = useState(false)
 
   const intermediaryStopsRef = useRef(null)
   const trainInfoScrollerRef = useRef(null)
+  const callingAtTextRef = useRef(null)
+
+  useInterval(() => {
+    if (activeAnimation === "callingAt__scroll" && UseCallingAtFixed) {
+      if (intermediaryStopsRef.current.getBoundingClientRect().left < 0 + 48) {
+        callingAtTextRef.current.style.position = "fixed"
+        callingAtTextRef.current.style.left = `${
+          48 - 4 - intermediaryStopsRef.current.getBoundingClientRect().left
+        }px`
+        callingAtTextRef.current.style.background = "#030303"
+        callingAtTextRef.current.style.zIndex = "100"
+        callingAtTextRef.current.style.paddingLeft = "48px"
+        callingAtTextRef.current.style.paddingRight = "16px"
+      } else {
+        callingAtTextRef.current.style.position = null
+        callingAtTextRef.current.style.left = null
+        callingAtTextRef.current.style.background = null
+        callingAtTextRef.current.style.zIndex = null
+      }
+    }
+  }, 15)
 
   const { operator: toc, length: coachCount, betweenStations } = train
 
@@ -129,7 +152,9 @@ export default function ScrollingInfo({ trainData: train }) {
                 : null,
           }}
         >
-          <span className="train--details__calling-at">Calling at:</span>
+          <span className="train--details__calling-at" ref={callingAtTextRef}>
+            Calling at:
+          </span>
           <span className="train--details__intermediary-stop-list">
             {intermediaryStops.length > 1 ? (
               <>
