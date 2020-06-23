@@ -10,6 +10,7 @@ import PageLink from "../components/Common/PageLink"
 import Form, { AutocompleteSelect, Select } from "../components/Common/Form"
 
 import NewGTR from "../components/Displays/NewGTR"
+import Attribution from "../components/Common/Attribution"
 
 const IndexPage = () => {
   const [BoardSettings, setBoardSettings] = useState({
@@ -78,7 +79,13 @@ const IndexPage = () => {
         </main>
       )}
 
-      {Page === 1 && <NewGTR ref={boardRef} station={BoardSettings.station} />}
+      {Page === 1 && (
+        <>
+          <NewGTR ref={boardRef} station={BoardSettings.station} />
+        </>
+      )}
+      
+      <Attribution />
     </Layout>
   )
 }
