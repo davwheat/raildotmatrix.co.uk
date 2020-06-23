@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2020-06-21T03:07:36.84578+01:00",
+  "nationalRailResponseTimeMilliseconds": 153,
+  "locationName": "London Victoria",
+  "filterLocationName": null,
+  "filtercrs": null,
+  "filterType": null,
+  "crs": "VIC",
+  "nrccMessages": [
+    {
+      "message": "<P>We are still running reduced train services. In line with government advice, please only travel if your journey is necessary. If you do need to travel by train, bring a face covering with you and wear it throughout your journey, as it is now compulsory. Find out more at nationalrail.co.uk/coronavirus</P>"
+    }
+  ],
+  "platformAvailable": true,
+  "areServicesAvailable": null,
+  "trainServices": [
+    {
+      "serviceID": "S9a+iOaj2+cy7iBV3t5cOg==",
+      "serviceIDUrlSafe": "S9a!iOaj2!cy7iBV3t5cOg--",
+      "serviceType": "train",
+      "isCancelled": null,
+      "filterLocationCancelled": null,
+      "cancelReason": null,
+      "delayReason": null,
+      "adhocAlert": null,
+      "std": "01:08",
+      "etd": "On time",
+      "platform": null,
+      "operator": "Southern",
+      "operatorCode": "SN",
+      "isCircularRoute": null,
+      "length": 8,
+      "detachFront": null,
+      "isReverseFormation": null,
+      "rsid": "SN171300",
+      "origin": [
+        {
+          "locationName": "London Victoria",
+          "crs": "VIC",
+          "via": null,
+          "futureChangeTo": null,
+          "assocIsCancelled": null
+        }
+      ],
+      "destination": [
+        {
+          "locationName": "Brighton",
+          "crs": "BTN",
+          "via": null,
+          "futureChangeTo": null,
+          "assocIsCancelled": null
+        }
+      ],
+      "currentOrigins": null,
+      "currentDestinations": null,
+      "subsequentCallingPointsList": null
+    }
+  ],
+  "busServices": null,
+  "ferryServices": null
+}

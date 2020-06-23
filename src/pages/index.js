@@ -1,21 +1,29 @@
-import React from "react"
-import { Link } from "gatsby"
+import React from 'react'
 
-import Layout from "../components/layout"
-import Image from "../components/image"
-import SEO from "../components/seo"
+import Layout from '../components/layout'
+import SEO from '../components/seo'
+import TypewriterText from '../components/Common/TypewriterText'
+import PageLink from '../components/Common/PageLink'
 
 const IndexPage = () => (
   <Layout>
     <SEO title="Home" />
-    <h1>Hi people</h1>
-    <p>Welcome to your new Gatsby site.</p>
-    <p>Now go build something great.</p>
-    <div style={{ maxWidth: `300px`, marginBottom: `1.45rem` }}>
-      <Image />
-    </div>
-    <Link to="/page-2/">Go to page 2</Link> <br />
-    <Link to="/using-typescript/">Go to "Using TypeScript"</Link>
+    <main>
+      <header>
+        <TypewriterText component="h1" className="display" cursor text="Welcome to Rail Dot Matrix" time={2000} />
+      </header>
+      <article>
+        <p>
+          This site is made for train nerds who can't actually go outside, but want to experience a small but of their local (or furthest away) train
+          station.
+        </p>
+        <p>
+          While sat comfortably at home, you can take a peek at what your station, or any other station in the UK, would look like at this very
+          moment.
+        </p>
+        <PageLink to="board">Let's go!</PageLink>
+      </article>
+    </main>
   </Layout>
 )
 

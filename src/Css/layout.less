@@ -1,0 +1,195 @@
+.noOverflow() {
+  -webkit-clip-path: inset(0); /* safari*/
+  clip-path: inset(0);
+  clip: rect(
+    0px,
+    auto,
+    auto,
+    0px
+  ); /* IE11/Edge (not that IE11 supports sticky anyway!) */
+}
+
+html {
+  font-family: Poppins, Arial, sans-serif;
+  background: #000;
+  color: #fff;
+  height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+  .noOverflow();
+}
+
+.displayFont() {
+  font-family: "Dot Matrix", Consolas, monospace;
+}
+
+.display {
+  .displayFont();
+
+  &--loud {
+    letter-spacing: 2px;
+    color: orange;
+    font-size: 3em;
+  }
+
+  &--light {
+    font-weight: 400;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.animated-text--cursor {
+  &__blinking {
+    .animated-text--content::after {
+      animation: blinking 2s steps(1, start) infinite;
+
+      @keyframes blinking {
+        from,
+        to {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+    }
+  }
+
+  .animated-text--content::after {
+    content: "\00a0";
+    display: inline-block;
+    height: 1.5ex;
+    background: currentColor;
+    width: 0.75ch;
+    transform: translateY(-0.25em);
+    vertical-align: bottom;
+  }
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  .noOverflow();
+}
+
+main {
+  width: 100vw;
+  max-width: 1200px;
+  padding: 32px;
+  background: rgba(128, 128, 128, 0.1);
+  .noOverflow();
+
+  header {
+    display: inline-block;
+    width: 100%;
+
+    h1 {
+      letter-spacing: 2px;
+      font-weight: 700;
+      color: orange;
+      font-size: 3em;
+      line-height: 1;
+
+      display: flex;
+
+      span.animated-text--prefix {
+        padding-right: 64px;
+
+        span {
+          &:not(:nth-child(3n)) {
+            display: inline-block;
+            width: 1ch;
+            text-align: center;
+          }
+        }
+      }
+
+      span.animated-text--content {
+        flex: 1;
+      }
+
+      span.animated-text--suffix {
+        padding-left: 16px;
+      }
+    }
+  }
+
+  article {
+    animation: appearAfter 3.5s ease-out;
+    max-width: 760px;
+    margin: auto;
+    margin-top: 16px;
+
+    p:not(:last-child) {
+      margin-bottom: 8px;
+    }
+
+    @keyframes appearAfter {
+      from {
+        opacity: 0;
+      }
+      70% {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  }
+
+  form {
+    .train-link {
+      margin-top: 24px;
+    }
+  }
+}
+
+.train-link {
+  .displayFont();
+  color: #fff;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  transition: transform 1s cubic-bezier(1, 0, 1, 0.5);
+  display: inline-block;
+
+  span {
+    line-height: 1;
+    font-size: 18px;
+    display: inline-block;
+    vertical-align: bottom;
+  }
+
+  &::after {
+    content: " ";
+    display: inline-block;
+    height: 18px;
+    width: 18px;
+    -webkit-mask-image: url("/img/train.svg");
+    mask-image: url("/img/train.svg");
+    background: #fff;
+    transform: translateY(-1px);
+    margin-left: 4px;
+    vertical-align: bottom;
+  }
+
+  &:hover,
+  &:focus {
+    color: orange;
+
+    &::after {
+      background: orange;
+    }
+  }
+
+  &__exiting {
+    transform: translateX(100vw);
+  }
+}

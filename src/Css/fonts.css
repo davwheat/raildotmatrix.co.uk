@@ -1,0 +1,45 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,700;1,400&display=swap");
+
+@font-face {
+  font-family: "Dot Matrix";
+  src: local("Dot Matrix"), local("Dot_Matrix"),
+    url("/fonts/subset-Dot_Matrix.woff2") format("woff2"),
+    url("/fonts/subset-Dot_Matrix.woff") format("woff"),
+    url("/fonts/subset-Dot_Matrix.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Dot Matrix";
+  src: local("Dot Matrix Bold"), local("Dot_Matrix_Bold"),
+    url("/fonts/subset-Dot_Matrix_Bold.woff2") format("woff2"),
+    url("/fonts/subset-Dot_Matrix_Bold.woff") format("woff"),
+    url("/fonts/subset-Dot_Matrix_Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Dot Matrix";
+  src: local("Dot Matrix Bold Tall"), local("Dot_Matrix_Bold_Tall"),
+    url("/fonts/subset-Dot_Matrix_Bold_Tall.woff2") format("woff2"),
+    url("/fonts/subset-Dot_Matrix_Bold_Tall.woff") format("woff"),
+    url("/fonts/subset-Dot_Matrix_Bold_Tall.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Transport";
+  src: url("/fonts/Transport Medium.woff2") format("woff2"),
+    url("/fonts/Transport Medium.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: normal;
+  font-display: swap;
+  unicode-range: U+0020-007E;
+}
