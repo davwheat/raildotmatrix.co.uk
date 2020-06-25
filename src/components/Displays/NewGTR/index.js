@@ -22,10 +22,10 @@ export default function NewGTR({ station }) {
     })
   }
 
-  // update every 30s
+  // update every 5s
   useInterval(() => {
     updateData()
-  }, 15 * 1000)
+  }, 5 * 1000)
 
   if (TrainData === null) updateData()
 
