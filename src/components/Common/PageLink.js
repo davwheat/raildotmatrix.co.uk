@@ -18,6 +18,7 @@ export default function PageLink({ onClick, className, children, to, afterExit, 
 
   return (
     <a
+      tabIndex={to ? null : 0}
       href={to}
       className={classes}
       {...props}

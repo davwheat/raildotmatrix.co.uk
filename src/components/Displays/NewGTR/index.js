@@ -1,15 +1,16 @@
-import React, { useState } from "react"
-import useInterval from "../../../hooks/useInterval"
+import React, { useState } from 'react'
+import useInterval from '../../../hooks/useInterval'
 
-import LoadingMessage from "./LoadingMessage"
-import Train from "./Train"
+import LoadingMessage from './LoadingMessage'
+import Train from './Train'
 
-import GetNextTrainsAtStation from "../../../Api/GetNextTrainsAtStation"
+import GetNextTrainsAtStation from '../../../Api/GetNextTrainsAtStation'
 
-import "./css/board.css"
-import NoServicesMessage from "./NoServicesMessage"
-import Time from "./Time"
-import ScrollingInfo from "./ScrollingInfo"
+import './css/board.css'
+import NoServicesMessage from './NoServicesMessage'
+import Time from './Time'
+import ScrollingInfo from './ScrollingInfo'
+import ErrorMessage from './ErrorMessage'
 
 export default function NewGTR({ station }) {
   const [TrainData, setTrainData] = useState(null)
@@ -42,6 +43,7 @@ export default function NewGTR({ station }) {
 
     return (
       <Train
+        via={train.destination[0].via}
         leftCallback={i === 0 ? leftCallback : () => {}}
         position={i + 1}
         scheduledTime={train.std}
@@ -49,22 +51,18 @@ export default function NewGTR({ station }) {
         isCancelled={train.isCancelled}
         intermediaryStops={
           train.subsequentCallingPointsList
-            ? train.subsequentCallingPointsList[0].subsequentCallingPoints.reduce(
-                (stops, thisStop) => {
-                  return [
-                    ...stops,
-                    {
-                      location: thisStop.locationName,
-                      eta:
-                        thisStop.et === "On time" ? thisStop.st : thisStop.et,
-                    },
-                  ]
-                },
-                []
-              )
+            ? train.subsequentCallingPointsList[0].subsequentCallingPoints.reduce((stops, thisStop) => {
+                return [
+                  ...stops,
+                  {
+                    location: thisStop.locationName,
+                    eta: thisStop.et === 'On time' ? thisStop.st : thisStop.et,
+                  },
+                ]
+              }, [])
             : null
         }
-        expectedTime={train.etd || "Delayed"}
+        expectedTime={train.etd || 'Delayed'}
         toc={train.operator}
         coachCount={train.length}
         departureStation={train.origin.locationName}
@@ -81,13 +79,12 @@ export default function NewGTR({ station }) {
         <span>Est</span>
       </div>
       {TrainData === null && <LoadingMessage />}
-      {!Services && (
-        <NoServicesMessage messages={TrainData && TrainData.nrccMessages} />
-      )}
-      {Services && (
+      {TrainData !== null && TrainData.error === true && <ErrorMessage />}
+      {TrainData !== null && !Services && !TrainData.error && <NoServicesMessage messages={TrainData && TrainData.nrccMessages} />}
+      {TrainData !== null && Services && !TrainData.error && (
         <>
           {GetTrain(Services, 0)}
-          {shouldShowScrollingInfo && <ScrollingInfo trainData={Services[0]} />}
+          {shouldShowScrollingInfo ? <ScrollingInfo trainData={Services[0]} /> : <p className="display--no-services"></p>}
           <div className="train--alternate-between">
             {GetTrain(Services, 1)}
             {GetTrain(Services, 2)}

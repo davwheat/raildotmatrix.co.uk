@@ -1,14 +1,8 @@
-import React from "react"
+import React from 'react'
 
-import Select, { createFilter } from "react-select"
+import Select, { createFilter } from 'react-select'
 
-export default function AutocompleteSelect({
-  label,
-  helpText,
-  placeholder,
-  autocompleteOptions,
-  onChange,
-}) {
+export default function AutocompleteSelect({ label, helpText, placeholder, autocompleteOptions, onChange, ...props }) {
   return (
     <label className="form-textbox">
       {label}
@@ -21,22 +15,21 @@ export default function AutocompleteSelect({
         components={{
           MenuList,
         }}
-        menuPortalTarget={
-          typeof window !== "undefined" && document.querySelector("body")
-        }
+        menuPortalTarget={typeof window !== 'undefined' && document.querySelector('body')}
         theme={theme => ({
           ...theme,
           colors: {
             ...theme.colors,
-            neutral0: "#212121",
-            neutral50: "#999",
-            neutral80: "#bbb",
-            text: "black",
-            primary25: "#FFA50099",
-            primary50: "#FFA500bb",
-            primary: "orange",
+            neutral0: '#212121',
+            neutral50: '#999',
+            neutral80: '#bbb',
+            text: 'black',
+            primary25: '#FFA50099',
+            primary50: '#FFA500bb',
+            primary: 'orange',
           },
         })}
+        {...props}
       />
       {helpText && <p className="form-textbox--help-text">{helpText}</p>}
     </label>

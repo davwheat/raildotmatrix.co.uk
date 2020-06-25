@@ -1,5 +1,6 @@
-import React, { useRef, useState, useEffect } from "react"
-import PropTypes from "prop-types"
+import React, { useRef, useState, useEffect } from 'react'
+import PropTypes from 'prop-types'
+import clsx from 'clsx'
 
 export default function Train(props) {
   const {
@@ -12,11 +13,12 @@ export default function Train(props) {
     betweenStations,
     leftCallback,
     isCancelled,
+    via: destVia,
   } = props
 
-  let currentStatus = "",
+  let currentStatus = '',
     location = null,
-    posStr = ""
+    posStr = ''
 
   const [shouldLeave, setShouldLeave] = useState(false)
   const [detailsOnLastRender, setDetailsOnLastRender] = useState(props)
@@ -38,32 +40,29 @@ export default function Train(props) {
     currentStatus = status
   } else {
     if (shouldLeave) {
-      currentStatus = "Arrived"
+      currentStatus = 'Arrived'
     } else if (expectedTime === scheduledTime) {
-      currentStatus = "On time"
+      currentStatus = 'On time'
     } else if (isCancelled) {
-      currentStatus = "Cancelled"
+      currentStatus = 'Cancelled'
     } else {
-      currentStatus =
-        expectedTime === "On time"
-          ? "On time"
-          : "Exp " + expectedTime.replace(":", "")
+      currentStatus = expectedTime === 'On time' ? 'On time' : 'Exp ' + expectedTime.replace(':', '')
     }
   }
 
   switch (position) {
     case 1:
-      posStr = "1st"
+      posStr = '1st'
       break
     case 2:
-      posStr = "2nd"
+      posStr = '2nd'
       break
     case 3:
-      posStr = "3rd"
+      posStr = '3rd'
       break
 
     default:
-      posStr = "???"
+      posStr = '???'
       break
   }
 
@@ -72,15 +71,25 @@ export default function Train(props) {
       <div className={`train ${position > 1 && `swap-out`}`}>
         {shouldLeave && (
           <div className="train--spinner">
-            {" "}
             <span>l</span>
           </div>
         )}
         <span className="train--position">{posStr}</span>
-        <span className="train--scheduled-time">
-          {scheduledTime.replace(":", "")}
+        <span className="train--scheduled-time">{scheduledTime.replace(':', '')}</span>
+        <span
+          className={clsx('train--destination', {
+            'train--destination__with-via': !!destVia,
+          })}
+        >
+          <span
+            className={clsx('train--destination__actual', {
+              'swap-out': !!destVia,
+            })}
+          >
+            {destVia ? destination + ' via' : destination}
+          </span>
+          {destVia && <span className="train--destination__via swap-out">{destVia}</span>}
         </span>
-        <span className="train--destination">{destination}</span>
         <span className="train--status">{currentStatus}</span>
       </div>
     </>
@@ -95,7 +104,7 @@ Train.propTypes = {
     PropTypes.shape({
       location: PropTypes.string.isRequired,
       eta: PropTypes.string,
-    })
+    }),
   ).isRequired,
   expectedTime: PropTypes.string.isRequired,
   status: PropTypes.string,

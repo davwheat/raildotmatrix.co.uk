@@ -24,6 +24,7 @@
     "react-select": "^3.1.0"
   },
   "devDependencies": {
+    "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.10",
     "prettier": "2.0.5"
   },
   "keywords": [

@@ -3,11 +3,11 @@ import PropTypes from 'prop-types'
 
 import './css/Select.css'
 
-export default function Select({ label, helpText, placeholder, options, onChange }) {
+export default function Select({ label, helpText, placeholder, options, onChange, ...props }) {
   return (
     <label className="form-select">
       {label}
-      <select onBlur={onChange} className="form-select--input" label={placeholder} defaultValue="">
+      <select onChange={onChange} className="form-select--input" label={placeholder} {...props}>
         {placeholder && (
           <option value="" disabled>
             {placeholder}

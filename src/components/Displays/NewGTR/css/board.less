@@ -121,29 +121,81 @@
       line-height: 1.1;
     }
 
-    :not(:last-child) {
+    > :not(:last-child) {
       padding-right: 32px;
     }
 
-    :nth-child(1) {
+    > :nth-child(1) {
       width: 3.75ch;
     }
 
-    :nth-child(2) {
+    > :nth-child(2) {
       width: 6.5ch;
     }
 
-    :nth-child(3) {
+    > :nth-child(3) {
       flex: 1;
     }
 
-    :last-child {
+    > :last-child {
       width: 9ch;
     }
   }
 
   .display--loading-data {
     .trainLine();
+  }
+
+  .train--destination__with-via {
+    height: 96px;
+    width: 100%;
+    background: #030303;
+    overflow: hidden;
+    .noOverflow();
+
+    > .swap-out {
+      overflow: hidden;
+      background-color: transparent;
+      position: absolute;
+      width: auto;
+
+      @keyframes swap1via {
+        from,
+        to,
+        55% {
+          transform: translateY(-100%);
+        }
+        5%,
+        50% {
+          transform: translateY(0);
+        }
+      }
+      @keyframes swap2via {
+        from,
+        to,
+        55% {
+          transform: translateY(100%);
+        }
+        5%,
+        50% {
+          transform: translateY(0);
+        }
+      }
+
+      @animate-time: 10s;
+      @delay: 0.6s;
+
+      &:first-child {
+        animation: swap1via @animate-time linear infinite forwards;
+        animation-delay: @delay;
+      }
+
+      &:last-child {
+        transform: translateY(100%);
+        animation: swap2via @animate-time (@animate-time / 2 + @delay) linear infinite
+          forwards;
+      }
+    }
   }
 
   .train {
@@ -165,10 +217,10 @@
         @keyframes swap1 {
           from,
           to,
-          55% {
+          52% {
             transform: translateY(-100%);
           }
-          5%,
+          2%,
           50% {
             transform: translateY(0);
           }
@@ -176,16 +228,16 @@
         @keyframes swap2 {
           from,
           to,
-          55% {
+          52% {
             transform: translateY(100%);
           }
-          5%,
+          2%,
           50% {
             transform: translateY(0);
           }
         }
 
-        @animate-time: 15s;
+        @animate-time: 30s;
 
         &:first-child {
           animation: swap1 @animate-time linear infinite forwards;
@@ -262,6 +314,7 @@
 
     position: relative;
     height: 96px;
+    font-style: italic;
 
     p {
       display: inline-block;
@@ -270,7 +323,7 @@
     &__scroller {
       position: absolute;
       left: 0;
-      
+
       animation-timing-function: linear;
       animation-iteration-count: 1;
       animation-duration: 0s;
@@ -352,14 +405,14 @@
       left: 100%;
       padding-right: 200%;
 
-      animation: slide 60s linear infinite forwards;
+      animation: slide 0s linear infinite forwards;
 
       @keyframes slide {
         from {
           transform: translateX(0);
         }
         to {
-          transform: translateX(-100%);
+          transform: translateX(-100% - 100vw);
         }
       }
 

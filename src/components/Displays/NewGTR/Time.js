@@ -1,5 +1,5 @@
-import React, { useState } from "react"
-import useInterval from "../../../hooks/useInterval"
+import React, { useState } from 'react'
+import useInterval from '../../../hooks/useInterval'
 
 export default function Time() {
   const [TimeString, setTimeString] = useState(null)
@@ -19,13 +19,13 @@ export default function Time() {
       <>
         <span className="display--time__big">
           {padZero(time.getHours())
-            .split("")
+            .split('')
             .map((c, i) => (
               <span key={i}>{c}</span>
             ))}
           :
           {padZero(time.getMinutes())
-            .split("")
+            .split('')
             .map((c, i) => (
               <span key={i}>{c}</span>
             ))}
@@ -33,12 +33,12 @@ export default function Time() {
         </span>
         <span className="display--time__small">
           {padZero(time.getSeconds())
-            .split("")
+            .split('')
             .map((c, i) => (
               <span key={i}>{c}</span>
             ))}
         </span>
-      </>
+      </>,
     )
   }
 

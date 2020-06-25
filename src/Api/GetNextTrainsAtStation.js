@@ -18,5 +18,11 @@ export default async function GetNextTrainsAtStation(station, options = { count:
     }),
   )
 
+  if (response.ok === false) {
+    console.log(response)
+
+    return { error: true }
+  }
+
   return await response.json()
 }
