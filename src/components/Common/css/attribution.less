@@ -46,19 +46,20 @@ footer {
 
   ~ .attribution--required-minimum {
     opacity: 1;
+    color: #222;
   }
 }
 
 .attribution--required-minimum {
   opacity: 0;
-  transition: opacity 0.25s ease-out;
+  transition: opacity 0.25s ease-out, color 0.25s ease-out;
 
   display: block;
   position: fixed;
   right: 8px;
   bottom: 8px;
 
-  color: #222;
+  color: #777;
   font-size: 13px;
 
   @media (max-width: 575px) {
