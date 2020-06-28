@@ -122,7 +122,8 @@ export default function ScrollingInfo({ trainData: train }) {
           style={{
             animationName: activeAnimation === 'callingAt__scroll' ? 'scrollByWidth2' : '',
             animationDuration: activeAnimation === 'callingAt__scroll' ? `${callingAtScrollTime}s` : `0s`,
-            transform: activeAnimation === 'callingAt__intro' ? `translateX(calc(1920px - 48px - ${train.isCancelled ? `13.75ch` : `9.75ch`}))` : null,
+            transform:
+              activeAnimation === 'callingAt__intro' ? `translateX(calc(1920px - 48px - ${train.isCancelled ? `13.75ch` : `9.75ch`}))` : null,
           }}
         >
           <span className="train--details__calling-at" ref={callingAtTextRef}>

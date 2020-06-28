@@ -1,6 +1,6 @@
-import React from "react"
+import React from 'react'
 
-import "./css/ToggleSwitch.css"
+import './css/ToggleSwitch.css'
 
 const ToggleSwitch = React.forwardRef((props, ref) => {
   const { label, onChange, checked, defaultChecked } = props
@@ -9,13 +9,7 @@ const ToggleSwitch = React.forwardRef((props, ref) => {
       <label className="toggle-switch--label">
         <span>{label}</span>
         <div className="toggle-switch__container">
-          <input
-            ref={ref}
-            type="checkbox"
-            onChange={onChange}
-            checked={checked}
-            defaultChecked={defaultChecked}
-          />
+          <input ref={ref} type="checkbox" onChange={onChange} checked={checked} defaultChecked={defaultChecked} />
           <div className="toggle-switch__slider"></div>
         </div>
       </label>

@@ -1,17 +1,17 @@
-import React, { useState, useRef, useEffect } from "react"
-import useInterval from "../../../hooks/useInterval"
+import React, { useState, useRef, useEffect } from 'react'
+import useInterval from '../../../hooks/useInterval'
 
-import LoadingMessage from "./LoadingMessage"
-import Train from "./Train"
+import LoadingMessage from './LoadingMessage'
+import Train from './Train'
 
-import GetNextTrainsAtStation from "../../../Api/GetNextTrainsAtStation"
+import GetNextTrainsAtStation from '../../../Api/GetNextTrainsAtStation'
 
-import "./css/board.css"
-import NoServicesMessage from "./NoServicesMessage"
-import Time from "./Time"
-import ScrollingInfo from "./ScrollingInfo"
-import ErrorMessage from "./ErrorMessage"
-import clsx from "clsx"
+import './css/board.css'
+import NoServicesMessage from './NoServicesMessage'
+import Time from './Time'
+import ScrollingInfo from './ScrollingInfo'
+import ErrorMessage from './ErrorMessage'
+import clsx from 'clsx'
 
 const FullBoard = React.forwardRef(({ station, noBg }, ref) => {
   const [TrainData, setTrainData] = useState(null)
@@ -41,10 +41,7 @@ const FullBoard = React.forwardRef(({ station, noBg }, ref) => {
     const availableHeight = window.innerHeight
     const availableWidth = window.innerWidth
 
-    const scale = Math.min(
-      availableWidth / currentWidth,
-      availableHeight / currentHeight
-    )
+    const scale = Math.min(availableWidth / currentWidth, availableHeight / currentHeight)
 
     div.style.cssText = `
       transform: scale(${scale}) translateZ(0);
@@ -59,10 +56,10 @@ const FullBoard = React.forwardRef(({ station, noBg }, ref) => {
       }
     }
 
-    window.addEventListener("resize", scale)
+    window.addEventListener('resize', scale)
 
     return () => {
-      window.removeEventListener("resize", scale)
+      window.removeEventListener('resize', scale)
     }
   }, [boardRef])
 
@@ -86,22 +83,18 @@ const FullBoard = React.forwardRef(({ station, noBg }, ref) => {
         isCancelled={train.isCancelled}
         intermediaryStops={
           train.subsequentCallingPointsList
-            ? train.subsequentCallingPointsList[0].subsequentCallingPoints.reduce(
-                (stops, thisStop) => {
-                  return [
-                    ...stops,
-                    {
-                      location: thisStop.locationName,
-                      eta:
-                        thisStop.et === "On time" ? thisStop.st : thisStop.et,
-                    },
-                  ]
-                },
-                []
-              )
+            ? train.subsequentCallingPointsList[0].subsequentCallingPoints.reduce((stops, thisStop) => {
+                return [
+                  ...stops,
+                  {
+                    location: thisStop.locationName,
+                    eta: thisStop.et === 'On time' ? thisStop.st : thisStop.et,
+                  },
+                ]
+              }, [])
             : null
         }
-        expectedTime={train.etd || "Delayed"}
+        expectedTime={train.etd || 'Delayed'}
         toc={train.operator}
         coachCount={train.length}
         departureStation={train.origin.locationName}
@@ -110,10 +103,7 @@ const FullBoard = React.forwardRef(({ station, noBg }, ref) => {
   }
 
   return (
-    <section
-      ref={boardRef}
-      className={clsx("dot-matrix", { "dot-matrix--noBg": noBg })}
-    >
+    <section ref={boardRef} className={clsx('dot-matrix', { 'dot-matrix--noBg': noBg })}>
       <div className="decoration">
         <span>Num</span>
         <span>Time</span>
@@ -122,17 +112,11 @@ const FullBoard = React.forwardRef(({ station, noBg }, ref) => {
       </div>
       {TrainData === null && <LoadingMessage />}
       {TrainData !== null && TrainData.error === true && <ErrorMessage />}
-      {TrainData !== null && !Services && !TrainData.error && (
-        <NoServicesMessage messages={TrainData && TrainData.nrccMessages} />
-      )}
+      {TrainData !== null && !Services && !TrainData.error && <NoServicesMessage messages={TrainData && TrainData.nrccMessages} />}
       {TrainData !== null && Services && !TrainData.error && (
         <>
           {GetTrain(Services, 0)}
-          {shouldShowScrollingInfo ? (
-            <ScrollingInfo trainData={Services[0]} />
-          ) : (
-            <p className="display--no-services"></p>
-          )}
+          {shouldShowScrollingInfo ? <ScrollingInfo trainData={Services[0]} /> : <p className="display--no-services"></p>}
           <div className="train--alternate-between">
             {GetTrain(Services, 1)}
             {GetTrain(Services, 2)}

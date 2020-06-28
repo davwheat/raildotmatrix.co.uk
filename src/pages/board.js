@@ -1,21 +1,21 @@
-import React, { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from 'react'
 
-import AllStations from "../Api/AllStations"
+import AllStations from '../Api/AllStations'
 
-import Layout from "../components/layout"
-import SEO from "../components/seo"
-import TypewriterText from "../components/Common/TypewriterText"
-import PageLink from "../components/Common/PageLink"
+import Layout from '../components/layout'
+import SEO from '../components/seo'
+import TypewriterText from '../components/Common/TypewriterText'
+import PageLink from '../components/Common/PageLink'
 
-import Form, { AutocompleteSelect, Select } from "../components/Common/Form"
+import Form, { AutocompleteSelect, Select } from '../components/Common/Form'
 
-import NewGTR from "../components/Displays/NewGTR"
-import Attribution from "../components/Common/Attribution"
+import NewGTR from '../components/Displays/NewGTR'
+import Attribution from '../components/Common/Attribution'
 
 const IndexPage = () => {
   const [BoardSettings, setBoardSettings] = useState({
-    station: "",
-    type: "",
+    station: '',
+    type: '',
   })
 
   const [Page, setPage] = useState(0)
@@ -38,17 +38,11 @@ const IndexPage = () => {
 
   return (
     <Layout>
-      <SEO title={Page === 0 ? "Board Setup" : "Station Board"} />
+      <SEO title={Page === 0 ? 'Board Setup' : 'Station Board'} />
       {Page === 0 && (
         <main>
           <header>
-            <TypewriterText
-              component="h1"
-              className="display"
-              cursor
-              text="Board settings"
-              time={2000}
-            />
+            <TypewriterText component="h1" className="display" cursor text="Board settings" time={2000} />
           </header>
           <article>
             <Form>
@@ -60,19 +54,18 @@ const IndexPage = () => {
               />
               <Select
                 label="Display type"
-                options={[{ value: "gtr-new", label: "GTR New" }]}
+                options={[{ value: 'gtr-new', label: 'GTR New' }]}
                 placeholder="Choose a display"
                 onChange={ChooseDisplay}
                 value={BoardSettings.type}
               />
               <PageLink
                 onClick={() => {
-                  if (!BoardSettings.station || !BoardSettings.type)
-                    return false
+                  if (!BoardSettings.station || !BoardSettings.type) return false
                   else return true
                 }}
                 afterExit={() => setPage(1)}
-                style={{ cursor: "pointer" }}
+                style={{ cursor: 'pointer' }}
               >
                 Next
               </PageLink>

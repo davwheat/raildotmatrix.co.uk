@@ -1,20 +1,17 @@
-import React, { useState, useRef, useEffect } from "react"
-import FullBoard from "./FullBoard"
-import ToggleSwitch from "../../Common/Form/ToggleSwitch"
-import useStateWithLocalStorage from "../../../hooks/useStateWithLocalStorage"
-import { throttle } from "throttle-debounce"
+import React, { useState, useRef, useEffect } from 'react'
+import FullBoard from './FullBoard'
+import ToggleSwitch from '../../Common/Form/ToggleSwitch'
+import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
+import { throttle } from 'throttle-debounce'
 
-import "./css/index.css"
-import PageLink from "../../Common/PageLink"
+import './css/index.css'
+import PageLink from '../../Common/PageLink'
 
 const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
-  const [settings, setSettings, resetSettings] = useStateWithLocalStorage(
-    "newGtrBoardSettings",
-    {
-      noBg: false,
-      hideSettings: false,
-    }
-  )
+  const [settings, setSettings, resetSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
+    noBg: false,
+    hideSettings: false,
+  })
 
   const settingsRef = useRef(null)
 
@@ -29,15 +26,14 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
   }
 
   useEffect(() => {
-
     let to = null
 
     function hideControls() {
-      settingsRef.current.classList.add("hide")
+      settingsRef.current.classList.add('hide')
     }
 
     function resetTimeout() {
-      settingsRef.current.classList.remove("hide")
+      settingsRef.current.classList.remove('hide')
       clearTimeout(to)
       to = setTimeout(() => {
         hideControls()
@@ -45,11 +41,11 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
     }
 
     if (settings.hideSettings) {
-      window.addEventListener("mousemove", throttle(1500, resetTimeout))
+      window.addEventListener('mousemove', throttle(1500, resetTimeout))
     }
 
     return function cleanupListener() {
-      window.removeEventListener("mousemove", resetTimeout)
+      window.removeEventListener('mousemove', resetTimeout)
     }
   })
 
@@ -58,7 +54,7 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
       <div className="board-settings" ref={settingsRef}>
         <PageLink
           style={{
-            cursor: "pointer",
+            cursor: 'pointer',
             zIndex: 1000,
           }}
           afterExit={editBoardCallback}
@@ -66,16 +62,8 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
           Edit board
         </PageLink>
         <br />
-        <ToggleSwitch
-          ref={noBgRef}
-          label="Remove background"
-          onChange={updateState}
-        />
-        <ToggleSwitch
-          ref={hideRef}
-          label="Hide this panel when idle"
-          onChange={updateState}
-        />
+        <ToggleSwitch ref={noBgRef} label="Remove background" onChange={updateState} />
+        <ToggleSwitch ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
       <FullBoard ref={ref} noBg={settings.noBg} station={station} />
     </>
