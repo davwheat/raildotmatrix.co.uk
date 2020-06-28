@@ -5,13 +5,9 @@ import NRE from "../../images/NRE_Powered_logo.png"
 import "./css/attribution.css"
 import PageLink from "./PageLink"
 
-import MediaQuery from "react-responsive"
-
 export default function Attribution() {
   return (
     <>
-      <MediaQuery maxDeviceWidth={1500}></MediaQuery>
-
       <footer>
         <div className="attribution--left">
           <p>
