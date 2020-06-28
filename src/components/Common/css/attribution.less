@@ -12,13 +12,21 @@ footer {
   transition: opacity 0.25s ease-out;
 
   img {
-    max-width: 100vw;
+    max-width: 45vw;
     width: 250px;
+
+    @media (max-width: 575px) {
+      display: none;
+    }
   }
 
   .attribution--left {
     align-self: center;
     margin-right: auto;
+
+    @media (max-width: 575px) {
+      margin-bottom: 24px;
+    }
 
     a {
       transform: translateY(2px);
@@ -52,4 +60,8 @@ footer {
 
   color: #222;
   font-size: 13px;
+
+  @media (max-width: 575px) {
+    opacity: 1;
+  }
 }
