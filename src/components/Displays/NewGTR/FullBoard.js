@@ -12,6 +12,7 @@ import Time from './Time'
 import ScrollingInfo from './ScrollingInfo'
 import ErrorMessage from './ErrorMessage'
 import clsx from 'clsx'
+import { debounce } from 'throttle-debounce'
 
 const FullBoard = React.forwardRef(({ station, noBg }, ref) => {
   const [TrainData, setTrainData] = useState(null)
@@ -49,11 +50,18 @@ const FullBoard = React.forwardRef(({ station, noBg }, ref) => {
     `
   }
 
+  // do it at least once
+  if (boardRef.current) {
+    fillDiv(boardRef.current, true)
+  }
+
   useEffect(() => {
     function scale() {
-      if (boardRef.current) {
-        fillDiv(boardRef.current, true)
-      }
+      debounce(250, () => {
+        if (boardRef.current) {
+          fillDiv(boardRef.current, true)
+        }
+      })
     }
 
     window.addEventListener('resize', scale)
