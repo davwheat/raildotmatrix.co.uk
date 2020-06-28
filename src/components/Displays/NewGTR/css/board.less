@@ -10,7 +10,7 @@
 }
 
 .dot-matrix {
-  width: 100vw;
+  width: 1920px;
   height: 576px;
   background: #080808;
   padding: 48px;
@@ -22,6 +22,8 @@
   font-size: 72px;
 
   position: relative;
+
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   .decoration {
     color: #fff;
@@ -192,8 +194,8 @@
 
       &:last-child {
         transform: translateY(100%);
-        animation: swap2via @animate-time (@animate-time / 2 + @delay) linear infinite
-          forwards;
+        animation: swap2via @animate-time (@animate-time / 2 + @delay) linear
+          infinite forwards;
       }
     }
   }
@@ -263,7 +265,7 @@
 
   .train--spinner {
     position: absolute;
-    left: -100vw;
+    left: -1920px;
     right: 0;
     top: 0;
     bottom: 0;
@@ -328,11 +330,11 @@
       animation-iteration-count: 1;
       animation-duration: 0s;
 
-      transform: translateX(calc(100vw - 48px));
+      transform: translateX(1920px - 48px);
 
       @keyframes scrollByWidth1 {
         from {
-          transform: translateX(calc(100vw - 48px));
+          transform: translateX(1920px - 48px);
         }
         to {
           transform: translateX(-100%);
@@ -348,17 +350,12 @@
       animation-iteration-count: 1;
       animation-duration: 0s;
 
-      transform: translateY(-96px) translateX(calc(100vw - 48px - 9.75ch));
+      transform: translateY(-96px) translateX(calc((1920px - 48px) - 9.75ch));
       transition: transform 0.5s linear;
-
-      .train--details__calling-at {
-        position: sticky;
-        left: 0;
-      }
 
       @keyframes scrollByWidth2 {
         from {
-          transform: translateX(calc(100vw - 48px - 9.75ch)) translateY(0);
+          transform: translateX(calc((1920px - 48px) - 9.75ch)) translateY(0);
         }
 
         to {
@@ -403,16 +400,15 @@
     span {
       position: absolute;
       left: 100%;
-      padding-right: 200%;
 
-      animation: slide 0s linear infinite forwards;
+      animation: slideNrcc 0s linear infinite forwards;
 
-      @keyframes slide {
+      @keyframes slideNrcc {
         from {
           transform: translateX(0);
         }
         to {
-          transform: translateX(-100% - 100vw);
+          transform: translateX(calc(-100% - 1920px));
         }
       }
 
@@ -422,5 +418,18 @@
         display: inline-block;
       }
     }
+  }
+}
+
+.dot-matrix.dot-matrix--noBg {
+  &,
+  .display--no-services,
+  .display--time,
+  .train,
+  .train--destination__with-via,
+  .train--alternate-between,
+  .train--spinner,
+  .train--details {
+    background: #000;
   }
 }

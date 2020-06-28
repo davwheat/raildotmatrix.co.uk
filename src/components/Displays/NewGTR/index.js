@@ -1,97 +1,85 @@
-import React, { useState } from 'react'
-import useInterval from '../../../hooks/useInterval'
+import React, { useState, useRef, useEffect } from "react"
+import FullBoard from "./FullBoard"
+import ToggleSwitch from "../../Common/Form/ToggleSwitch"
+import useStateWithLocalStorage from "../../../hooks/useStateWithLocalStorage"
+import { throttle } from "throttle-debounce"
 
-import LoadingMessage from './LoadingMessage'
-import Train from './Train'
+import "./css/index.css"
+import PageLink from "../../Common/PageLink"
 
-import GetNextTrainsAtStation from '../../../Api/GetNextTrainsAtStation'
+const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
+  const [settings, setSettings, resetSettings] = useStateWithLocalStorage(
+    "newGtrBoardSettings",
+    {
+      noBg: false,
+      hideSettings: false,
+    }
+  )
 
-import './css/board.css'
-import NoServicesMessage from './NoServicesMessage'
-import Time from './Time'
-import ScrollingInfo from './ScrollingInfo'
-import ErrorMessage from './ErrorMessage'
+  const settingsRef = useRef(null)
 
-export default function NewGTR({ station }) {
-  const [TrainData, setTrainData] = useState(null)
-  const [shouldShowScrollingInfo, setShouldShowScrollingInfo] = useState(true)
+  const noBgRef = useRef(null)
+  const hideRef = useRef(null)
 
-  async function updateData() {
-    GetNextTrainsAtStation(station, { minOffset: 0 }).then(res => {
-      setTrainData(res)
+  function updateState() {
+    setSettings({
+      noBg: noBgRef.current.checked,
+      hideSettings: hideRef.current.checked,
     })
   }
 
-  // update every 5s
-  useInterval(() => {
-    updateData()
-  }, 5 * 1000)
+  useEffect(() => {
 
-  if (TrainData === null) updateData()
+    let to = null
 
-  const Services = TrainData ? TrainData.trainServices : null
-
-  function GetTrain(Services, i) {
-    const train = Services[i]
-
-    if (!train) return null
-
-    function leftCallback(left) {
-      if (left) setShouldShowScrollingInfo(false)
-      else setShouldShowScrollingInfo(true)
+    function hideControls() {
+      settingsRef.current.classList.add("hide")
     }
 
-    return (
-      <Train
-        via={train.destination[0].via}
-        leftCallback={i === 0 ? leftCallback : () => {}}
-        position={i + 1}
-        scheduledTime={train.std}
-        destination={train.destination[0].locationName}
-        isCancelled={train.isCancelled}
-        intermediaryStops={
-          train.subsequentCallingPointsList
-            ? train.subsequentCallingPointsList[0].subsequentCallingPoints.reduce((stops, thisStop) => {
-                return [
-                  ...stops,
-                  {
-                    location: thisStop.locationName,
-                    eta: thisStop.et === 'On time' ? thisStop.st : thisStop.et,
-                  },
-                ]
-              }, [])
-            : null
-        }
-        expectedTime={train.etd || 'Delayed'}
-        toc={train.operator}
-        coachCount={train.length}
-        departureStation={train.origin.locationName}
-      />
-    )
-  }
+    function resetTimeout() {
+      settingsRef.current.classList.remove("hide")
+      clearTimeout(to)
+      to = setTimeout(() => {
+        hideControls()
+      }, 2500)
+    }
+
+    if (settings.hideSettings) {
+      window.addEventListener("mousemove", throttle(1500, resetTimeout))
+    }
+
+    return function cleanupListener() {
+      window.removeEventListener("mousemove", resetTimeout)
+    }
+  })
 
   return (
-    <section className="dot-matrix">
-      <div className="decoration">
-        <span>Num</span>
-        <span>Time</span>
-        <span>Destination</span>
-        <span>Est</span>
+    <>
+      <div className="board-settings" ref={settingsRef}>
+        <PageLink
+          style={{
+            cursor: "pointer",
+            zIndex: 1000,
+          }}
+          afterExit={editBoardCallback}
+        >
+          Edit board
+        </PageLink>
+        <br />
+        <ToggleSwitch
+          ref={noBgRef}
+          label="Remove background"
+          onChange={updateState}
+        />
+        <ToggleSwitch
+          ref={hideRef}
+          label="Hide this panel when idle"
+          onChange={updateState}
+        />
       </div>
-      {TrainData === null && <LoadingMessage />}
-      {TrainData !== null && TrainData.error === true && <ErrorMessage />}
-      {TrainData !== null && !Services && !TrainData.error && <NoServicesMessage messages={TrainData && TrainData.nrccMessages} />}
-      {TrainData !== null && Services && !TrainData.error && (
-        <>
-          {GetTrain(Services, 0)}
-          {shouldShowScrollingInfo ? <ScrollingInfo trainData={Services[0]} /> : <p className="display--no-services"></p>}
-          <div className="train--alternate-between">
-            {GetTrain(Services, 1)}
-            {GetTrain(Services, 2)}
-          </div>
-        </>
-      )}
-      <Time />
-    </section>
+      <FullBoard ref={ref} noBg={settings.noBg} station={station} />
+    </>
   )
-}
+})
+
+export default NewGTR
