@@ -32,22 +32,34 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
       settingsRef.current.classList.add('hide')
     }
 
-    function resetTimeout() {
-      throttle(1500, () => {
-        settingsRef.current.classList.remove('hide')
-        clearTimeout(to)
-        to = setTimeout(() => {
-          hideControls()
-        }, 2500)
+    const throttledReset = throttle(1500, true, () => {
+      console.log('Reset')
+
+      settingsRef.current.classList.remove('hide')
+      clearTimeout(to)
+      to = setTimeout(() => {
+        hideControls()
+      }, 2500)
+    })
+
+    function resetTimeout(e) {
+      throttledReset(e)
+    }
+
+    const events = ['click', 'mousemove', 'mouseover', 'mousemove', 'touchmove', 'touchstart', 'touchend', 'focus']
+
+    if (settings.hideSettings) {
+      events.forEach(e => {
+        console.log(e)
+
+        window.addEventListener(e, resetTimeout)
       })
     }
 
-    if (settings.hideSettings) {
-      window.addEventListener('mousemove', resetTimeout)
-    }
-
     return function cleanupListener() {
-      window.removeEventListener('mousemove', resetTimeout)
+      events.forEach(e => {
+        window.removeEventListener(e, resetTimeout)
+      })
     }
   })
 

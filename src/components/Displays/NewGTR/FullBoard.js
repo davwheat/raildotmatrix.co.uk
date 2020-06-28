@@ -56,12 +56,14 @@ const FullBoard = React.forwardRef(({ station, noBg }, ref) => {
   }
 
   useEffect(() => {
-    function scale() {
-      debounce(250, () => {
-        if (boardRef.current) {
-          fillDiv(boardRef.current, true)
-        }
-      })
+    const debouncedScale = debounce(250, () => {
+      if (boardRef.current) {
+        fillDiv(boardRef.current, true)
+      }
+    })
+
+    function scale(e) {
+      debouncedScale(e)
     }
 
     window.addEventListener('resize', scale)
