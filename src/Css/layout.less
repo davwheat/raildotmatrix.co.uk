@@ -99,7 +99,7 @@ main {
 
       display: flex;
 
-      span.animated-text--prefix {
+      span.animated-text--prefix:not(:empty) {
         padding-right: 64px;
 
         span {
@@ -115,7 +115,7 @@ main {
         flex: 1;
       }
 
-      span.animated-text--suffix {
+      span.animated-text--suffix:not(:empty) {
         padding-left: 16px;
       }
     }
