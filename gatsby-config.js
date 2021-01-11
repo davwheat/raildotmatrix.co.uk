@@ -7,7 +7,7 @@ module.exports = {
   plugins: [
     `gatsby-plugin-preact`,
     `gatsby-plugin-htaccess`,
-    `gatsby-plugin-react-helmet`,
+    `gatsby-plugin-react-head`,
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
