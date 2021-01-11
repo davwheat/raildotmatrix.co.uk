@@ -41,7 +41,7 @@
   "scripts": {
     "build": "gatsby build",
     "develop": "gatsby develop",
-    "lint": "prettier --single-quote --trailing-comma all --print-width 150 --tab-width 2 --write \"**/*.{js,jsx,json,md}\"",
+    "lint": "prettier --write \"**/*.{js,jsx,json,md}\"",
     "start": "npm run develop",
     "deploy": "gatsby clean && yarn run lint && gatsby build"
   },
