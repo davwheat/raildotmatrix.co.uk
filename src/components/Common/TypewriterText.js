@@ -11,7 +11,7 @@ export default function TypewriterText({ prefix, suffix, text, component, time, 
       x += text.substr(x.length, 1)
       setCurrentText(x)
     },
-    time ? time / text.length : 150,
+    time ? time / text.length : 150
   )
 
   if (cursor) {

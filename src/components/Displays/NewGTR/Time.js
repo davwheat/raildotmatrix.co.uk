@@ -38,7 +38,7 @@ export default function Time() {
               <span key={i}>{c}</span>
             ))}
         </span>
-      </>,
+      </>
     )
   }
 

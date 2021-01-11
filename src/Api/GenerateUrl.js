@@ -1,15 +1,10 @@
-import Config from "./Config"
+import Config from './Config'
 
-export default function GenerateUrl(
-  service,
-  urlParams,
-  queryParams,
-  noKey_old = false
-) {
+export default function GenerateUrl(service, urlParams, queryParams, noKey_old = false) {
   // Azure handles api key
   const noKey = true
 
-  let queryString = noKey ? "" : `?apiKey=${Config.apiKey}`,
+  let queryString = noKey ? '' : `?apiKey=${Config.apiKey}`,
     i = noKey ? 0 : 1
 
   for (let [param, value] of Object.entries(queryParams)) {
@@ -18,5 +13,5 @@ export default function GenerateUrl(
 
     i++
   }
-  return `${Config.endpoint}/${service}/${urlParams.join("/")}${queryString}`
+  return `${Config.endpoint}/${service}/${urlParams.join('/')}${queryString}`
 }

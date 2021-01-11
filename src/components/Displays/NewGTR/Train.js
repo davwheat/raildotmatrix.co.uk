@@ -104,7 +104,7 @@ Train.propTypes = {
     PropTypes.shape({
       location: PropTypes.string.isRequired,
       eta: PropTypes.string,
-    }),
+    })
   ).isRequired,
   expectedTime: PropTypes.string.isRequired,
   status: PropTypes.string,

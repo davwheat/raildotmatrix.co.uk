@@ -15,7 +15,7 @@ export default async function GetNextTrainsAtStation(station, options = { count:
       numServices: options.count || 3,
       timeOffset: options.minOffset || 0,
       timeWindow: options.timeWindow || 120,
-    }),
+    })
   )
 
   if (response.ok === false) {
