@@ -29,8 +29,8 @@ function SEO({ title }) {
 
   return (
     <>
-      <Title>{title ? `{title} | ${site.siteMetadata.title}` : site.siteMetadata.title}</Title>
-      <Meta name="description">{metaDescription}</Meta>
+      <Title>{title ? `${title} | ${site.siteMetadata.title}` : site.siteMetadata.title}</Title>
+      <Meta name="description" content={metaDescription} />
     </>
     // <Helmet
     //   htmlAttributes={{
