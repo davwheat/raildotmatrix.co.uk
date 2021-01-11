@@ -6,9 +6,6 @@
 
 // You can delete this file if you're not using it
 
-import '@fontsource/poppins/400.css'
-import '@fontsource/poppins/700.css'
-
 import React from 'react'
 
 export const onClientEntry = () => {
