@@ -5,6 +5,8 @@ module.exports = {
     author: `@davwheat`,
   },
   plugins: [
+    `gatsby-plugin-preact`,
+    `gatsby-plugin-htaccess`,
     `gatsby-plugin-react-helmet`,
     {
       resolve: `gatsby-plugin-manifest`,
@@ -18,6 +20,6 @@ module.exports = {
         icon: `src/images/logo.png`, // This path is relative to the root of the site.
       },
     },
-    'gatsby-plugin-webpack-bundle-analyser-v2',
+    "gatsby-plugin-webpack-bundle-analyser-v2",
   ],
 }

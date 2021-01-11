@@ -11,7 +11,7 @@ export default async function GetNextTrainsAtStation(station, options = { count:
   }
 
   let response = await fetch(
-    GenerateUrl('getDeparturesByCRS', [station], {
+    GenerateUrl('departures', [station], {
       numServices: options.count || 3,
       timeOffset: options.minOffset || 0,
       timeWindow: options.timeWindow || 120,

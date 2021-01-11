@@ -1,6 +1,6 @@
-import ApiKey from '../Secret/apiKey'
+// import ApiKey from '../Secret/apiKey'
 
 export default {
-  apiKey: ApiKey,
-  endpoint: `https://api.departureboard.io/api/v2.0/`,
+  // apiKey: ApiKey,
+  endpoint: `https://huxley2-nationalrailapi.azurewebsites.net/`,
 }
