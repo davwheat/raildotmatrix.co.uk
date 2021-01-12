@@ -13,7 +13,11 @@ import NewGTR from '../components/Displays/NewGTR'
 import Attribution from '../components/Common/Attribution'
 
 const IndexPage = () => {
-  const searchParams = window && new URLSearchParams(window.location.search)
+  let searchParams
+  if (typeof window !== 'undefined') {
+    searchParams = window && new URLSearchParams(window.location.search)
+  }
+
   const stn = searchParams && searchParams.get('station')
 
   const [BoardSettings, setBoardSettings] = useState({
