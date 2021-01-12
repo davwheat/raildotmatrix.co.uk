@@ -29,7 +29,7 @@ export default function Train(props) {
     leftCallback(false)
   }
 
-  if (intermediaryStops[0].eta === null && !shouldLeave) {
+  if (intermediaryStops && intermediaryStops[0].eta === null && !shouldLeave) {
     setShouldLeave(true)
     leftCallback(true)
   }
@@ -105,7 +105,7 @@ Train.propTypes = {
       location: PropTypes.string.isRequired,
       eta: PropTypes.string,
     })
-  ).isRequired,
+  ),
   expectedTime: PropTypes.string.isRequired,
   status: PropTypes.string,
   otherMessages: PropTypes.string,

@@ -53,7 +53,7 @@ export default function ScrollingInfo({ trainData: train }) {
       }, [])
     : null
 
-  if (intermediaryStops[0].eta === null && !shouldLeave) setShouldLeave(true)
+  if (intermediaryStops && intermediaryStops[0].eta === null && !shouldLeave) setShouldLeave(true)
 
   if (betweenStations && !shouldLeave) {
     if (betweenStations.length > 1)

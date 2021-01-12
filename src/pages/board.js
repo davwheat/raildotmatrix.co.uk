@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState } from 'react'
 
 import AllStations from '../Api/AllStations'
 
@@ -13,14 +13,15 @@ import NewGTR from '../components/Displays/NewGTR'
 import Attribution from '../components/Common/Attribution'
 
 const IndexPage = () => {
+  const searchParams = window && new URLSearchParams(window.location.search)
+  const stn = searchParams && searchParams.get('station')
+
   const [BoardSettings, setBoardSettings] = useState({
-    station: '',
-    type: '',
+    station: stn || '',
+    type: 'gtr-new',
   })
 
-  const [Page, setPage] = useState(0)
-
-  const boardRef = useRef(null)
+  const [Page, setPage] = useState(stn ? 1 : 0)
 
   function ChooseStation(stn) {
     setBoardSettings({

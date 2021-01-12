@@ -19,8 +19,8 @@ const FullBoard = React.forwardRef(({ station, noBg }, ref) => {
   const [shouldShowScrollingInfo, setShouldShowScrollingInfo] = useState(true)
 
   async function updateData() {
-    GetNextTrainsAtStation(station, { minOffset: 0 }).then(res => {
-      setTrainData(res)
+    GetNextTrainsAtStation(station, { minOffset: 0 }).then(data => {
+      setTrainData(data)
     })
   }
 
