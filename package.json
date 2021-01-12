@@ -6,7 +6,6 @@
   "author": "David Wheatley <hi@davwheat.dev>",
   "dependencies": {
     "@fontsource/poppins": "^4.1.0",
-    "@welldone-software/why-did-you-render": "^6.0.5",
     "clsx": "^1.1.1",
     "gatsby": "^2.30.1",
     "gatsby-image": "^2.9.0",
