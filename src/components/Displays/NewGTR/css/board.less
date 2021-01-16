@@ -1,12 +1,7 @@
 .noOverflow() {
   -webkit-clip-path: inset(0); /* safari*/
   clip-path: inset(0);
-  clip: rect(
-    0px,
-    auto,
-    auto,
-    0px
-  ); /* IE11/Edge (not that IE11 supports sticky anyway!) */
+  clip: rect(0px, auto, auto, 0px); /* IE11/Edge (not that IE11 supports sticky anyway!) */
 }
 
 .dot-matrix {
@@ -17,7 +12,7 @@
 
   user-select: none;
 
-  font-family: "Dot Matrix";
+  font-family: 'Dot Matrix';
   color: orange;
   font-size: 72px;
 
@@ -36,8 +31,7 @@
     width: 100%;
 
     * {
-      font-family: Transport, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+      font-family: Transport, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue',
         sans-serif;
       font-size: 24px;
     }
@@ -194,8 +188,7 @@
 
       &:last-child {
         transform: translateY(100%);
-        animation: swap2via @animate-time (@animate-time / 2 + @delay) linear
-          infinite forwards;
+        animation: swap2via @animate-time (@animate-time / 2 + @delay) linear infinite forwards;
       }
     }
   }
@@ -247,8 +240,7 @@
 
         &:last-child {
           transform: translateY(100%);
-          animation: swap2 @animate-time (@animate-time / 2) linear infinite
-            forwards;
+          animation: swap2 @animate-time (@animate-time / 2) linear infinite forwards;
         }
       }
     }
@@ -316,7 +308,7 @@
 
     position: relative;
     height: 96px;
-    font-style: italic;
+    // font-style: italic;
 
     p {
       display: inline-block;
@@ -372,7 +364,7 @@
     margin-bottom: 24px;
 
     &::after {
-      content: " ";
+      content: ' ';
       display: block;
       width: 100%;
       border-bottom: 8px dotted orange;
