@@ -5,8 +5,8 @@ export default function LoadingMessage() {
     <p className="display--loading-data">
       <span>1st</span>
       <span>XX:XX</span>
-      <span>Loading data...</span>
-      <span>Expt 20:08</span>
+      <span>Loading data: please wait...</span>
+      <span>Wait 2 mins</span>
     </p>
   )
 }
