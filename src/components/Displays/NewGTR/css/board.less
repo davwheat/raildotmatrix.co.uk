@@ -340,12 +340,27 @@
       animation-iteration-count: 1;
       animation-duration: 0s;
 
-      transform: translateY(-96px) translateX(calc((1920px - 48px) - 9.75ch));
+      transform: translateY(-96px) translateX(calc((1920px - 48px) - 11ch));
+
+      &[data-cancelled='true'] {
+        transform: translateY(-96px) translateX(calc((1920px - 48px) - 14.5ch));
+      }
+
       transition: transform 0.5s linear;
 
       @keyframes scrollByWidth2 {
         from {
-          transform: translateX(calc((1920px - 48px) - 9.75ch)) translateY(0);
+          transform: translateX(calc((1920px - 48px) - 11ch)) translateY(0);
+        }
+
+        to {
+          transform: translateX(-100%) translateY(0);
+        }
+      }
+
+      @keyframes scrollByWidth2cancelled {
+        from {
+          transform: translateX(calc((1920px - 48px) - 14.5ch)) translateY(0);
         }
 
         to {
@@ -353,7 +368,6 @@
         }
       }
     }
-  }
 
     &::after {
       background: #000;
