@@ -1,7 +1,5 @@
 .noOverflow() {
-  -webkit-clip-path: inset(0); /* safari*/
   clip-path: inset(0);
-  clip: rect(0px, auto, auto, 0px); /* IE11/Edge (not that IE11 supports sticky anyway!) */
 }
 
 .dot-matrix {
@@ -304,7 +302,7 @@
   }
 
   .train--details {
-    .noOverflow();
+    clip-path: polygon(0 0, 100% 0, 100% 1000000000px, 0 1000000000px);
 
     position: relative;
     height: 96px;
@@ -357,17 +355,17 @@
     }
   }
 
-  .display--splitter {
-    width: 100%;
-    padding: 16px 32px;
-    background: #030303;
-    margin-bottom: 24px;
-
     &::after {
-      content: ' ';
-      display: block;
-      width: 100%;
-      border-bottom: 8px dotted orange;
+      background: #000;
+      text-align: center;
+      content: '..........................................................................................................................................';
+      position: absolute;
+      left: 50%;
+      transform: translateX(calc(-50% + 3px));
+      bottom: -27px;
+      letter-spacing: 6px;
+      font-size: 36px;
+      z-index: -1;
     }
   }
 
