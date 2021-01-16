@@ -1,6 +1,6 @@
 import GenerateUrl from './GenerateUrl'
 
-export default async function GetNextTrainsAtStation(station, options = { count: 3, timeWindow: 300, minOffset: 0, mustStopAt: null }) {
+export default async function GetNextTrainsAtStation(station, options = { count: 3, timeWindow: 120, minOffset: 0, mustStopAt: null }) {
   if (options.minOffset < -239) {
     console.error('Time offset cannot be more than 239 minutes in the past.')
     return null
@@ -15,7 +15,7 @@ export default async function GetNextTrainsAtStation(station, options = { count:
       expand: true,
       numServices: options.count || 3,
       timeOffset: options.minOffset || 0,
-      timeWindow: options.timeWindow || 300,
+      timeWindow: options.timeWindow || 120,
     })
   )
 
