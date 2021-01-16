@@ -41,8 +41,8 @@ export default function ScrollingInfo({ trainData: train }) {
     else departureStation += origin.locationName
   })
 
-  const intermediaryStops = train.subsequentCallingPointsList
-    ? train.subsequentCallingPointsList[0].subsequentCallingPoints.reduce((stops, thisStop) => {
+  const intermediaryStops = train.subsequentCallingPoints
+    ? train.subsequentCallingPoints[0].callingPoint.reduce((stops, thisStop) => {
         return [
           ...stops,
           {

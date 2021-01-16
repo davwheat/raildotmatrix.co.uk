@@ -92,8 +92,8 @@ const FullBoard = React.forwardRef(({ station, noBg }, ref) => {
         destination={train.destination[0].locationName}
         isCancelled={train.isCancelled}
         intermediaryStops={
-          train.subsequentCallingPointsList
-            ? train.subsequentCallingPointsList[0].subsequentCallingPoints.reduce((stops, thisStop) => {
+          train.subsequentCallingPoints
+            ? train.subsequentCallingPoints[0].callingPoint.reduce((stops, thisStop) => {
                 return [
                   ...stops,
                   {
