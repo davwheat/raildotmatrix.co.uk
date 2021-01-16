@@ -111,9 +111,10 @@ export default function ScrollingInfo({ trainData: train }) {
           animationDuration: activeAnimation === 'trainInfo__scroll' ? `${trainInfoScrollTime}s` : '0s',
         }}
       >
-        This {train.isCancelled ? 'was' : 'is'} a {toc} service
-        {coachCount && ` formed of ${coachCount} coaches`}.{location} {otherMessages}{' '}
-        {train.isCancelled && departureStation && `This is the service from ${departureStation}.`}
+        This {train.isCancelled ? 'was' : 'is'} {toc ? `a ${toc}` : `the`} service
+        {coachCount ? ` formed of ${coachCount} coaches` : ''}.{location ? ` ${location}` : ''}
+        {otherMessages ? ` ${otherMessages}` : ''}
+        {train.isCancelled && departureStation ? ` This is the service from ${departureStation}.` : ''}
       </p>
       {intermediaryStops && (
         <p
