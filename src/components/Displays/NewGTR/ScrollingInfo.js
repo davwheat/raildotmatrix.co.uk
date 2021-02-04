@@ -135,13 +135,21 @@ export default function ScrollingInfo({ trainData: train }) {
               <>
                 {intermediaryStops
                   .slice(0, intermediaryStops.length - 1)
-                  .map(stop => `${stop.location}${train.isCancelled ? '' : ` (${stop.eta})`}, `)}{' '}
+                  .map(stop => `${stop.location}${train.isCancelled && train.eta && train.eta !== 'Delayed' ? '' : ` (${stop.eta})`}, `)}{' '}
                 and {intermediaryStops[intermediaryStops.length - 1].location}{' '}
-                {train.isCancelled ? '' : ` (${intermediaryStops[intermediaryStops.length - 1].eta})`}
+                {train.isCancelled &&
+                intermediaryStops[intermediaryStops.length - 1].eta &&
+                intermediaryStops[intermediaryStops.length - 1].eta !== 'Delayed'
+                  ? ''
+                  : ` (${intermediaryStops[intermediaryStops.length - 1].eta})`}
               </>
             ) : (
               `${intermediaryStops[intermediaryStops.length - 1].location} only ${
-                train.isCancelled ? '' : ` (${intermediaryStops[intermediaryStops.length - 1].eta})`
+                train.isCancelled &&
+                intermediaryStops[intermediaryStops.length - 1].eta &&
+                intermediaryStops[intermediaryStops.length - 1].eta !== 'Delayed'
+                  ? ''
+                  : ` (${intermediaryStops[intermediaryStops.length - 1].eta})`
               }`
             )}
           </span>
