@@ -45,6 +45,8 @@ export default function Train(props) {
       currentStatus = 'On time'
     } else if (isCancelled) {
       currentStatus = 'Cancelled'
+    } else if (expectedTime === 'Delayed') {
+      currentStatus = 'Delayed'
     } else {
       currentStatus = expectedTime === 'On time' ? 'On time' : 'Exp ' + expectedTime.replace(':', '')
     }
