@@ -33,8 +33,6 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
     }
 
     const throttledReset = throttle(1500, true, () => {
-      console.log('Reset')
-
       settingsRef.current.classList.remove('hide')
       clearTimeout(to)
       to = setTimeout(() => {
@@ -50,8 +48,6 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
 
     if (settings.hideSettings) {
       events.forEach(e => {
-        console.log(e)
-
         window.addEventListener(e, resetTimeout)
       })
     }
