@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react'
-import useInterval from '../../../hooks/useInterval'
 
 import LoadingMessage from './LoadingMessage'
 import Train from './Train'
@@ -13,25 +12,30 @@ import ScrollingInfo from './ScrollingInfo'
 import ErrorMessage from './ErrorMessage'
 import clsx from 'clsx'
 import { debounce } from 'throttle-debounce'
+import NRCCMessages from './NRCCMessage'
 
-const FullBoard = ({ station, noBg }, ref) => {
+const FullBoard = ({ station, noBg }) => {
   const [TrainData, setTrainData] = useState(null)
   const [shouldShowScrollingInfo, setShouldShowScrollingInfo] = useState(true)
 
-  async function updateData() {
-    GetNextTrainsAtStation(station, { minOffset: 0 }).then(data => {
+  function updateData() {
+    const ac = new AbortController()
+
+    GetNextTrainsAtStation(station, { minOffset: 0 }, ac).then(data => {
       setTrainData(data)
     })
-  }
 
-  // update every 5s
-  useInterval(() => {
-    updateData()
-  }, 5 * 1000)
+    return () => {
+      ac.abort()
+    }
+  }
 
   if (TrainData === null) updateData()
 
-  const Services = TrainData ? TrainData.trainServices : null
+  /**
+   * @type {object[] | null}
+   */
+  const Services = TrainData && TrainData.trainServices ? TrainData.trainServices : null
 
   const boardRef = useRef(null)
 
@@ -54,6 +58,20 @@ const FullBoard = ({ station, noBg }, ref) => {
   if (boardRef.current) {
     fillDiv(boardRef.current)
   }
+
+  useEffect(() => {
+    let abort
+
+    // update every 30s
+    const intKey = setInterval(() => {
+      abort = updateData()
+    }, 30 * 1000)
+
+    return () => {
+      clearInterval(intKey)
+      abort && abort()
+    }
+  }, [updateData])
 
   useEffect(() => {
     const debouncedScale = debounce(250, () => {
@@ -127,10 +145,14 @@ const FullBoard = ({ station, noBg }, ref) => {
         <>
           {GetTrain(Services, 0)}
           {shouldShowScrollingInfo ? <ScrollingInfo trainData={Services[0]} /> : <p className="display--no-services"></p>}
-          <div className="train--alternate-between">
-            {GetTrain(Services, 1)}
-            {GetTrain(Services, 2)}
-          </div>
+          {Services.length > 2 && (
+            <div className="train--alternate-between">
+              {GetTrain(Services, 1)}
+              {GetTrain(Services, 2)}
+            </div>
+          )}
+          {Services.length === 2 && GetTrain(Services, 1)}
+          {Services.length === 1 && <NRCCMessages messages={TrainData.nrccMessages} />}
         </>
       )}
       <Time />
