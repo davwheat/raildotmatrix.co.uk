@@ -13,7 +13,21 @@ export default function NRCCMessages({ messages }) {
   return (
     <p className="display--no-services nrccMsgs">
       <span ref={nrccMessages} style={{ animationDuration: scrollTime + 's' }}>
-        {messages ? messages.map(data => <p className="nrccMsg" dangerouslySetInnerHTML={{ __html: data.message }} />) : `. . .`}
+        {messages
+          ? messages.map(data => {
+              /**
+               * @type {string}
+               */
+              let message = data.value
+
+              // Replace links with just their host name
+              message = message.replaceAll(/<a href="(.*?)">(.*?)<\/a>/g, (a, b) => {
+                return `at ${new URL(b).host}`
+              })
+
+              return <span key={message} className="nrccMsg" dangerouslySetInnerHTML={{ __html: message }} />
+            })
+          : `. . .`}
       </span>
     </p>
   )
