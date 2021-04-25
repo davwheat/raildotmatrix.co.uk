@@ -9,6 +9,7 @@ module.exports = {
   plugins: [
     `gatsby-plugin-htaccess`,
     `gatsby-plugin-react-head`,
+    `gatsby-plugin-less`,
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
