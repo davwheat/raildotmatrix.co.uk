@@ -43,7 +43,7 @@
     "develop": "gatsby develop",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
     "start": "npm run develop",
-    "deploy": "gatsby clean && yarn run lint && gatsby build"
+    "deploy": "gatsby clean && yarn run format && gatsby build"
   },
   "repository": {
     "type": "git",
