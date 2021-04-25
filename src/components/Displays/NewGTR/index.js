@@ -23,6 +23,10 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
       noBg: noBgRef.current.checked,
       hideSettings: hideRef.current.checked,
     })
+
+    if (!hideRef.current.checked) {
+      settingsRef.current.classList.remove('hide')
+    }
   }
 
   useEffect(() => {
@@ -52,12 +56,13 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
       })
     }
 
-    return function cleanupListener() {
+    return () => {
       events.forEach(e => {
         window.removeEventListener(e, resetTimeout)
       })
+      clearTimeout(to)
     }
-  })
+  }, [settings])
 
   return (
     <>
@@ -72,8 +77,8 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
           Edit board
         </PageLink>
         <br />
-        <ToggleSwitch ref={noBgRef} label="Remove background" onChange={updateState} />
-        <ToggleSwitch ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
+        <ToggleSwitch checked={settings.noBg} ref={noBgRef} label="Remove background" onChange={updateState} />
+        <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
       <FullBoard ref={ref} noBg={settings.noBg} station={station} />
     </>
