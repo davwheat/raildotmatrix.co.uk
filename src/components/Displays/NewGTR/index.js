@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useRef, useEffect } from 'react'
 import FullBoard from './FullBoard'
 import ToggleSwitch from '../../Common/Form/ToggleSwitch'
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
@@ -8,7 +8,7 @@ import './css/index.css'
 import PageLink from '../../Common/PageLink'
 
 const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
-  const [settings, setSettings, resetSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
+  const [settings, setSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
     noBg: false,
     hideSettings: false,
   })

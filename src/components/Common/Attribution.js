@@ -14,7 +14,7 @@ export default function Attribution() {
             A fun project by <PageLink to="https://github.com/davwheat">David Wheatley</PageLink>
           </p>
         </div>
-        <a href="https://www.nationalrail.co.uk/" target="_blank" rel="noopener noreferer">
+        <a href="https://www.nationalrail.co.uk/" target="_blank" rel="noopener noreferrer">
           <img src={NRE} alt="Powered by National Rail Enquiries" />
         </a>
       </footer>

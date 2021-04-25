@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import clsx from 'clsx'
 
@@ -17,7 +17,6 @@ export default function Train(props) {
   } = props
 
   let currentStatus = '',
-    location = null,
     posStr = ''
 
   const [shouldLeave, setShouldLeave] = useState(false)
@@ -33,8 +32,6 @@ export default function Train(props) {
     setShouldLeave(true)
     leftCallback(true)
   }
-
-  let date = new Date()
 
   if (status) {
     currentStatus = status
@@ -114,12 +111,4 @@ Train.propTypes = {
   toc: PropTypes.string.isRequired,
   coachCount: PropTypes.number,
   departureStation: PropTypes.string,
-}
-
-function padZero(input) {
-  if (input < 10) {
-    return `0${input}`
-  } else {
-    return `${input}`
-  }
 }
