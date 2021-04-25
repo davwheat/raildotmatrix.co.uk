@@ -1,3 +1,5 @@
+const PROD_PLUGINS = process.env.NODE_ENV === 'production' ? [`gatsby-plugin-preact`] : []
+
 module.exports = {
   siteMetadata: {
     title: `Rail Dot Matrix`,
@@ -5,7 +7,6 @@ module.exports = {
     author: `@davwheat`,
   },
   plugins: [
-    `gatsby-plugin-preact`,
     `gatsby-plugin-htaccess`,
     `gatsby-plugin-react-head`,
     {
@@ -21,5 +22,6 @@ module.exports = {
       },
     },
     'gatsby-plugin-webpack-bundle-analyser-v2',
+    ...PROD_PLUGINS,
   ],
 }
