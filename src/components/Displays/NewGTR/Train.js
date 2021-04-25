@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import clsx from 'clsx'
 
-export default function Train(props) {
+function Train(props) {
   const {
     position,
     scheduledTime,
@@ -112,3 +112,5 @@ Train.propTypes = {
   coachCount: PropTypes.number,
   departureStation: PropTypes.string,
 }
+
+export default React.memo(Train)
