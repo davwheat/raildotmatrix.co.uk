@@ -71,7 +71,7 @@ const FullBoard = ({ station, noBg }) => {
       clearInterval(intKey)
       abort && abort()
     }
-  }, [updateData])
+  })
 
   useEffect(() => {
     const debouncedScale = debounce(250, () => {
