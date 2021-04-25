@@ -7,11 +7,14 @@ export default function GenerateUrl(service, urlParams, queryParams, noKey_old =
   let queryString = noKey ? '' : `?apiKey=${Config.apiKey}`,
     i = noKey ? 0 : 1
 
-  for (let [param, value] of Object.entries(queryParams)) {
-    if (i === 0) queryString += `?${param}=${value}`
-    else queryString += `&${param}=${value}`
+  if (queryParams) {
+    for (let [param, value] of Object.entries(queryParams)) {
+      if (i === 0) queryString += `?${param}=${value}`
+      else queryString += `&${param}=${value}`
 
-    i++
+      i++
+    }
   }
-  return `${Config.endpoint}/${service}/${urlParams.join('/')}${queryString}`
+
+  return `${Config.endpoint}/${service}/${urlParams ? urlParams.join('/') : ''}${queryString}`
 }
