@@ -4,7 +4,7 @@ import ToggleSwitch from '../../Common/Form/ToggleSwitch'
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
 import { throttle } from 'throttle-debounce'
 
-import './css/index.css'
+import './css/index.less'
 import PageLink from '../../Common/PageLink'
 
 const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {

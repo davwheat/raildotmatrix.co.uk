@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import './css/Select.css'
+import './css/Select.less'
 
 export default function Select({ label, helpText, placeholder, options, onChange, ...props }) {
   return (

@@ -2,7 +2,7 @@ import React from 'react'
 
 import NRE from '../../images/NRE_Powered_logo.png'
 
-import './css/attribution.css'
+import './css/attribution.less'
 import PageLink from './PageLink'
 
 export default function Attribution() {

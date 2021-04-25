@@ -8,7 +8,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import '../css/layout.css'
+import '../css/layout.less'
 import '../css/fonts.css'
 
 import '@fontsource/poppins/400.css'

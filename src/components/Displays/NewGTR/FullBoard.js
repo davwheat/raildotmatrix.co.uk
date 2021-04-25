@@ -6,7 +6,7 @@ import Train from './Train'
 
 import GetNextTrainsAtStation from '../../../Api/GetNextTrainsAtStation'
 
-import './css/board.css'
+import './css/board.less'
 import NoServicesMessage from './NoServicesMessage'
 import Time from './Time'
 import ScrollingInfo from './ScrollingInfo'
