@@ -1,6 +1,4 @@
-import React, { useState } from 'react'
-
-import AllStations from '../Api/AllStations'
+import React, { useEffect, useState } from 'react'
 
 import Layout from '../components/layout'
 import SEO from '../components/seo'
@@ -11,9 +9,13 @@ import Form, { AutocompleteSelect, Select } from '../components/Common/Form'
 
 import NewGTR from '../components/Displays/NewGTR'
 import Attribution from '../components/Common/Attribution'
+import GenerateUrl from '../Api/GenerateUrl'
 
 const IndexPage = () => {
+  const [autocomplete, setAutocomplete] = useState([{ label: 'Loading stations...', value: 'VIC' }])
+
   let searchParams
+
   if (typeof window !== 'undefined') {
     searchParams = window && new URLSearchParams(window.location.search)
   }
@@ -41,6 +43,17 @@ const IndexPage = () => {
     })
   }
 
+  // Fetch live autocomplete data from API
+  useEffect(() => {
+    if (autocomplete[0].label === 'Loading stations...') {
+      fetch(GenerateUrl('crs'))
+        .then(response => response.json())
+        .then(data => {
+          setAutocomplete(data.map(pair => ({ label: `${pair.stationName} (${pair.crsCode})`, value: pair.crsCode })))
+        })
+    }
+  })
+
   return (
     <Layout>
       <SEO title={Page === 0 ? 'Board Setup' : 'Station Board'} />
@@ -54,7 +67,7 @@ const IndexPage = () => {
               <AutocompleteSelect
                 onChange={ChooseStation}
                 label="Select a station"
-                autocompleteOptions={AllStations}
+                autocompleteOptions={autocomplete}
                 value={BoardSettings.station.value}
               />
               <Select
