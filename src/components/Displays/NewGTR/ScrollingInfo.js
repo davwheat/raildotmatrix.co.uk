@@ -75,29 +75,26 @@ export default function ScrollingInfo({ trainData: train }) {
     trainInfoScrollTime = Math.ceil((trainInfoScrollerRef.current.offsetWidth + window.innerWidth) / 475)
   }
 
-  const beginTimeouts = () => {
+  const beginTimeouts = React.useCallback(() => {
     setActiveAnimation('trainInfo__scroll')
     console.log('Scrolling train details... Time: ', trainInfoScrollTime)
 
-    setTimeout(() => {
+    const x = setTimeout(() => {
       setActiveAnimation('callingAt__intro')
 
       console.log("Performing intro to 'calling at'. Time: ", callingAtScrollDelay / 1000)
-
-      setTimeout(() => {
-        setActiveAnimation('callingAt__scroll')
-
-        console.log('Scrolling stopping points... Time: ', callingAtScrollTime)
-      }, callingAtScrollDelay)
     }, trainInfoScrollTime * 1000)
-  }
 
-  useEffect(() => {
-    beginTimeouts()
+    const y = setTimeout(() => {
+      setActiveAnimation('callingAt__scroll')
 
-    const key = setInterval(beginTimeouts, callingAtScrollTime * 1000 + callingAtScrollDelay + trainInfoScrollTime * 1000)
+      console.log('Scrolling stopping points... Time: ', callingAtScrollTime)
+    }, trainInfoScrollTime * 1000 + callingAtScrollDelay)
 
-    return () => clearInterval(key)
+    return () => {
+      clearTimeout(x)
+      clearTimeout(y)
+    }
   }, [trainInfoScrollTime, callingAtScrollDelay, callingAtScrollTime])
 
   if (train.isCancelled) {
@@ -107,8 +104,19 @@ export default function ScrollingInfo({ trainData: train }) {
   } else if (train.delayReason && train.etd !== 'On time') {
     otherMessages = train.delayReason
 
-    if (otherMessages && !otherMessages.endsWith('.')) otherMessages += '.'
+    if (!otherMessages.endsWith('.')) otherMessages += '.'
   }
+
+  useEffect(() => {
+    const clearTs = beginTimeouts()
+
+    const key = setInterval(beginTimeouts, callingAtScrollTime * 1000 + callingAtScrollDelay + trainInfoScrollTime * 1000)
+
+    return () => {
+      clearInterval(key)
+      clearTs()
+    }
+  }, [beginTimeouts])
 
   return (
     <div className="train--details">
@@ -123,8 +131,9 @@ export default function ScrollingInfo({ trainData: train }) {
         This {IS_OR_WAS} {toc ? `a ${toc}` : `the`} service
         {coachCount ? ` formed of ${coachCount} coaches` : ''}.{location ? ` ${location}` : ''}
         {otherMessages ? ` ${otherMessages}` : ''}
-        {train.isCancelled && departureStation ? ` This ${IS_OR_WAS} the service from ${departureStation}.` : ''}
+        {departureStation ? ` This ${IS_OR_WAS} the service from ${departureStation}.` : ''}
       </p>
+
       {intermediaryStops && (
         <p
           ref={intermediaryStopsRef}
