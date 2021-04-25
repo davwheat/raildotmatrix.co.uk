@@ -140,11 +140,15 @@ const FullBoard = ({ station, noBg }) => {
       </div>
       {TrainData === null && <LoadingMessage />}
       {TrainData !== null && TrainData.error === true && <ErrorMessage />}
-      {TrainData !== null && !Services && !TrainData.error && <NoServicesMessage messages={TrainData && TrainData.nrccMessages} />}
+      {TrainData !== null && !Services && !TrainData.error && <NoServicesMessage messages={TrainData.nrccMessages} />}
       {TrainData !== null && Services && !TrainData.error && (
         <>
           {GetTrain(Services, 0)}
-          {shouldShowScrollingInfo ? <ScrollingInfo trainData={Services[0]} /> : <p className="display--no-services"></p>}
+          {shouldShowScrollingInfo ? (
+            <ScrollingInfo key={Services[0].serviceIdGuid} trainData={Services[0]} />
+          ) : (
+            <p className="display--no-services"></p>
+          )}
           {Services.length > 2 && (
             <div className="train--alternate-between">
               {GetTrain(Services, 1)}

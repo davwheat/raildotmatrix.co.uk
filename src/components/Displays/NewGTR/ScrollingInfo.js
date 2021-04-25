@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 
 import useInterval from '../../../hooks/useInterval'
 
@@ -30,6 +30,8 @@ export default function ScrollingInfo({ trainData: train }) {
     }
   }, 15)
 
+  const IS_OR_WAS = train.isCancelled ? 'was' : 'is'
+
   const { operator: toc, length: coachCount, betweenStations } = train
 
   let departureStation = '',
@@ -56,8 +58,7 @@ export default function ScrollingInfo({ trainData: train }) {
   if (intermediaryStops && intermediaryStops[0].eta === null && !shouldLeave) setShouldLeave(true)
 
   if (betweenStations && !shouldLeave) {
-    if (betweenStations.length > 1)
-      location = `This train ${train.isCancelled ? 'was' : 'is'} currently between ${betweenStations[0]} and ${betweenStations[1]}.`
+    if (betweenStations.length > 1) location = `This train ${IS_OR_WAS} currently between ${betweenStations[0]} and ${betweenStations[1]}.`
     else if (betweenStations.length === 1) location = `This train is currently at ${betweenStations[0]}.`
   }
 
@@ -74,7 +75,7 @@ export default function ScrollingInfo({ trainData: train }) {
     trainInfoScrollTime = Math.ceil((trainInfoScrollerRef.current.offsetWidth + window.innerWidth) / 475)
   }
 
-  useInterval(() => {
+  const beginTimeouts = () => {
     setActiveAnimation('trainInfo__scroll')
     console.log('Scrolling train details... Time: ', trainInfoScrollTime)
 
@@ -89,7 +90,15 @@ export default function ScrollingInfo({ trainData: train }) {
         console.log('Scrolling stopping points... Time: ', callingAtScrollTime)
       }, callingAtScrollDelay)
     }, trainInfoScrollTime * 1000)
-  }, callingAtScrollTime * 1000 + callingAtScrollDelay + trainInfoScrollTime * 1000)
+  }
+
+  useEffect(() => {
+    beginTimeouts()
+
+    const key = setInterval(beginTimeouts, callingAtScrollTime * 1000 + callingAtScrollDelay + trainInfoScrollTime * 1000)
+
+    return () => clearInterval(key)
+  }, [trainInfoScrollTime, callingAtScrollDelay, callingAtScrollTime])
 
   if (train.isCancelled) {
     if (train.cancelReason) otherMessages = train.cancelReason
@@ -111,10 +120,10 @@ export default function ScrollingInfo({ trainData: train }) {
           animationDuration: activeAnimation === 'trainInfo__scroll' ? `${trainInfoScrollTime}s` : '0s',
         }}
       >
-        This {train.isCancelled ? 'was' : 'is'} {toc ? `a ${toc}` : `the`} service
+        This {IS_OR_WAS} {toc ? `a ${toc}` : `the`} service
         {coachCount ? ` formed of ${coachCount} coaches` : ''}.{location ? ` ${location}` : ''}
         {otherMessages ? ` ${otherMessages}` : ''}
-        {train.isCancelled && departureStation ? ` This is the service from ${departureStation}.` : ''}
+        {train.isCancelled && departureStation ? ` This ${IS_OR_WAS} the service from ${departureStation}.` : ''}
       </p>
       {intermediaryStops && (
         <p
@@ -130,31 +139,47 @@ export default function ScrollingInfo({ trainData: train }) {
           <span className="train--details__calling-at" ref={callingAtTextRef}>
             {train.isCancelled ? `Was calling at:` : `Calling at:`}
           </span>
-          <span className="train--details__intermediary-stop-list">
-            {intermediaryStops.length > 1 ? (
-              <>
-                {intermediaryStops
-                  .slice(0, intermediaryStops.length - 1)
-                  .map(stop => `${stop.location}${train.isCancelled && train.eta && train.eta !== 'Delayed' ? '' : ` (${stop.eta})`}, `)}{' '}
-                and {intermediaryStops[intermediaryStops.length - 1].location}{' '}
-                {train.isCancelled &&
-                intermediaryStops[intermediaryStops.length - 1].eta &&
-                intermediaryStops[intermediaryStops.length - 1].eta !== 'Delayed'
-                  ? ''
-                  : ` (${intermediaryStops[intermediaryStops.length - 1].eta})`}
-              </>
-            ) : (
-              `${intermediaryStops[intermediaryStops.length - 1].location} only ${
-                train.isCancelled &&
-                intermediaryStops[intermediaryStops.length - 1].eta &&
-                intermediaryStops[intermediaryStops.length - 1].eta !== 'Delayed'
-                  ? ''
-                  : ` (${intermediaryStops[intermediaryStops.length - 1].eta})`
-              }`
-            )}
-          </span>
+          <IntermediaryStops intermediaryStops={intermediaryStops} train={train} />
         </p>
       )}
     </div>
   )
+}
+
+function getStopTime(intermediaryStop, isCancelled) {
+  if (isCancelled || intermediaryStop.eta === 'Delayed') return ''
+
+  return ` (${intermediaryStop.eta})`
+}
+
+function createStop(intermediaryStop, isCancelled, stopIndex, totalStops) {
+  if (totalStops === 1) {
+    return `${intermediaryStop.location} only${getStopTime(intermediaryStop, isCancelled)}`
+  }
+
+  // No comma if 2nd to last
+  if (stopIndex + 2 === totalStops) return `${intermediaryStop.location}${getStopTime(intermediaryStop, isCancelled)} `
+
+  // No comma, and prepend and if last
+  if (stopIndex + 1 === totalStops) return `and ${intermediaryStop.location}${getStopTime(intermediaryStop, isCancelled)}.`
+
+  return `${intermediaryStop.location}${getStopTime(intermediaryStop, isCancelled)}, `
+}
+
+const IntermediaryStops = ({ intermediaryStops, train }) => {
+  const isCancelled = train.isCancelled
+
+  let stopsText = ''
+
+  if (intermediaryStops.length === 1) {
+    return <span className="train--details__intermediary-stop-list">{createStop(intermediaryStops[0], isCancelled, 0, 1)}</span>
+  }
+
+  const length = intermediaryStops.length
+
+  stopsText = intermediaryStops.reduce((prev, curr, i) => {
+    return `${prev}${createStop(curr, isCancelled, i, length)}`
+  }, '')
+
+  return <span className="train--details__intermediary-stop-list">{stopsText}</span>
 }
