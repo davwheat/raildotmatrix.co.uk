@@ -45,7 +45,7 @@ function Train(props) {
     } else if (expectedTime === 'Delayed') {
       currentStatus = 'Delayed'
     } else {
-      currentStatus = expectedTime === 'On time' ? 'On time' : 'Exp ' + expectedTime.replace(':', '')
+      currentStatus = expectedTime === 'On time' ? 'On time' : 'Expt ' + expectedTime.replace(':', '')
     }
   }
 
