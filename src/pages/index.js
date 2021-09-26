@@ -15,7 +15,7 @@ const IndexPage = () => (
       </header>
       <article>
         <p>
-          This site is made for train nerds who can't actually go outside, but want to experience a small but of their local (or furthest away) train
+          This site is made for train nerds who can't actually go outside, but want to experience a small bit of their local (or furthest away) train
           station.
         </p>
         <p>
