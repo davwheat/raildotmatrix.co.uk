@@ -4,6 +4,7 @@
   "description": "Generate a realistic dot matrix display for any UK railway station",
   "version": "0.1.0",
   "author": "David Wheatley <hi@davwheat.dev>",
+  "prettier": "@flarum/prettier-config",
   "dependencies": {
     "@fontsource/poppins": "^4.1.0",
     "clsx": "^1.1.1",
@@ -26,6 +27,7 @@
     "throttle-debounce": "^3.0.1"
   },
   "devDependencies": {
+    "@flarum/prettier-config": "^1.0.0",
     "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.22",
     "prettier": "2.2.1"
   },

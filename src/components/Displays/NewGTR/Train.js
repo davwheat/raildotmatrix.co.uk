@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
-import PropTypes from 'prop-types'
-import clsx from 'clsx'
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import clsx from 'clsx';
 
 function Train(props) {
   const {
@@ -14,55 +14,55 @@ function Train(props) {
     leftCallback,
     isCancelled,
     via: destVia,
-  } = props
+  } = props;
 
   let currentStatus = '',
-    posStr = ''
+    posStr = '';
 
-  const [shouldLeave, setShouldLeave] = useState(false)
-  const [detailsOnLastRender, setDetailsOnLastRender] = useState(props)
+  const [shouldLeave, setShouldLeave] = useState(false);
+  const [detailsOnLastRender, setDetailsOnLastRender] = useState(props);
 
   if (detailsOnLastRender !== props) {
-    setShouldLeave(false)
-    setDetailsOnLastRender(props)
-    leftCallback(false)
+    setShouldLeave(false);
+    setDetailsOnLastRender(props);
+    leftCallback(false);
   }
 
   if (intermediaryStops && intermediaryStops[0].eta === null && !shouldLeave) {
-    setShouldLeave(true)
-    leftCallback(true)
+    setShouldLeave(true);
+    leftCallback(true);
   }
 
   if (status) {
-    currentStatus = status
+    currentStatus = status;
   } else {
     if (shouldLeave) {
-      currentStatus = 'Arrived'
+      currentStatus = 'Arrived';
     } else if (expectedTime === scheduledTime) {
-      currentStatus = 'On time'
+      currentStatus = 'On time';
     } else if (isCancelled) {
-      currentStatus = 'Cancelled'
+      currentStatus = 'Cancelled';
     } else if (expectedTime === 'Delayed') {
-      currentStatus = 'Delayed'
+      currentStatus = 'Delayed';
     } else {
-      currentStatus = expectedTime === 'On time' ? 'On time' : 'Expt ' + expectedTime.replace(':', '')
+      currentStatus = expectedTime === 'On time' ? 'On time' : 'Expt ' + expectedTime.replace(':', '');
     }
   }
 
   switch (position) {
     case 1:
-      posStr = '1st'
-      break
+      posStr = '1st';
+      break;
     case 2:
-      posStr = '2nd'
-      break
+      posStr = '2nd';
+      break;
     case 3:
-      posStr = '3rd'
-      break
+      posStr = '3rd';
+      break;
 
     default:
-      posStr = '???'
-      break
+      posStr = '???';
+      break;
   }
 
   return (
@@ -92,7 +92,7 @@ function Train(props) {
         <span className="train--status">{currentStatus}</span>
       </div>
     </>
-  )
+  );
 }
 
 Train.propTypes = {
@@ -111,6 +111,6 @@ Train.propTypes = {
   toc: PropTypes.string.isRequired,
   coachCount: PropTypes.number,
   departureStation: PropTypes.string,
-}
+};
 
-export default React.memo(Train)
+export default React.memo(Train);

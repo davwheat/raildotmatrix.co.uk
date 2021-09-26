@@ -1,5 +1,5 @@
-import React from 'react'
-import NRCCMessages from './NRCCMessage'
+import React from 'react';
+import NRCCMessages from './NRCCMessage';
 
 export default function NoServicesMessage({ messages }) {
   return (
@@ -12,5 +12,5 @@ export default function NoServicesMessage({ messages }) {
       </p>
       <NRCCMessages messages={messages} />
     </>
-  )
+  );
 }

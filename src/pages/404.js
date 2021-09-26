@@ -1,29 +1,29 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 
-import Layout from '../components/layout'
-import SEO from '../components/seo'
-import TypewriterText from '../components/Common/TypewriterText'
-import PageLink from '../components/Common/PageLink'
-import useInterval from '../hooks/useInterval'
+import Layout from '../components/layout';
+import SEO from '../components/seo';
+import TypewriterText from '../components/Common/TypewriterText';
+import PageLink from '../components/Common/PageLink';
+import useInterval from '../hooks/useInterval';
 
 const NotFoundPage = () => {
-  const [timeString, setTimeString] = useState(`${padZero(new Date().getHours())}:${padZero(new Date().getMinutes())}`)
+  const [timeString, setTimeString] = useState(`${padZero(new Date().getHours())}:${padZero(new Date().getMinutes())}`);
 
   function padZero(input) {
     if (input < 10) {
-      return `0${input}`
+      return `0${input}`;
     } else {
-      return `${input}`
+      return `${input}`;
     }
   }
 
   function updateTimeString() {
-    const date = new Date()
+    const date = new Date();
 
-    setTimeString(`${padZero(date.getHours())}:${padZero(date.getMinutes())}`)
+    setTimeString(`${padZero(date.getHours())}:${padZero(date.getMinutes())}`);
   }
 
-  useInterval(updateTimeString, 2500)
+  useInterval(updateTimeString, 2500);
 
   return (
     <Layout>
@@ -36,7 +36,7 @@ const NotFoundPage = () => {
             prefix={
               <>
                 1st&nbsp;
-                {timeString.split('').map(c => (
+                {timeString.split('').map((c) => (
                   <span>{c}</span>
                 ))}
               </>
@@ -50,7 +50,7 @@ const NotFoundPage = () => {
         <PageLink to="/">Home page!</PageLink>
       </main>
     </Layout>
-  )
-}
+  );
+};
 
-export default NotFoundPage
+export default NotFoundPage;

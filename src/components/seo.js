@@ -5,10 +5,10 @@
  * See: https://www.gatsbyjs.org/docs/use-static-query/
  */
 
-import React from 'react'
-import PropTypes from 'prop-types'
-import { useStaticQuery, graphql } from 'gatsby'
-import { Meta, Title } from 'react-head'
+import React from 'react';
+import PropTypes from 'prop-types';
+import { useStaticQuery, graphql } from 'gatsby';
+import { Meta, Title } from 'react-head';
 
 function SEO({ title }) {
   const { site } = useStaticQuery(
@@ -23,9 +23,9 @@ function SEO({ title }) {
         }
       }
     `
-  )
+  );
 
-  const metaDescription = site.siteMetadata.description
+  const metaDescription = site.siteMetadata.description;
 
   return (
     <>
@@ -73,11 +73,11 @@ function SEO({ title }) {
     //     },
     //   ].concat(meta)}
     // />
-  )
+  );
 }
 
 SEO.propTypes = {
   title: PropTypes.string,
-}
+};
 
-export default SEO
+export default SEO;

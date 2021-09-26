@@ -1,4 +1,4 @@
-const PROD_PLUGINS = process.env.NODE_ENV === 'production' ? [`gatsby-plugin-preact`] : []
+const PROD_PLUGINS = process.env.NODE_ENV === 'production' ? [`gatsby-plugin-preact`] : [];
 
 module.exports = {
   siteMetadata: {
@@ -25,4 +25,4 @@ module.exports = {
     'gatsby-plugin-webpack-bundle-analyser-v2',
     ...PROD_PLUGINS,
   ],
-}
+};

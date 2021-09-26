@@ -1,58 +1,63 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 
-import Layout from '../components/layout'
-import SEO from '../components/seo'
-import TypewriterText from '../components/Common/TypewriterText'
-import PageLink from '../components/Common/PageLink'
+import Layout from '../components/layout';
+import SEO from '../components/seo';
+import TypewriterText from '../components/Common/TypewriterText';
+import PageLink from '../components/Common/PageLink';
 
-import Form, { AutocompleteSelect, Select } from '../components/Common/Form'
+import Form, { AutocompleteSelect, Select } from '../components/Common/Form';
 
-import NewGTR from '../components/Displays/NewGTR'
-import Attribution from '../components/Common/Attribution'
-import GenerateUrl from '../Api/GenerateUrl'
+import NewGTR from '../components/Displays/NewGTR';
+import Attribution from '../components/Common/Attribution';
+import GenerateUrl from '../Api/GenerateUrl';
 
 const IndexPage = () => {
-  const [autocomplete, setAutocomplete] = useState([{ label: 'Loading stations...', value: 'VIC' }])
+  const [autocomplete, setAutocomplete] = useState([{ label: 'Loading stations...', value: 'VIC' }]);
 
-  let searchParams
+  let searchParams;
 
   if (typeof window !== 'undefined') {
-    searchParams = window && new URLSearchParams(window.location.search)
+    searchParams = window && new URLSearchParams(window.location.search);
   }
 
-  const stn = searchParams && searchParams.get('station')
+  const stn = searchParams && searchParams.get('station');
 
   const [BoardSettings, setBoardSettings] = useState({
     station: stn || '',
     type: 'gtr-new',
-  })
+  });
 
-  const [Page, setPage] = useState(stn ? 1 : 0)
+  const [Page, setPage] = useState(stn ? 1 : 0);
 
   function ChooseStation(stn) {
     setBoardSettings({
       type: BoardSettings.type,
       station: stn.value,
-    })
+    });
   }
 
   function ChooseDisplay(display) {
     setBoardSettings({
       type: display.target.value,
       station: BoardSettings.station,
-    })
+    });
   }
 
   // Fetch live autocomplete data from API
   useEffect(() => {
     if (autocomplete[0].label === 'Loading stations...') {
       fetch(GenerateUrl('crs'))
-        .then(response => response.json())
-        .then(data => {
-          setAutocomplete(data.map(pair => ({ label: `${pair.stationName} (${pair.crsCode})`, value: pair.crsCode })))
-        })
+        .then((response) => response.json())
+        .then((data) => {
+          setAutocomplete(
+            data.map((pair) => ({
+              label: `${pair.stationName} (${pair.crsCode})`,
+              value: pair.crsCode,
+            }))
+          );
+        });
     }
-  })
+  });
 
   return (
     <Layout>
@@ -79,8 +84,8 @@ const IndexPage = () => {
               />
               <PageLink
                 onClick={() => {
-                  if (!BoardSettings.station || !BoardSettings.type) return false
-                  else return true
+                  if (!BoardSettings.station || !BoardSettings.type) return false;
+                  else return true;
                 }}
                 afterExit={() => setPage(1)}
                 style={{ cursor: 'pointer' }}
@@ -96,7 +101,7 @@ const IndexPage = () => {
         <>
           <NewGTR
             editBoardCallback={() => {
-              setPage(0)
+              setPage(0);
             }}
             station={BoardSettings.station}
           />
@@ -105,7 +110,7 @@ const IndexPage = () => {
 
       <Attribution />
     </Layout>
-  )
-}
+  );
+};
 
-export default IndexPage
+export default IndexPage;

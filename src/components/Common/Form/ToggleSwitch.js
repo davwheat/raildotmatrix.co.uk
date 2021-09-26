@@ -1,9 +1,9 @@
-import React from 'react'
+import React from 'react';
 
-import './css/ToggleSwitch.less'
+import './css/ToggleSwitch.less';
 
 const ToggleSwitch = React.forwardRef((props, ref) => {
-  const { label, onChange, checked, defaultChecked } = props
+  const { label, onChange, checked, defaultChecked } = props;
   return (
     <div className="toggle-switch">
       <label className="toggle-switch--label">
@@ -14,7 +14,7 @@ const ToggleSwitch = React.forwardRef((props, ref) => {
         </div>
       </label>
     </div>
-  )
-})
+  );
+});
 
-export default ToggleSwitch
+export default ToggleSwitch;

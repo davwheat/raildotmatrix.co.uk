@@ -1,4 +1,4 @@
-import GenerateUrl from './GenerateUrl'
+import GenerateUrl from './GenerateUrl';
 
 export default async function GetNextTrainsAtStation(
   station,
@@ -6,12 +6,12 @@ export default async function GetNextTrainsAtStation(
   abortController
 ) {
   if (options.minOffset < -239) {
-    console.error('Time offset cannot be more than 239 minutes in the past.')
-    return null
+    console.error('Time offset cannot be more than 239 minutes in the past.');
+    return null;
   }
   if (options.minOffset > 119) {
-    console.error('Time offset cannot be more than 119 minutes in the future.')
-    return null
+    console.error('Time offset cannot be more than 119 minutes in the future.');
+    return null;
   }
 
   let response = await fetch(
@@ -24,11 +24,11 @@ export default async function GetNextTrainsAtStation(
     {
       signal: abortController ? abortController.signal : undefined,
     }
-  )
+  );
 
   if (response.ok === false) {
-    return { error: true }
+    return { error: true };
   }
 
-  return await response.json()
+  return await response.json();
 }

@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 export default function ErrorMessage() {
   return (
@@ -13,5 +13,5 @@ export default function ErrorMessage() {
         <span>Please speak to staff for assistance</span>
       </p>
     </>
-  )
+  );
 }

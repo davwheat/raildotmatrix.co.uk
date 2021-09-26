@@ -1,10 +1,10 @@
-import React from 'react'
+import React from 'react';
 
-import Layout from '../components/layout'
-import SEO from '../components/seo'
-import TypewriterText from '../components/Common/TypewriterText'
-import PageLink from '../components/Common/PageLink'
-import Attribution from '../components/Common/Attribution'
+import Layout from '../components/layout';
+import SEO from '../components/seo';
+import TypewriterText from '../components/Common/TypewriterText';
+import PageLink from '../components/Common/PageLink';
+import Attribution from '../components/Common/Attribution';
 
 const IndexPage = () => (
   <Layout>
@@ -28,6 +28,6 @@ const IndexPage = () => (
 
     <Attribution />
   </Layout>
-)
+);
 
-export default IndexPage
+export default IndexPage;

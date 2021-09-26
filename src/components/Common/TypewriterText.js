@@ -1,24 +1,24 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 
-import useInterval from '../../hooks/useInterval'
+import useInterval from '../../hooks/useInterval';
 
 export default function TypewriterText({ prefix, suffix, text, component, time, cursor, className, ...props }) {
-  const [currentText, setCurrentText] = useState('')
+  const [currentText, setCurrentText] = useState('');
 
   useInterval(
     () => {
-      let x = currentText
-      x += text.substr(x.length, 1)
-      setCurrentText(x)
+      let x = currentText;
+      x += text.substr(x.length, 1);
+      setCurrentText(x);
     },
     time ? time / text.length : 150
-  )
+  );
 
   if (cursor) {
-    className ? (className += ' animated-text--cursor') : (className = 'animated-text--cursor')
+    className ? (className += ' animated-text--cursor') : (className = 'animated-text--cursor');
 
     if (currentText.length === text.length) {
-      className += ' animated-text--cursor__blinking'
+      className += ' animated-text--cursor__blinking';
     }
   }
 
@@ -42,5 +42,5 @@ export default function TypewriterText({ prefix, suffix, text, component, time, 
       </span>
       {suffix}
     </>
-  )
+  );
 }

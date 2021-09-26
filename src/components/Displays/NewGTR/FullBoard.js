@@ -1,104 +1,104 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react';
 
-import LoadingMessage from './LoadingMessage'
-import Train from './Train'
+import LoadingMessage from './LoadingMessage';
+import Train from './Train';
 
-import GetNextTrainsAtStation from '../../../Api/GetNextTrainsAtStation'
+import GetNextTrainsAtStation from '../../../Api/GetNextTrainsAtStation';
 
-import './css/board.less'
-import NoServicesMessage from './NoServicesMessage'
-import Time from './Time'
-import ScrollingInfo from './ScrollingInfo'
-import ErrorMessage from './ErrorMessage'
-import clsx from 'clsx'
-import { debounce } from 'throttle-debounce'
-import NRCCMessages from './NRCCMessage'
+import './css/board.less';
+import NoServicesMessage from './NoServicesMessage';
+import Time from './Time';
+import ScrollingInfo from './ScrollingInfo';
+import ErrorMessage from './ErrorMessage';
+import clsx from 'clsx';
+import { debounce } from 'throttle-debounce';
+import NRCCMessages from './NRCCMessage';
 
 const FullBoard = ({ station, noBg }) => {
-  const [TrainData, setTrainData] = useState(null)
-  const [shouldShowScrollingInfo, setShouldShowScrollingInfo] = useState(true)
+  const [TrainData, setTrainData] = useState(null);
+  const [shouldShowScrollingInfo, setShouldShowScrollingInfo] = useState(true);
 
   function updateData() {
-    const ac = new AbortController()
+    const ac = new AbortController();
 
-    GetNextTrainsAtStation(station, { minOffset: 0 }, ac).then(data => {
-      setTrainData(data)
-    })
+    GetNextTrainsAtStation(station, { minOffset: 0 }, ac).then((data) => {
+      setTrainData(data);
+    });
 
     return () => {
-      ac.abort()
-    }
+      ac.abort();
+    };
   }
 
-  if (TrainData === null) updateData()
+  if (TrainData === null) updateData();
 
   /**
    * @type {object[] | null}
    */
-  const Services = TrainData && TrainData.trainServices ? TrainData.trainServices : null
+  const Services = TrainData && TrainData.trainServices ? TrainData.trainServices : null;
 
-  const boardRef = useRef(null)
+  const boardRef = useRef(null);
 
   function fillDiv(div) {
-    const currentWidth = div.offsetWidth
-    const currentHeight = div.offsetHeight
+    const currentWidth = div.offsetWidth;
+    const currentHeight = div.offsetHeight;
 
-    const availableHeight = window.innerHeight
-    const availableWidth = window.innerWidth
+    const availableHeight = window.innerHeight;
+    const availableWidth = window.innerWidth;
 
-    const scale = Math.min(availableWidth / currentWidth, availableHeight / currentHeight)
+    const scale = Math.min(availableWidth / currentWidth, availableHeight / currentHeight);
 
     div.style.cssText = `
       transform: scale(${scale}) translateZ(0);
       transform-origin: 50% 50%;
-    `
+    `;
   }
 
   // do it at least once
   if (boardRef.current) {
-    fillDiv(boardRef.current)
+    fillDiv(boardRef.current);
   }
 
   useEffect(() => {
-    let abort
+    let abort;
 
     // update every 30s
     const intKey = setInterval(() => {
-      abort = updateData()
-    }, 30 * 1000)
+      abort = updateData();
+    }, 30 * 1000);
 
     return () => {
-      clearInterval(intKey)
-      abort && abort()
-    }
-  })
+      clearInterval(intKey);
+      abort && abort();
+    };
+  });
 
   useEffect(() => {
     const debouncedScale = debounce(250, () => {
       if (boardRef.current) {
-        fillDiv(boardRef.current)
+        fillDiv(boardRef.current);
       }
-    })
+    });
 
     function scale(e) {
-      debouncedScale(e)
+      debouncedScale(e);
     }
 
-    window.addEventListener('resize', scale)
+    window.addEventListener('resize', scale);
 
     return () => {
-      window.removeEventListener('resize', scale)
-    }
-  }, [boardRef])
+      window.removeEventListener('resize', scale);
+    };
+  }, [boardRef]);
 
   function GetTrain(Services, i) {
-    const train = Services[i]
+    const train = Services[i];
 
-    if (!train) return null
+    if (!train) return null;
 
     function leftCallback(left) {
-      if (left) setShouldShowScrollingInfo(false)
-      else setShouldShowScrollingInfo(true)
+      if (left) setShouldShowScrollingInfo(false);
+      else setShouldShowScrollingInfo(true);
     }
 
     return (
@@ -118,7 +118,7 @@ const FullBoard = ({ station, noBg }) => {
                     location: thisStop.locationName,
                     eta: thisStop.et === 'On time' ? thisStop.st : thisStop.et,
                   },
-                ]
+                ];
               }, [])
             : null
         }
@@ -127,7 +127,7 @@ const FullBoard = ({ station, noBg }) => {
         coachCount={train.length}
         departureStation={train.origin.locationName}
       />
-    )
+    );
   }
 
   return (
@@ -161,7 +161,7 @@ const FullBoard = ({ station, noBg }) => {
       )}
       <Time />
     </section>
-  )
-}
+  );
+};
 
-export default FullBoard
+export default FullBoard;

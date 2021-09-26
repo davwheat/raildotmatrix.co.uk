@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 export default function LoadingMessage() {
   return (
@@ -8,5 +8,5 @@ export default function LoadingMessage() {
       <span>Loading data: please wait...</span>
       <span>Wait 2 mins</span>
     </p>
-  )
+  );
 }

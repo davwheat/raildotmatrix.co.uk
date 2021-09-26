@@ -1,19 +1,19 @@
-import React, { useState } from 'react'
-import useInterval from '../../../hooks/useInterval'
+import React, { useState } from 'react';
+import useInterval from '../../../hooks/useInterval';
 
 export default function Time() {
-  const [TimeString, setTimeString] = useState(null)
+  const [TimeString, setTimeString] = useState(null);
 
   function padZero(input) {
     if (input < 10) {
-      return `0${input}`
+      return `0${input}`;
     } else {
-      return `${input}`
+      return `${input}`;
     }
   }
 
   function updateTime() {
-    const time = new Date()
+    const time = new Date();
 
     setTimeString(
       <>
@@ -39,12 +39,12 @@ export default function Time() {
             ))}
         </span>
       </>
-    )
+    );
   }
 
   useInterval(() => {
-    updateTime()
-  }, 1000)
+    updateTime();
+  }, 1000);
 
-  return <p className="display--time">{TimeString}</p>
+  return <p className="display--time">{TimeString}</p>;
 }

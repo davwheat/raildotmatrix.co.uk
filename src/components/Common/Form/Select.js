@@ -1,7 +1,7 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import React from 'react';
+import PropTypes from 'prop-types';
 
-import './css/Select.less'
+import './css/Select.less';
 
 export default function Select({ label, helpText, placeholder, options, onChange, ...props }) {
   return (
@@ -13,7 +13,7 @@ export default function Select({ label, helpText, placeholder, options, onChange
             {placeholder}
           </option>
         )}
-        {options.map(o => (
+        {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
           </option>
@@ -21,7 +21,7 @@ export default function Select({ label, helpText, placeholder, options, onChange
       </select>
       {helpText && <p className="form-select--help-text">{helpText}</p>}
     </label>
-  )
+  );
 }
 
 Select.propTypes = {
@@ -29,4 +29,4 @@ Select.propTypes = {
   helpText: PropTypes.string,
   placeholder: PropTypes.string,
   options: PropTypes.arrayOf(PropTypes.shape({ value: PropTypes.string, label: PropTypes.string })),
-}
+};

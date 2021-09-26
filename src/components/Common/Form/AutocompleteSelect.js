@@ -1,6 +1,6 @@
-import React from 'react'
+import React from 'react';
 
-import Select, { createFilter } from 'react-select'
+import Select, { createFilter } from 'react-select';
 
 export default function AutocompleteSelect({ label, helpText, placeholder, autocompleteOptions, onChange, ...props }) {
   return (
@@ -16,7 +16,7 @@ export default function AutocompleteSelect({ label, helpText, placeholder, autoc
           MenuList,
         }}
         menuPortalTarget={typeof window !== 'undefined' && document.querySelector('body')}
-        theme={theme => ({
+        theme={(theme) => ({
           ...theme,
           colors: {
             ...theme.colors,
@@ -33,28 +33,28 @@ export default function AutocompleteSelect({ label, helpText, placeholder, autoc
       />
       {helpText && <p className="form-textbox--help-text">{helpText}</p>}
     </label>
-  )
+  );
 }
 
 const MenuList = function MenuList(props) {
-  const children = props.children
+  const children = props.children;
 
   if (!children.length) {
-    return <div className="form-textbox--autocomplete-dropdown">{children}</div>
+    return <div className="form-textbox--autocomplete-dropdown">{children}</div>;
   }
 
   return (
     <div className="form-textbox--autocomplete-dropdown">
       {children.length &&
         children.map((key, i) => {
-          if (i >= 6) return null
+          if (i >= 6) return null;
 
           return (
             <div className="form-textbox--autocomplete-dropdown-item" key={i}>
               {key}
             </div>
-          )
+          );
         })}
     </div>
-  )
-}
+  );
+};
