@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@flarum/prettier-config": "^1.0.0",
+    "cross-env": "^7.0.3",
     "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.25",
     "prettier": "^2.4.1"
   },
@@ -36,7 +37,8 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "gatsby build",
+    "build": "cross-env NODE_ENV=production gatsby build",
+    "build:ci": "cross-env NODE_ENV=production gatsby build --verbose",
     "develop": "gatsby develop",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,json,md}\"",
