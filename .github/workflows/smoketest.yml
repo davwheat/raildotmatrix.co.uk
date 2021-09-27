@@ -9,8 +9,41 @@ env:
   NODE_VERSION: 16.x
 
 jobs:
+  install:
+    runs-on: ubuntu-latest
+    name: Prepare repo
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Cache node_modules for other runs
+        uses: actions/cache@v2
+        id: module-cache
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-node-modules-${{ github.sha }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ github.sha }}-
+            ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies on cache miss
+        run: yarn install --frozen-lockfile
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+
+      - name: Install project dependencies from cache
+        run: yarn --prefer-offline --frozen-lockfile
+        if: steps.yarn-cache.outputs.cache-hit == 'true'
+
   formatting:
     runs-on: ubuntu-latest
+    needs: [install]
     name: Verify formatting
 
     steps:
@@ -23,11 +56,46 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: Restore dependencies cache
+        uses: actions/cache@v2
+        id: module-cache
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-node-modules-${{ github.sha }}-${{ hashFiles('yarn.lock') }}
 
       - name: Verify formatting
         run: yarn format:check
+
+  # test:
+  #   runs-on: ubuntu-latest
+  #   needs: [install]
+  #   name: Run tests
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+
+  #     - name: Use Node.js ${{ env.NODE_VERSION }}
+  #       uses: actions/setup-node@v2
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
+
+  #     - name: Restore dependencies cache
+  #       uses: actions/cache@v2
+  #       id: moduleCache
+  #       with:
+  #         path: ./node_modules
+  #         key: ${{ runner.os }}-node-modules-${{ github.sha }}-${{ hashFiles('yarn.lock') }}
+
+  #     - name: Run tests
+  #       run: yarn test
+
+  #     - name: Upload coverage
+  #       # Run even if tests fail
+  #       if: always()
+  #       uses: codecov/codecov-action@v1
+  #       with:
+  #         directory: coverage
 
   build:
     name: Build site
@@ -46,6 +114,13 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
 
+      - name: Restore dependencies cache
+        uses: actions/cache@v2
+        id: module-cache
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-node-modules-${{ github.sha }}-${{ hashFiles('yarn.lock') }}
+
       - name: Restore Gatsby cache
         uses: actions/cache@v2
         id: gatsbyCache
@@ -53,7 +128,7 @@ jobs:
           path: ./.cache
           key: ${{ runner.os }}-gatsby-cache-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-gatsby-cache-${{ hashFiles('yarn.lock') }}
+            ${{ runner.os }}-gatsby-cache-
 
       - name: Restore Gatsby build output
         uses: actions/cache@v2
@@ -62,12 +137,8 @@ jobs:
           path: ./public
           key: ${{ runner.os }}-gatsby-out-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-gatsby-out-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
-
-      - name: Install dependencies
-        run: |
-          yarn install --frozen-lockfile
-          npx browserslist@latest --update-db
+            ${{ runner.os }}-gatsby-out-${{ hashFiles('yarn.lock') }}
+            ${{ runner.os }}-gatsby-out-
 
       - name: Build site
         run: yarn build:ci
@@ -75,7 +146,7 @@ jobs:
   deploy:
     name: Deploy site to production
     runs-on: ubuntu-latest
-    needs: [build, formatting]
+    needs: [build, formatting, install]
 
     # Only deploy on push to deploy branch
     if: github.ref == 'refs/heads/deploy' && github.event_name == 'push'
