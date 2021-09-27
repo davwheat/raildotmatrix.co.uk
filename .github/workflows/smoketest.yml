@@ -75,7 +75,7 @@ jobs:
   deploy:
     name: Deploy site to production
     runs-on: ubuntu-latest
-    needs: [build, formatting, install]
+    needs: [build, formatting]
 
     # Only deploy on push to deploy branch
     if: github.ref == 'refs/heads/deploy' && github.event_name == 'push'
