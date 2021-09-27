@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 
 import Layout from '../components/layout';
 import SEO from '../components/seo';
-import TypewriterText from '../components/Common/TypewriterText';
-import PageLink from '../components/Common/PageLink';
+import TypewriterText from '../components/common/TypewriterText';
+import PageLink from '../components/common/PageLink';
 
-import Form, { AutocompleteSelect, Select } from '../components/Common/Form';
+import Form, { AutocompleteSelect, Select } from '../components/common/Form';
 
-import NewGTR from '../components/Displays/NewGTR';
-import Attribution from '../components/Common/Attribution';
-import GenerateUrl from '../Api/GenerateUrl';
+import NewGTR from '../components/displays/NewGTR';
+import Attribution from '../components/common/Attribution';
+import GenerateUrl from '../api/GenerateUrl';
 
 const IndexPage = () => {
   const [autocomplete, setAutocomplete] = useState([{ label: 'Loading stations...', value: 'VIC' }]);
