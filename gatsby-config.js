@@ -1,4 +1,15 @@
-const PROD_PLUGINS = process.env.NODE_ENV === 'production' ? [`gatsby-plugin-preact`] : [];
+const PROD_PLUGINS =
+  process.env.NODE_ENV === 'production'
+    ? [
+        {
+          resolve: 'gatsby-plugin-remove-console',
+          options: {
+            exclude: ['error', 'warn'],
+          },
+        },
+        `gatsby-plugin-preact`,
+      ]
+    : [];
 
 module.exports = {
   siteMetadata: {
@@ -7,9 +18,11 @@ module.exports = {
     author: `@davwheat`,
   },
   plugins: [
-    `gatsby-plugin-htaccess`,
+    ...PROD_PLUGINS,
+
+    `gatsby-plugin-csp`,
+    `gatsby-plugin-webpack-size`,
     `gatsby-plugin-react-head`,
-    `gatsby-plugin-less`,
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
@@ -19,10 +32,10 @@ module.exports = {
         background_color: `#000`,
         theme_color: `#ffa500`,
         display: `minimal-ui`,
-        icon: `src/images/logo.png`, // This path is relative to the root of the site.
+        icon: `src/images/logo.png`,
       },
     },
     'gatsby-plugin-webpack-bundle-analyser-v2',
-    ...PROD_PLUGINS,
+    `gatsby-plugin-less`,
   ],
 };
