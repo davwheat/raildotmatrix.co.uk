@@ -9,7 +9,7 @@ const PROD_PLUGINS =
         },
         `gatsby-plugin-preact`,
       ]
-    : ['gatsby-plugin-webpack-bundle-analyser-v2', `gatsby-plugin-webpack-size`];
+    : [];
 
 module.exports = {
   siteMetadata: {
@@ -20,6 +20,8 @@ module.exports = {
   plugins: [
     ...PROD_PLUGINS,
 
+    'gatsby-plugin-webpack-bundle-analyser-v2',
+    `gatsby-plugin-webpack-size`,
     `gatsby-plugin-csp`,
     `gatsby-plugin-react-head`,
     {
