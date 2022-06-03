@@ -5,7 +5,7 @@ import SEO from '../components/seo';
 import TypewriterText from '../components/common/TypewriterText';
 import PageLink from '../components/common/PageLink';
 
-import Form, { AutocompleteSelect, Select } from '../components/common/Form';
+import Form, { AutocompleteSelect, Select } from '../components/common/form';
 
 import NewGTR from '../components/displays/NewGTR';
 import Attribution from '../components/common/Attribution';
