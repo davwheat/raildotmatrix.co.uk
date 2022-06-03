@@ -2,9 +2,9 @@ import React from 'react';
 
 import Layout from '../components/layout';
 import SEO from '../components/seo';
-import TypewriterText from '../components/Common/TypewriterText';
-import PageLink from '../components/Common/PageLink';
-import Attribution from '../components/Common/Attribution';
+import TypewriterText from '../components/common/TypewriterText';
+import PageLink from '../components/common/PageLink';
+import Attribution from '../components/common/Attribution';
 
 const IndexPage = () => (
   <Layout>

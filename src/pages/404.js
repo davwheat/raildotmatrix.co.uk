@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 
 import Layout from '../components/layout';
 import SEO from '../components/seo';
-import TypewriterText from '../components/Common/TypewriterText';
-import PageLink from '../components/Common/PageLink';
+import TypewriterText from '../components/common/TypewriterText';
+import PageLink from '../components/common/PageLink';
 import useInterval from '../hooks/useInterval';
 
 const NotFoundPage = () => {

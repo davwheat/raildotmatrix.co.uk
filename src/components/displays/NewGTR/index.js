@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import FullBoard from './FullBoard';
-import ToggleSwitch from '../../common/Form/ToggleSwitch';
+import ToggleSwitch from '../../common/form/ToggleSwitch';
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage';
 import { throttle } from 'throttle-debounce';
 
