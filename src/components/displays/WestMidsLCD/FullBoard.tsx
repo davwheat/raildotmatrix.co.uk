@@ -73,14 +73,17 @@ function FullBoard({ station, platformNumber }: { station: string; platformNumbe
         setLoadingData(false);
       });
     }, UPDATE_INTERVAL_SECS * 1000);
+
+    return () => {
+      clearInterval(key);
+    };
   }, [setTrainData, setLastUpdated, setLoadingData, lastUpdated, loadingData, station, loadTrainData]);
 
   useEffect(() => {
-    // do it at least once
-    if (boardRef.current) {
-      fillDiv(boardRef.current);
-    }
+    boardRef.current && requestAnimationFrame(() => fillDiv(boardRef.current!));
+  });
 
+  useEffect(() => {
     const debouncedScale = debounce(250, () => {
       if (boardRef.current) {
         fillDiv(boardRef.current);

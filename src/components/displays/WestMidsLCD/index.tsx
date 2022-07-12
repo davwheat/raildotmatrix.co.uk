@@ -7,7 +7,7 @@ import { throttle } from 'throttle-debounce';
 import './css/index.less';
 import PageLink from '../../common/PageLink';
 
-const NewGTR = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) => {
+const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) => {
   const [settings, setSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
     noBg: false,
     hideSettings: false,
@@ -77,7 +77,6 @@ const NewGTR = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) 
           Edit board
         </PageLink>
         <br />
-        <ToggleSwitch checked={settings.noBg} ref={noBgRef} label="Remove background" onChange={updateState} />
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
       <FullBoard ref={ref} noBg={settings.noBg} station={station} />
@@ -85,4 +84,4 @@ const NewGTR = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) 
   );
 });
 
-export default NewGTR;
+export default WestMidsLCD;
