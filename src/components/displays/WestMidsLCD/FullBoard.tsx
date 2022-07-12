@@ -58,16 +58,22 @@ function FullBoard({ station, platformNumber }: { station: string; platformNumbe
   useEffect(() => {
     if (loadingData) return;
 
-    if (lastUpdated === 0 || lastUpdated - Date.now() > UPDATE_INTERVAL_SECS * 1000) {
-      setLoadingData(true);
-
+    if (lastUpdated === 0) {
       loadTrainData(station, (data) => {
         setTrainData(data);
         setLastUpdated(Date.now());
         setLoadingData(false);
       });
     }
-  }, [loadingData, lastUpdated, station]);
+
+    const key = setInterval(() => {
+      loadTrainData(station, (data) => {
+        setTrainData(data);
+        setLastUpdated(Date.now());
+        setLoadingData(false);
+      });
+    }, UPDATE_INTERVAL_SECS * 1000);
+  }, [setTrainData, setLastUpdated, setLoadingData, lastUpdated, loadingData, station, loadTrainData]);
 
   useEffect(() => {
     // do it at least once
@@ -91,8 +97,6 @@ function FullBoard({ station, platformNumber }: { station: string; platformNumbe
       window.removeEventListener('resize', scale);
     };
   }, [boardRef.current]);
-
-  console.log(trainData);
 
   const firstService = !isError && trainData.trainServices?.[0];
   const secondService = !isError && trainData.trainServices?.[1];
