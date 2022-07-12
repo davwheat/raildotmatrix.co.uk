@@ -87,8 +87,8 @@ function FullBoard({ station, platformNumber }: { station: string; platformNumbe
       }
     });
 
-    function scale(e) {
-      debouncedScale(e);
+    function scale() {
+      debouncedScale();
     }
 
     window.addEventListener('resize', scale);
