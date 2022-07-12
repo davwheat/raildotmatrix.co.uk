@@ -1,0 +1,59 @@
+.tfwm-board {
+  .nextTrain {
+    margin-top: 24px;
+
+    .top-row {
+      font-size: 1.1em;
+
+      display: grid;
+      grid-template-columns: 220px 1fr 240px;
+      align-items: baseline;
+
+      .dest {
+        margin-right: 16px;
+      }
+
+      .status {
+        font-size: 0.58em;
+
+        &[data-on-time='true'] {
+          background: #fff;
+          color: #000;
+        }
+
+        &[data-on-time='false'] {
+          background: var(--red);
+          color: #fff;
+        }
+
+        padding: 5px 8px;
+
+        --br: 8px;
+        border-top-left-radius: var(--br);
+        border-bottom-left-radius: var(--br);
+      }
+    }
+
+    .second-row {
+      display: flex;
+      color: var(--yellow);
+
+      margin-top: 8px;
+      font-size: 0.6em;
+
+      .length {
+        margin-left: auto;
+      }
+    }
+
+    .third-row {
+      margin-top: 8px;
+
+      .trainInfo {
+        --edge-fade: 0;
+        --pad-x: 0;
+        --ignore-pad: 1;
+      }
+    }
+  }
+}

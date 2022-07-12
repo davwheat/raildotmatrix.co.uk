@@ -11,7 +11,7 @@ const IndexPage = () => (
     <SEO title="Home" />
     <main>
       <header>
-        <TypewriterText component="h1" className="display" cursor text="Welcome to Rail Dot Matrix" time={2000} />
+        <TypewriterText component="h1" className="display" cursor text="Welcome to Rail Dot Matrix" time={500} />
       </header>
       <article>
         <p>

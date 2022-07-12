@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { getAAn } from 'english-a-an';
+import englishAAnList from 'english-a-an-list/dist/aan.json';
 
 import useInterval from '../../../hooks/useInterval';
 
@@ -128,7 +130,7 @@ export default function ScrollingInfo({ trainData: train }) {
           animationDuration: activeAnimation === 'trainInfo__scroll' ? `${trainInfoScrollTime}s` : '0s',
         }}
       >
-        This {IS_OR_WAS} {toc ? `a ${toc}` : `the`} service
+        This {IS_OR_WAS} {toc ? `${getAAn(null, englishAAnList, toc)} ${toc}` : `the`} service
         {coachCount ? ` formed of ${coachCount} coaches` : ''}.{location ? ` ${location}` : ''}
         {otherMessages ? ` ${otherMessages}` : ''}
         {departureStation ? ` This ${IS_OR_WAS} the service from ${departureStation}.` : ''}

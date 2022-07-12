@@ -25,12 +25,12 @@ function Train(props) {
   if (detailsOnLastRender !== props) {
     setShouldLeave(false);
     setDetailsOnLastRender(props);
-    leftCallback(false);
+    setTimeout(() => leftCallback(false));
   }
 
   if (intermediaryStops && intermediaryStops[0].eta === null && !shouldLeave) {
     setShouldLeave(true);
-    leftCallback(true);
+    setTimeout(() => leftCallback(true));
   }
 
   if (status) {

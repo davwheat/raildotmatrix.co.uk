@@ -7,9 +7,11 @@ import PageLink from '../components/common/PageLink';
 
 import Form, { AutocompleteSelect, Select } from '../components/common/form';
 
-import NewGTR from '../components/displays/NewGTR';
 import Attribution from '../components/common/Attribution';
 import GenerateUrl from '../api/GenerateUrl';
+
+import NewGTR from '../components/displays/NewGTR';
+import WestMidsLCD from '../components/displays/WestMidsLCD';
 
 const IndexPage = () => {
   const [autocomplete, setAutocomplete] = useState([{ label: 'Loading stations...', value: 'VIC' }]);
@@ -20,11 +22,12 @@ const IndexPage = () => {
     searchParams = window && new URLSearchParams(window.location.search);
   }
 
-  const stn = searchParams && searchParams.get('station');
+  const stn = searchParams?.get('station');
+  const type = searchParams?.get('type');
 
   const [BoardSettings, setBoardSettings] = useState({
     station: stn || '',
-    type: 'gtr-new',
+    type: type || 'gtr-new',
   });
 
   const [Page, setPage] = useState(stn ? 1 : 0);
@@ -65,7 +68,7 @@ const IndexPage = () => {
       {Page === 0 && (
         <main>
           <header>
-            <TypewriterText component="h1" className="display" cursor text="Board settings" time={2000} />
+            <TypewriterText component="h1" className="display" cursor text="Board settings" time={500} />
           </header>
           <article>
             <Form>
@@ -77,7 +80,10 @@ const IndexPage = () => {
               />
               <Select
                 label="Display type"
-                options={[{ value: 'gtr-new', label: 'GTR New' }]}
+                options={[
+                  { value: 'gtr-new', label: 'GTR New' },
+                  { value: 'tfwm-lcd', label: 'TfWM LCD' },
+                ]}
                 placeholder="Choose a display"
                 onChange={ChooseDisplay}
                 value={BoardSettings.type}
@@ -97,20 +103,28 @@ const IndexPage = () => {
         </main>
       )}
 
-      {Page === 1 && (
-        <>
-          <NewGTR
-            editBoardCallback={() => {
-              setPage(0);
-            }}
-            station={BoardSettings.station}
-          />
-        </>
-      )}
+      {Page === 1 && getBoard(BoardSettings, setPage)}
 
       <Attribution />
     </Layout>
   );
 };
+
+function getBoard(BoardSettings, setPage) {
+  const boardName = BoardSettings.type;
+
+  const attrs = {
+    editBoardCallback: () => {
+      setPage(0);
+    },
+    station: BoardSettings.station,
+  };
+
+  if (boardName === 'gtr-new') {
+    return <NewGTR {...attrs} />;
+  } else if (boardName === 'tfwm-lcd') {
+    return <WestMidsLCD {...attrs} />;
+  }
+}
 
 export default IndexPage;

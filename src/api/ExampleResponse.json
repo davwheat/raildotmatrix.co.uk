@@ -1,45 +1,170 @@
 {
-  "generatedAt": "2020-06-21T03:07:36.84578+01:00",
-  "nationalRailResponseTimeMilliseconds": 153,
-  "locationName": "London Victoria",
-  "filterLocationName": null,
-  "filtercrs": null,
-  "filterType": null,
-  "crs": "VIC",
-  "nrccMessages": [
-    {
-      "message": "<P>We are still running reduced train services. In line with government advice, please only travel if your journey is necessary. If you do need to travel by train, bring a face covering with you and wear it throughout your journey, as it is now compulsory. Find out more at nationalrail.co.uk/coronavirus</P>"
-    }
-  ],
-  "platformAvailable": true,
-  "areServicesAvailable": null,
   "trainServices": [
     {
-      "serviceID": "S9a+iOaj2+cy7iBV3t5cOg==",
-      "serviceIDUrlSafe": "S9a!iOaj2!cy7iBV3t5cOg--",
-      "serviceType": "train",
-      "isCancelled": null,
-      "filterLocationCancelled": null,
-      "cancelReason": null,
-      "delayReason": null,
-      "adhocAlert": null,
-      "std": "01:08",
-      "etd": "On time",
-      "platform": null,
-      "operator": "Southern",
-      "operatorCode": "SN",
-      "isCircularRoute": null,
-      "length": 8,
-      "detachFront": null,
-      "isReverseFormation": null,
-      "rsid": "SN171300",
+      "previousCallingPoints": null,
+      "subsequentCallingPoints": [
+        {
+          "callingPoint": [
+            {
+              "locationName": "Three Bridges",
+              "crs": "TBD",
+              "st": "02:36",
+              "et": "On time",
+              "at": null,
+              "isCancelled": false,
+              "length": 8,
+              "detachFront": true,
+              "formation": {
+                "avgLoading": 5,
+                "avgLoadingSpecified": true,
+                "coaches": null
+              },
+              "adhocAlerts": null
+            },
+            {
+              "locationName": "Haywards Heath",
+              "crs": "HHE",
+              "st": "02:36",
+              "et": "On time",
+              "at": null,
+              "isCancelled": false,
+              "length": 4,
+              "detachFront": true,
+              "formation": {
+                "avgLoading": 5,
+                "avgLoadingSpecified": true,
+                "coaches": null
+              },
+              "adhocAlerts": null
+            },
+            {
+              "locationName": "Burgess Hill",
+              "crs": "BUG",
+              "st": "02:36",
+              "et": "On time",
+              "at": null,
+              "isCancelled": false,
+              "length": 4,
+              "detachFront": false,
+              "formation": {
+                "avgLoading": 5,
+                "avgLoadingSpecified": true,
+                "coaches": null
+              },
+              "adhocAlerts": null
+            },
+            {
+              "locationName": "Brighton",
+              "crs": "BTN",
+              "st": "02:36",
+              "et": "On time",
+              "at": null,
+              "isCancelled": false,
+              "length": 4,
+              "detachFront": false,
+              "formation": {
+                "avgLoading": 5,
+                "avgLoadingSpecified": true,
+                "coaches": null
+              },
+              "adhocAlerts": null
+            }
+          ],
+          "serviceType": 0,
+          "serviceChangeRequired": false,
+          "assocIsCancelled": false
+        },
+        {
+          "callingPoint": [
+            {
+              "locationName": "Burgess Hill",
+              "crs": "BUG",
+              "st": "02:36",
+              "et": "On time",
+              "at": null,
+              "isCancelled": false,
+              "length": 4,
+              "detachFront": false,
+              "formation": {
+                "avgLoading": 5,
+                "avgLoadingSpecified": true,
+                "coaches": null
+              },
+              "adhocAlerts": null
+            },
+            {
+              "locationName": "Littlehampton",
+              "crs": "LIT",
+              "st": "02:45",
+              "et": "On time",
+              "at": null,
+              "isCancelled": false,
+              "length": 4,
+              "detachFront": false,
+              "formation": {
+                "avgLoading": 5,
+                "avgLoadingSpecified": true,
+                "coaches": null
+              },
+              "adhocAlerts": null
+            }
+          ],
+          "serviceType": 0,
+          "serviceChangeRequired": false,
+          "assocIsCancelled": false
+        },
+        {
+          "callingPoint": [
+            {
+              "locationName": "Haywards Heath",
+              "crs": "HHE",
+              "st": "02:36",
+              "et": "On time",
+              "at": null,
+              "isCancelled": false,
+              "length": 4,
+              "detachFront": false,
+              "formation": {
+                "avgLoading": 5,
+                "avgLoadingSpecified": true,
+                "coaches": null
+              },
+              "adhocAlerts": null
+            },
+            {
+              "locationName": "Horsham",
+              "crs": "HRH",
+              "st": "02:45",
+              "et": "On time",
+              "at": null,
+              "isCancelled": false,
+              "length": 4,
+              "detachFront": false,
+              "formation": {
+                "avgLoading": 5,
+                "avgLoadingSpecified": true,
+                "coaches": null
+              },
+              "adhocAlerts": null
+            }
+          ],
+          "serviceType": 0,
+          "serviceChangeRequired": false,
+          "assocIsCancelled": false
+        }
+      ],
+      "formation": {
+        "avgLoading": 5,
+        "avgLoadingSpecified": true,
+        "coaches": null
+      },
       "origin": [
         {
-          "locationName": "London Victoria",
-          "crs": "VIC",
+          "locationName": "Bedford",
+          "crs": "BDM",
           "via": null,
           "futureChangeTo": null,
-          "assocIsCancelled": null
+          "assocIsCancelled": false
         }
       ],
       "destination": [
@@ -48,214 +173,58 @@
           "crs": "BTN",
           "via": null,
           "futureChangeTo": null,
-          "assocIsCancelled": null
+          "assocIsCancelled": false
+        },
+        {
+          "locationName": "Horsham",
+          "crs": "HRH",
+          "via": null,
+          "futureChangeTo": null,
+          "assocIsCancelled": false
+        },
+        {
+          "locationName": "Littlehampton",
+          "crs": "LIT",
+          "via": null,
+          "futureChangeTo": null,
+          "assocIsCancelled": false
         }
       ],
       "currentOrigins": null,
       "currentDestinations": null,
-      "subsequentCallingPointsList": [
-        {
-          "callingPoint": [
-            {
-              "locationName": "Hove",
-              "crs": "HOV",
-              "st": "04:25",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "Portslade",
-              "crs": "PLD",
-              "st": "04:28",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "Shoreham-by-Sea",
-              "crs": "SSE",
-              "st": "04:33",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "Lancing",
-              "crs": "LAC",
-              "st": "04:37",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "Worthing",
-              "crs": "WRH",
-              "st": "04:41",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "West Worthing",
-              "crs": "WWO",
-              "st": "04:44",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "Durrington-on-Sea",
-              "crs": "DUR",
-              "st": "04:46",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "Goring-by-Sea",
-              "crs": "GBS",
-              "st": "04:49",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "Angmering",
-              "crs": "ANG",
-              "st": "04:53",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "Littlehampton",
-              "crs": "LIT",
-              "st": "05:06",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "Horsham",
-              "crs": "HRH",
-              "st": "05:39",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "Three Bridges",
-              "crs": "TBD",
-              "st": "05:53",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "Gatwick Airport",
-              "crs": "GTW",
-              "st": "05:59",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "East Croydon",
-              "crs": "ECR",
-              "st": "06:18",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "Clapham Junction",
-              "crs": "CLJ",
-              "st": "06:28",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            },
-            {
-              "locationName": "London Victoria",
-              "crs": "VIC",
-              "st": "06:35",
-              "et": "On time",
-              "at": null,
-              "isCancelled": false,
-              "length": 0,
-              "detachFront": false,
-              "formation": null,
-              "adhocAlerts": null
-            }
-          ],
-          "serviceType": 0,
-          "serviceChangeRequired": false,
-          "assocIsCancelled": false
-        }
-      ]
+      "rsid": "TL406900",
+      "serviceIdPercentEncoded": "%2BE64Xj4DY0iUz2vSG5NoGA%3D%3D",
+      "serviceIdGuid": "5eb84ef8-033e-4863-94cf-6bd21b936818",
+      "serviceIdUrlSafe": "-E64Xj4DY0iUz2vSG5NoGA",
+      "sta": null,
+      "eta": null,
+      "std": "02:31",
+      "etd": "On time",
+      "platform": "3",
+      "operator": "Thameslink",
+      "operatorCode": "TL",
+      "isCircularRoute": false,
+      "isCancelled": false,
+      "filterLocationCancelled": false,
+      "serviceType": 0,
+      "length": 8,
+      "detachFront": false,
+      "isReverseFormation": false,
+      "cancelReason": null,
+      "delayReason": null,
+      "serviceID": "+E64Xj4DY0iUz2vSG5NoGA==",
+      "adhocAlerts": null
     }
   ],
   "busServices": null,
-  "ferryServices": null
+  "ferryServices": null,
+  "generatedAt": "2022-07-12T01:02:01.5315487+00:00",
+  "locationName": "Gatwick Airport",
+  "crs": "GTW",
+  "filterLocationName": null,
+  "filtercrs": null,
+  "filterType": 0,
+  "nrccMessages": null,
+  "platformAvailable": true,
+  "areServicesAvailable": true
 }

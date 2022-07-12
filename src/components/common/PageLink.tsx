@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
 import { navigate } from 'gatsby';
 
-export default function PageLink({ onClick, className, children, to, afterExit, ...props }) {
+interface IProps {
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => boolean;
+  className?: string;
+  children: React.ReactNode;
+  to?: string;
+  afterExit?: () => void;
+  [x: string]: unknown;
+}
+
+export default function PageLink({ onClick, className, children, to, afterExit, ...props }: IProps) {
   const [isExiting, setIsExiting] = useState(false);
 
   let classes = '';
@@ -18,7 +27,7 @@ export default function PageLink({ onClick, className, children, to, afterExit, 
 
   return (
     <a
-      tabIndex={to ? null : 0}
+      tabIndex={to ? undefined : 0}
       href={to}
       className={classes}
       {...props}

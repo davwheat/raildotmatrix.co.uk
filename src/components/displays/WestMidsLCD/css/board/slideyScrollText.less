@@ -1,0 +1,28 @@
+.slidey-scroll-text {
+  overflow: hidden;
+  white-space: nowrap;
+
+  --edge-fade: 24px;
+  // --pad-x: 24px;
+  // --ignore-pad: 0;
+
+  -webkit-mask-image: -webkit-linear-gradient(to left, transparent, black var(--edge-fade), black calc(100% - var(--edge-fade)), transparent 100%);
+  mask-image: linear-gradient(to left, transparent, black var(--edge-fade), black calc(100% - var(--edge-fade)), transparent 100%, transparent 100%);
+
+  // Fix issue with mask-image leaving 1px gaps at sides with 100% transparency
+  clip-path: inset(0 1px 0 1px);
+
+  &-inner {
+    --trans-x: 0;
+    --opacity: 1;
+
+    display: inline-block;
+
+    padding: 0 var(--edge-fade);
+    margin: 0 calc(-1 * var(--ignore-pad) * var(--pad-x));
+    opacity: var(--opacity);
+
+    transform: translateX(var(--trans-x));
+    transition: transform linear var(--transition-time, 0s), opacity linear 0.5s;
+  }
+}

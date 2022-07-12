@@ -7,41 +7,41 @@ import { throttle } from 'throttle-debounce';
 import './css/index.less';
 import PageLink from '../../common/PageLink';
 
-const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
+const NewGTR = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) => {
   const [settings, setSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
     noBg: false,
     hideSettings: false,
   });
 
-  const settingsRef = useRef(null);
+  const settingsRef = useRef<HTMLDivElement>(null);
 
-  const noBgRef = useRef(null);
-  const hideRef = useRef(null);
+  const noBgRef = useRef<HTMLInputElement>(null);
+  const hideRef = useRef<HTMLInputElement>(null);
 
   function updateState() {
     setSettings({
-      noBg: noBgRef.current.checked,
-      hideSettings: hideRef.current.checked,
+      noBg: noBgRef.current?.checked,
+      hideSettings: hideRef.current?.checked,
     });
 
-    if (!hideRef.current.checked) {
-      settingsRef.current.classList.remove('hide');
+    if (!hideRef.current?.checked) {
+      settingsRef.current?.classList.remove('hide');
     }
   }
 
   useEffect(() => {
-    let to = null;
+    let to = -1;
 
     function hideControls() {
-      settingsRef.current.classList.add('hide');
+      settingsRef.current!.classList.add('hide');
     }
 
     const throttledReset = throttle(1500, () => {
-      settingsRef.current.classList.remove('hide');
+      settingsRef.current!.classList.remove('hide');
       clearTimeout(to);
       to = setTimeout(() => {
         hideControls();
-      }, 2500);
+      }, 2500) as any;
     });
 
     function resetTimeout(e) {

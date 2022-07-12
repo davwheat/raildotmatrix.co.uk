@@ -89,7 +89,7 @@ const FullBoard = ({ station, noBg }) => {
     return () => {
       window.removeEventListener('resize', scale);
     };
-  }, [boardRef]);
+  }, [boardRef.current]);
 
   function GetTrain(Services, i) {
     const train = Services[i];
