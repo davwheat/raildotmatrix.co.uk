@@ -1,6 +1,6 @@
 import GenerateUrl from './GenerateUrl';
 
-import example from './ExampleResponse.json';
+// import example from './ExampleResponse.json';
 
 export interface Location {
   locationName: string;
@@ -77,7 +77,7 @@ export default async function GetNextTrainsAtStation(
   options: IOptions = { count: 3, timeWindow: 120, minOffset: 0, mustStopAt: null },
   abortController?: AbortController
 ): Promise<ApiResponse | null | { error: true }> {
-  return example;
+  // return example;
 
   if (options.minOffset < -239) {
     console.error('Time offset cannot be more than 239 minutes in the past.');
