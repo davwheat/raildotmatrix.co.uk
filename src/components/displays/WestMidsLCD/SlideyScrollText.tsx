@@ -13,14 +13,7 @@ interface IProps {
   oneWayScroll?: boolean;
 }
 
-export default function SlideyScrollText({
-  children,
-  className,
-  classNameInner,
-  pauseAtEnds = 4000,
-  scrollSpeed = 75,
-  oneWayScroll = false,
-}: IProps) {
+function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4000, scrollSpeed = 75, oneWayScroll = false }: IProps) {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
 
@@ -149,3 +142,5 @@ export default function SlideyScrollText({
     </div>
   );
 }
+
+export default React.memo(SlideyScrollText);

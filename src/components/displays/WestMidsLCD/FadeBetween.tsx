@@ -8,7 +8,7 @@ interface IProps {
   secondsPerEl?: number;
 }
 
-export default function FadeBetween({ elements, secondsPerEl = 5 }: IProps) {
+function FadeBetween({ elements, secondsPerEl = 5 }: IProps) {
   const shownIndex = useRef<number>(-1);
   const optionContainer = useRef<HTMLDivElement>(null);
 
@@ -64,3 +64,5 @@ export default function FadeBetween({ elements, secondsPerEl = 5 }: IProps) {
     </div>
   );
 }
+
+export default React.memo(FadeBetween);
