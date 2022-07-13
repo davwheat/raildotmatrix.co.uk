@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-import GetNextTrainsAtStation, { ApiResponse } from '../../../api/GetNextTrainsAtStation';
+import GetNextTrainsAtStation, { ApiResponse, TrainService } from '../../../api/GetNextTrainsAtStation';
 
 import './css/board/index.less';
 
@@ -24,7 +24,7 @@ function loadTrainData(station: string, setTrainData: (data: any) => void) {
   return ac;
 }
 
-const UPDATE_INTERVAL_SECS = 30;
+const UPDATE_INTERVAL_SECS = 15;
 
 function fillDiv(div: HTMLDivElement) {
   const currentWidth = div.offsetWidth;
@@ -45,6 +45,22 @@ function isValidResponseApi(response: ApiResponse | null | { error: true }): res
   return response !== null && !(response as any).error;
 }
 
+function getRealDeptTime(trainService: TrainService, stdForDelayed: boolean = false): string | null {
+  let realDeptTime: string | null = null;
+
+  if (trainService?.isCancelled || trainService?.etd === 'On time') {
+    realDeptTime = trainService.std!;
+  } else if (trainService?.etd === 'Delayed') {
+    if (stdForDelayed) {
+      realDeptTime = trainService.std!;
+    }
+  } else {
+    realDeptTime = trainService.etd!;
+  }
+
+  return realDeptTime;
+}
+
 function FullBoard({ station, platformNumber }: IProps) {
   const [trainData, setTrainData] = useState<ApiResponse | null | { error: true }>(null);
 
@@ -57,21 +73,62 @@ function FullBoard({ station, platformNumber }: IProps) {
 
   const boardRef = useRef<HTMLDivElement>(null);
 
+  const loadData = useCallback(() => {
+    loadTrainData(station, (data: ApiResponse | null | { error: true }) => {
+      if (isValidResponseApi(data)) {
+        console.log([...data.trainServices]);
+
+        data.trainServices = data.trainServices
+          .filter((trainService) => {
+            const realDeptTime = getRealDeptTime(trainService);
+
+            if (!realDeptTime) return true;
+
+            const now = new Date().toLocaleString('en-GB', { hour: '2-digit', hour12: false, minute: '2-digit', timeZone: 'Europe/London' });
+
+            const [nowHour, nowMin] = now.split(':');
+            const [realHour, realMin] = realDeptTime.split(':');
+
+            if (realHour !== nowHour) {
+              return true;
+            }
+
+            if (realHour === nowHour && realMin > nowMin) {
+              return true;
+            }
+          })
+          .sort((a, b) => {
+            const aRealDeptTime = getRealDeptTime(a, true);
+            const bRealDeptTime = getRealDeptTime(b, true);
+
+            if (aRealDeptTime === bRealDeptTime) {
+              if (a.std === b.std) {
+                return 0;
+              }
+
+              return a.std! > b.std! ? 1 : -1;
+            }
+
+            return aRealDeptTime! > bRealDeptTime! ? 1 : -1;
+          });
+      }
+
+      console.log([...data.trainServices]);
+
+      setTrainData(data);
+      setDataInfo({ lastUpdated: Date.now(), loadingData: false });
+    });
+  }, [station, setTrainData, setDataInfo]);
+
   useEffect(() => {
     if (dataInfo.loadingData) return;
 
     if (dataInfo.lastUpdated === 0) {
-      loadTrainData(station, (data) => {
-        setTrainData(data);
-        setDataInfo({ lastUpdated: Date.now(), loadingData: false });
-      });
+      loadData();
     }
 
     const key = setInterval(() => {
-      loadTrainData(station, (data) => {
-        setTrainData(data);
-        setDataInfo({ lastUpdated: Date.now(), loadingData: false });
-      });
+      loadData();
     }, UPDATE_INTERVAL_SECS * 1000);
 
     return () => {
