@@ -23,7 +23,7 @@ function FadeBetween({ elements, secondsPerEl = 5 }: IProps) {
   }
 
   useEffect(() => {
-    if (shownIndex.current === -1) return;
+    if (shownIndex.current === -1 || elements.length <= 1) return;
 
     let key: number;
 
