@@ -33,7 +33,8 @@ const NextTrainThirdRow = React.memo(({ callingPointText, extraText }) => {
   return (
     <div className="third-row">
       <SlideyScrollText className="trainInfo" scrollSpeed={350} oneWayScroll>
-        {callingPointText} {extraText}
+        {callingPointText}
+        {extraText && <>. {extraText.endsWith('.' ? extraText : <>{extraText}.</>)}</>}
       </SlideyScrollText>
     </div>
   );
