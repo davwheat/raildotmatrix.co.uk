@@ -19,38 +19,45 @@ function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4
 
   const previousElContent = useRef<string>('');
 
+  const animationStep = useRef<'pause-left' | 'scrolling-right' | 'pause-right' | 'scrolling-left' | 'fade-out' | 'fade-in'>('pause-left');
+
   useEffect(() => {
-    const { current: dest } = outerRef;
-    const { current: destInner } = innerRef;
+    const { current: outer } = outerRef;
+    const { current: inner } = innerRef;
 
-    let innerStyle = getComputedStyle(destInner!);
+    let outerStyles!: CSSStyleDeclaration;
+    let innerStyles!: CSSStyleDeclaration;
 
-    let outerWidth = dest!.offsetWidth;
-    let innerWidth = destInner!.offsetWidth;
-    let innerWidthWithoutPadding = innerWidth - parseFloat(innerStyle.paddingLeft) - parseFloat(innerStyle.paddingRight);
+    let outerWidth!: number;
+    let innerWidth!: number;
 
-    let animationStep: 'pause-left' | 'scrolling-right' | 'pause-right' | 'scrolling-left' | 'fade-out' | 'fade-in' = 'pause-left';
+    function updateSizes() {
+      outerStyles = getComputedStyle(outer!);
+      innerStyles = getComputedStyle(inner!);
+
+      outerWidth = parseFloat(outerStyles.width);
+      innerWidth = parseFloat(innerStyles.width);
+    }
+
+    updateSizes();
+
     let currentTimeout = -1;
 
-    destInner!.style.removeProperty('--trans-x');
-    destInner!.style.removeProperty('--transition-time');
+    inner!.style.removeProperty('--trans-x');
+    inner!.style.removeProperty('--transition-time');
 
     function updateScrollDuration() {
-      const innerStyle = getComputedStyle(destInner!);
-
-      outerWidth = dest!.clientWidth;
-      innerWidth = destInner!.clientWidth;
-      innerWidthWithoutPadding = innerWidth - parseFloat(innerStyle.paddingLeft) - parseFloat(innerStyle.paddingRight);
+      updateSizes();
 
       const scrollDuration = `${(innerWidth - outerWidth) / scrollSpeed}s`;
-      destInner!.style.setProperty('--transition-time', scrollDuration);
+      inner!.style.setProperty('--transition-time', scrollDuration);
     }
 
     function setScrollingProps() {
       let showLeft = false;
       let showRight = false;
 
-      switch (animationStep) {
+      switch (animationStep.current) {
         case 'fade-in':
         case 'pause-left':
           showRight = true;
@@ -68,112 +75,123 @@ function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4
           break;
       }
 
-      dest!.style.setProperty('--show-fade-left', showLeft ? '1' : '0');
-      dest!.style.setProperty('--show-fade-right', showRight ? '1' : '0');
+      outer!.style.setProperty('--show-fade-left', showLeft ? '1' : '0');
+      outer!.style.setProperty('--show-fade-right', showRight ? '1' : '0');
     }
 
     function transitionEndHandler() {
-      if (animationStep === 'fade-out') {
-        animationStep = 'fade-in';
+      if (animationStep.current === 'fade-out') {
+        animationStep.current = 'fade-in';
 
         setScrollingProps();
 
         currentTimeout = setTimeout(() => {
-          destInner!.style.setProperty('--trans-x', '0');
+          inner!.style.setProperty('--trans-x', '0');
           updateScrollDuration();
-          destInner!.style.setProperty('--opacity', '1');
+          inner!.style.setProperty('--opacity', '1');
         }, 250) as any;
-      } else if (animationStep === 'fade-in') {
-        animationStep = 'pause-left';
+      } else if (animationStep.current === 'fade-in') {
+        animationStep.current = 'pause-left';
 
         setScrollingProps();
 
         currentTimeout = setTimeout(() => {
-          animationStep = 'scrolling-right';
+          animationStep.current = 'scrolling-right';
           updateScrollDuration();
-          destInner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
+          inner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
         }, pauseAtEnds || 0) as any;
-      } else if (animationStep === 'scrolling-right') {
-        animationStep = 'pause-right';
+      } else if (animationStep.current === 'scrolling-right') {
+        animationStep.current = 'pause-right';
 
         setScrollingProps();
 
         currentTimeout = setTimeout(() => {
           if (oneWayScroll) {
-            animationStep = 'fade-out';
+            animationStep.current = 'fade-out';
 
-            destInner!.style.removeProperty('--transition-time');
-            destInner!.style.setProperty('--opacity', '0');
+            inner!.style.removeProperty('--transition-time');
+            inner!.style.setProperty('--opacity', '0');
 
             currentTimeout = setTimeout(() => {
-              animationStep = 'scrolling-right';
+              animationStep.current = 'scrolling-right';
 
               setScrollingProps();
               updateScrollDuration();
 
-              destInner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
+              inner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
             }, pauseAtEnds || 0) as any;
             return;
           }
 
-          animationStep = 'scrolling-left';
+          animationStep.current = 'scrolling-left';
 
           setScrollingProps();
           updateScrollDuration();
 
-          destInner!.style.setProperty('--trans-x', '0');
+          inner!.style.setProperty('--trans-x', '0');
         }, pauseAtEnds || 0) as any;
-      } else if (animationStep === 'scrolling-left') {
-        animationStep = 'pause-left';
+      } else if (animationStep.current === 'scrolling-left') {
+        animationStep.current = 'pause-left';
 
-        dest!.style.setProperty('--scrolled', '0');
+        outer!.style.setProperty('--scrolled', '0');
         currentTimeout = setTimeout(() => {
-          animationStep = 'scrolling-right';
+          animationStep.current = 'scrolling-right';
 
           setScrollingProps();
           updateScrollDuration();
 
-          destInner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
+          inner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
         }, pauseAtEnds || 0) as any;
       }
     }
 
-    if (previousElContent.current !== destInner!.innerHTML) {
-      previousElContent.current = destInner!.innerHTML;
+    if (previousElContent.current !== inner!.innerHTML) {
+      previousElContent.current = inner!.innerHTML;
 
-      destInner!.style.removeProperty('--trans-x');
-      destInner!.style.removeProperty('--transition-time');
-      animationStep = 'pause-left';
-    }
+      outer!.style.removeProperty('--edge-fade');
+      inner!.style.removeProperty('--trans-x');
+      inner!.style.removeProperty('--transition-time');
+      inner!.style.removeProperty('--opacity');
+      outer!.style.removeProperty('--show-fade-left');
+      outer!.style.removeProperty('--show-fade-right');
 
-    if (innerWidthWithoutPadding < outerWidth) {
-      dest!.style.setProperty('--edge-fade', '0');
-      return;
+      animationStep.current = 'pause-left';
     }
 
     if (innerWidth > outerWidth) {
-      dest!.style.removeProperty('--edge-fade');
+      outer!.style.removeProperty('--edge-fade');
+      inner!.style.removeProperty('--trans-x');
+      inner!.style.removeProperty('--transition-time');
+      inner!.style.removeProperty('--opacity');
+      outer!.style.removeProperty('--show-fade-left');
+      outer!.style.removeProperty('--show-fade-right');
 
-      if (animationStep === 'pause-left') {
-        currentTimeout = setTimeout(() => {
-          animationStep = 'scrolling-right';
+      console.log('reset');
 
-          setScrollingProps();
-          updateScrollDuration();
+      animationStep.current = 'pause-left';
 
-          destInner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
-        }, pauseAtEnds || 0) as any;
-      }
+      currentTimeout = setTimeout(() => {
+        animationStep.current = 'scrolling-right';
 
-      destInner?.addEventListener('transitionend', transitionEndHandler);
+        setScrollingProps();
+        updateScrollDuration();
+
+        inner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
+      }, pauseAtEnds || 0) as any;
+
+      inner?.addEventListener('transitionend', transitionEndHandler);
     } else {
-      destInner!.style.removeProperty('--trans-x');
-      destInner!.style.removeProperty('--transition-time');
+      outer!.style.removeProperty('--edge-fade');
+      inner!.style.removeProperty('--trans-x');
+      inner!.style.removeProperty('--transition-time');
+      inner!.style.removeProperty('--opacity');
+      outer!.style.removeProperty('--show-fade-left');
+      outer!.style.removeProperty('--show-fade-right');
     }
 
     return () => {
       clearTimeout(currentTimeout);
-      destInner?.removeEventListener('transitionend', transitionEndHandler);
+      inner?.removeEventListener('transitionend', transitionEndHandler);
     };
   });
 
