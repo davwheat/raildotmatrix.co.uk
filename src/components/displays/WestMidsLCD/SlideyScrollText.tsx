@@ -166,8 +166,6 @@ function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4
       outer!.style.removeProperty('--show-fade-left');
       outer!.style.removeProperty('--show-fade-right');
 
-      console.log('reset');
-
       animationStep.current = 'pause-left';
 
       currentTimeout = setTimeout(() => {
