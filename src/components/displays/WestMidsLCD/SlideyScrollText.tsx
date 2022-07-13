@@ -46,9 +46,37 @@ function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4
       destInner!.style.setProperty('--transition-time', scrollDuration);
     }
 
+    function setScrollingProps() {
+      let showLeft = false;
+      let showRight = false;
+
+      switch (animationStep) {
+        case 'fade-in':
+        case 'pause-left':
+          showRight = true;
+          break;
+
+        case 'scrolling-left':
+        case 'scrolling-right':
+          showLeft = true;
+          showRight = true;
+          break;
+
+        case 'fade-out':
+        case 'pause-right':
+          showLeft = true;
+          break;
+      }
+
+      dest!.style.setProperty('--show-fade-left', showLeft ? '1' : '0');
+      dest!.style.setProperty('--show-fade-right', showRight ? '1' : '0');
+    }
+
     function transitionEndHandler() {
       if (animationStep === 'fade-out') {
         animationStep = 'fade-in';
+
+        setScrollingProps();
 
         currentTimeout = setTimeout(() => {
           destInner!.style.setProperty('--trans-x', '0');
@@ -58,6 +86,8 @@ function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4
       } else if (animationStep === 'fade-in') {
         animationStep = 'pause-left';
 
+        setScrollingProps();
+
         currentTimeout = setTimeout(() => {
           animationStep = 'scrolling-right';
           updateScrollDuration();
@@ -65,6 +95,8 @@ function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4
         }, pauseAtEnds || 0) as any;
       } else if (animationStep === 'scrolling-right') {
         animationStep = 'pause-right';
+
+        setScrollingProps();
 
         currentTimeout = setTimeout(() => {
           if (oneWayScroll) {
@@ -75,22 +107,32 @@ function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4
 
             currentTimeout = setTimeout(() => {
               animationStep = 'scrolling-right';
+
+              setScrollingProps();
               updateScrollDuration();
+
               destInner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
             }, pauseAtEnds || 0) as any;
             return;
           }
 
           animationStep = 'scrolling-left';
+
+          setScrollingProps();
           updateScrollDuration();
+
           destInner!.style.setProperty('--trans-x', '0');
         }, pauseAtEnds || 0) as any;
       } else if (animationStep === 'scrolling-left') {
         animationStep = 'pause-left';
 
+        dest!.style.setProperty('--scrolled', '0');
         currentTimeout = setTimeout(() => {
           animationStep = 'scrolling-right';
+
+          setScrollingProps();
           updateScrollDuration();
+
           destInner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
         }, pauseAtEnds || 0) as any;
       }
@@ -106,18 +148,19 @@ function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4
 
     if (innerWidthWithoutPadding < outerWidth) {
       dest!.style.setProperty('--edge-fade', '0');
-      // dest!.style.setProperty('--ignore-pad', '1');
       return;
     }
 
     if (innerWidth > outerWidth) {
       dest!.style.removeProperty('--edge-fade');
-      // dest!.style.removeProperty('--ignore-pad');
 
       if (animationStep === 'pause-left') {
         currentTimeout = setTimeout(() => {
           animationStep = 'scrolling-right';
+
+          setScrollingProps();
           updateScrollDuration();
+
           destInner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
         }, pauseAtEnds || 0) as any;
       }

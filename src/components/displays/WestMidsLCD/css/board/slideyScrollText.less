@@ -2,15 +2,31 @@
   overflow: hidden;
   white-space: nowrap;
 
-  --edge-fade: 24px;
-  // --pad-x: 24px;
-  // --ignore-pad: 0;
+  --edge-fade: 32px;
+  --show-fade-left: 0;
+  --show-fade-right: 0;
 
-  -webkit-mask-image: -webkit-linear-gradient(to left, transparent, black var(--edge-fade), black calc(100% - var(--edge-fade)), transparent 100%);
-  mask-image: linear-gradient(to left, transparent, black var(--edge-fade), black calc(100% - var(--edge-fade)), transparent 100%, transparent 100%);
+  --edge-fade-l: calc(var(--edge-fade) * var(--show-fade-left));
+  --edge-fade-r: calc(var(--edge-fade) * var(--show-fade-right));
+
+  -webkit-mask-image: -webkit-linear-gradient(
+    to right,
+    transparent,
+    black var(--edge-fade-l),
+    black calc(100% - var(--edge-fade-r)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--edge-fade-l),
+    black calc(100% - var(--edge-fade-r)),
+    transparent 100%,
+    transparent 100%
+  );
 
   // Fix issue with mask-image leaving 1px gaps at sides with 100% transparency
-  clip-path: inset(0 1px 0 1px);
+  clip-path: inset(0 1px);
 
   &-inner {
     --trans-x: 0;
@@ -18,8 +34,6 @@
 
     display: inline-block;
 
-    padding: 0 var(--edge-fade);
-    margin: 0 calc(-1 * var(--ignore-pad) * var(--pad-x));
     opacity: var(--opacity);
 
     transform: translateX(var(--trans-x));
