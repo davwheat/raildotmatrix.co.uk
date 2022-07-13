@@ -34,7 +34,7 @@ export default function NextTrain({ nextTrain }: { nextTrain: TrainService }) {
             Sometimes data feed issues mean that the train length is 0.
             We should hide the length when this is the case.
            */}
-          {(nextTrain.length || 0) === 0 && `? carriages`}
+          {/* {(nextTrain.length || 0) === 0 && `? carriages`} */}
         </div>
       </div>
 
