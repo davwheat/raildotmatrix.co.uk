@@ -84,7 +84,12 @@ function FullBoard({ station, platformNumber }: IProps) {
 
             if (!realDeptTime) return true;
 
-            const now = new Date().toLocaleString('en-GB', { hour: '2-digit', hour12: false, minute: '2-digit', timeZone: 'Europe/London' });
+            const now = new Date(new Date().getTime() + 60 * 60 * 1000).toLocaleString('en-GB', {
+              hour: '2-digit',
+              hour12: false,
+              minute: '2-digit',
+              timeZone: 'Europe/London',
+            });
 
             const [nowHour, nowMin] = now.split(':');
             const [realHour, realMin] = realDeptTime.split(':');
