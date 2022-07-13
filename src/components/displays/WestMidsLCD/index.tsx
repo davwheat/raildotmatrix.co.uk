@@ -1,26 +1,23 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import FullBoard from './FullBoard';
 import ToggleSwitch from '../../common/form/ToggleSwitch';
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage';
-import { throttle } from 'throttle-debounce';
+import { debounce } from 'throttle-debounce';
 
 import './css/index.less';
 import PageLink from '../../common/PageLink';
 
 const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) => {
-  const [settings, setSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
-    noBg: false,
+  const [settings, setSettings] = useStateWithLocalStorage('tfwmLcdBoardSettings', {
     hideSettings: false,
   });
 
   const settingsRef = useRef<HTMLDivElement>(null);
 
-  const noBgRef = useRef<HTMLInputElement>(null);
   const hideRef = useRef<HTMLInputElement>(null);
 
   function updateState() {
     setSettings({
-      noBg: noBgRef.current?.checked,
       hideSettings: hideRef.current?.checked,
     });
 
@@ -29,40 +26,34 @@ const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, 
     }
   }
 
-  useEffect(() => {
-    let to = -1;
+  const updateHidden = useCallback(() => {
+    settingsRef.current!.classList[settings.hideSettings ? 'add' : 'remove']('hide');
+  }, [settings.hideSettings]);
 
-    function hideControls() {
-      settingsRef.current!.classList.add('hide');
+  const debouncedHide = debounce(1000, updateHidden);
+
+  useEffect(() => {
+    updateHidden();
+
+    if (!settings.hideSettings) {
+      return;
     }
 
-    const throttledReset = throttle(1500, () => {
+    function handler() {
       settingsRef.current!.classList.remove('hide');
-      clearTimeout(to);
-      to = setTimeout(() => {
-        hideControls();
-      }, 2500) as any;
-    });
 
-    function resetTimeout(e) {
-      throttledReset(e);
+      debouncedHide();
     }
 
     const events = ['click', 'mousemove', 'mouseover', 'mousemove', 'touchmove', 'touchstart', 'touchend', 'focus'];
 
-    if (settings.hideSettings) {
-      events.forEach((e) => {
-        window.addEventListener(e, resetTimeout);
-      });
-    }
+    events.forEach((e) => window.addEventListener(e, handler));
 
     return () => {
-      events.forEach((e) => {
-        window.removeEventListener(e, resetTimeout);
-      });
-      clearTimeout(to);
+      debouncedHide.cancel();
+      events.forEach((e) => window.removeEventListener(e, handler));
     };
-  }, [settings]);
+  }, [settings.hideSettings]);
 
   return (
     <>
@@ -79,7 +70,7 @@ const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, 
         <br />
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
-      <FullBoard ref={ref} noBg={settings.noBg} station={station} />
+      <FullBoard ref={ref} station={station} />
     </>
   );
 });
