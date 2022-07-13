@@ -1,8 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import FullBoard from './FullBoard';
 import ToggleSwitch from '../../common/form/ToggleSwitch';
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage';
-import { throttle } from 'throttle-debounce';
+import { debounce } from 'throttle-debounce';
 
 import './css/index.less';
 import PageLink from '../../common/PageLink';
@@ -29,40 +29,34 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
     }
   }
 
-  useEffect(() => {
-    let to = null;
+  const updateHidden = useCallback(() => {
+    settingsRef.current.classList[settings.hideSettings ? 'add' : 'remove']('hide');
+  }, [settings.hideSettings]);
 
-    function hideControls() {
-      settingsRef.current.classList.add('hide');
+  const debouncedHide = debounce(1000, updateHidden);
+
+  useEffect(() => {
+    updateHidden();
+
+    if (!settings.hideSettings) {
+      return;
     }
 
-    const throttledReset = throttle(1500, () => {
+    function handler() {
       settingsRef.current.classList.remove('hide');
-      clearTimeout(to);
-      to = setTimeout(() => {
-        hideControls();
-      }, 2500);
-    });
 
-    function resetTimeout(e) {
-      throttledReset(e);
+      debouncedHide();
     }
 
     const events = ['click', 'mousemove', 'mouseover', 'mousemove', 'touchmove', 'touchstart', 'touchend', 'focus'];
 
-    if (settings.hideSettings) {
-      events.forEach((e) => {
-        window.addEventListener(e, resetTimeout);
-      });
-    }
+    events.forEach((e) => window.addEventListener(e, handler));
 
     return () => {
-      events.forEach((e) => {
-        window.removeEventListener(e, resetTimeout);
-      });
-      clearTimeout(to);
+      debouncedHide.cancel();
+      events.forEach((e) => window.removeEventListener(e, handler));
     };
-  }, [settings]);
+  }, [settings.hideSettings]);
 
   return (
     <>

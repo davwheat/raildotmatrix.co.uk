@@ -88,17 +88,24 @@ export default async function GetNextTrainsAtStation(
     return null;
   }
 
-  let response = await fetch(
-    GenerateUrl('departures', [station], {
-      expand: true,
-      numServices: options.count || 3,
-      timeOffset: options.minOffset || 0,
-      timeWindow: options.timeWindow || 120,
-    }),
-    {
-      signal: abortController ? abortController.signal : undefined,
-    }
-  );
+  let response: Response;
+
+  try {
+    response = await fetch(
+      GenerateUrl('departures', [station], {
+        expand: true,
+        numServices: options.count || 3,
+        timeOffset: options.minOffset || 0,
+        timeWindow: options.timeWindow || 120,
+      }),
+      {
+        signal: abortController ? abortController.signal : undefined,
+      }
+    );
+  } catch (e) {
+    console.error(e);
+    return { error: true };
+  }
 
   if (response.ok === false) {
     return { error: true };
