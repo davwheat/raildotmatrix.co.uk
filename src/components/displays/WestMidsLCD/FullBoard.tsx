@@ -7,6 +7,7 @@ import './css/board/index.less';
 import { debounce } from 'throttle-debounce';
 import BoardHeader from './BoardHeader';
 import NextTrain from './NextTrainData';
+import SecondaryTrainData from './SecondaryTrainData';
 
 interface IProps {
   station: string;
@@ -139,6 +140,9 @@ function FullBoard({ station, platformNumber }: IProps) {
       <BoardHeader platformNumber={platformNumber} stationName={trainData?.locationName ?? station} />
 
       {firstService && <NextTrain nextTrain={firstService} />}
+
+      {secondService && <SecondaryTrainData train={secondService} position={2} />}
+      {thirdService && <SecondaryTrainData train={thirdService} position={3} />}
     </article>
   );
 }

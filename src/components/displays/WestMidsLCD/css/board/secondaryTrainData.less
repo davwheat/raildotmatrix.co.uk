@@ -1,0 +1,45 @@
+.tfwm-board {
+  .secondaryTrain {
+    position: relative;
+    display: grid;
+    align-items: center;
+
+    grid-template-columns: 150px 75px 185px 1fr auto;
+
+    // line-height: 1;
+    font-size: 0.8em;
+
+    --pad-y: 4px;
+
+    padding: var(--pad-y) 20px;
+    background: #080808;
+
+    + .secondaryTrain {
+      margin-top: 8px;
+    }
+
+    .position {
+      color: var(--yellow);
+    }
+
+    .arrow {
+      img {
+        display: block;
+
+        position: absolute;
+
+        height: 100%;
+        object-fit: contain;
+        // left: 0;
+        // right: 0;
+        top: 0;
+        bottom: 0;
+      }
+    }
+
+    .status {
+      color: var(--grey);
+      text-align: right;
+    }
+  }
+}
