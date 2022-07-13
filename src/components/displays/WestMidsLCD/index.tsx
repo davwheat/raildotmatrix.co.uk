@@ -13,7 +13,6 @@ const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, 
   });
 
   const settingsRef = useRef<HTMLDivElement>(null);
-
   const hideRef = useRef<HTMLInputElement>(null);
 
   function updateState() {

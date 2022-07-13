@@ -1,25 +1,9 @@
-import dayjs from 'dayjs';
-import React, { useState } from 'react';
-import { useRef } from 'react';
-import { useEffect } from 'react';
-import { CallingPointLocation, CallingPoints, Location, TrainService } from '../../../api/GetNextTrainsAtStation';
+import React from 'react';
+import { TrainService } from '../../../api/GetNextTrainsAtStation';
+import { combineLocations } from './combineLocations';
 
 import './css/board/nextTrain.less';
 import SlideyScrollText from './SlideyScrollText';
-
-export function combineLocations(locations: { locationName: string; [x: string]: any }[], showAnd: boolean = true): string {
-  const names = locations.map((l) => l.locationName);
-
-  if (names.length === 1) return names[0];
-
-  if (!showAnd) {
-    return names.join(', ');
-  }
-
-  const lastName = names.pop();
-
-  return names.join(', ') + ' and ' + lastName;
-}
 
 export default function NextTrain({ nextTrain }: { nextTrain: TrainService }) {
   const isOnTime = nextTrain.etd === 'On time' || nextTrain.etd === nextTrain.std;
