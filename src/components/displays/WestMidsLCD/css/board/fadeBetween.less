@@ -1,0 +1,45 @@
+.fadeBetween {
+  display: grid;
+
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+
+  grid-template-areas: 'a';
+
+  --transition-speed: 0.25s;
+
+  > .textOption {
+    grid-area: a;
+    transition: opacity linear var(--transition-speed);
+  }
+
+  .in {
+    opacity: 1;
+    animation: slideIn var(--transition-speed) linear 0s 1;
+  }
+
+  .out {
+    opacity: 0;
+    animation: slideOut var(--transition-speed) linear 0s 1;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateY(-4px);
+    }
+
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideOut {
+    from {
+      transform: translateY(0);
+    }
+
+    to {
+      transform: translateY(4px);
+    }
+  }
+}
