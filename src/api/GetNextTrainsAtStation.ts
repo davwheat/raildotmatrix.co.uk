@@ -34,6 +34,8 @@ export interface TrainService {
   currentOrigin: Location[] | null;
 
   delayReason?: string;
+  cancelReason?: string;
+
   detachFront: boolean;
   eta?: string;
   etd?: string;
@@ -60,7 +62,7 @@ export interface ApiResponse {
   areServicesAvailable: boolean;
   crs: string;
   locationName: string;
-  nrccMessages: null | string[];
+  // nrccMessages: null | string[];
   platformAvailable: boolean;
   trainServices: TrainService[];
 }

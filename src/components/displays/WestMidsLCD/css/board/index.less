@@ -43,6 +43,31 @@
     font-variant-numeric: tabular-nums;
   }
 
+  .flash {
+    animation: flash 2s infinite;
+
+    @keyframes flash {
+      0% {
+        opacity: 0;
+      }
+      10% {
+        opacity: 0;
+      }
+      40% {
+        opacity: 1;
+      }
+      60% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+  }
+
   &__notice {
     display: flex;
     flex-direction: column;

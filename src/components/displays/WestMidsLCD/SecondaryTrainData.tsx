@@ -27,14 +27,14 @@ export default function SecondaryTrainData({ train, position }: { train: TrainSe
   const finalColumnElements: React.ReactNode[] = [];
 
   finalColumnElements.push(
-    <>
+    <span className={train.isCancelled ? 'flash' : ''}>
       {isOnTime && 'On time'}
       {!isOnTime && train.isCancelled && 'Cancelled'}
       {!isOnTime && !train.isCancelled && `Exp ${train.etd}`}
-    </>
+    </span>
   );
 
-  if ((train.length || 0) > 0) {
+  if ((train.length || 0) > 0 && !train.isCancelled) {
     finalColumnElements.push(
       <>
         {train.length}
@@ -54,7 +54,7 @@ export default function SecondaryTrainData({ train, position }: { train: TrainSe
 
       <div className="time">{train.std ?? train.sta}</div>
 
-      <SlideyScrollText className="dest" classNameInner="dest-inner">
+      <SlideyScrollText className="dest" classNameInner="dest-inner" oneWayScroll>
         {combineLocations(train.currentDestinations ?? train.destination)}
       </SlideyScrollText>
 
