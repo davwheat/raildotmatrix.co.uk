@@ -18,7 +18,7 @@ const NextTrainTopRow = React.memo(({ std, sta, currentDestinations, destination
         {combineLocations(currentDestinations ?? destination)}
       </SlideyScrollText>
 
-      <div className="status" data-on-time={isOnTime}>
+      <div className="status" data-on-time={`${isOnTime}`}>
         <span className={isCancelled ? 'flash' : ''}>
           {isOnTime && 'On time'}
           {!isOnTime && isCancelled && 'Cancelled'}
