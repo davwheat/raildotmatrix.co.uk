@@ -22,19 +22,22 @@ function ordinal(number: number) {
 }
 
 export default function SecondaryTrainData({ train, position }: { train: TrainService; position: number }) {
-  const isOnTime = train.etd === 'On time' || train.etd === train.std;
+  const { etd, std, sta } = train;
+  const isOnTime = train.etd === 'On time' || etd === std;
+  const isCancelled = train.isCancelled;
 
   const finalColumnElements: React.ReactNode[] = [];
 
   finalColumnElements.push(
-    <span className={train.isCancelled ? 'flash' : ''}>
+    <span className={isCancelled ? 'flash' : ''}>
       {isOnTime && 'On time'}
-      {!isOnTime && train.isCancelled && 'Cancelled'}
-      {!isOnTime && !train.isCancelled && `Exp ${train.etd}`}
+      {!isOnTime && isCancelled && 'Cancelled'}
+      {!isOnTime && !isCancelled && etd === 'Delayed' && etd}
+      {!isOnTime && !isCancelled && etd !== 'Delayed' && `Exp ${etd}`}
     </span>
   );
 
-  if ((train.length || 0) > 0 && !train.isCancelled) {
+  if ((train.length || 0) > 0 && !isCancelled) {
     finalColumnElements.push(
       <>
         {train.length}
@@ -52,13 +55,13 @@ export default function SecondaryTrainData({ train, position }: { train: TrainSe
         <img src={ArrowSVG} />
       </div>
 
-      <div className="time">{train.std ?? train.sta}</div>
+      <div className="time">{std ?? sta}</div>
 
       <SlideyScrollText className="dest" classNameInner="dest-inner" oneWayScroll>
         {combineLocations(train.currentDestinations ?? train.destination)}
       </SlideyScrollText>
 
-      <div className="status" data-on-time={isOnTime && !train.isCancelled}>
+      <div className="status" data-on-time={isOnTime && !isCancelled}>
         <FadeBetween elements={finalColumnElements} />
       </div>
     </div>

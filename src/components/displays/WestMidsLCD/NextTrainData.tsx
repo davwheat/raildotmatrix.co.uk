@@ -22,7 +22,8 @@ const NextTrainTopRow = React.memo(({ std, sta, currentDestinations, destination
         <span className={isCancelled ? 'flash' : ''}>
           {isOnTime && 'On time'}
           {!isOnTime && isCancelled && 'Cancelled'}
-          {!isOnTime && !isCancelled && `Exp ${etd}`}
+          {!isOnTime && !isCancelled && etd === 'Delayed' && etd}
+          {!isOnTime && !isCancelled && etd !== "Delayed" && `Exp ${etd}`}
         </span>
       </div>
     </div>
