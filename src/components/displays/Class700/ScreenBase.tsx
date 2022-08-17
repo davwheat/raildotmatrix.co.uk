@@ -49,9 +49,9 @@ export default function ScreenBase({}) {
 
   useEffect(() => {
     if (shouldScrollStages) {
-      setTimeout(scrollToNextScreen, 10 * 1000);
+      setTimeout(scrollToNextScreen, screenStage === 'calling points' ? 45 * 1000 : 10 * 1000);
     }
-  }, [scrollToNextScreen, shouldScrollStages, setScreenStage]);
+  }, [scrollToNextScreen, shouldScrollStages, screenStage, setScreenStage]);
 
   console.log(screenStage);
 
