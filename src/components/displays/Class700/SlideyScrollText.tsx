@@ -12,7 +12,7 @@ interface IProps {
   scrollSpeed?: number;
 }
 
-function SlideyScrollText({ children, className, classNameInner, pauseWhenDone = 5000, scrollSpeed = 90 }: IProps) {
+function SlideyScrollText({ children, className, classNameInner, pauseWhenDone = 5000, scrollSpeed = 110 }: IProps) {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
 
@@ -78,15 +78,13 @@ function SlideyScrollText({ children, className, classNameInner, pauseWhenDone =
 
       inner!.style.removeProperty('--trans-x');
       inner!.style.removeProperty('--transition-time');
-      inner!.style.removeProperty('--opacity');
 
       animationStep.current = 'pause-left';
     }
 
     if (innerWidth > outerWidth) {
-      inner!.style.removeProperty('--trans-x');
+      inner!.style.setProperty('--trans-x', `${outerWidth}px`);
       inner!.style.removeProperty('--transition-time');
-      inner!.style.removeProperty('--opacity');
 
       animationStep.current = 'pause-left';
 
@@ -100,9 +98,8 @@ function SlideyScrollText({ children, className, classNameInner, pauseWhenDone =
 
       inner?.addEventListener('transitionend', transitionEndHandler);
     } else {
-      inner!.style.removeProperty('--trans-x');
       inner!.style.removeProperty('--transition-time');
-      inner!.style.removeProperty('--opacity');
+      inner!.style.setProperty('--trans-x', '0');
     }
 
     return () => {
