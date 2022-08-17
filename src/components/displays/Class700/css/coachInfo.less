@@ -1,0 +1,114 @@
+.smallScreen {
+  .coachInfo {
+    background-color: var(--dark-blue);
+    font-weight: 900;
+  }
+}
+
+.bigScreen {
+  .coachInfo {
+    .layout-title {
+      // position: absolute;
+      line-height: 1.3;
+      font-size: 42px;
+      text-align: center;
+
+      .coach {
+        &-intro {
+          margin-left: -21px;
+          transform-origin: right;
+        }
+
+        &-of {
+          transform-origin: center;
+          margin-left: -3px;
+        }
+
+        &-num {
+          margin-left: 6px;
+          margin-right: 6px;
+          transform-origin: center;
+        }
+
+        &-total {
+          margin-left: 4px;
+          transform-origin: center;
+        }
+      }
+    }
+
+    .coach-diagram {
+      display: grid;
+
+      grid-template-columns: repeat(var(--coach-count), auto);
+      grid-template-rows: 0.9fr auto 1fr;
+
+      height: 100%;
+      justify-content: center;
+      align-items: center;
+
+      row-gap: 4px;
+
+      .coach-svg-body {
+        fill: white;
+      }
+
+      [data-active='true'] .coach-svg-body {
+        fill: black;
+      }
+
+      .front-label {
+        grid-column: 1 / span var(--coach-count);
+        font-size: 12px;
+
+        align-self: flex-end;
+
+        transform: none;
+      }
+
+      .current-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        grid-column: var(--coach) / span 1;
+        line-height: 1.1;
+
+        text-align: center;
+
+        .text {
+          transform: none;
+        }
+
+        font-size: 9px;
+
+        .coach-here {
+          letter-spacing: -0.06em;
+        }
+
+        .coach-num-small {
+          font-size: 9px;
+        }
+      }
+
+      .coach-svg,
+      .coach-diagram-num {
+        grid-row: 2 / span 1;
+        grid-column: var(--coach) / span 1;
+      }
+
+      .coach-diagram-num {
+        color: black;
+        transform-origin: center;
+        text-align: center;
+        font-size: 17px;
+        line-height: 1;
+        margin-top: -6px;
+
+        &[data-active='true'] {
+          color: white;
+        }
+      }
+    }
+  }
+}
