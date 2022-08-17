@@ -1,37 +1,34 @@
 import React, { useRef, useEffect, useCallback } from 'react';
-import FullBoard from './FullBoard';
+import ScreenBase from './ScreenBase';
 import ToggleSwitch from '../../common/form/ToggleSwitch';
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage';
 import { debounce } from 'throttle-debounce';
 
 import './css/index.less';
 import PageLink from '../../common/PageLink';
+import NoSSR from '@mpth/react-no-ssr';
 import { ZoomDiv } from '../ZoomDiv';
 
-const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
-  const [settings, setSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
-    noBg: false,
+const Class700PIS = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) => {
+  const [settings, setSettings] = useStateWithLocalStorage('class700LcdBoardSettings', {
     hideSettings: false,
   });
 
-  const settingsRef = useRef(null);
-
-  const noBgRef = useRef(null);
-  const hideRef = useRef(null);
+  const settingsRef = useRef<HTMLDivElement>(null);
+  const hideRef = useRef<HTMLInputElement>(null);
 
   function updateState() {
     setSettings({
-      noBg: noBgRef.current.checked,
-      hideSettings: hideRef.current.checked,
+      hideSettings: hideRef.current?.checked,
     });
 
-    if (!hideRef.current.checked) {
-      settingsRef.current.classList.remove('hide');
+    if (!hideRef.current?.checked) {
+      settingsRef.current?.classList.remove('hide');
     }
   }
 
   const updateHidden = useCallback(() => {
-    settingsRef.current.classList[settings.hideSettings ? 'add' : 'remove']('hide');
+    settingsRef.current!.classList[settings.hideSettings ? 'add' : 'remove']('hide');
   }, [settings.hideSettings]);
 
   const debouncedHide = debounce(1000, updateHidden);
@@ -44,7 +41,7 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
     }
 
     function handler() {
-      settingsRef.current.classList.remove('hide');
+      settingsRef.current!.classList.remove('hide');
 
       debouncedHide();
     }
@@ -72,14 +69,16 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
           Edit board
         </PageLink>
         <br />
-        <ToggleSwitch checked={settings.noBg} ref={noBgRef} label="Remove background" onChange={updateState} />
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
-      <ZoomDiv>
-        <FullBoard ref={ref} noBg={settings.noBg} station={station} />
-      </ZoomDiv>
+
+      <NoSSR>
+        <ZoomDiv>
+          <ScreenBase ref={ref} />
+        </ZoomDiv>
+      </NoSSR>
     </>
   );
 });
 
-export default NewGTR;
+export default Class700PIS;

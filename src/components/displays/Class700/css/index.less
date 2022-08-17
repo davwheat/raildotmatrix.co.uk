@@ -1,0 +1,180 @@
+@font-face {
+  font-family: 'Siemens Sans';
+  src: url('./SiemensSans-Roman.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Siemens Sans';
+  src: url('./SiemensSans-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+  font-stretch: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Siemens Sans';
+  src: url('./SiemensSans-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-stretch: normal;
+  font-display: block;
+}
+
+.class700 {
+  user-select: none;
+
+  font-family: 'Siemens Sans', sans-serif;
+  display: grid;
+
+  width: 1280px;
+  height: 264px;
+
+  grid-template-columns: 14px 24px 290px 65px minmax(0, 1fr) 24px 14px;
+  grid-template-rows: 30px 20px minmax(0, 1fr) 20px 30px;
+  grid-template-areas:
+    'metal-1 metal-1 metal-1 metal-1 metal-1 metal-1 metal-4'
+    'metal-2 black-1 black-1 black-1 black-1 black-4 metal-4'
+    'metal-2 black-2  small  black-5   big   black-4 metal-4'
+    'metal-2 black-2 black-3 black-3 black-3 black-3 metal-4'
+    'metal-2 metal-3 metal-3 metal-3 metal-3 metal-3 metal-3';
+
+  --grey-metal: #a0a0a0;
+  --black-border: #0a0a0a;
+  --screen-off: #111111;
+
+  --dark-blue: #1f2095;
+  --light-blue: #0052ed;
+
+  background-color: var(--grey-metal);
+
+  .blackFrame {
+    background-color: var(--black-border);
+    outline: 1px solid var(--black-border);
+
+    &1 {
+      grid-area: black-1;
+    }
+    &2 {
+      grid-area: black-2;
+    }
+    &3 {
+      grid-area: black-3;
+    }
+    &4 {
+      grid-area: black-4;
+    }
+    &5 {
+      grid-area: black-5;
+    }
+  }
+
+  .smallScreen {
+    background-color: var(--screen-off);
+    grid-area: small;
+    overflow: hidden;
+
+    border-top: 2px solid var(--black-border);
+    border-bottom: 2px solid var(--black-border);
+
+    z-index: 1;
+
+    font-size: 60px;
+
+    > .splitLines {
+      height: 100%;
+
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr;
+
+      > * {
+        padding: 0 4px;
+      }
+
+      > .lightBlue {
+        font-size: 60px;
+        line-height: 1.25;
+
+        // TODO: is this right?
+        color: #cee5fa;
+      }
+    }
+
+    > *:not(.splitLines) {
+      height: 100%;
+      padding: 0 4px;
+    }
+  }
+
+  .bigScreen {
+    background-color: var(--screen-off);
+    grid-area: big;
+    overflow: hidden;
+    position: relative;
+
+    z-index: 1;
+
+    font-size: 64px;
+    line-height: 1.15;
+
+    > .splitLines {
+      height: 100%;
+
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr;
+
+      &--offset {
+        grid-template-rows: 1fr 2fr;
+      }
+
+      > * {
+        padding: 0 8px;
+      }
+
+      > .lightBlue {
+        font-size: 60px;
+        line-height: 1.25;
+
+        // TODO: is this right?
+        color: #cee5fa;
+      }
+    }
+
+    > *:not(.splitLines) {
+      height: 100%;
+      padding: 0 8px;
+    }
+  }
+
+  .darkBlue {
+    background-color: var(--dark-blue);
+  }
+
+  .lightBlue {
+    background-color: var(--light-blue);
+  }
+}
+
+span.text {
+  display: inline-block;
+  transform-origin: left center;
+
+  transform: scaleX(0.9);
+  letter-spacing: -0.03125em;
+
+  &.t900 {
+    transform: scaleX(0.86);
+    letter-spacing: -0.023em;
+    font-weight: 900;
+  }
+}
+
+@import './destination.less';
+@import './callingPoints.less';
+@import './coachInfo.less';

@@ -1,0 +1,47 @@
+.smallScreen {
+  .destination {
+    background-color: var(--dark-blue);
+    font-weight: 900;
+
+    position: relative;
+
+    .clock {
+      padding: 8px 16px;
+      padding-bottom: 12px;
+
+      position: absolute;
+      top: 50%;
+      left: 50%;
+
+      transform: translate(-50%, -50%);
+
+      border-radius: 24px;
+      border: 6px solid white;
+
+      line-height: 1;
+      background-color: var(--screen-off);
+      position: absolute;
+
+      text-align: center;
+
+      .time {
+        font-size: 78px;
+
+        .text {
+          transform-origin: center;
+          transform: scaleX(0.9);
+        }
+      }
+
+      .date {
+        margin-top: 4px;
+        font-size: 18px;
+
+        .text {
+          transform-origin: center;
+          transform: scaleX(0.9);
+        }
+      }
+    }
+  }
+}

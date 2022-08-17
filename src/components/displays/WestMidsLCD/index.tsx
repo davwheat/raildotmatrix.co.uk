@@ -6,6 +6,7 @@ import { debounce } from 'throttle-debounce';
 
 import './css/index.less';
 import PageLink from '../../common/PageLink';
+import { ZoomDiv } from '../ZoomDiv';
 
 const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) => {
   const [settings, setSettings] = useStateWithLocalStorage('tfwmLcdBoardSettings', {
@@ -69,7 +70,9 @@ const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, 
         <br />
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
-      <FullBoard ref={ref} station={station} />
+      <ZoomDiv>
+        <FullBoard ref={ref} station={station} />
+      </ZoomDiv>
     </>
   );
 });

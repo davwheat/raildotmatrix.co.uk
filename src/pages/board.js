@@ -12,6 +12,20 @@ import GenerateUrl from '../api/GenerateUrl';
 
 import NewGTR from '../components/displays/NewGTR';
 import WestMidsLCD from '../components/displays/WestMidsLCD';
+import Class700PIS from '../components/displays/Class700';
+
+function isValidBoard(BoardSettings) {
+  const boardName = BoardSettings.type;
+  const station = BoardSettings.station;
+
+  if (['gtr-new', 'tfwm-lcd'].includes(boardName) && station) {
+    return true;
+  } else if (boardName === 'class-700') {
+    return true;
+  }
+
+  return false;
+}
 
 const IndexPage = () => {
   const [autocomplete, setAutocomplete] = useState([{ label: 'Loading stations...', value: 'VIC' }]);
@@ -30,7 +44,7 @@ const IndexPage = () => {
     type: type || 'gtr-new',
   });
 
-  const [Page, setPage] = useState(stn ? 1 : 0);
+  const [Page, setPage] = useState(isValidBoard(BoardSettings) ? 1 : 0);
 
   function ChooseStation(stn) {
     setBoardSettings({
@@ -61,6 +75,13 @@ const IndexPage = () => {
         });
     }
   });
+
+  const Board = getBoard(BoardSettings, setPage);
+
+  if (!Board && Page === 1) {
+    // Reset when invalid board type is selected
+    setPage(0);
+  }
 
   return (
     <Layout>
@@ -103,7 +124,7 @@ const IndexPage = () => {
         </main>
       )}
 
-      {Page === 1 && getBoard(BoardSettings, setPage)}
+      {Page === 1 && Board}
 
       <Attribution />
     </Layout>
@@ -124,6 +145,10 @@ function getBoard(BoardSettings, setPage) {
     return <NewGTR {...attrs} />;
   } else if (boardName === 'tfwm-lcd') {
     return <WestMidsLCD {...attrs} />;
+  } else if (boardName === 'class-700') {
+    return <Class700PIS />;
+  } else {
+    return null;
   }
 }
 
