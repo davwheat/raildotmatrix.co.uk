@@ -19,31 +19,48 @@ export default function CoachInfoBigScreen() {
         </div>
       </div>
       <div className="lightBlue">
-        <div className="coach-diagram" style={{ '--coach-count': coaches, '--coach': coach }}>
-          <span className="front-label text t900">◀ FRONT</span>
+        <div className="coach-diagram" style={{ '--coach-count': coaches, '--coach': coach } as any}>
+          <span key="front" className="front-label text t900">
+            ◀ FRONT
+          </span>
 
           {Array.from({ length: coaches }, (_, i) => i + 1).map((coachNum) => {
-            console.log(coachNum);
-
             if (coachNum === 1) {
               return (
-                <EndCoach style={{ '--coach': coachNum }} class="coach-svg" key={coachNum} height={25} data-active={coachNum.toString() === coach} />
+                <EndCoach
+                  style={{ '--coach': coachNum }}
+                  className="coach-svg"
+                  key={coachNum}
+                  height={25}
+                  data-active={coachNum.toString() === coach}
+                />
               );
             } else {
               return (
-                <Coach style={{ '--coach': coachNum }} class="coach-svg" key={coachNum} height={25} data-active={coachNum.toString() === coach} />
+                <Coach
+                  style={{ '--coach': coachNum } as any}
+                  className="coach-svg"
+                  key={coachNum}
+                  height={25}
+                  data-active={coachNum.toString() === coach}
+                />
               );
             }
           })}
 
-          <div className="current-label ">
+          <div key="you-are-here" className="current-label">
             <span>▲</span>
             <span className="text t900 coach-here">YOU ARE HERE</span>
             <span className="text coach-num-small">in coach {coach}</span>
           </div>
 
           {Array.from({ length: coaches }, (_, i) => (
-            <span className="text t900 coach-diagram-num" style={{ '--coach': i + 1 }} data-active={(i + 1).toString() === coach}>
+            <span
+              key={`num-${i + 1}`}
+              className="text t900 coach-diagram-num"
+              style={{ '--coach': i + 1 } as any}
+              data-active={(i + 1).toString() === coach}
+            >
               {i + 1}
             </span>
           ))}
