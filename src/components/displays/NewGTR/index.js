@@ -6,6 +6,7 @@ import { debounce } from 'throttle-debounce';
 
 import './css/index.less';
 import PageLink from '../../common/PageLink';
+import { ZoomDiv } from '../ZoomDiv';
 
 const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
   const [settings, setSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
@@ -74,7 +75,9 @@ const NewGTR = React.forwardRef(({ station, editBoardCallback }, ref) => {
         <ToggleSwitch checked={settings.noBg} ref={noBgRef} label="Remove background" onChange={updateState} />
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
-      <FullBoard ref={ref} noBg={settings.noBg} station={station} />
+      <ZoomDiv>
+        <FullBoard ref={ref} noBg={settings.noBg} station={station} />
+      </ZoomDiv>
     </>
   );
 });

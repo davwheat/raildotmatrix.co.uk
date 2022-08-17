@@ -11,7 +11,6 @@ import Time from './Time';
 import ScrollingInfo from './ScrollingInfo';
 import ErrorMessage from './ErrorMessage';
 import clsx from 'clsx';
-import { debounce } from 'throttle-debounce';
 import NRCCMessages from './NRCCMessage';
 
 const FullBoard = ({ station, noBg }) => {
@@ -39,26 +38,6 @@ const FullBoard = ({ station, noBg }) => {
 
   const boardRef = useRef(null);
 
-  function fillDiv(div) {
-    const currentWidth = div.offsetWidth;
-    const currentHeight = div.offsetHeight;
-
-    const availableHeight = window.innerHeight;
-    const availableWidth = window.innerWidth;
-
-    const scale = Math.min(availableWidth / currentWidth, availableHeight / currentHeight);
-
-    div.style.cssText = `
-      transform: scale(${scale}) translateZ(0);
-      transform-origin: 50% 50%;
-    `;
-  }
-
-  // do it at least once
-  if (boardRef.current) {
-    fillDiv(boardRef.current);
-  }
-
   useEffect(() => {
     let abort;
 
@@ -72,24 +51,6 @@ const FullBoard = ({ station, noBg }) => {
       abort && abort();
     };
   });
-
-  useEffect(() => {
-    const debouncedScale = debounce(250, () => {
-      if (boardRef.current) {
-        fillDiv(boardRef.current);
-      }
-    });
-
-    function scale(e) {
-      debouncedScale(e);
-    }
-
-    window.addEventListener('resize', scale);
-
-    return () => {
-      window.removeEventListener('resize', scale);
-    };
-  }, [boardRef.current]);
 
   function GetTrain(Services, i) {
     const train = Services[i];

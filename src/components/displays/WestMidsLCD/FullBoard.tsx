@@ -4,7 +4,6 @@ import GetNextTrainsAtStation, { ApiResponse, TrainService } from '../../../api/
 
 import './css/board/index.less';
 
-import { debounce } from 'throttle-debounce';
 import BoardHeader from './BoardHeader';
 import NextTrain from './NextTrainData';
 import SecondaryTrainData from './SecondaryTrainData';
@@ -26,23 +25,8 @@ function loadTrainData(station: string, setTrainData: (data: any) => void) {
 
 const UPDATE_INTERVAL_SECS = 15;
 
-function fillDiv(div: HTMLDivElement) {
-  const currentWidth = div.offsetWidth;
-  const currentHeight = div.offsetHeight;
-
-  const availableHeight = window.innerHeight;
-  const availableWidth = window.innerWidth;
-
-  const scale = Math.min(availableWidth / currentWidth, availableHeight / currentHeight);
-
-  div.style.cssText = `
-    transform: scale(${scale}) translateZ(0);
-    transform-origin: 50% 50%;
-  `;
-}
-
 function isValidResponseApi(response: ApiResponse | null | { error: true }): response is ApiResponse {
-  return response !== null && !(response as any).error;
+  return response !== null && !(response as any).error && (response as any).trainServices;
 }
 
 function getRealDeptTime(trainService: TrainService, stdForDelayed: boolean = false): string | null {
@@ -76,8 +60,6 @@ function FullBoard({ station, platformNumber }: IProps) {
   const loadData = useCallback(() => {
     loadTrainData(station, (data: ApiResponse | null | { error: true }) => {
       if (isValidResponseApi(data)) {
-        console.log([...data.trainServices]);
-
         data.trainServices = data.trainServices
           .filter((trainService) => {
             const realDeptTime = getRealDeptTime(trainService);
@@ -118,8 +100,6 @@ function FullBoard({ station, platformNumber }: IProps) {
           });
       }
 
-      console.log([...data.trainServices]);
-
       setTrainData(data);
       setDataInfo({ lastUpdated: Date.now(), loadingData: false });
     });
@@ -140,28 +120,6 @@ function FullBoard({ station, platformNumber }: IProps) {
       clearInterval(key);
     };
   }, [setTrainData, setDataInfo, dataInfo, station, loadTrainData]);
-
-  useEffect(() => {
-    boardRef.current && requestAnimationFrame(() => fillDiv(boardRef.current!));
-  });
-
-  useEffect(() => {
-    const debouncedScale = debounce(250, () => {
-      if (boardRef.current) {
-        fillDiv(boardRef.current);
-      }
-    });
-
-    function scale() {
-      debouncedScale();
-    }
-
-    window.addEventListener('resize', scale);
-
-    return () => {
-      window.removeEventListener('resize', scale);
-    };
-  }, [boardRef.current]);
 
   const firstService = !isError && trainData.trainServices?.[0];
   const secondService = !isError && trainData.trainServices?.[1];
