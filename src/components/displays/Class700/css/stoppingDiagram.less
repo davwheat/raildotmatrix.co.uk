@@ -1,0 +1,115 @@
+.smallScreen {
+  .stoppingDiagram {
+    background-color: var(--dark-blue);
+  }
+}
+
+.bigScreen {
+  .stoppingDiagram {
+    --circle-size: 64px;
+
+    padding: 16px 0 !important;
+
+    background-color: var(--dark-blue);
+    display: grid;
+
+    row-gap: 16px;
+
+    grid-template-columns: repeat(4, 1fr var(--circle-size)) 1fr;
+    grid-template-rows: 1fr auto 1fr;
+
+    .stopCircle {
+      grid-column: calc(2 * var(--stop-num)) / span 1;
+      grid-row: 2 / span 1;
+
+      justify-self: center;
+
+      height: var(--circle-size);
+      width: var(--circle-size);
+      border-radius: 50%;
+      border: 8px solid white;
+      background-color: var(--dark-blue);
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &[data-next='true'] {
+        background-color: white;
+        color: var(--dark-blue);
+
+        .text {
+          transform-origin: center;
+          font-size: 20px;
+        }
+      }
+    }
+
+    .stopText {
+      font-size: 18px;
+      text-align: center;
+      position: relative;
+
+      white-space: nowrap;
+
+      grid-column: calc(2 * var(--stop-num)) / span 1;
+
+      .textWrapper {
+        transform-origin: center;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .text {
+        transform-origin: center;
+      }
+
+      &[data-pos='top'] {
+        grid-row: 1 / span 1;
+      }
+
+      &[data-pos='bottom'] {
+        grid-row: 3 / span 1;
+      }
+    }
+
+    .stopLine {
+      grid-row: 2 / span 1;
+
+      height: 0;
+
+      border: 0;
+      border-top: solid 8px white;
+
+      align-self: center;
+
+      position: relative;
+
+      &[data-dotted='true'] {
+        border-style: dashed;
+      }
+
+      // Hack to extend line into stop circle's curved border
+
+      &::before,
+      &::after {
+        display: block;
+        content: '';
+        position: absolute;
+        width: 4px;
+        height: 8px;
+        background: white;
+        top: -8px;
+      }
+
+      &::before {
+        left: -3px;
+      }
+
+      &::after {
+        right: -3px;
+      }
+    }
+  }
+}
