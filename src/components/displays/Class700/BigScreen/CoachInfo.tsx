@@ -48,11 +48,13 @@ export default function CoachInfoBigScreen() {
             }
           })}
 
-          <div key="you-are-here" className="current-label">
-            <span>▲</span>
-            <span className="text t900 coach-here">YOU ARE HERE</span>
-            <span className="text coach-num-small">in coach {coach}</span>
-          </div>
+          {coach > 0 && coach < coaches && (
+            <div key="you-are-here" className="current-label">
+              <span>▲</span>
+              <span className="text t900 coach-here">YOU ARE HERE</span>
+              <span className="text coach-num-small">in coach {coach}</span>
+            </div>
+          )}
 
           {Array.from({ length: coaches }, (_, i) => (
             <span
