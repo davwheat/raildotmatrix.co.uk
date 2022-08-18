@@ -12,7 +12,7 @@ interface IProps {
   scrollSpeed?: number;
 }
 
-function SlideyScrollText({ children, className, classNameInner, pauseWhenDone = 5000, scrollSpeed = 110 }: IProps) {
+function SlideyScrollText({ children, className, classNameInner, pauseWhenDone = 5000, scrollSpeed = 150 }: IProps) {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
 

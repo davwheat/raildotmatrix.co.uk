@@ -3,10 +3,12 @@ import CallingPointsBigScreen, { getCallingPoints } from './BigScreen/CallingPoi
 import CoachInfoBigScreen from './BigScreen/CoachInfo';
 import DestinationBigScreen, { getDestination } from './BigScreen/Destination';
 import NextStopBigScreen from './BigScreen/NextStop';
+import StoppingDiagramBigScreen from './BigScreen/StoppingDiagram';
 import { getUrlParam } from './getUrlParam';
 import CallingPointsSmallScreen from './SmallScreen/CallingPoints';
 import DestinationSmallScreen from './SmallScreen/Destination';
 import NextStopSmallScreen from './SmallScreen/NextStop';
+import StoppingDiagramSmallScreen from './SmallScreen/StoppingDiagram';
 
 export const ValidScreenStages = [
   'destination',
@@ -17,7 +19,7 @@ export const ValidScreenStages = [
   'toilets',
   'tfl status',
   'cctv',
-  'stops graphic',
+  'stopping diagram',
   'no route',
   'short platform',
 ] as const;
@@ -31,7 +33,7 @@ export const ScreenStagesCycle: typeof ValidScreenStages[number][] = [
   // 'toilets',
   // 'tfl status',
   // 'cctv',
-  // 'stops graphic',
+  'stopping diagram',
 ];
 
 export function validateScreenStage(stage: string): boolean {
@@ -58,7 +60,7 @@ function isNextStopDestination(): boolean {
 
 export default function ScreenBase({}) {
   const [screenStage, setScreenStage] = useState<typeof ValidScreenStages[number]>(
-    getUrlParam('screenStage') ?? isNextStopDestination() ? 'next stop' : 'destination'
+    getUrlParam('screenStage') ?? (isNextStopDestination() ? 'next stop' : 'destination')
   );
   const shouldScrollStages = getUrlParam('scrollStages') === 'true';
 
@@ -74,6 +76,7 @@ export default function ScreenBase({}) {
     setScreenStage(nextStage);
   }
 
+  // TODO: use callback to switch after scroll complete for calling points
   useEffect(() => {
     let to: number | null = null;
     if (shouldScrollStages) {
@@ -136,6 +139,12 @@ function getScreens(screenStage: typeof ValidScreenStages[number]): { small: () 
       return {
         small: () => null,
         big: CoachInfoBigScreen,
+      };
+
+    case 'stopping diagram':
+      return {
+        small: StoppingDiagramSmallScreen,
+        big: StoppingDiagramBigScreen,
       };
 
     default:
