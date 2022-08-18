@@ -22,7 +22,24 @@ export default function NRCCMessages({ messages }) {
 
               // Replace links with just their host name
               message = message.replaceAll(/<a href="(.*?)">(.*?)<\/a>/g, (a, b) => {
-                return `at ${new URL(b).host}`;
+                let urlSource = b;
+                let url = null;
+
+                try {
+                  url = new URL(urlSource).host;
+                } catch {
+                  try {
+                    urlSource = a;
+
+                    if (urlSource.startsWith('//')) urlSource = 'https:' + urlSource;
+
+                    url = b + ' on ' + new URL(urlSource).host;
+                  } catch {
+                    url = 'nationalrail.co.uk';
+                  }
+                }
+
+                return `${url}`;
               });
 
               return <span key={message} className="nrccMsg" dangerouslySetInnerHTML={{ __html: message }} />;
