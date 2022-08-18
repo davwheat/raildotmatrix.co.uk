@@ -2,12 +2,10 @@ import React from 'react';
 import { crsToStationName } from '../../../../functions/crsToStationName';
 import { getUrlParam } from '../getUrlParam';
 import SlideyScrollText from '../SlideyScrollText';
+import { getDestination } from './Destination';
 
-export default function CallingPointsBigScreen() {
-  let destination = getUrlParam('dest');
-
-  destination &&= crsToStationName(destination);
-  destination ??= 'Unknown';
+export function getCallingPoints(format: 'crs' | 'names'): string[] {
+  const destination = getDestination(format === 'crs' ? 'crs' : 'name');
 
   let callingPoints: string[] = getUrlParam('stop') ?? [];
 
@@ -17,13 +15,20 @@ export default function CallingPointsBigScreen() {
     callingPoints = [];
   }
 
-  callingPoints = callingPoints.map(crsToStationName).filter(Boolean) as string[];
+  let mappedCallingPoints = callingPoints.filter((crs) => !!crsToStationName(crs)).map(format === 'names' ? crsToStationName : (x) => x) as string[];
 
-  if (callingPoints.length === 0) {
-    callingPoints = [destination];
+  if (mappedCallingPoints.length === 0) {
+    mappedCallingPoints = [destination];
   } else {
-    callingPoints.push(destination);
+    mappedCallingPoints.push(destination);
   }
+
+  return mappedCallingPoints;
+}
+
+export default function CallingPointsBigScreen() {
+  const destination = getDestination();
+  const callingPoints = getCallingPoints('names');
 
   return (
     <div className="callingPoints splitLines">

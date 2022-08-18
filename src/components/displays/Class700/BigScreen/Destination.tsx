@@ -2,10 +2,10 @@ import React from 'react';
 import { crsToStationName } from '../../../../functions/crsToStationName';
 import { getUrlParam } from '../getUrlParam';
 
-export function getDestination() {
+export function getDestination(format: 'crs' | 'name' = 'name') {
   let destination = getUrlParam('dest');
 
-  destination &&= crsToStationName(destination);
+  format === 'name' && (destination &&= crsToStationName(destination));
   destination ??= 'Unknown';
 
   return destination;
