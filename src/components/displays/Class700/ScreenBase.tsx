@@ -58,7 +58,7 @@ function isNextStopDestination(): boolean {
 
 export default function ScreenBase({}) {
   const [screenStage, setScreenStage] = useState<typeof ValidScreenStages[number]>(
-    getUrlParam('screenStage') ?? isNextStopDestination() ? 'next stop' : 'destination'
+    getUrlParam('screenStage') ?? (isNextStopDestination() ? 'next stop' : 'destination')
   );
   const shouldScrollStages = getUrlParam('scrollStages') === 'true';
 
