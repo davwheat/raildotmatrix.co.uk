@@ -2,11 +2,17 @@ import React from 'react';
 import { crsToStationName } from '../../../../functions/crsToStationName';
 import { getUrlParam } from '../getUrlParam';
 
-export default function DestinationBigScreen() {
+export function getDestination() {
   let destination = getUrlParam('dest');
 
   destination &&= crsToStationName(destination);
   destination ??= 'Unknown';
+
+  return destination;
+}
+
+export default function DestinationBigScreen() {
+  const destination = getDestination();
 
   return (
     <div className="destination splitLines">

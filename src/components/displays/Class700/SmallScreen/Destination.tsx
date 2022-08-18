@@ -1,5 +1,5 @@
-import dayjs from 'dayjs';
 import React from 'react';
+import SmallClock from '../reusable/SmallClock';
 
 export default function DestinationSmallScreen() {
   return (
@@ -7,14 +7,7 @@ export default function DestinationSmallScreen() {
       <div className="darkBlue" />
       <div className="lightBlue" />
 
-      <div className="clock">
-        <div className="time">
-          <span className="text t900">{dayjs().format('HH:mm')}</span>
-        </div>
-        <div className="date">
-          <span className="text t900">{dayjs().format('D/M/YYYY')}</span>
-        </div>
-      </div>
+      <SmallClock />
     </div>
   );
 }
