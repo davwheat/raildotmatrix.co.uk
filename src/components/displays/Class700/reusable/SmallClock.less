@@ -1,0 +1,52 @@
+.clock {
+  padding: 8px 16px !important;
+  padding-bottom: 12px !important;
+
+  height: 85%;
+  width: 85%;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  border-radius: 24px;
+  border: 6px solid white;
+
+  line-height: 1;
+  background-color: var(--screen-off);
+  position: absolute;
+
+  text-align: center;
+
+  .time {
+    font-size: 78px;
+
+    position: absolute;
+
+    left: 50%;
+    transform: translateX(-50%);
+
+    .text {
+      transform-origin: center;
+      transform: scaleX(0.9);
+    }
+  }
+
+  .date {
+    margin-top: 4px;
+    font-size: 18px;
+
+    position: absolute;
+
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    .text {
+      transform-origin: center;
+      transform: scaleX(0.9);
+    }
+  }
+}

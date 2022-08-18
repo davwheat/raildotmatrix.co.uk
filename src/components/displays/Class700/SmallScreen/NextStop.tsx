@@ -1,9 +1,9 @@
 import React from 'react';
 import SmallClock from '../reusable/SmallClock';
 
-export default function DestinationSmallScreen() {
+export default function NextStopSmallScreen() {
   return (
-    <div className="destination splitLines">
+    <div className="nextStop splitLines">
       <div className="darkBlue" />
       <div className="lightBlue" />
 

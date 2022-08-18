@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import CallingPointsBigScreen from './BigScreen/CallingPoints';
+import CallingPointsBigScreen, { getCallingPoints } from './BigScreen/CallingPoints';
 import CoachInfoBigScreen from './BigScreen/CoachInfo';
-import DestinationBigScreen from './BigScreen/Destination';
+import DestinationBigScreen, { getDestination } from './BigScreen/Destination';
+import NextStopBigScreen from './BigScreen/NextStop';
 import { getUrlParam } from './getUrlParam';
 import CallingPointsSmallScreen from './SmallScreen/CallingPoints';
 import DestinationSmallScreen from './SmallScreen/Destination';
+import NextStopSmallScreen from './SmallScreen/NextStop';
 
 export const ValidScreenStages = [
   'destination',
-  'next station',
+  'next stop',
   'calling points',
   'coach info',
   'loading',
@@ -22,7 +24,7 @@ export const ValidScreenStages = [
 
 export const ScreenStagesCycle: typeof ValidScreenStages[number][] = [
   'destination',
-  // 'next station',
+  'next stop',
   'calling points',
   'coach info',
   // 'loading',
@@ -36,21 +38,51 @@ export function validateScreenStage(stage: string): boolean {
   return (ValidScreenStages as Readonly<string[]>).includes(stage);
 }
 
+function getNextScreen(screen: typeof ValidScreenStages[number]): typeof ValidScreenStages[number] {
+  const nextIndex = (ScreenStagesCycle.indexOf(screen) + 1) % ScreenStagesCycle.length;
+  return ScreenStagesCycle[nextIndex];
+}
+
+function isNextStopDestination(): boolean {
+  const destination = getDestination('crs');
+  const callingPoints = getCallingPoints('crs');
+
+  if (callingPoints.length === 1 && destination === callingPoints[0]) {
+    // Next station is last stop.
+    // In this case, we don't show the "Destination" screen.
+    return true;
+  }
+
+  return false;
+}
+
 export default function ScreenBase({}) {
-  const [screenStage, setScreenStage] = useState(getUrlParam('screenStage') ?? 'destination');
+  const [screenStage, setScreenStage] = useState<typeof ValidScreenStages[number]>(
+    getUrlParam('screenStage') ?? isNextStopDestination() ? 'next stop' : 'destination'
+  );
   const shouldScrollStages = getUrlParam('scrollStages') === 'true';
 
   function scrollToNextScreen() {
-    const nextIndex = (ScreenStagesCycle.indexOf(screenStage) + 1) % ScreenStagesCycle.length;
-    const nextStage = ScreenStagesCycle[nextIndex];
+    let nextStage = getNextScreen(screenStage);
+
+    if (isNextStopDestination()) {
+      while (nextStage === 'destination' || nextStage === 'calling points') {
+        nextStage = getNextScreen(nextStage);
+      }
+    }
 
     setScreenStage(nextStage);
   }
 
   useEffect(() => {
+    let to: number | null = null;
     if (shouldScrollStages) {
-      setTimeout(scrollToNextScreen, screenStage === 'calling points' ? 45 * 1000 : 10 * 1000);
+      to = window.setTimeout(scrollToNextScreen, screenStage === 'calling points' ? 45 * 1000 : 10 * 1000);
     }
+
+    return () => {
+      to !== null && clearTimeout(to);
+    };
   }, [scrollToNextScreen, shouldScrollStages, screenStage, setScreenStage]);
 
   console.log(screenStage);
@@ -86,6 +118,12 @@ function getScreens(screenStage: typeof ValidScreenStages[number]): { small: () 
       return {
         small: DestinationSmallScreen,
         big: DestinationBigScreen,
+      };
+
+    case 'next stop':
+      return {
+        small: NextStopSmallScreen,
+        big: NextStopBigScreen,
       };
 
     case 'calling points':
