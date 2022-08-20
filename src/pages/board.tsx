@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
-import Layout from '../components/layout';
-import SEO from '../components/seo';
+import Layout from '../components/Layout';
+import Seo from '../components/Seo';
 import TypewriterText from '../components/common/TypewriterText';
 import PageLink from '../components/common/PageLink';
 
@@ -82,7 +82,7 @@ const IndexPage = () => {
 
   return (
     <Layout>
-      <SEO title={Page === 0 ? 'Board Setup' : 'Station Board'} />
+      <Seo title={Page === 0 ? 'Board Setup' : 'Station Board'} />
       {Page === 0 && (
         <main>
           <header>
