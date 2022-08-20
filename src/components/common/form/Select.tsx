@@ -1,13 +1,24 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import './css/Select.less';
 
-export default function Select({ label, helpText, placeholder, options, onChange, ...props }) {
+interface IProps {
+  label: string;
+  helpText?: string;
+  placeholder?: string;
+  options: {
+    label: string;
+    value: string;
+  }[];
+  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
+  value: string;
+}
+
+export default function Select({ label, helpText, placeholder, options, onChange, ...props }: IProps) {
   return (
     <label className="form-select">
       {label}
-      <select onChange={onChange} className="form-select--input" label={placeholder} {...props}>
+      <select onChange={onChange} className="form-select--input" {...props}>
         {placeholder && (
           <option value="" disabled>
             {placeholder}
@@ -19,14 +30,8 @@ export default function Select({ label, helpText, placeholder, options, onChange
           </option>
         ))}
       </select>
+
       {helpText && <p className="form-select--help-text">{helpText}</p>}
     </label>
   );
 }
-
-Select.propTypes = {
-  label: PropTypes.string.isRequired,
-  helpText: PropTypes.string,
-  placeholder: PropTypes.string,
-  options: PropTypes.arrayOf(PropTypes.shape({ value: PropTypes.string, label: PropTypes.string })),
-};

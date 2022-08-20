@@ -2,8 +2,14 @@ import React from 'react';
 
 import './css/ToggleSwitch.less';
 
-const ToggleSwitch = React.forwardRef((props, ref) => {
-  const { label, onChange, checked, defaultChecked } = props;
+interface IProps {
+  label: string;
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+  checked: boolean;
+  defaultChecked?: boolean;
+}
+
+const ToggleSwitch = React.forwardRef<HTMLInputElement, IProps>(({ label, onChange, checked, defaultChecked }: IProps, ref) => {
   return (
     <div className="toggle-switch">
       <label className="toggle-switch--label">
