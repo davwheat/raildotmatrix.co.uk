@@ -37,6 +37,7 @@ export default function AutocompleteSelect({ label, helpText, placeholder, autoc
 }
 
 const MenuList = function MenuList(props) {
+  /** @type {any[]} */
   const children = props.children;
 
   if (!children.length) {
@@ -46,9 +47,7 @@ const MenuList = function MenuList(props) {
   return (
     <div className="form-textbox--autocomplete-dropdown">
       {children.length &&
-        children.map((key, i) => {
-          if (i >= 6) return null;
-
+        children.slice(0, 5).map((key, i) => {
           return (
             <div className="form-textbox--autocomplete-dropdown-item" key={i}>
               {key}
