@@ -8,7 +8,6 @@ import PageLink from '../components/common/PageLink';
 import Form, { AutocompleteSelect, Select } from '../components/common/form';
 
 import Attribution from '../components/common/Attribution';
-import GenerateUrl from '../api/GenerateUrl';
 
 import NewGTR from '../components/displays/NewGTR';
 import WestMidsLCD from '../components/displays/WestMidsLCD';
@@ -63,18 +62,16 @@ const IndexPage = () => {
   // Fetch live autocomplete data from API
   useEffect(() => {
     if (autocomplete[0].label === 'Loading stations...') {
-      fetch(GenerateUrl('crs'))
-        .then((response) => response.json())
-        .then((data) => {
-          setAutocomplete(
-            data.map((pair) => ({
-              label: `${pair.stationName} (${pair.crsCode})`,
-              value: pair.crsCode,
-            }))
-          );
-        });
+      import('uk-railway-stations').then(({ default: data }) => {
+        setAutocomplete(
+          data.map((data) => ({
+            label: `${data.stationName} (${data.crsCode})`,
+            value: data.crsCode,
+          }))
+        );
+      });
     }
-  });
+  }, [autocomplete, setAutocomplete]);
 
   const Board = getBoard(BoardSettings, setPage);
 
@@ -146,6 +143,7 @@ function getBoard(BoardSettings, setPage) {
   } else if (boardName === 'tfwm-lcd') {
     return <WestMidsLCD {...attrs} />;
   } else if (boardName === 'class-700') {
+    // Hidden option
     return <Class700PIS />;
   } else {
     return null;
