@@ -1,7 +1,12 @@
+import React, { useState, useEffect } from 'react';
+
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
-import { useRef } from 'react';
-import { useEffect } from 'react';
+
+import dayjsUtc from 'dayjs/plugin/utc';
+import dayjsTz from 'dayjs/plugin/timezone';
+
+dayjs.extend(dayjsUtc);
+dayjs.extend(dayjsTz);
 
 import './css/board/header.less';
 
@@ -16,16 +21,15 @@ export default function BoardHeader({ platformNumber, stationName }: { platformN
 }
 
 function Clock() {
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const intervalRef = useRef(-1);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
   useEffect(() => {
-    intervalRef.current = setInterval(() => {
+    const key = window.setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000) as any;
+    }, 1000);
 
     return () => {
-      clearInterval(intervalRef.current);
+      clearInterval(key);
     };
   });
 
