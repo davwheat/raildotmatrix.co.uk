@@ -16,7 +16,7 @@
     "dayjs": "^1.11.5",
     "english-a-an": "^2.2.5",
     "english-a-an-list": "^2.2.5",
-    "gatsby": "^4.21.0",
+    "gatsby": "^4.25.7",
     "gatsby-image": "^3.11.0",
     "gatsby-plugin-csp": "^1.1.3",
     "gatsby-plugin-htaccess": "^1.4.0",
