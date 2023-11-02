@@ -14,9 +14,18 @@ interface IProps {
 }
 
 function NewGTR({ station, editBoardCallback }: IProps) {
+  let searchParams;
+
+  if (typeof window !== 'undefined') {
+    searchParams = window && new URLSearchParams(window.location.search);
+  }
+
+  const hideSettings = searchParams?.get('hideSettings');
+  const noBg = searchParams?.get('noBg');
+
   const [settings, setSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
-    noBg: false,
-    hideSettings: false,
+    noBg: !!noBg,
+    hideSettings: !!hideSettings,
   });
 
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -44,7 +53,7 @@ function NewGTR({ station, editBoardCallback }: IProps) {
   useEffect(() => {
     updateHidden();
 
-    if (!settings.hideSettings) {
+    if (!settings.hideSettings || !!hideSettings) {
       return;
     }
 
@@ -80,6 +89,7 @@ function NewGTR({ station, editBoardCallback }: IProps) {
         <ToggleSwitch checked={settings.noBg} ref={noBgRef} label="Remove background" onChange={updateState} />
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
+
       <ZoomDiv>
         <FullBoard noBg={settings.noBg} station={station} />
       </ZoomDiv>

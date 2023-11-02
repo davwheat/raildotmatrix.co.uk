@@ -157,7 +157,7 @@ export default function ScrollingInfo({ trainData: train }) {
 }
 
 function getStopTime(intermediaryStop, isCancelled) {
-  if (isCancelled || intermediaryStop.eta === 'Delayed') return '';
+  if (isCancelled || intermediaryStop.eta === 'Delayed' || intermediaryStop.eta === 'Cancelled') return '';
 
   return ` (${intermediaryStop.eta})`;
 }
@@ -185,11 +185,10 @@ const IntermediaryStops = ({ intermediaryStops, train }) => {
     return <span className="train--details__intermediary-stop-list">{createStop(intermediaryStops[0], isCancelled, 0, 1)}</span>;
   }
 
-  const length = intermediaryStops.length;
+  const stops = intermediaryStops.filter((s) => s.eta !== 'Cancelled');
+  const length = stops.length;
 
-  stopsText = intermediaryStops.reduce((prev, curr, i) => {
-    return `${prev}${createStop(curr, isCancelled, i, length)}`;
-  }, '');
+  stopsText = stops.reduce((prev, curr, i) => `${prev}${createStop(curr, isCancelled, i, length)}`, '');
 
   return <span className="train--details__intermediary-stop-list">{stopsText}</span>;
 };
