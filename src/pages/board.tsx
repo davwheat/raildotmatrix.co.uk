@@ -99,7 +99,7 @@ const IndexPage = () => {
               <Select
                 label="Display type"
                 options={[
-                  { value: 'gtr-new', label: 'GTR New' },
+                  { value: 'gtr-new', label: 'Infotec DMI' },
                   { value: 'tfwm-lcd', label: 'TfWM LCD' },
                 ]}
                 placeholder="Choose a display"

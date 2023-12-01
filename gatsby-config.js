@@ -7,7 +7,6 @@ const PROD_PLUGINS =
             exclude: ['error', 'warn'],
           },
         },
-        `gatsby-plugin-preact`,
       ]
     : [];
 

@@ -16,13 +16,11 @@
     "dayjs": "^1.11.10",
     "english-a-an": "^2.4.0",
     "english-a-an-list": "^2.4.0",
-    "gatsby": "^4.25.7",
-    "gatsby-image": "^3.11.0",
+    "gatsby": "^5.12.11",
     "gatsby-plugin-csp": "^1.1.4",
     "gatsby-plugin-htaccess": "^1.4.0",
-    "gatsby-plugin-less": "^6.25.0",
-    "gatsby-plugin-manifest": "^4.25.0",
-    "gatsby-plugin-preact": "^6.25.0",
+    "gatsby-plugin-less": "^7.12.0",
+    "gatsby-plugin-manifest": "^5.12.3",
     "gatsby-plugin-react-head": "https://github.com/davwheat/gatsby-plugin-react-head",
     "gatsby-plugin-react-svg": "^3.3.0",
     "gatsby-plugin-remove-console": "^0.0.2",
@@ -30,11 +28,9 @@
     "jquery": "^3.7.1",
     "jquery-resizable-dom": "^0.35.0",
     "lodash": "^4.17.21",
-    "preact": "^10.18.0",
-    "preact-render-to-string": "^5.2.6",
     "prop-types": "^15.8.1",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-head": "^3.4.2",
     "react-select": "^4.3.1",
     "throttle-debounce": "^5.0.0",
@@ -42,14 +38,14 @@
   },
   "devDependencies": {
     "@flarum/prettier-config": "^1.0.0",
-    "@types/color": "^3.0.4",
-    "@types/react": "^17.0.66",
-    "@types/throttle-debounce": "^5.0.0",
+    "@types/color": "^3.0.6",
+    "@types/react": "^17.0.71",
+    "@types/throttle-debounce": "^5.0.2",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "cross-env": "^7.0.3",
-    "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.31",
-    "prettier": "^2.8.8",
-    "typescript": "^4.9.5"
+    "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.32",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.2"
   },
   "keywords": [
     "gatsby"
@@ -72,5 +68,5 @@
   "bugs": {
     "url": "https://github.com/gatsbyjs/gatsby/issues"
   },
-  "packageManager": "yarn@3.6.3"
+  "packageManager": "yarn@4.0.2"
 }
