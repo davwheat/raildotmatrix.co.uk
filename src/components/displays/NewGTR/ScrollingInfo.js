@@ -86,11 +86,14 @@ export default function ScrollingInfo({ trainData: train }) {
       console.log("Performing intro to 'calling at'. Time: ", callingAtScrollDelay / 1000);
     }, trainInfoScrollTime * 1000);
 
-    const y = setTimeout(() => {
-      setActiveAnimation('callingAt__scroll');
+    const y = setTimeout(
+      () => {
+        setActiveAnimation('callingAt__scroll');
 
-      console.log('Scrolling stopping points... Time: ', callingAtScrollTime);
-    }, trainInfoScrollTime * 1000 + callingAtScrollDelay);
+        console.log('Scrolling stopping points... Time: ', callingAtScrollTime);
+      },
+      trainInfoScrollTime * 1000 + callingAtScrollDelay
+    );
 
     return () => {
       clearTimeout(x);
