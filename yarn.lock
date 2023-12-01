@@ -2958,43 +2958,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prefresh/babel-plugin@npm:^0.4.3":
-  version: 0.4.4
-  resolution: "@prefresh/babel-plugin@npm:0.4.4"
-  checksum: a05b009e3ebc24cc0f68862282564890a5e15a0c88c4dbc207bc765e75c20977373744f11af98a0f5b15023616b27a2d1831d82b611c0df0028333e2e786219f
-  languageName: node
-  linkType: hard
-
-"@prefresh/core@npm:^1.3.3":
-  version: 1.5.2
-  resolution: "@prefresh/core@npm:1.5.2"
-  peerDependencies:
-    preact: ^10.0.0
-  checksum: 53d1ce714ed098ccc11f3a8e2826ff6b90237445c24df6281eb162791b534d1d7626a43c0c1c7427139d2ade658e1ba7020963c001135bbdbeeb15073008529b
-  languageName: node
-  linkType: hard
-
-"@prefresh/utils@npm:^1.1.2":
-  version: 1.2.0
-  resolution: "@prefresh/utils@npm:1.2.0"
-  checksum: 38cdc6cbb5e18df36996161214eb1097db3361cb0b6402a8012cbe500ba8fb5bcbdc39a687d3b6d67e99f6c340ed77d59f27ab167dfc1655eb4d783740d87d52
-  languageName: node
-  linkType: hard
-
-"@prefresh/webpack@npm:^3.3.4":
-  version: 3.3.4
-  resolution: "@prefresh/webpack@npm:3.3.4"
-  dependencies:
-    "@prefresh/core": "npm:^1.3.3"
-    "@prefresh/utils": "npm:^1.1.2"
-  peerDependencies:
-    "@prefresh/babel-plugin": ^0.4.0
-    preact: ^10.4.0
-    webpack: ^4.0.0 || ^5.0.0
-  checksum: 590587a1db907153be421739510007c4c52dd136c7d557a43a1bbca4af110e22ea5f0c4404861af7ac450c15d74e772f8f08c9f07ad85988e72368ca8153fe07
-  languageName: node
-  linkType: hard
-
 "@sideway/address@npm:^4.1.3":
   version: 4.1.4
   resolution: "@sideway/address@npm:4.1.4"
@@ -7594,22 +7557,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"gatsby-plugin-preact@npm:^7.12.0":
-  version: 7.12.0
-  resolution: "gatsby-plugin-preact@npm:7.12.0"
-  dependencies:
-    "@babel/runtime": "npm:^7.20.13"
-    "@gatsbyjs/webpack-hot-middleware": "npm:^2.25.3"
-    "@prefresh/babel-plugin": "npm:^0.4.3"
-    "@prefresh/webpack": "npm:^3.3.4"
-  peerDependencies:
-    gatsby: ^5.0.0-next
-    preact: ^10.3.4
-    preact-render-to-string: ^5.1.8
-  checksum: e82c65ed8f582873c69e9f73d69ae3e28ba1bca84d1772fef7619253fcbed1b1e10f1161a8bbcc7439c6a140390643e97ee44b28ffc42c31bc590acc74020fd1
-  languageName: node
-  linkType: hard
-
 "gatsby-plugin-react-head@https://github.com/davwheat/gatsby-plugin-react-head":
   version: 1.1.0
   resolution: "gatsby-plugin-react-head@https://github.com/davwheat/gatsby-plugin-react-head.git#commit=5bbcd4d54d0ff92c4f080fa998cac25cf0af3904"
@@ -11567,24 +11514,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"preact-render-to-string@npm:^6.3.1":
-  version: 6.3.1
-  resolution: "preact-render-to-string@npm:6.3.1"
-  dependencies:
-    pretty-format: "npm:^3.8.0"
-  peerDependencies:
-    preact: ">=10"
-  checksum: bc2f64de7d5dc16b32ad89e53a2d2c39fb0a0a55d1ebb3966cfdac3d8434f1e73293b543bacf85aef30f58ceb5ff153b606ac6b8a25d96f2462389f7054734d7
-  languageName: node
-  linkType: hard
-
-"preact@npm:^10.19.2":
-  version: 10.19.2
-  resolution: "preact@npm:10.19.2"
-  checksum: 1a37e967d8947d1c82ad86cd90968536612c1463effdc5b0230a4517dc928cae8c9052513f0d5ac7bb09480b9431d129197d6c9b6924d32e32245e5ecd27cc8a
-  languageName: node
-  linkType: hard
-
 "prebuild-install@npm:^7.1.1":
   version: 7.1.1
   resolution: "prebuild-install@npm:7.1.1"
@@ -11637,13 +11566,6 @@ __metadata:
     lodash: "npm:^4.17.20"
     renderkid: "npm:^2.0.4"
   checksum: 779743faf707308e5d07c53c3ec94596c0cb631c92104a2721dd5d021ade39505a9151c5a5f838dfd26b02a06752c410eb6de1769c4fe327c90bd083f61a1fa1
-  languageName: node
-  linkType: hard
-
-"pretty-format@npm:^3.8.0":
-  version: 3.8.0
-  resolution: "pretty-format@npm:3.8.0"
-  checksum: 69f12937bfb7b2a537a7463b9f875a16322401f1e44d7702d643faa0d21991126c24c093217ef6da403b54c15942a834174fa1c016b72e2cb9edaae6bb3729b6
   languageName: node
   linkType: hard
 
@@ -13904,7 +13826,6 @@ __metadata:
     gatsby-plugin-htaccess: "npm:^1.4.0"
     gatsby-plugin-less: "npm:^7.12.0"
     gatsby-plugin-manifest: "npm:^5.12.3"
-    gatsby-plugin-preact: "npm:^7.12.0"
     gatsby-plugin-react-head: "https://github.com/davwheat/gatsby-plugin-react-head"
     gatsby-plugin-react-svg: "npm:^3.3.0"
     gatsby-plugin-remove-console: "npm:^0.0.2"
@@ -13913,8 +13834,6 @@ __metadata:
     jquery: "npm:^3.7.1"
     jquery-resizable-dom: "npm:^0.35.0"
     lodash: "npm:^4.17.21"
-    preact: "npm:^10.19.2"
-    preact-render-to-string: "npm:^6.3.1"
     prettier: "npm:^3.1.0"
     prop-types: "npm:^15.8.1"
     react: "npm:^18.2.0"
