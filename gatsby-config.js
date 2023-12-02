@@ -16,13 +16,16 @@ module.exports = {
     description: `See a virtual railway dot matrix for any UK station.`,
     author: `@davwheat`,
   },
+  flags: {
+    DEV_SSR: true,
+  },
   plugins: [
     ...PROD_PLUGINS,
 
     'gatsby-plugin-webpack-bundle-analyser-v2',
     `gatsby-plugin-webpack-size`,
-    `gatsby-plugin-csp`,
     `gatsby-plugin-react-head`,
+    `gatsby-plugin-cloudflare-pages`,
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
