@@ -25,6 +25,7 @@ module.exports = {
     'gatsby-plugin-webpack-bundle-analyser-v2',
     `gatsby-plugin-webpack-size`,
     `gatsby-plugin-react-head`,
+    `gatsby-plugin-cloudflare-pages`,
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
