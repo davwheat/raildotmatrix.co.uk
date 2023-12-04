@@ -1557,7 +1557,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.22.5":
+"@babel/runtime@npm:^7.23.5":
   version: 7.23.5
   resolution: "@babel/runtime@npm:7.23.5"
   dependencies:
@@ -7269,17 +7269,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fs-extra@npm:^10.1.0":
-  version: 10.1.0
-  resolution: "fs-extra@npm:10.1.0"
-  dependencies:
-    graceful-fs: "npm:^4.2.0"
-    jsonfile: "npm:^6.0.1"
-    universalify: "npm:^2.0.0"
-  checksum: 5f579466e7109719d162a9249abbeffe7f426eb133ea486e020b89bc6d67a741134076bf439983f2eb79276ceaf6bd7b7c1e43c3fd67fe889863e69072fb0a5e
-  languageName: node
-  linkType: hard
-
 "fs-extra@npm:^11.1.1":
   version: 11.1.1
   resolution: "fs-extra@npm:11.1.1"
@@ -7288,6 +7277,17 @@ __metadata:
     jsonfile: "npm:^6.0.1"
     universalify: "npm:^2.0.0"
   checksum: a2480243d7dcfa7d723c5f5b24cf4eba02a6ccece208f1524a2fbde1c629492cfb9a59e4b6d04faff6fbdf71db9fdc8ef7f396417a02884195a625f5d8dc9427
+  languageName: node
+  linkType: hard
+
+"fs-extra@npm:^11.2.0":
+  version: 11.2.0
+  resolution: "fs-extra@npm:11.2.0"
+  dependencies:
+    graceful-fs: "npm:^4.2.0"
+    jsonfile: "npm:^6.0.1"
+    universalify: "npm:^2.0.0"
+  checksum: d77a9a9efe60532d2e790e938c81a02c1b24904ef7a3efb3990b835514465ba720e99a6ea56fd5e2db53b4695319b644d76d5a0e9988a2beef80aa7b1da63398
   languageName: node
   linkType: hard
 
@@ -7438,7 +7438,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"gatsby-core-utils@npm:^4.11.0, gatsby-core-utils@npm:^4.12.1":
+"gatsby-core-utils@npm:^4.12.1":
   version: 4.12.1
   resolution: "gatsby-core-utils@npm:4.12.1"
   dependencies:
@@ -7532,19 +7532,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"gatsby-plugin-cloudflare-pages@npm:^1.0.0-alpha.2":
-  version: 1.0.0-alpha.2
-  resolution: "gatsby-plugin-cloudflare-pages@npm:1.0.0-alpha.2"
+"gatsby-plugin-cloudflare-pages@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "gatsby-plugin-cloudflare-pages@npm:1.0.1"
   dependencies:
-    "@babel/runtime": "npm:^7.22.5"
-    fs-extra: "npm:^10.1.0"
-    gatsby-core-utils: "npm:^4.11.0"
+    "@babel/runtime": "npm:^7.23.5"
+    fs-extra: "npm:^11.2.0"
+    gatsby-core-utils: "npm:^4.12.1"
     kebab-hash: "npm:^0.1.2"
     lodash.mergewith: "npm:^4.6.2"
     webpack-assets-manifest: "npm:^5.1.0"
   peerDependencies:
     gatsby: ^4.0.0 || ^5.0.0
-  checksum: 67c47165cc69df819c9f0e5acb44bdb8c2858d9c4d0f505645c36e18e25e37c6c1ae1bcd57ea479c42a6f38701557fb2d60c0f3092f32f352d0653421e0cb6fe
+  checksum: 3ae005cfa0345e7de36ade37651fe8cdc8b678b50363ccc55a10e32276fc8e098a3e664ab614967bfdba18c3fb1bc81cf4119de6c505c097369a471186296501
   languageName: node
   linkType: hard
 
@@ -13880,7 +13880,7 @@ __metadata:
     english-a-an: "npm:^2.4.0"
     english-a-an-list: "npm:^2.4.0"
     gatsby: "npm:^5.12.11"
-    gatsby-plugin-cloudflare-pages: "npm:^1.0.0-alpha.2"
+    gatsby-plugin-cloudflare-pages: "npm:^1.0.1"
     gatsby-plugin-less: "npm:^7.12.0"
     gatsby-plugin-manifest: "npm:^5.12.3"
     gatsby-plugin-react-head: "https://github.com/davwheat/gatsby-plugin-react-head"
