@@ -7532,9 +7532,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"gatsby-plugin-cloudflare-pages@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "gatsby-plugin-cloudflare-pages@npm:1.0.1"
+"gatsby-plugin-cloudflare-pages@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "gatsby-plugin-cloudflare-pages@npm:1.0.2"
   dependencies:
     "@babel/runtime": "npm:^7.23.5"
     fs-extra: "npm:^11.2.0"
@@ -7544,7 +7544,7 @@ __metadata:
     webpack-assets-manifest: "npm:^5.1.0"
   peerDependencies:
     gatsby: ^4.0.0 || ^5.0.0
-  checksum: 3ae005cfa0345e7de36ade37651fe8cdc8b678b50363ccc55a10e32276fc8e098a3e664ab614967bfdba18c3fb1bc81cf4119de6c505c097369a471186296501
+  checksum: a9e73959b629c0816d509e8d8574fe5048dccf72580522d15e50d442b7b97cfe3705686ce395db342749aec946744c5774d984787f217620fa38f7d723e0dbce
   languageName: node
   linkType: hard
 
@@ -13880,7 +13880,7 @@ __metadata:
     english-a-an: "npm:^2.4.0"
     english-a-an-list: "npm:^2.4.0"
     gatsby: "npm:^5.12.11"
-    gatsby-plugin-cloudflare-pages: "npm:^1.0.1"
+    gatsby-plugin-cloudflare-pages: "npm:^1.0.2"
     gatsby-plugin-less: "npm:^7.12.0"
     gatsby-plugin-manifest: "npm:^5.12.3"
     gatsby-plugin-react-head: "https://github.com/davwheat/gatsby-plugin-react-head"
