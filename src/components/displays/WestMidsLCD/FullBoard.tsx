@@ -146,13 +146,15 @@ function FullBoard({ station, platformNumber }: IProps) {
   }
 
   if (trainData.trainServices?.length === 0) {
-    <article className="tfwm-board tfwm-board__notice" ref={boardRef}>
-      <BoardHeader platformNumber={platformNumber} stationName={station} />
+    return (
+      <article className="tfwm-board tfwm-board__notice" ref={boardRef}>
+        <BoardHeader platformNumber={platformNumber} stationName={station} />
 
-      <div className="fullscreenNotice">
-        <p>Please listen for announcements or call National&nbsp;Rail&nbsp;Enquiries on 03457 48 49 50</p>
-      </div>
-    </article>;
+        <div className="fullscreenNotice">
+          <p>Please listen for announcements or call National&nbsp;Rail&nbsp;Enquiries on 03457 48 49 50</p>
+        </div>
+      </article>
+    );
   }
 
   return (

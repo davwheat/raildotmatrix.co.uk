@@ -13,8 +13,8 @@ interface IProps {
   editBoardCallback: () => void;
 }
 
-function NewGTR({ station, editBoardCallback }: IProps) {
-  let searchParams;
+const NewGTR = React.forwardRef<any, IProps>(({ station, editBoardCallback }, ref) => {
+  let searchParams: URLSearchParams | null = null;
 
   if (typeof window !== 'undefined') {
     searchParams = window && new URLSearchParams(window.location.search);
@@ -29,18 +29,15 @@ function NewGTR({ station, editBoardCallback }: IProps) {
   });
 
   const settingsRef = useRef<HTMLDivElement>(null);
-
-  const noBgRef = useRef<HTMLInputElement>(null);
   const hideRef = useRef<HTMLInputElement>(null);
 
   function updateState() {
     setSettings({
-      noBg: noBgRef.current!.checked,
-      hideSettings: hideRef.current!.checked,
+      hideSettings: hideRef.current?.checked,
     });
 
-    if (!hideRef.current!.checked) {
-      settingsRef.current!.classList.remove('hide');
+    if (!hideRef.current?.checked) {
+      settingsRef.current?.classList.remove('hide');
     }
   }
 
@@ -53,7 +50,7 @@ function NewGTR({ station, editBoardCallback }: IProps) {
   useEffect(() => {
     updateHidden();
 
-    if (!settings.hideSettings || !!hideSettings) {
+    if (!settings.hideSettings) {
       return;
     }
 
@@ -86,15 +83,13 @@ function NewGTR({ station, editBoardCallback }: IProps) {
           Edit board
         </PageLink>
         <br />
-        <ToggleSwitch checked={settings.noBg} ref={noBgRef} label="Remove background" onChange={updateState} />
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
-
       <ZoomDiv>
-        <FullBoard noBg={settings.noBg} station={station} />
+        <FullBoard ref={ref} station={station} />
       </ZoomDiv>
     </>
   );
-}
+});
 
 export default NewGTR;
