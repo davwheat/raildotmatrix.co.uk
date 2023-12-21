@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import useInterval from '../../hooks/useInterval';
 
 interface IProps extends Record<string, unknown> {
-  prefix?: React.ReactChild;
-  suffix?: React.ReactChild;
+  prefix?: React.ReactNode;
+  suffix?: React.ReactNode;
   text: string;
   component?: string;
   /**
@@ -17,7 +17,7 @@ interface IProps extends Record<string, unknown> {
   /**
    * Whether to show a blinking cursor after the text.
    */
-  cursor: boolean;
+  cursor?: boolean;
   className?: string;
 }
 

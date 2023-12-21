@@ -5,8 +5,9 @@ import SEO from '../components/Seo';
 import TypewriterText from '../components/common/TypewriterText';
 import PageLink from '../components/common/PageLink';
 import useInterval from '../hooks/useInterval';
+import type { PageProps } from 'gatsby';
 
-const NotFoundPage = () => {
+export default function NotFoundPage(props: PageProps) {
   const [timeString, setTimeString] = useState(`${padZero(new Date().getHours())}:${padZero(new Date().getMinutes())}`);
 
   function padZero(input) {
@@ -51,6 +52,4 @@ const NotFoundPage = () => {
       </main>
     </Layout>
   );
-};
-
-export default NotFoundPage;
+}
