@@ -94,11 +94,10 @@ export default async function GetNextTrainsAtStation(
 
   try {
     response = await fetch(
-      GenerateUrl('departures', [station], {
-        expand: true,
-        numServices: options.count || 3,
-        timeOffset: options.minOffset || 0,
-        timeWindow: options.timeWindow || 120,
+      GenerateUrl('departures', [station, (options.count || 5).toString()], {
+        expand: 'true',
+        timeOffset: (options.minOffset || 0).toString(),
+        timeWindow: (options.timeWindow || 120).toString(),
       }),
       {
         signal: abortController ? abortController.signal : undefined,
