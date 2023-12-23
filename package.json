@@ -36,6 +36,7 @@
     "uk-railway-stations": "^1.5.2"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231218.0",
     "@flarum/prettier-config": "^1.0.0",
     "@types/color": "^3.0.6",
     "@types/react": "^18.2.45",
@@ -44,7 +45,8 @@
     "cross-env": "^7.0.3",
     "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.32",
     "prettier": "^3.1.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "wrangler": "^3.22.1"
   },
   "keywords": [
     "gatsby"
@@ -54,10 +56,11 @@
     "build": "cross-env NODE_ENV=production gatsby build",
     "build:ci": "cross-env NODE_ENV=production gatsby build --verbose",
     "develop": "gatsby develop",
+    "develop:workers": "wrangler pages dev --proxy 8000",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,json,md}\"",
     "start": "yarn develop",
-    "serve": "gatsby serve",
+    "serve": "yarn wrangler pages dev public/",
     "clean": "gatsby clean"
   },
   "repository": {
