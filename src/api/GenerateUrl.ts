@@ -1,7 +1,6 @@
 import Config from './Config';
 
-export default function GenerateUrl(service, urlParams, queryParams, noKey_old = false) {
-  // Azure handles api key
+export default function GenerateUrl(service: string, urlParams: string[], queryParams: Record<string, string>) {
   const noKey = true;
 
   let queryString = noKey ? '' : `?apiKey=${Config.apiKey}`,
