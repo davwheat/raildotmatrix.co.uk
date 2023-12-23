@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "lib": ["dom", "esnext"],
+    "jsx": "react-jsx",
+    // "jsxImportSource": "@emotion/react",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "strictNullChecks": true
+    // "paths": {
+    //   "@components/*": ["./src/components/*"],
+    //   "@data/*": ["./src/data/*"],
+    //   "@assets/*": ["./src/assets/*"],
+    //   "@functions/*": ["./src/functions/*"],
+    //   "@types/*": ["./@types/*", "../node_modules/@types/*"],
+    //   "@styles/*": ["./src/styles/*"],
+    //   "@hooks/*": ["./src/hooks/*"],
+    //   "@leaflet/*": ["./src/leaflet/*"],
+    //   "@atoms/*": ["./src/atoms/*"],
+    //   "@atoms": ["./src/atoms"]
+    // }
+  },
+  "exclude": ["node_modules", "build", "scripts", "acceptance-tests", "webpack", "jest", "src/setupTests.ts"]
+}

@@ -45,7 +45,7 @@ function getRealDeptTime(trainService: TrainService, stdForDelayed: boolean = fa
   return realDeptTime;
 }
 
-function FullBoard({ station, platformNumber }: IProps) {
+export default function FullBoard({ station, platformNumber }: IProps) {
   const [trainData, setTrainData] = useState<ApiResponse | null | { error: true }>(null);
 
   const isError = !isValidResponseApi(trainData);
@@ -168,5 +168,3 @@ function FullBoard({ station, platformNumber }: IProps) {
     </article>
   );
 }
-
-export default FullBoard;

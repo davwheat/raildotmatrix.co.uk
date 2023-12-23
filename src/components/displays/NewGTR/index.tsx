@@ -13,7 +13,7 @@ interface IProps {
   editBoardCallback: () => void;
 }
 
-const NewGTR = React.forwardRef<any, IProps>(({ station, editBoardCallback }, ref) => {
+export default function NewGTR({ station, editBoardCallback }) {
   let searchParams: URLSearchParams | null = null;
 
   if (typeof window !== 'undefined') {
@@ -86,10 +86,8 @@ const NewGTR = React.forwardRef<any, IProps>(({ station, editBoardCallback }, re
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
       <ZoomDiv>
-        <FullBoard ref={ref} station={station} />
+        <FullBoard station={station} />
       </ZoomDiv>
     </>
   );
-});
-
-export default NewGTR;
+}

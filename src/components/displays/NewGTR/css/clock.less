@@ -1,0 +1,21 @@
+.clock {
+  font-size: 96px;
+  font-weight: 900;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  height: 112px;
+
+  .char {
+    width: 1ch;
+    text-align: center;
+
+    // Colons are narrower
+    &:nth-child(3n) {
+      width: 0.4ch;
+    }
+  }
+}

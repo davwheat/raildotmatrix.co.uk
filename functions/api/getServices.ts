@@ -26,10 +26,10 @@ interface TrainService {
   length: number;
   isReverseFormation: boolean;
   detachFront: boolean;
-  origin: Origin[];
-  destination: Destination[];
-  currentOrigins: any;
-  currentDestinations: any;
+  origin: EndPointLocation[];
+  destination: EndPointLocation[];
+  currentOrigins: EndPointLocation[] | null;
+  currentDestinations: EndPointLocation[] | null;
   formation: any;
   rid: string;
   uid: string;
@@ -145,17 +145,7 @@ interface DelayReason {
   value: number;
 }
 
-interface Origin {
-  isOperationalEndPoint: boolean;
-  locationName: string;
-  crs: string;
-  tiploc: string;
-  via: any;
-  futureChangeTo: number;
-  futureChangeToSpecified: boolean;
-}
-
-interface Destination {
+interface EndPointLocation {
   isOperationalEndPoint: boolean;
   locationName: string;
   crs: string;

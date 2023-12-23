@@ -13,7 +13,7 @@ export default async function GetNextTrainsAtStationStaff(
   options: IOptions = { count: 3, timeWindow: 120, minOffset: 0, mustStopAt: null },
   abortController?: AbortController
 ): Promise<StaffServicesResponse | null | { error: true }> {
-  // return require('./ExampleStaffResponse.json');
+  return require('./ExampleStaffResponse.json');
 
   if (options.minOffset < -239) {
     console.error('Time offset cannot be more than 239 minutes in the past.');
