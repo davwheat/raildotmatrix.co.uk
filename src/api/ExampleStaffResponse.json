@@ -1518,7 +1518,7 @@
           "locationName": "Bedford",
           "crs": "BDM",
           "tiploc": "BEDFDM",
-          "via": null,
+          "via": "via London Bridge",
           "futureChangeTo": 0,
           "futureChangeToSpecified": false
         }
@@ -2507,10 +2507,19 @@
       "destination": [
         {
           "isOperationalEndPoint": false,
-          "locationName": "Brighton",
-          "crs": "BTN",
-          "tiploc": "BRGHTN",
-          "via": null,
+          "locationName": "Ore",
+          "crs": "BDM",
+          "tiploc": "BEDFDM",
+          "via": "via Lewes",
+          "futureChangeTo": 0,
+          "futureChangeToSpecified": false
+        },
+        {
+          "isOperationalEndPoint": false,
+          "locationName": "Eastbourne",
+          "crs": "BDM",
+          "tiploc": "BEDFDM",
+          "via": "via Lewes",
           "futureChangeTo": 0,
           "futureChangeToSpecified": false
         }
@@ -5601,7 +5610,7 @@
           "locationName": "Bedford",
           "crs": "BDM",
           "tiploc": "BEDFDM",
-          "via": null,
+          "via": "via London Bridge",
           "futureChangeTo": 0,
           "futureChangeToSpecified": false
         }
@@ -8444,7 +8453,7 @@
           "locationName": "Bedford",
           "crs": "BDM",
           "tiploc": "BEDFDM",
-          "via": null,
+          "via": "via London Bridge",
           "futureChangeTo": 0,
           "futureChangeToSpecified": false
         }
