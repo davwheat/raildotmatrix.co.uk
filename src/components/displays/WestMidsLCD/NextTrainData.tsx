@@ -1,4 +1,3 @@
-import clsx from 'clsx';
 import React from 'react';
 import { TrainService } from '../../../api/GetNextTrainsAtStation';
 import { combineLocations } from './combineLocations';
@@ -23,7 +22,7 @@ const NextTrainTopRow = React.memo(({ std, sta, currentDestinations, destination
           {isOnTime && 'On time'}
           {!isOnTime && isCancelled && 'Cancelled'}
           {!isOnTime && !isCancelled && etd === 'Delayed' && etd}
-          {!isOnTime && !isCancelled && etd !== "Delayed" && `Exp ${etd}`}
+          {!isOnTime && !isCancelled && etd !== 'Delayed' && `Exp ${etd}`}
         </span>
       </div>
     </div>
