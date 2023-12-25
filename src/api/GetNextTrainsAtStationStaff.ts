@@ -1,6 +1,7 @@
 import { StaffServicesResponse } from '../../functions/api/getServices';
 
-export { StaffServicesResponse };
+export type { StaffServicesResponse };
+
 interface IOptions {
   count?: number;
   timeWindow?: number;
