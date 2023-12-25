@@ -13,7 +13,18 @@ function getTimeNumerics(): string {
   return dayjs().tz('Europe/London').format('HH:mm:ss');
 }
 
-export default function Clock() {
+function getLastNumber(num: string): string {
+  const int = parseInt(num);
+
+  if (int === 0) return '9';
+  else return (int - 1).toString();
+}
+
+interface IProps {
+  animateDigits?: boolean;
+}
+
+export default function Clock({ animateDigits = false }: IProps) {
   const [time, setTime] = useState(getTimeNumerics());
 
   useEffect(() => {
@@ -29,10 +40,24 @@ export default function Clock() {
   return (
     <div className="row clock">
       {[...time].map((t, i) => (
-        <div key={i} className="char">
-          {t}
+        <div className="char" key={i}>
+          {!animateDigits && t}
+          {animateDigits && (t !== ':' ? <ClockDigit digit={t} /> : t)}
         </div>
       ))}
     </div>
+  );
+}
+
+function ClockDigit({ digit }: { digit: string }) {
+  return (
+    <>
+      <div key={`${digit}-1`} className="prev">
+        {getLastNumber(digit)}
+      </div>
+      <div key={`${digit}-2`} className="current">
+        {digit}
+      </div>
+    </>
   );
 }

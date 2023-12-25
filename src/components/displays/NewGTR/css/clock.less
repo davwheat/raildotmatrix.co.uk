@@ -1,21 +1,107 @@
+@keyframes squash-out {
+  0% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+    opacity: 1;
+  }
+  80% {
+    clip-path: polygon(
+      0 calc(var(--dot-height) * 4),
+      100% calc(var(--dot-height) * 4),
+      100% calc(var(--dot-height) * 5),
+      0% calc(var(--dot-height) * 5)
+    );
+    opacity: 1;
+  }
+  100% {
+    clip-path: polygon(
+      0 calc(var(--dot-height) * 4),
+      100% calc(var(--dot-height) * 4),
+      100% calc(var(--dot-height) * 5),
+      0% calc(var(--dot-height) * 5)
+    );
+    opacity: 0;
+  }
+}
+
+@keyframes squash-in {
+  0% {
+    clip-path: polygon(
+      0 calc(var(--dot-height) * 4),
+      100% calc(var(--dot-height) * 4),
+      100% calc(var(--dot-height) * 5),
+      0% calc(var(--dot-height) * 5)
+    );
+    opacity: 0;
+  }
+  20% {
+    clip-path: polygon(
+      0 calc(var(--dot-height) * 4),
+      100% calc(var(--dot-height) * 4),
+      100% calc(var(--dot-height) * 5),
+      0% calc(var(--dot-height) * 5)
+    );
+    opacity: 1;
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+    opacity: 1;
+  }
+}
+
 .clock {
   font-size: 96px;
   font-weight: 900;
 
-  display: flex;
-  flex-direction: row;
-  align-items: center;
   justify-content: center;
+
+  margin-top: auto;
 
   height: 112px;
 
   .char {
-    width: 1ch;
+    --width: 1ch;
+    --flip-duration: 0.25s;
+    width: var(--width);
     text-align: center;
+    position: relative;
+    height: 1em;
+
+    > .current,
+    > .prev {
+      --dot-height: calc(100% / 9);
+
+      width: var(--width);
+      position: absolute;
+      top: 0;
+    }
+
+    > .prev {
+      animation-name: squash-out;
+      animation-duration: var(--flip-duration);
+      animation-timing-function: steps(4, start);
+      animation-fill-mode: forwards;
+    }
+
+    > .current {
+      clip-path: polygon(
+        0 calc(var(--dot-height) * 4),
+        100% calc(var(--dot-height) * 4),
+        100% calc(var(--dot-height) * 5),
+        0% calc(var(--dot-height) * 5)
+      );
+      opacity: 0;
+
+      animation-name: squash-in;
+      animation-duration: var(--flip-duration);
+      animation-timing-function: steps(4, start);
+      animation-fill-mode: forwards;
+      animation-delay: var(--flip-duration);
+    }
 
     // Colons are narrower
     &:nth-child(3n) {
-      width: 0.4ch;
+      --width: 0.4ch;
+      opacity: 1 !important;
     }
   }
 }

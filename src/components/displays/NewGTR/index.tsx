@@ -13,7 +13,7 @@ interface IProps {
   editBoardCallback: () => void;
 }
 
-export default function NewGTR({ station, editBoardCallback }) {
+export default function NewGTR({ station, editBoardCallback }: IProps) {
   let searchParams: URLSearchParams | null = null;
 
   if (typeof window !== 'undefined') {
@@ -21,19 +21,21 @@ export default function NewGTR({ station, editBoardCallback }) {
   }
 
   const hideSettings = searchParams?.get('hideSettings');
-  const noBg = searchParams?.get('noBg');
+  const animateClockDigits = searchParams?.get('animateClockDigits');
 
   const [settings, setSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
-    noBg: !!noBg,
     hideSettings: !!hideSettings,
+    animateClockDigits: !!animateClockDigits,
   });
 
   const settingsRef = useRef<HTMLDivElement>(null);
   const hideRef = useRef<HTMLInputElement>(null);
+  const animateClockDigitsRef = useRef<HTMLInputElement>(null);
 
   function updateState() {
     setSettings({
-      hideSettings: hideRef.current?.checked,
+      hideSettings: !!hideRef.current?.checked,
+      animateClockDigits: !!animateClockDigitsRef.current?.checked,
     });
 
     if (!hideRef.current?.checked) {
@@ -84,9 +86,11 @@ export default function NewGTR({ station, editBoardCallback }) {
         </PageLink>
         <br />
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
+        <br />
+        <ToggleSwitch checked={settings.animateClockDigits} ref={animateClockDigitsRef} label="Animate clock digits" onChange={updateState} />
       </div>
       <ZoomDiv>
-        <FullBoard station={station} />
+        <FullBoard station={station} animateClockDigits={settings.animateClockDigits} />
       </ZoomDiv>
     </>
   );

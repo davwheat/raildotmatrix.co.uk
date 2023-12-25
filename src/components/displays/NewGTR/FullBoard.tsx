@@ -4,12 +4,13 @@ import type { StaffServicesResponse } from '../../../api/GetNextTrainsAtStationS
 import GetNextTrainsAtStationStaff from '../../../api/GetNextTrainsAtStationStaff';
 import CallNreMessage from './CallNreMessage';
 import Clock from './Clock';
+import TrainServices from './TrainServices';
 
 import './css/board.less';
-import TrainServices from './TrainServices';
 
 interface IProps {
   station: string;
+  animateClockDigits?: boolean;
 }
 
 function loadTrainData(station: string, setTrainData: (data: any) => void) {
@@ -28,7 +29,7 @@ function isValidResponseApi(response: StaffServicesResponse | null | { error: tr
   return response !== null && !(response as any).error && (response as any).trainServices;
 }
 
-export default function FullBoard({ station }: IProps) {
+export default function FullBoard({ station, animateClockDigits }: IProps) {
   const [trainData, setTrainData] = useState<StaffServicesResponse | null | { error: true }>(null);
   const [dataInfo, setDataInfo] = useState({
     loadingData: false,
@@ -64,7 +65,7 @@ export default function FullBoard({ station }: IProps) {
     return (
       <article className="dot-matrix">
         <CallNreMessage />
-        <Clock />
+        <Clock animateDigits={animateClockDigits} />
       </article>
     );
   }
@@ -72,7 +73,7 @@ export default function FullBoard({ station }: IProps) {
   return (
     <article className="dot-matrix">
       <TrainServices services={trainData.trainServices} />
-      <Clock />
+      <Clock animateDigits={animateClockDigits} />
     </article>
   );
 }
