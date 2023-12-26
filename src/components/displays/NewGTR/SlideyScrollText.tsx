@@ -14,9 +14,26 @@ interface IProps {
    * @returns `true` if the animation should be stopped, `false` otherwise.
    */
   onComplete?: () => boolean;
+  /**
+   * @param willScroll `true` if the text will scroll, `false` otherwise.
+   */
+  onStart?: (willScroll: boolean) => void;
+  /**
+   * The number of milliseconds to wait before calling `onComplete` if the text is not scrolling.
+   */
+  callCompleteIfNotScrolling?: number;
 }
 
-function SlideyScrollText({ children, className, classNameInner, pauseWhenDone = 750, scrollSpeed = 400, onComplete }: IProps) {
+function SlideyScrollText({
+  children,
+  className,
+  classNameInner,
+  pauseWhenDone = 750,
+  scrollSpeed = 400,
+  callCompleteIfNotScrolling = 5_000,
+  onStart,
+  onComplete,
+}: IProps) {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
 
@@ -47,6 +64,7 @@ function SlideyScrollText({ children, className, classNameInner, pauseWhenDone =
     updateSizes();
 
     let currentTimeout = -1;
+    let completeIfNotScrollTimeout = -1;
 
     inner!.style.removeProperty('--trans-x');
     inner!.style.removeProperty('--transition-time');
@@ -108,13 +126,18 @@ function SlideyScrollText({ children, className, classNameInner, pauseWhenDone =
     } else {
       inner!.style.removeProperty('--transition-time');
       inner!.style.setProperty('--trans-x', '0');
+
+      completeIfNotScrollTimeout = setTimeout(() => onComplete?.(), callCompleteIfNotScrolling || 0) as any;
     }
+
+    onStart?.(innerWidth > outerWidth);
 
     return () => {
       clearTimeout(currentTimeout);
+      clearTimeout(completeIfNotScrollTimeout);
       inner?.removeEventListener('transitionend', transitionEndHandler);
     };
-  });
+  }, [callCompleteIfNotScrolling, onStart, onComplete, previousElContent, pauseAtEnds, pauseWhenDone, scrollSpeed]);
 
   return (
     <div className={clsx('slidey-scroll-text', className)} ref={outerRef}>

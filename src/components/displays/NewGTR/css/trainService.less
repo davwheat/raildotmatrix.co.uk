@@ -17,7 +17,7 @@
     // Fixed width for times
     > * {
       display: inline-block;
-      width: 0.9ch;
+      width: 1ch;
       text-align: center;
 
       &:nth-child(3) {
@@ -44,27 +44,5 @@
   .etd {
     text-align: right;
     margin-right: -4px;
-  }
-}
-
-.trainServiceAdditional {
-  margin-top: 12px;
-  height: 1em;
-  display: flex;
-
-  .callingAt {
-    width: calc(var(--ordinal-width) + var(--std-width) + var(--gap) * 2);
-    background-color: black;
-    flex-shrink: 0;
-
-    &Point {
-      &:not(:nth-last-child(2)):not(:last-child)::after {
-        content: ', ';
-      }
-
-      &:nth-last-child(2)::after {
-        content: ' and ';
-      }
-    }
   }
 }

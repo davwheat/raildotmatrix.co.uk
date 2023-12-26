@@ -29,7 +29,7 @@ export default function SwapBetween({ interval, animate = true, children, classN
         <div
           key={i}
           style={{
-            transform: shownChild === i ? 'translateY(0)' : shownChild > i ? 'translateY(105%)' : 'translateY(-105%)',
+            transform: shownChild === i ? 'translateY(0)' : shownChild < i ? 'translateY(105%)' : 'translateY(-105%)',
           }}
         >
           {c}

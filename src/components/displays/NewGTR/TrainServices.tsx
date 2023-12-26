@@ -45,6 +45,7 @@ export interface IMyTrainService {
         }[];
   }[];
 
+  isDelayed(): boolean;
   displayedDepartureTime(): string;
 }
 
@@ -91,9 +92,13 @@ function processServices(services: NonNullable<StaffServicesResponse['trainServi
               })) || null,
           })),
 
+        isDelayed(): boolean {
+          return dayjs(this.estimatedDeparture).diff(dayjs(this.scheduledDeparture), 'minute') >= 1;
+        },
+
         displayedDepartureTime(): string {
           if (this.hasDeparted || this.hasArrived) return 'Arrived';
-          if (dayjs(this.estimatedDeparture).diff(dayjs(this.scheduledDeparture), 'minute') === 0) return 'On time';
+          if (!this.isDelayed()) return 'On time';
           if (this.estimatedDeparture) return dayjs(this.estimatedDeparture).format('HH:mm');
           if (this.scheduledDeparture) return dayjs(this.scheduledDeparture).format('HH:mm');
           return 'Delayed';
