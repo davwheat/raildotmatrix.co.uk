@@ -54,6 +54,8 @@ function processServices(services: NonNullable<StaffServicesResponse['trainServi
 
   return applicableServices
     .map((service): IMyTrainService => {
+      console.log(service);
+
       return {
         destinations: (service.currentDestinations || service.destination).map((d) => ({ name: d.locationName, via: d.via })),
         origins: (service.currentOrigins || service.origin).map((o) => ({ name: o.locationName, via: o.via })),
@@ -85,11 +87,10 @@ function processServices(services: NonNullable<StaffServicesResponse['trainServi
             estimatedDeparture: location.etdSpecified ? dayjs(location.etd).toDate() : null,
             scheduledArrival: location.staSpecified ? dayjs(location.sta).toDate() : null,
             estimatedArrival: location.etaSpecified ? dayjs(location.eta).toDate() : null,
-            associations:
-              location.associations?.map((association) => ({
+            associations: /* location.associations?.map((association) => ({
                 type: CategoryToAssociationType[association.category] as AssociationType,
                 service: processServices([association.service])[0],
-              })) || null,
+              })) || */ null,
           })),
 
         isDelayed(): boolean {
