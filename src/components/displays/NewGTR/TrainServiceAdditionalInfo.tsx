@@ -30,9 +30,10 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
   // Memoise to prevent early animation end
   const callingPoints = React.useMemo(
     () =>
-      service.passengerCallPoints.map(
-        (p) => `${p.name} (${p.estimatedArrival ? dayjs(p.estimatedArrival).format('HH:mm') : dayjs(p.scheduledArrival).format('HH:mm')})`
-      ),
+      service.passengerCallPoints.map((p) => {
+        const aTime = p.displayedArrivalTime();
+        return `${p.name}${aTime ? ` (${aTime})` : ''}`;
+      }),
     [JSON.stringify(service.passengerCallPoints)]
   );
 
