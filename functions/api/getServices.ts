@@ -19,8 +19,8 @@ export interface StaffServicesResponse {
 interface TrainService {
   previousLocations: any;
   subsequentLocations: SubsequentLocation[];
-  cancelReason: CancelReason | null;
-  delayReason: DelayReason | null;
+  cancelReason: CancelLatenessReason | null;
+  delayReason: CancelLatenessReason | null;
   category: string;
   activities: string;
   length: number;
@@ -133,16 +133,11 @@ interface Association {
   service: TrainService;
 }
 
-interface CancelReason {
+interface CancelLatenessReason {
   tiploc: string;
   near: boolean;
   value: number;
-}
-
-interface DelayReason {
-  tiploc: string;
-  near: boolean;
-  value: number;
+  stationName?: string | null;
 }
 
 interface EndPointLocation {
@@ -160,6 +155,8 @@ interface NrccMessage {
   severity: number;
   xhtmlMessage: string;
 }
+
+import TiplocToStation from './tiploc_to_station.json';
 
 async function getServiceByRid(rid: string): Promise<TrainService> {
   const response = await fetch(`https://national-rail-api.davwheat.dev/service/${rid}`);
@@ -199,6 +196,14 @@ export const onRequest: PagesFunction<unknown> = async (context) => {
 
     for (const s in json.trainServices) {
       const service: TrainService = json.trainServices[s];
+
+      if (service.cancelReason?.near) {
+        service.cancelReason.stationName = TiplocToStation[service.cancelReason.tiploc] || null;
+      }
+
+      if (service.delayReason?.near) {
+        service.delayReason.stationName = TiplocToStation[service.delayReason.tiploc] || null;
+      }
 
       for (const l in service.subsequentLocations) {
         const location: SubsequentLocation = service.subsequentLocations[l];
