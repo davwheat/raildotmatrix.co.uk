@@ -18,7 +18,7 @@ const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, 
 
   function updateState() {
     setSettings({
-      hideSettings: hideRef.current?.checked,
+      hideSettings: hideRef.current?.checked || false,
     });
 
     if (!hideRef.current?.checked) {
