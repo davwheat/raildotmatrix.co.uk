@@ -19,6 +19,12 @@ function getServiceInfo(service: IMyTrainService): string {
 
   portions.push(`A${toc ? ` ${toc}` : ''} service${length ? ` formed of ${length} coaches` : ''}.`);
 
+  if (service.cancelled) {
+    if (service.cancelReason) portions.push(service.cancelReason);
+  } else if (service.isDelayed()) {
+    if (service.delayReason) portions.push(service.delayReason);
+  }
+
   return portions.join(' ');
 }
 
