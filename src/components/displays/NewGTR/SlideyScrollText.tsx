@@ -29,7 +29,7 @@ function SlideyScrollText({
   className,
   classNameInner,
   pauseWhenDone = 750,
-  scrollSpeed = 400,
+  scrollSpeed = 550,
   callCompleteIfNotScrolling = 5_000,
   onStart,
   onComplete,
