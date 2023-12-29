@@ -7,6 +7,7 @@ import './css/trainService.less';
 import type { IMyTrainService } from './TrainServices';
 import SwapBetween from './SwapBetween';
 import TrainServiceAdditionalInfo from './TrainServiceAdditionalInfo';
+import clsx from 'clsx';
 
 interface IProps {
   ordinal: string;
@@ -38,6 +39,7 @@ export default function TrainService({ ordinal, service, showAdditionalDetails =
   );
 
   const etd = service.displayedDepartureTime();
+  const isCancelled = service.cancelled;
 
   return (
     <>
@@ -58,7 +60,7 @@ export default function TrainService({ ordinal, service, showAdditionalDetails =
             ))}
           </SwapBetween>
         </span>
-        <span className="etd time">
+        <span className={clsx('etd time', { flash: isCancelled })}>
           {etd.includes(':') ? (
             <>
               Expt{' '}
