@@ -107,20 +107,18 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
   return (
     <div className="trainServiceAdditional">
       <div className={clsx('info', { shown: shownPage === 0 })}>
-        {shownPage === 0 && (
-          <SlideyScrollText
-            callCompleteIfNotScrolling={8_000}
-            onComplete={() => {
-              nextPage();
-              // Stop animation
-              console.log('next from info');
+        <SlideyScrollText
+          callCompleteIfNotScrolling={8_000}
+          onComplete={() => {
+            shownPage === 0 && nextPage();
+            // Stop animation
+            console.log('next from info');
 
-              return true;
-            }}
-          >
-            {serviceInfo}
-          </SlideyScrollText>
-        )}
+            return true;
+          }}
+        >
+          {serviceInfo}
+        </SlideyScrollText>
       </div>
 
       {callingPointPages.map((page, i) => (
