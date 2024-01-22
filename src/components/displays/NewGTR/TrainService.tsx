@@ -17,8 +17,9 @@ interface IProps {
 
 const DESTINATION_MAX_LENGTH = 21;
 
-function getDestinationAsStrings(destination: IMyTrainService['destinations'][number]): string[] {
-  const name = destination.name;
+function getDestinationAsStrings(destination: IMyTrainService['destinations'][number], index: number): string[] {
+  const andText = index > 0 ? 'and ' : '';
+  const name = `${andText}${destination.name}`;
   const via = destination.via || '';
 
   const whole = `${name} ${via}`.trim();
@@ -33,7 +34,7 @@ function getDestinationAsStrings(destination: IMyTrainService['destinations'][nu
 export default function TrainService({ ordinal, service, showAdditionalDetails = false }: IProps) {
   const getDestinationPages = useCallback(
     function getDestinationPages(): string[] {
-      return service.destinations.map((d) => getDestinationAsStrings(d)).flat();
+      return service.destinations.map((d, i) => getDestinationAsStrings(d, i)).flat();
     },
     [service, getDestinationAsStrings]
   );

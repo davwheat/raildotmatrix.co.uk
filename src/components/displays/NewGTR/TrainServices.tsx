@@ -6,20 +6,19 @@ import dayjs from 'dayjs';
 import dayjsUtc from 'dayjs/plugin/utc';
 import dayjsTz from 'dayjs/plugin/timezone';
 
-import type { StaffServicesResponse } from '../../../api/GetNextTrainsAtStationStaff';
 import SwapBetween from './SwapBetween';
 import Separator from './Separator';
 
 import LatenessCodes from '../../../api/LatenessCodes.json';
 import CancellationCodes from '../../../api/CancellationCodes.json';
 
+import type { StaffServicesResponse } from '../../../api/GetNextTrainsAtStationStaff';
+import { AssociatedServiceDetail, Association, AssociationCategory } from '../../../../functions/api/getServices';
+
 dayjs.extend(dayjsUtc);
 dayjs.extend(dayjsTz);
 
 dayjs.tz.setDefault('Europe/London');
-
-type AssociationType = 'join' | 'divide' | 'linkedPrevious' | 'linkedNext';
-const CategoryToAssociationType: AssociationType[] = ['join', 'divide', 'linkedPrevious', 'linkedNext'];
 
 class CallPoint implements IPassengerCallPoint {
   name: string;
@@ -28,12 +27,8 @@ class CallPoint implements IPassengerCallPoint {
   estimatedDeparture: Date | null;
   scheduledArrival: Date | null;
   estimatedArrival: Date | null;
-  associations:
-    | null
-    | {
-        type: AssociationType | null;
-        service: IMyTrainService;
-      }[];
+  length: number | null;
+  associations: IAssociation[];
 
   displayedArrivalTime(): string | null {
     if (this.isCancelled) return null;
@@ -53,6 +48,7 @@ class CallPoint implements IPassengerCallPoint {
     scheduledArrival,
     estimatedArrival,
     associations,
+    length,
   }: {
     name: string;
     isCancelled: boolean;
@@ -60,12 +56,8 @@ class CallPoint implements IPassengerCallPoint {
     estimatedDeparture: Date | null;
     scheduledArrival: Date | null;
     estimatedArrival: Date | null;
-    associations:
-      | null
-      | {
-          type: AssociationType | null;
-          service: IMyTrainService;
-        }[];
+    associations: IAssociation[];
+    length: number | null;
   }) {
     this.name = name;
     this.isCancelled = isCancelled;
@@ -74,6 +66,7 @@ class CallPoint implements IPassengerCallPoint {
     this.scheduledArrival = scheduledArrival;
     this.estimatedArrival = estimatedArrival;
     this.associations = associations;
+    this.length = length;
   }
 }
 
@@ -89,7 +82,7 @@ class Service implements IMyTrainService {
   estimatedArrival: Date | null;
   actualArrival: Date | null;
   hasArrived: boolean;
-  length: number;
+  length: number | null;
   toc: string;
   passengerCallPoints: IPassengerCallPoint[];
   private _cancelReason: NonNullable<StaffServicesResponse['trainServices']>[number]['cancelReason'];
@@ -165,7 +158,7 @@ class Service implements IMyTrainService {
     estimatedArrival: Date | null;
     actualArrival: Date | null;
     hasArrived: boolean;
-    length: number;
+    length: number | null;
     toc: string;
     passengerCallPoints: IPassengerCallPoint[];
     cancelReason: NonNullable<StaffServicesResponse['trainServices']>[number]['cancelReason'];
@@ -190,6 +183,14 @@ class Service implements IMyTrainService {
   }
 }
 
+export interface IAssociation<Category extends AssociationCategory = AssociationCategory> {
+  type: Category;
+  /**
+   * NOTE: All associations' calling point locations **will** contain the dividing point!
+   */
+  service: Category extends AssociationCategory.Divide ? IMyTrainService : undefined;
+}
+
 interface IPassengerCallPoint {
   name: string;
   isCancelled: boolean;
@@ -197,14 +198,11 @@ interface IPassengerCallPoint {
   estimatedDeparture: Date | null;
   scheduledArrival: Date | null;
   estimatedArrival: Date | null;
-  associations:
-    | null
-    | {
-        type: AssociationType | null;
-        service: IMyTrainService;
-      }[];
+  length: number | null;
+  associations: IAssociation[];
   displayedArrivalTime(): string | null;
 }
+
 export interface IMyTrainService {
   destinations: { name: string; via: null | string }[];
   origins: { name: string; via: null | string }[];
@@ -217,7 +215,7 @@ export interface IMyTrainService {
   estimatedArrival: Date | null;
   actualArrival: Date | null;
   hasArrived: boolean;
-  length: number;
+  length: number | null;
   toc: string;
   passengerCallPoints: IPassengerCallPoint[];
   cancelReason: string | null;
@@ -233,6 +231,43 @@ function processServices(services: NonNullable<StaffServicesResponse['trainServi
   return applicableServices
     .map((service): IMyTrainService => {
       console.log(service);
+
+      let serviceLength = service.length;
+      let currentLength = service.length;
+
+      const stops = service.subsequentLocations
+        // Non-passenger stops
+        .filter((l) => l.crs && (service.isCancelled ? true : !l.isCancelled) && !l.isOperational && !l.isPass)
+        .map((location) => {
+          const assoc = (location.associations || []).map((association) => {
+            return {
+              type: association.category,
+              service: association.category === AssociationCategory.Divide ? processAssociatedService(association, service) || undefined : undefined,
+            };
+          });
+
+          assoc.forEach((a) => {
+            if (!a.service || !serviceLength || !currentLength) return;
+
+            if (a.service.length === null) {
+              serviceLength = null;
+              currentLength = null;
+            } else {
+              currentLength!! -= a.service?.length || 0;
+            }
+          });
+
+          return new CallPoint({
+            name: location.locationName,
+            isCancelled: service.isCancelled || location.isCancelled,
+            scheduledDeparture: location.stdSpecified ? dayjs(location.std).toDate() : null,
+            estimatedDeparture: location.etdSpecified ? dayjs(location.etd).toDate() : null,
+            scheduledArrival: location.staSpecified ? dayjs(location.sta).toDate() : null,
+            estimatedArrival: location.etaSpecified ? dayjs(location.eta).toDate() : null,
+            length: currentLength,
+            associations: assoc,
+          });
+        });
 
       return new Service({
         destinations: (service.currentDestinations || service.destination).map((d) => ({ name: d.locationName, via: d.via })),
@@ -253,27 +288,10 @@ function processServices(services: NonNullable<StaffServicesResponse['trainServi
         actualArrival: service.ataSpecified ? dayjs(service.ata).toDate() : null,
         hasArrived: !!service.ataSpecified,
 
-        length: service.length,
+        length: serviceLength,
         toc: service.operator,
 
-        passengerCallPoints: service.subsequentLocations
-          // Non-passenger stops
-          .filter((l) => l.crs && (service.isCancelled ? true : !l.isCancelled) && !l.isOperational && !l.isPass)
-          .map(
-            (location) =>
-              new CallPoint({
-                name: location.locationName,
-                isCancelled: service.isCancelled || location.isCancelled,
-                scheduledDeparture: location.stdSpecified ? dayjs(location.std).toDate() : null,
-                estimatedDeparture: location.etdSpecified ? dayjs(location.etd).toDate() : null,
-                scheduledArrival: location.staSpecified ? dayjs(location.sta).toDate() : null,
-                estimatedArrival: location.etaSpecified ? dayjs(location.eta).toDate() : null,
-                associations: /* location.associations?.map((association) => ({
-                type: CategoryToAssociationType[association.category] as AssociationType,
-                service: processServices([association.service])[0],
-              })) || */ null,
-              })
-          ),
+        passengerCallPoints: stops,
       });
     })
     .sort((a, b) => {
@@ -281,6 +299,66 @@ function processServices(services: NonNullable<StaffServicesResponse['trainServi
       const bTime = b.actualDeparture || b.estimatedDeparture || b.scheduledDeparture;
       return aTime && bTime ? aTime.getTime() - bTime.getTime() : 0;
     });
+}
+
+function processAssociatedService(
+  association: Association<AssociationCategory.Divide>,
+  ogService: NonNullable<StaffServicesResponse['trainServices']>[number]
+): IMyTrainService | null {
+  const service = association.service;
+
+  const stop1 = service.locations[0];
+
+  const ogDests = ogService.currentDestinations || ogService.destination;
+  const applicableOgDest = ogDests.find((d) => d.tiploc === association.destTiploc);
+
+  const ogOrigins = ogService.currentOrigins || ogService.origin;
+
+  return new Service({
+    destinations: (applicableOgDest
+      ? [applicableOgDest]
+      : stop1.falseDest || [{ locationName: association.destination, crs: association.destCRS }]
+    ).map((d) => ({
+      name: d.locationName,
+      via: 'via' in d ? d.via : null,
+    })),
+    origins: ogOrigins.map((o) => ({ name: o.locationName, via: o.via })),
+
+    cancelled: association.isCancelled,
+
+    cancelReason: service.cancelReason,
+    delayReason: service.delayReason,
+
+    scheduledDeparture: service.stdSpecified ? dayjs(service.std).toDate() : null,
+    estimatedDeparture: service.etdSpecified ? dayjs(service.etd).toDate() : null,
+    actualDeparture: service.atdSpecified ? dayjs(service.atd).toDate() : null,
+    hasDeparted: !!service.atdSpecified,
+
+    scheduledArrival: service.staSpecified ? dayjs(service.sta).toDate() : null,
+    estimatedArrival: service.etaSpecified ? dayjs(service.eta).toDate() : null,
+    actualArrival: service.ataSpecified ? dayjs(service.ata).toDate() : null,
+    hasArrived: !!service.ataSpecified,
+
+    length: stop1.length,
+    toc: ogService.operator,
+
+    passengerCallPoints: service.locations
+      // Non-passenger stops
+      .filter((l) => l.crs && (association.isCancelled ? true : !l.isCancelled) && !l.isOperational && !l.isPass)
+      .map(
+        (location) =>
+          new CallPoint({
+            name: location.locationName,
+            isCancelled: association.isCancelled || location.isCancelled,
+            scheduledDeparture: location.stdSpecified ? dayjs(location.std).toDate() : null,
+            estimatedDeparture: location.etdSpecified ? dayjs(location.etd).toDate() : null,
+            scheduledArrival: location.staSpecified ? dayjs(location.sta).toDate() : null,
+            estimatedArrival: location.etaSpecified ? dayjs(location.eta).toDate() : null,
+            associations: [],
+            length: stop1.length,
+          })
+      ),
+  });
 }
 
 interface IProps {

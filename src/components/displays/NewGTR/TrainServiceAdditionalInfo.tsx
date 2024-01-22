@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import SlideyScrollText from './SlideyScrollText';
-import dayjs from 'dayjs';
 import clsx from 'clsx';
 
 import './css/trainServiceAdditionalInfo.less';
 
-import type { IMyTrainService } from './TrainServices';
+import type { IAssociation, IMyTrainService } from './TrainServices';
+import { AssociationCategory } from '../../../../functions/api/getServices';
 
 interface IProps {
   service: IMyTrainService;
@@ -28,42 +28,115 @@ function getServiceInfo(service: IMyTrainService): string {
   return portions.join(' ');
 }
 
-export default function TrainServiceAdditionalInfo({ service }: IProps) {
-  console.log('additional info');
+interface InfoPage {
+  prefix: string;
+  callPoints: string[];
+}
 
-  const [showCallingPoints, setShowCallingPoints] = React.useState(true);
+export default function TrainServiceAdditionalInfo({ service }: IProps) {
+  const associatedServices = React.useMemo(
+    () =>
+      service.passengerCallPoints
+        .map((s) => s.associations)
+        .flat(1)
+        .filter((a): a is IAssociation<AssociationCategory.Divide> => a.type === AssociationCategory.Divide)
+        .map((a) => a.service),
+    [JSON.stringify(service)]
+  );
+
+  const pageCount = 2 + associatedServices.length;
+
+  const [shownPage, setShownPage] = React.useState(0);
+
+  const nextPage = React.useCallback(() => {
+    setShownPage((p) => {
+      if (p + 1 >= pageCount) return 0;
+      return p + 1;
+    });
+  }, [pageCount]);
+
+  useEffect(() => {
+    if (shownPage >= pageCount) setShownPage(0);
+  }, [shownPage, pageCount]);
 
   // Memoise to prevent early animation end
-  const callingPoints = React.useMemo(
-    () =>
-      service.passengerCallPoints.map((p) => {
-        const aTime = p.displayedArrivalTime();
-        return `${p.name}${aTime ? ` (${aTime})` : ''}`;
-      }),
-    [JSON.stringify(service.passengerCallPoints)]
-  );
+  const callingPointPages: InfoPage[] = React.useMemo(() => {
+    const ogServicePoints = service.passengerCallPoints.map((p) => {
+      const aTime = p.displayedArrivalTime();
+      return `${p.name}${aTime ? ` (${aTime})` : ''}`;
+    });
+
+    const assocCount = associatedServices.length;
+
+    const assocServices = associatedServices.map((s, i): InfoPage => {
+      const [stop1, ...stops] = s.passengerCallPoints;
+
+      const ogServiceDivideIndex = service.passengerCallPoints.findIndex((p) => p.name === stop1.name);
+      const pointsToDivide = ogServicePoints.slice(0, ogServiceDivideIndex + 1);
+
+      const pos = i + 1 === assocCount ? 'Rear' : 'Middle';
+
+      return {
+        prefix: `${pos} ${s.length ? `${s.length} ` : ''}coaches:`,
+        callPoints: [
+          ...pointsToDivide,
+          ...stops.map((p) => {
+            const aTime = p.displayedArrivalTime();
+            return `${p.name}${aTime ? ` (${aTime})` : ''}`;
+          }),
+        ],
+      };
+    });
+
+    if (assocServices.length === 0) {
+      // No splits
+      return [
+        {
+          prefix: 'Calling at:',
+          callPoints: ogServicePoints,
+        },
+      ];
+    } else {
+      const ogLengthEnd = service.passengerCallPoints.at(-1)!!.length;
+      return [{ prefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches:`, callPoints: ogServicePoints }, ...assocServices];
+    }
+  }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map((a) => a.passengerCallPoints))]);
 
   const serviceInfo = React.useMemo(() => getServiceInfo(service), [JSON.stringify(service)]);
 
   return (
     <div className="trainServiceAdditional">
-      <div className={clsx('info', { shown: !showCallingPoints })}>
-        <SlideyScrollText
-          callCompleteIfNotScrolling={8_000}
-          onComplete={() => {
-            setShowCallingPoints(true);
-            // Stop animation
-            return true;
-          }}
-        >
-          {serviceInfo}
-        </SlideyScrollText>
+      <div className={clsx('info', { shown: shownPage === 0 })}>
+        {shownPage === 0 && (
+          <SlideyScrollText
+            callCompleteIfNotScrolling={8_000}
+            onComplete={() => {
+              nextPage();
+              // Stop animation
+              console.log('next from info');
+
+              return true;
+            }}
+          >
+            {serviceInfo}
+          </SlideyScrollText>
+        )}
       </div>
 
-      <div className={clsx('callingPoints', { shown: showCallingPoints })}>
-        <div className="callingAt">Calling at:</div>
-        {showCallingPoints && <CallingPoints pointsText={callingPoints} onComplete={() => setShowCallingPoints(false)} />}
-      </div>
+      {callingPointPages.map((page, i) => (
+        <div key={i} className={clsx('callingPoints', { shown: shownPage === i + 1 })}>
+          <div className="callingAt">{page.prefix}</div>
+          {shownPage === i + 1 && (
+            <CallingPoints
+              pointsText={page.callPoints}
+              onComplete={() => {
+                console.log('next from call p', i + 1);
+                nextPage();
+              }}
+            />
+          )}
+        </div>
+      ))}
     </div>
   );
 }

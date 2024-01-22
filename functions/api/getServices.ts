@@ -16,14 +16,37 @@ export interface StaffServicesResponse {
   servicesAreUnavailable: boolean;
 }
 
+export interface AssociatedServiceDetail {
+  cancelReason: CancelLatenessReason | null;
+  delayReason: CancelLatenessReason | null;
+  isCharter: boolean;
+  isPassengerService: boolean;
+  category: string;
+  sta: string;
+  staSpecified: boolean;
+  ata: string;
+  ataSpecified: boolean;
+  eta: string;
+  etaSpecified: boolean;
+  std: string;
+  stdSpecified: boolean;
+  atd: string;
+  atdSpecified: boolean;
+  etd: string;
+  etdSpecified: boolean;
+  rid: string;
+  uid: string;
+  locations: AssociatedServiceLocation[];
+}
+
 interface TrainService {
   previousLocations: any;
-  subsequentLocations: SubsequentLocation[];
+  subsequentLocations: TimingLocation[];
   cancelReason: CancelLatenessReason | null;
   delayReason: CancelLatenessReason | null;
   category: string;
   activities: string;
-  length: number;
+  length: number | null;
   isReverseFormation: boolean;
   detachFront: boolean;
   origin: EndPointLocation[];
@@ -71,7 +94,7 @@ interface TrainService {
   adhocAlerts: any;
 }
 
-interface SubsequentLocation {
+interface TimingLocation {
   locationName: string;
   tiploc: string;
   crs?: string;
@@ -106,14 +129,26 @@ interface SubsequentLocation {
   adhocAlerts: any;
 }
 
-interface Association {
+export enum AssociationCategory {
+  Join = 0,
+  Divide = 1,
+  LinkedFrom = 2,
+  LinkedTo = 3,
+}
+
+interface AssociatedServiceLocation extends TimingLocation {
+  length: number | null;
+  falseDest: null | EndPointLocation[];
+}
+
+export interface Association<Category extends AssociationCategory = AssociationCategory> {
   /**
    * 0: Join
    * 1: Divide
    * 2: Linked-From (last service)
    * 3: Linked-To (next service)
    */
-  category: number;
+  category: AssociationCategory;
   rid: string;
   uid: string;
   trainid: string;
@@ -130,7 +165,7 @@ interface Association {
   /**
    * Added by this proxy
    */
-  service: TrainService;
+  service: Category extends AssociationCategory.Divide ? AssociatedServiceDetail : undefined;
 }
 
 interface CancelLatenessReason {
@@ -206,7 +241,7 @@ export const onRequest: PagesFunction<unknown> = async (context) => {
       }
 
       for (const l in service.subsequentLocations) {
-        const location: SubsequentLocation = service.subsequentLocations[l];
+        const location: TimingLocation = service.subsequentLocations[l];
 
         for (const a in location.associations) {
           const association: Association = location.associations[a];
