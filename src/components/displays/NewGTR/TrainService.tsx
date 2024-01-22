@@ -39,6 +39,8 @@ export default function TrainService({ ordinal, service, showAdditionalDetails =
     [service, getDestinationAsStrings]
   );
 
+  const pages = getDestinationPages();
+
   const etd = service.displayedDepartureTime();
   const isCancelled = service.cancelled;
 
@@ -55,8 +57,8 @@ export default function TrainService({ ordinal, service, showAdditionalDetails =
             ))}
         </span>
         <span className="destination">
-          <SwapBetween animate={false} interval={3_000}>
-            {getDestinationPages().map((d, i) => (
+          <SwapBetween key={pages.length} animate={false} interval={3_000}>
+            {pages.map((d, i) => (
               <span key={i}>{d}</span>
             ))}
           </SwapBetween>
