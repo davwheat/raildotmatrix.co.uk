@@ -12,6 +12,7 @@ import Attribution from '../components/common/Attribution';
 import NewGTR from '../components/displays/NewGTR';
 import WestMidsLCD from '../components/displays/WestMidsLCD';
 import Class700PIS from '../components/displays/Class700';
+import NoSSR from '@mpth/react-no-ssr';
 
 function isValidBoard(BoardSettings) {
   const boardName = BoardSettings.type;
@@ -82,46 +83,48 @@ const IndexPage = () => {
 
   return (
     <Layout>
-      <Seo title={Page === 0 ? 'Board Setup' : 'Station Board'} />
-      {Page === 0 && (
-        <main>
-          <header>
-            <TypewriterText component="h1" className="display" cursor text="Board settings" time={500} />
-          </header>
-          <article>
-            <Form>
-              <AutocompleteSelect
-                onChange={ChooseStation}
-                label="Select a station"
-                autocompleteOptions={autocomplete}
-                value={BoardSettings.station.value}
-              />
-              <Select
-                label="Display type"
-                options={[
-                  { value: 'gtr-new', label: 'Infotec DMI' },
-                  { value: 'tfwm-lcd', label: 'TfWM LCD' },
-                ]}
-                placeholder="Choose a display"
-                onChange={ChooseDisplay}
-                value={BoardSettings.type}
-              />
-              <PageLink
-                onClick={() => {
-                  if (!BoardSettings.station || !BoardSettings.type) return false;
-                  else return true;
-                }}
-                afterExit={() => setPage(1)}
-                style={{ cursor: 'pointer' }}
-              >
-                Next
-              </PageLink>
-            </Form>
-          </article>
-        </main>
-      )}
+      <NoSSR>
+        <Seo title={Page === 0 ? 'Board Setup' : 'Station Board'} />
+        {Page === 0 && (
+          <main>
+            <header>
+              <TypewriterText component="h1" className="display" cursor text="Board settings" time={500} />
+            </header>
+            <article>
+              <Form>
+                <AutocompleteSelect
+                  onChange={ChooseStation}
+                  label="Select a station"
+                  autocompleteOptions={autocomplete}
+                  value={BoardSettings.station.value}
+                />
+                <Select
+                  label="Display type"
+                  options={[
+                    { value: 'gtr-new', label: 'Infotec DMI' },
+                    { value: 'tfwm-lcd', label: 'TfWM LCD' },
+                  ]}
+                  placeholder="Choose a display"
+                  onChange={ChooseDisplay}
+                  value={BoardSettings.type}
+                />
+                <PageLink
+                  onClick={() => {
+                    if (!BoardSettings.station || !BoardSettings.type) return false;
+                    else return true;
+                  }}
+                  afterExit={() => setPage(1)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Next
+                </PageLink>
+              </Form>
+            </article>
+          </main>
+        )}
 
-      {Page === 1 && Board}
+        {Page === 1 && Board}
+      </NoSSR>
 
       <Attribution />
     </Layout>

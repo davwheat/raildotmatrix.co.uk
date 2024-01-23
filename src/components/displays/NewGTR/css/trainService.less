@@ -1,0 +1,48 @@
+:root {
+  --gap: 36px;
+  --ordinal-width: 3ch;
+  --std-width: 4.5ch;
+  --etd-width: 9.5ch;
+}
+
+.dot-matrix .trainService {
+  display: grid;
+
+  height: 1em;
+
+  grid-template-columns: var(--ordinal-width) var(--std-width) 1fr var(--etd-width);
+  gap: var(--gap);
+
+  .time {
+    // Fixed width for times
+    > * {
+      display: inline-block;
+      width: 1ch;
+      text-align: center;
+
+      &:nth-child(3) {
+        padding-left: 0.075ch;
+        width: 0.5ch;
+      }
+    }
+  }
+
+  .destination {
+    span {
+      display: inline-block;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .swapBetween {
+      height: 100%;
+    }
+  }
+
+  .etd {
+    text-align: right;
+    margin-right: -4px;
+  }
+}

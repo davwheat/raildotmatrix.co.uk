@@ -24,7 +24,7 @@ export const ValidScreenStages = [
   'short platform',
 ] as const;
 
-export const ScreenStagesCycle: typeof ValidScreenStages[number][] = [
+export const ScreenStagesCycle: (typeof ValidScreenStages)[number][] = [
   'destination',
   'next stop',
   'calling points',
@@ -40,7 +40,7 @@ export function validateScreenStage(stage: string): boolean {
   return (ValidScreenStages as Readonly<string[]>).includes(stage);
 }
 
-function getNextScreen(screen: typeof ValidScreenStages[number]): typeof ValidScreenStages[number] {
+function getNextScreen(screen: (typeof ValidScreenStages)[number]): (typeof ValidScreenStages)[number] {
   const nextIndex = (ScreenStagesCycle.indexOf(screen) + 1) % ScreenStagesCycle.length;
   return ScreenStagesCycle[nextIndex];
 }
@@ -59,7 +59,7 @@ function isNextStopDestination(): boolean {
 }
 
 export default function ScreenBase({}) {
-  const [screenStage, setScreenStage] = useState<typeof ValidScreenStages[number]>(
+  const [screenStage, setScreenStage] = useState<(typeof ValidScreenStages)[number]>(
     getUrlParam('screenStage') ?? (isNextStopDestination() ? 'next stop' : 'destination')
   );
   const shouldScrollStages = getUrlParam('scrollStages') === 'true';
@@ -115,7 +115,7 @@ export default function ScreenBase({}) {
   );
 }
 
-function getScreens(screenStage: typeof ValidScreenStages[number]): { small: () => JSX.Element | null; big: () => JSX.Element | null } {
+function getScreens(screenStage: (typeof ValidScreenStages)[number]): { small: () => JSX.Element | null; big: () => JSX.Element | null } {
   switch (screenStage) {
     case 'destination':
       return {
