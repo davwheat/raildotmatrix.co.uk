@@ -1,12 +1,13 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { CSSProperties, useCallback, useEffect, useState } from 'react';
 
-import type { StaffServicesResponse } from '../../../api/GetNextTrainsAtStationStaff';
 import GetNextTrainsAtStationStaff from '../../../api/GetNextTrainsAtStationStaff';
 import CallNreMessage from './CallNreMessage';
 import Clock from './Clock';
 import TrainServices from './TrainServices';
 
 import './css/board.less';
+
+import type { StaffServicesResponse } from '../../../api/GetNextTrainsAtStationStaff';
 
 interface IProps {
   station: string;
@@ -23,7 +24,7 @@ function loadTrainData(station: string, setTrainData: (data: any) => void) {
   return ac;
 }
 
-const UPDATE_INTERVAL_SECS = 15;
+const UPDATE_INTERVAL_SECS = 20;
 
 function isValidResponseApi(response: StaffServicesResponse | null | { error: true }): response is StaffServicesResponse {
   return response !== null && !(response as any).error && (response as any).trainServices;

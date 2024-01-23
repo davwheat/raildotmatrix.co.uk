@@ -13,6 +13,11 @@ interface IProps {
   editBoardCallback: () => void;
 }
 
+const BoardColors = {
+  orange: 'hsl(39, 100%, 45%)',
+  white: '#efefef',
+} as const;
+
 export default function NewGTR({ station, editBoardCallback }: IProps) {
   let searchParams: URLSearchParams | null = null;
 
@@ -22,20 +27,26 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
 
   const hideSettings = searchParams?.get('hideSettings');
   const animateClockDigits = searchParams?.get('animateClockDigits');
+  const color: keyof typeof BoardColors = Object.keys(BoardColors).includes(searchParams?.get('color') || '')
+    ? (searchParams!!.get('color')!! as keyof typeof BoardColors)
+    : 'orange';
 
   const [settings, setSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
     hideSettings: !!hideSettings,
     animateClockDigits: !!animateClockDigits,
+    color,
   });
 
   const settingsRef = useRef<HTMLDivElement>(null);
   const hideRef = useRef<HTMLInputElement>(null);
   const animateClockDigitsRef = useRef<HTMLInputElement>(null);
+  const colorRef = useRef<HTMLSelectElement>(null);
 
   function updateState() {
     setSettings({
       hideSettings: !!hideRef.current?.checked,
       animateClockDigits: !!animateClockDigitsRef.current?.checked,
+      color: colorRef.current?.value as keyof typeof BoardColors,
     });
 
     if (!hideRef.current?.checked) {
@@ -88,9 +99,18 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
         <br />
         <ToggleSwitch checked={settings.animateClockDigits} ref={animateClockDigitsRef} label="Animate clock digits" onChange={updateState} />
+        <br />
+        <label htmlFor="color-select">Color</label>
+        <select id="color-select" ref={colorRef} value={settings.color} onChange={updateState} style={{ textTransform: 'capitalize', marginLeft: 4 }}>
+          {Object.entries(BoardColors).map(([color]) => (
+            <option value={color}>{color}</option>
+          ))}
+        </select>
       </div>
       <ZoomDiv>
-        <FullBoard station={station} animateClockDigits={settings.animateClockDigits} />
+        <div style={{ '--color': BoardColors[settings.color] } as any}>
+          <FullBoard station={station} animateClockDigits={settings.animateClockDigits} />
+        </div>
       </ZoomDiv>
     </>
   );
