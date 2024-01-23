@@ -4,19 +4,17 @@ import { useStaticQuery, graphql } from 'gatsby';
 import { Meta, Title } from 'react-head';
 
 function Seo({ title }: { title: string }) {
-  const { site } = useStaticQuery(
-    graphql`
-      query {
-        site {
-          siteMetadata {
-            title
-            description
-            author
-          }
+  const { site } = useStaticQuery(graphql`
+    query {
+      site {
+        siteMetadata {
+          title
+          description
+          author
         }
       }
-    `
-  );
+    }
+  `);
 
   const metaDescription = site.siteMetadata.description;
 

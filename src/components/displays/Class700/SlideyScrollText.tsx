@@ -50,7 +50,7 @@ function SlideyScrollText({ children, className, classNameInner, pauseWhenDone =
     function updateScrollDuration() {
       updateSizes();
 
-      const scrollDuration = `${innerWidth / scrollSpeed}s`;
+      const scrollDuration = `${(innerWidth + outerWidth) / scrollSpeed}s`;
       inner!.style.setProperty('--transition-time', scrollDuration);
     }
 
