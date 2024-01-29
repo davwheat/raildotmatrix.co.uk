@@ -22,6 +22,8 @@ function getDestinationAsStrings(destination: IMyTrainService['destinations'][nu
   const name = `${andText}${destination.name}`;
   const via = destination.via || '';
 
+  if (!via) return [name];
+
   const whole = `${name} ${via}`.trim();
 
   if (whole.length <= DESTINATION_MAX_LENGTH) {
@@ -40,7 +42,6 @@ export default function TrainService({ ordinal, service, showAdditionalDetails =
   );
 
   const pages = getDestinationPages();
-
   const etd = service.displayedDepartureTime();
   const isCancelled = service.cancelled;
 
