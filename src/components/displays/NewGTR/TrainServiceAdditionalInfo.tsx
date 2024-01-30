@@ -12,12 +12,25 @@ interface IProps {
   service: IMyTrainService;
 }
 
+function aAnToc(toc: string): string {
+  switch (toc) {
+    case 'Avanti West Coast':
+    case 'Elizabeth Line':
+    case 'East Midlands Railway':
+    case 'Island Line':
+      return 'An';
+
+    default:
+      return 'A';
+  }
+}
+
 function getServiceInfo(service: IMyTrainService): string {
   const { toc, length } = service;
 
   const portions: string[] = [];
 
-  portions.push(`A${toc ? ` ${toc}` : ''} service${length ? ` formed of ${length} coaches` : ''}.`);
+  portions.push(`${aAnToc(toc)}${toc ? ` ${toc}` : ''} service${length ? ` formed of ${length} coaches` : ''}.`);
 
   if (service.cancelled) {
     if (service.cancelReason) portions.push(service.cancelReason);
