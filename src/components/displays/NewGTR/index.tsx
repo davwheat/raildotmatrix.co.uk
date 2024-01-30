@@ -68,7 +68,7 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
     }
 
     function handler() {
-      settingsRef.current!.classList.remove('hide');
+      settingsRef.current?.classList.remove('hide');
 
       debouncedHide();
     }
