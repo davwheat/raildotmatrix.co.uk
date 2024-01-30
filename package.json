@@ -16,10 +16,10 @@
     "dayjs": "^1.11.10",
     "english-a-an": "^2.4.0",
     "english-a-an-list": "^2.4.0",
-    "gatsby": "^5.13.1",
+    "gatsby": "^5.13.3",
     "gatsby-plugin-cloudflare-pages": "^1.0.2",
-    "gatsby-plugin-less": "^7.13.0",
-    "gatsby-plugin-manifest": "^5.13.0",
+    "gatsby-plugin-less": "^7.13.1",
+    "gatsby-plugin-manifest": "^5.13.1",
     "gatsby-plugin-react-head": "https://github.com/davwheat/gatsby-plugin-react-head",
     "gatsby-plugin-react-svg": "^3.3.0",
     "gatsby-plugin-remove-console": "^0.0.2",
@@ -36,7 +36,7 @@
     "uk-railway-stations": "^1.5.2"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240117.0",
+    "@cloudflare/workers-types": "^4.20240129.0",
     "@flarum/prettier-config": "^1.0.0",
     "@types/color": "^3.0.6",
     "@types/react": "^18.2.48",
@@ -46,7 +46,7 @@
     "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.32",
     "prettier": "^3.2.4",
     "typescript": "^5.3.3",
-    "wrangler": "^3.23.0"
+    "wrangler": "^3.25.0"
   },
   "keywords": [
     "gatsby"
@@ -70,5 +70,5 @@
   "bugs": {
     "url": "https://github.com/gatsbyjs/gatsby/issues"
   },
-  "packageManager": "yarn@4.0.2"
+  "packageManager": "yarn@4.1.0"
 }

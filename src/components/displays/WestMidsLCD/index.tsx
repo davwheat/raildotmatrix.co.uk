@@ -40,7 +40,7 @@ const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, 
     }
 
     function handler() {
-      settingsRef.current!.classList.remove('hide');
+      settingsRef.current?.classList.remove('hide');
 
       debouncedHide();
     }

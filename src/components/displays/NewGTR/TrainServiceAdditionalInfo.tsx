@@ -5,11 +5,24 @@ import clsx from 'clsx';
 
 import './css/trainServiceAdditionalInfo.less';
 
-import type { IAssociation, IMyTrainService } from './TrainServices';
 import { AssociationCategory } from '../../../../functions/api/getServices';
+import type { IAssociation, IMyTrainService } from '../../../api/ProcessServices';
 
 interface IProps {
   service: IMyTrainService;
+}
+
+function aAnToc(toc: string): string {
+  switch (toc) {
+    case 'Avanti West Coast':
+    case 'Elizabeth Line':
+    case 'East Midlands Railway':
+    case 'Island Line':
+      return 'An';
+
+    default:
+      return 'A';
+  }
 }
 
 function getServiceInfo(service: IMyTrainService): string {
@@ -17,7 +30,7 @@ function getServiceInfo(service: IMyTrainService): string {
 
   const portions: string[] = [];
 
-  portions.push(`A${toc ? ` ${toc}` : ''} service${length ? ` formed of ${length} coaches` : ''}.`);
+  portions.push(`${aAnToc(toc)}${toc ? ` ${toc}` : ''} service${length ? ` formed of ${length} coaches` : ''}.`);
 
   if (service.cancelled) {
     if (service.cancelReason) portions.push(service.cancelReason);
@@ -103,6 +116,9 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
   }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map((a) => a.passengerCallPoints))]);
 
   const serviceInfo = React.useMemo(() => getServiceInfo(service), [JSON.stringify(service)]);
+
+  console.log(callingPointPages);
+  console.log(service);
 
   return (
     <div className="trainServiceAdditional">

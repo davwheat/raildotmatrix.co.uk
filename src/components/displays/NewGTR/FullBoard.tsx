@@ -8,6 +8,7 @@ import TrainServices from './TrainServices';
 import './css/board.less';
 
 import type { StaffServicesResponse } from '../../../api/GetNextTrainsAtStationStaff';
+import { processServices } from '../../../api/ProcessServices';
 
 interface IProps {
   station: string;
@@ -62,7 +63,9 @@ export default function FullBoard({ station, animateClockDigits }: IProps) {
     };
   }, [setTrainData, setDataInfo, dataInfo, station, loadTrainData]);
 
-  if (isError || trainData.trainServices === null || trainData.trainServices.length === 0) {
+  const services = isError || !trainData.trainServices ? null : processServices(trainData.trainServices);
+
+  if (!services || services.length === 0) {
     return (
       <article className="dot-matrix">
         <CallNreMessage />
@@ -73,7 +76,7 @@ export default function FullBoard({ station, animateClockDigits }: IProps) {
 
   return (
     <article className="dot-matrix">
-      <TrainServices services={trainData.trainServices} />
+      <TrainServices services={services} />
       <Clock animateDigits={animateClockDigits} />
     </article>
   );
