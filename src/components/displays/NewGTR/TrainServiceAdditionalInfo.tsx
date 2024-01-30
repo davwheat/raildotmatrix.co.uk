@@ -5,8 +5,8 @@ import clsx from 'clsx';
 
 import './css/trainServiceAdditionalInfo.less';
 
-import type { IAssociation, IMyTrainService } from './TrainServices';
 import { AssociationCategory } from '../../../../functions/api/getServices';
+import type { IAssociation, IMyTrainService } from '../../../api/ProcessServices';
 
 interface IProps {
   service: IMyTrainService;
@@ -103,6 +103,9 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
   }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map((a) => a.passengerCallPoints))]);
 
   const serviceInfo = React.useMemo(() => getServiceInfo(service), [JSON.stringify(service)]);
+
+  console.log(callingPointPages);
+  console.log(service);
 
   return (
     <div className="trainServiceAdditional">

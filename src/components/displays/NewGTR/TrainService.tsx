@@ -4,10 +4,11 @@ import dayjs from 'dayjs';
 
 import './css/trainService.less';
 
-import type { IMyTrainService } from './TrainServices';
 import SwapBetween from './SwapBetween';
 import TrainServiceAdditionalInfo from './TrainServiceAdditionalInfo';
 import clsx from 'clsx';
+
+import type { IMyTrainService } from '../../../api/ProcessServices';
 
 interface IProps {
   ordinal: string;
