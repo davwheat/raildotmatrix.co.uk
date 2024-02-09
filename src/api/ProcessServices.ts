@@ -84,7 +84,8 @@ class Service implements IMyTrainService {
   get cancelReason(): string | null {
     if (!this._cancelReason) return null;
 
-    let reason = (CancellationCodes as Record<string, string>)[this._cancelReason!!.value.toString()];
+    let reason = (CancellationCodes as Record<string, string | undefined>)[this._cancelReason!!.value.toString()];
+    if (!reason) return null;
 
     if (reason && this._cancelReason!!.stationName) {
       reason += ` near ${this._cancelReason!!.stationName}`;
@@ -98,7 +99,8 @@ class Service implements IMyTrainService {
   get delayReason(): string | null {
     if (!this._delayReason) return null;
 
-    let reason = (LatenessCodes as Record<string, string>)[this._delayReason!!.value.toString()];
+    let reason = (LatenessCodes as Record<string, string | undefined>)[this._delayReason!!.value.toString()];
+    if (!reason) return null;
 
     if (reason && this._delayReason!!.stationName) {
       reason += ` near ${this._delayReason!!.stationName}`;
