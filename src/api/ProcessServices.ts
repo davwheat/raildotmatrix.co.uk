@@ -220,7 +220,79 @@ export interface IMyTrainService {
   displayedDepartureTime(): string;
 }
 
-export function processServices(services: NonNullable<StaffServicesResponse['trainServices']>, platforms: string[] | null): IMyTrainService[] {
+function getLegacyTocName(tocCode: string) {
+  switch (tocCode.toUpperCase()) {
+    case 'AW':
+      return 'Arriva Trains Wales';
+    case 'CC':
+      return 'c2c';
+    case 'CH':
+      return 'Chiltern Railways';
+    case 'CS':
+      return 'Caledonian Sleeper';
+    case 'EM':
+      return 'East Midlands Trains';
+    case 'ES':
+      return 'Eurostar';
+    case 'GC':
+      return 'Grand Central';
+    case 'GN':
+      return 'First Capital Connect';
+    case 'GR':
+      return 'National Express East Coast';
+    case 'GW':
+      return 'First Great Western';
+    case 'GX':
+      return 'Gatwick Express';
+    case 'HT':
+      return 'Hull Trains';
+    case 'HX':
+      return 'Heathrow Express';
+    case 'IL':
+      return 'Island Line';
+    case 'LD':
+      return 'Lumo';
+    case 'LE':
+      return 'One';
+    case 'LM':
+      return 'London Midland';
+    case 'LO':
+      return 'London Overground';
+    case 'ME':
+      return 'Merseyrail';
+    case 'NT':
+      return 'Northern Rail';
+    case 'SE':
+      return 'Southeastern';
+    case 'SN':
+      return 'Southern';
+    case 'SR':
+      return 'ScotRail';
+    case 'SW':
+      return 'South West Trains';
+    case 'TL':
+      return 'First Capital Connect';
+    case 'TP':
+      return 'First Transpennine Express';
+    case 'TW':
+      return 'Tyne & Wear Metro';
+    case 'VT':
+      return 'Virgin Trains';
+    case 'XC':
+      return 'Virgin Trains';
+    case 'XR':
+      return 'TfL Rail';
+
+    default:
+      return '';
+  }
+}
+
+export function processServices(
+  services: NonNullable<StaffServicesResponse['trainServices']>,
+  platforms: string[] | null,
+  useLegacyTocNames: boolean
+): IMyTrainService[] {
   const applicableServices = services.filter((s) => {
     if (!s.isPassengerService || s.isOperationalCall || !s.stdSpecified) {
       return false;
@@ -295,7 +367,7 @@ export function processServices(services: NonNullable<StaffServicesResponse['tra
         hasArrived: !!service.ataSpecified,
 
         length: serviceLength,
-        toc: service.operator,
+        toc: useLegacyTocNames ? getLegacyTocName(service.operatorCode) || service.operator : service.operator,
 
         passengerCallPoints: stops,
       });
