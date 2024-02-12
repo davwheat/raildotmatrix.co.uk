@@ -83,6 +83,8 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
     };
   }, [settings.hideSettings]);
 
+  const platforms = searchParams?.getAll('platform');
+
   return (
     <>
       <div className="board-settings" ref={settingsRef}>
@@ -106,10 +108,11 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
             <option value={color}>{color}</option>
           ))}
         </select>
+        {platforms && <p>Only showing platform(s) {platforms.join(',')}</p>}
       </div>
       <ZoomDiv>
         <div style={{ '--color': BoardColors[settings.color] } as any}>
-          <FullBoard station={station} animateClockDigits={settings.animateClockDigits} />
+          <FullBoard station={station} animateClockDigits={settings.animateClockDigits} platforms={platforms} />
         </div>
       </ZoomDiv>
     </>

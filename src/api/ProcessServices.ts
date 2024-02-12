@@ -220,8 +220,19 @@ export interface IMyTrainService {
   displayedDepartureTime(): string;
 }
 
-export function processServices(services: NonNullable<StaffServicesResponse['trainServices']>): IMyTrainService[] {
-  const applicableServices = services.filter((s) => s.isPassengerService && !s.isOperationalCall && s.stdSpecified);
+export function processServices(services: NonNullable<StaffServicesResponse['trainServices']>, platforms: string[] | null): IMyTrainService[] {
+  const applicableServices = services.filter((s) => {
+    if (!s.isPassengerService || s.isOperationalCall || !s.stdSpecified) {
+      return false;
+    }
+
+    // Platform filtering
+    if (platforms && platforms.length > 0 && !platforms.includes(s.platform)) {
+      return false;
+    }
+
+    return true;
+  });
 
   return applicableServices
     .map((service): IMyTrainService => {

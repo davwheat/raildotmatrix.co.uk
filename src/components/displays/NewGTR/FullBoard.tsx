@@ -1,4 +1,4 @@
-import React, { CSSProperties, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import GetNextTrainsAtStationStaff from '../../../api/GetNextTrainsAtStationStaff';
 import CallNreMessage from './CallNreMessage';
@@ -11,6 +11,7 @@ import type { StaffServicesResponse } from '../../../api/GetNextTrainsAtStationS
 import { processServices } from '../../../api/ProcessServices';
 
 interface IProps {
+  platforms?: string[];
   station: string;
   animateClockDigits?: boolean;
 }
@@ -31,7 +32,7 @@ function isValidResponseApi(response: StaffServicesResponse | null | { error: tr
   return response !== null && !(response as any).error && (response as any).trainServices;
 }
 
-export default function FullBoard({ station, animateClockDigits }: IProps) {
+export default function FullBoard({ station, animateClockDigits, platforms }: IProps) {
   const [trainData, setTrainData] = useState<StaffServicesResponse | null | { error: true }>(null);
   const [dataInfo, setDataInfo] = useState({
     loadingData: false,
@@ -63,7 +64,7 @@ export default function FullBoard({ station, animateClockDigits }: IProps) {
     };
   }, [setTrainData, setDataInfo, dataInfo, station, loadTrainData]);
 
-  const services = isError || !trainData.trainServices ? null : processServices(trainData.trainServices);
+  const services = isError || !trainData.trainServices ? null : processServices(trainData.trainServices, platforms ?? null);
 
   if (!services || services.length === 0) {
     return (
