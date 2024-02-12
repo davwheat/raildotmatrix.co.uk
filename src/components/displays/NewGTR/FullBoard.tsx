@@ -14,6 +14,7 @@ interface IProps {
   platforms?: string[];
   station: string;
   animateClockDigits?: boolean;
+  useLegacyTocNames?: boolean;
 }
 
 function loadTrainData(station: string, setTrainData: (data: any) => void) {
@@ -32,7 +33,7 @@ function isValidResponseApi(response: StaffServicesResponse | null | { error: tr
   return response !== null && !(response as any).error && (response as any).trainServices;
 }
 
-export default function FullBoard({ station, animateClockDigits, platforms }: IProps) {
+export default function FullBoard({ station, animateClockDigits, platforms, useLegacyTocNames }: IProps) {
   const [trainData, setTrainData] = useState<StaffServicesResponse | null | { error: true }>(null);
   const [dataInfo, setDataInfo] = useState({
     loadingData: false,
@@ -64,7 +65,7 @@ export default function FullBoard({ station, animateClockDigits, platforms }: IP
     };
   }, [setTrainData, setDataInfo, dataInfo, station, loadTrainData]);
 
-  const services = isError || !trainData.trainServices ? null : processServices(trainData.trainServices, platforms ?? null);
+  const services = isError || !trainData.trainServices ? null : processServices(trainData.trainServices, platforms ?? null, !!useLegacyTocNames);
 
   if (!services || services.length === 0) {
     return (

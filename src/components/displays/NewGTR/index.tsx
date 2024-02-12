@@ -112,7 +112,12 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
       </div>
       <ZoomDiv>
         <div style={{ '--color': BoardColors[settings.color] } as any}>
-          <FullBoard station={station} animateClockDigits={settings.animateClockDigits} platforms={platforms} />
+          <FullBoard
+            station={station}
+            animateClockDigits={settings.animateClockDigits}
+            platforms={platforms}
+            useLegacyTocNames={!!searchParams?.get('useLegacyTocNames')}
+          />
         </div>
       </ZoomDiv>
     </>
