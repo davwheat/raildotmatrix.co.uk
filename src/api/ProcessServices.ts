@@ -118,10 +118,10 @@ class Service implements IMyTrainService {
   displayedDepartureTime(): string {
     if (this.cancelled) return 'Cancelled';
     if (this.hasDeparted || this.hasArrived) return 'Arrived';
+    if (!this.estimatedDeparture) return 'Delayed';
     if (!this.isDelayed()) return 'On time';
     if (this.estimatedDeparture) return dayjs(this.estimatedDeparture).format('HH:mm');
-    if (this.scheduledDeparture) return dayjs(this.scheduledDeparture).format('HH:mm');
-    return 'Delayed';
+    return dayjs(this.scheduledDeparture).format('HH:mm');
   }
 
   constructor({
