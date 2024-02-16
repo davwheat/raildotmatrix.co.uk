@@ -220,7 +220,7 @@ export interface IMyTrainService {
   displayedDepartureTime(): string;
 }
 
-function getLegacyTocName(tocCode: string) {
+export function getLegacyTocName(tocCode: string) {
   switch (tocCode.toUpperCase()) {
     case 'AW':
       return 'Arriva Trains Wales';

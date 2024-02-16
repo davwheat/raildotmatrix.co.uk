@@ -7,16 +7,24 @@ import './css/board/index.less';
 import BoardHeader from './BoardHeader';
 import NextTrain from './NextTrainData';
 import SecondaryTrainData from './SecondaryTrainData';
+import { getLegacyTocName } from '../../../api/ProcessServices';
 
 interface IProps {
   station: string;
   platformNumber: number;
+  useLegacyTocNames?: boolean;
 }
 
-function loadTrainData(station: string, setTrainData: (data: any) => void) {
+function loadTrainData(station: string, useLegacyTocNames: boolean, setTrainData: (data: any) => void) {
   const ac = new AbortController();
 
   GetNextTrainsAtStation(station, { minOffset: 0 }, ac).then((data) => {
+    if (useLegacyTocNames && data && 'trainServices' in data) {
+      data.trainServices.forEach((s) => {
+        s.operator = getLegacyTocName(s.operatorCode);
+      });
+    }
+
     setTrainData(data);
   });
 
@@ -45,7 +53,7 @@ function getRealDeptTime(trainService: TrainService, stdForDelayed: boolean = fa
   return realDeptTime;
 }
 
-export default function FullBoard({ station, platformNumber }: IProps) {
+export default function FullBoard({ station, platformNumber, useLegacyTocNames = false }: IProps) {
   const [trainData, setTrainData] = useState<ApiResponse | null | { error: true }>(null);
 
   const isError = !isValidResponseApi(trainData);
@@ -58,7 +66,7 @@ export default function FullBoard({ station, platformNumber }: IProps) {
   const boardRef = useRef<HTMLDivElement>(null);
 
   const loadData = useCallback(() => {
-    loadTrainData(station, (data: ApiResponse | null | { error: true }) => {
+    loadTrainData(station, useLegacyTocNames, (data: ApiResponse | null | { error: true }) => {
       if (isValidResponseApi(data)) {
         data.trainServices = data.trainServices
           .filter((trainService) => {
