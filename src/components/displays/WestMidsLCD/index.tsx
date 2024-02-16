@@ -9,6 +9,12 @@ import PageLink from '../../common/PageLink';
 import { ZoomDiv } from '../ZoomDiv';
 
 const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) => {
+  let searchParams: URLSearchParams | null = null;
+
+  if (typeof window !== 'undefined') {
+    searchParams = window && new URLSearchParams(window.location.search);
+  }
+
   const [settings, setSettings] = useStateWithLocalStorage('tfwmLcdBoardSettings', {
     hideSettings: false,
   });
@@ -71,7 +77,7 @@ const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, 
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
       <ZoomDiv>
-        <FullBoard ref={ref} station={station} />
+        <FullBoard ref={ref} station={station} useLegacyTocNames={!!searchParams?.get('useLegacyTocNames')} />
       </ZoomDiv>
     </>
   );
