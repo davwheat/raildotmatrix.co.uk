@@ -102,7 +102,7 @@ const IndexPage = () => {
                   label="Display type"
                   options={[
                     { value: 'gtr-new', label: 'Infotec DMI' },
-                    { value: 'tfwm-lcd', label: 'TfWM LCD' },
+                    { value: 'tfwm-lcd', label: 'Blackbox horizontal LCD' },
                   ]}
                   placeholder="Choose a display"
                   onChange={ChooseDisplay}
