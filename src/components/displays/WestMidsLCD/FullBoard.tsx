@@ -7,7 +7,8 @@ import './css/board/index.less';
 import BoardHeader from './BoardHeader';
 import NextTrain from './NextTrainData';
 import SecondaryTrainData from './SecondaryTrainData';
-import { getLegacyTocName } from '../../../api/ProcessServices';
+import { processServices } from '../../../api/ProcessServices';
+import GetNextTrainsAtStationStaff, { StaffServicesResponse } from '../../../api/GetNextTrainsAtStationStaff';
 
 interface IProps {
   station: string;
@@ -15,25 +16,19 @@ interface IProps {
   useLegacyTocNames?: boolean;
 }
 
-function loadTrainData(station: string, useLegacyTocNames: boolean, setTrainData: (data: any) => void) {
+function loadTrainData(station: string, setTrainData: (data: any) => void) {
   const ac = new AbortController();
 
-  GetNextTrainsAtStation(station, { minOffset: 0 }, ac).then((data) => {
-    if (useLegacyTocNames && data && 'trainServices' in data) {
-      data.trainServices.forEach((s) => {
-        s.operator = getLegacyTocName(s.operatorCode);
-      });
-    }
-
+  GetNextTrainsAtStationStaff(station, { minOffset: 0 }, ac).then((data) => {
     setTrainData(data);
   });
 
   return ac;
 }
 
-const UPDATE_INTERVAL_SECS = 15;
+const UPDATE_INTERVAL_SECS = 20;
 
-function isValidResponseApi(response: ApiResponse | null | { error: true }): response is ApiResponse {
+function isValidResponseApi(response: StaffServicesResponse | null | { error: true }): response is StaffServicesResponse {
   return response !== null && !(response as any).error && (response as any).trainServices;
 }
 
@@ -54,60 +49,18 @@ function getRealDeptTime(trainService: TrainService, stdForDelayed: boolean = fa
 }
 
 export default function FullBoard({ station, platformNumber, useLegacyTocNames = false }: IProps) {
-  const [trainData, setTrainData] = useState<ApiResponse | null | { error: true }>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
 
-  const isError = !isValidResponseApi(trainData);
-
+  const [trainData, setTrainData] = useState<StaffServicesResponse | null | { error: true }>(null);
   const [dataInfo, setDataInfo] = useState({
     loadingData: false,
     lastUpdated: 0,
   });
 
-  const boardRef = useRef<HTMLDivElement>(null);
+  const isError = !isValidResponseApi(trainData);
 
   const loadData = useCallback(() => {
-    loadTrainData(station, useLegacyTocNames, (data: ApiResponse | null | { error: true }) => {
-      if (isValidResponseApi(data)) {
-        data.trainServices = data.trainServices
-          .filter((trainService) => {
-            const realDeptTime = getRealDeptTime(trainService);
-
-            if (!realDeptTime) return true;
-
-            const now = new Date(new Date().getTime() + 60 * 60 * 1000).toLocaleString('en-GB', {
-              hour: '2-digit',
-              hour12: false,
-              minute: '2-digit',
-              timeZone: 'Europe/London',
-            });
-
-            const [nowHour, nowMin] = now.split(':');
-            const [realHour, realMin] = realDeptTime.split(':');
-
-            if (realHour !== nowHour) {
-              return true;
-            }
-
-            if (realHour === nowHour && realMin > nowMin) {
-              return true;
-            }
-          })
-          .sort((a, b) => {
-            const aRealDeptTime = getRealDeptTime(a, true);
-            const bRealDeptTime = getRealDeptTime(b, true);
-
-            if (aRealDeptTime === bRealDeptTime) {
-              if (a.std === b.std) {
-                return 0;
-              }
-
-              return a.std! > b.std! ? 1 : -1;
-            }
-
-            return aRealDeptTime! > bRealDeptTime! ? 1 : -1;
-          });
-      }
-
+    loadTrainData(station, (data: StaffServicesResponse | null | { error: true }) => {
       setTrainData(data);
       setDataInfo({ lastUpdated: Date.now(), loadingData: false });
     });
@@ -129,11 +82,9 @@ export default function FullBoard({ station, platformNumber, useLegacyTocNames =
     };
   }, [setTrainData, setDataInfo, dataInfo, station, loadTrainData]);
 
-  const firstService = !isError && trainData.trainServices?.[0];
-  const secondService = !isError && trainData.trainServices?.[1];
-  const thirdService = !isError && trainData.trainServices?.[2];
+  const services = isError || !trainData.trainServices ? null : processServices(trainData.trainServices, /*platforms ??*/ null, !!useLegacyTocNames);
 
-  if (isError) {
+  if (isError || services === null || services.length === 0) {
     return (
       <article className="tfwm-board tfwm-board__notice" ref={boardRef}>
         <BoardHeader platformNumber={platformNumber} stationName={station} />
@@ -144,6 +95,8 @@ export default function FullBoard({ station, platformNumber, useLegacyTocNames =
       </article>
     );
   }
+
+  const [firstService, secondService, thirdService] = services;
 
   if (dataInfo.loadingData) {
     return (

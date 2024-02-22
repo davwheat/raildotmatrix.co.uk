@@ -8,18 +8,40 @@ interface IProps {
   children: React.ReactNode;
   className?: string;
   classNameInner?: string;
-  pauseAtEnds?: false | number;
+  pauseWhenDone?: false | number;
   scrollSpeed?: number;
-  oneWayScroll?: boolean;
+  /**
+   * @returns `true` if the animation should be stopped, `false` otherwise.
+   */
+  onComplete?: () => boolean;
+  /**
+   * @param willScroll `true` if the text will scroll, `false` otherwise.
+   */
+  onStart?: (willScroll: boolean) => void;
+  /**
+   * The number of milliseconds to wait before calling `onComplete` if the text is not scrolling.
+   */
+  callCompleteIfNotScrolling?: number;
 }
 
-function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4000, scrollSpeed = 75, oneWayScroll = false }: IProps) {
+function SlideyScrollText({
+  children,
+  className,
+  classNameInner,
+  pauseWhenDone = 750,
+  scrollSpeed = 550,
+  callCompleteIfNotScrolling = 5_000,
+  onStart,
+  onComplete,
+}: IProps) {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
 
+  const pauseAtEnds = 1000;
+
   const previousElContent = useRef<string>('');
 
-  const animationStep = useRef<'pause-left' | 'scrolling-right' | 'pause-right' | 'scrolling-left' | 'fade-out' | 'fade-in'>('pause-left');
+  const animationStep = useRef<'pause-left' | 'scrolling-right' | 'pause-right'>('pause-left');
 
   useEffect(() => {
     const { current: outer } = outerRef;
@@ -42,6 +64,7 @@ function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4
     updateSizes();
 
     let currentTimeout = -1;
+    let completeIfNotScrollTimeout = -1;
 
     inner!.style.removeProperty('--trans-x');
     inner!.style.removeProperty('--transition-time');
@@ -49,98 +72,29 @@ function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4
     function updateScrollDuration() {
       updateSizes();
 
-      const scrollDuration = `${(innerWidth - outerWidth) / scrollSpeed}s`;
+      const scrollDuration = `${(innerWidth + outerWidth) / scrollSpeed}s`;
       inner!.style.setProperty('--transition-time', scrollDuration);
     }
 
-    function setScrollingProps() {
-      let showLeft = false;
-      let showRight = false;
-
-      switch (animationStep.current) {
-        case 'fade-in':
-        case 'pause-left':
-          showRight = true;
-          break;
-
-        case 'scrolling-left':
-        case 'scrolling-right':
-          showLeft = true;
-          showRight = true;
-          break;
-
-        case 'fade-out':
-        case 'pause-right':
-          showLeft = true;
-          break;
-      }
-
-      outer!.style.setProperty('--show-fade-left', showLeft ? '1' : '0');
-      outer!.style.setProperty('--show-fade-right', showRight ? '1' : '0');
-    }
-
     function transitionEndHandler() {
-      if (animationStep.current === 'fade-out') {
-        animationStep.current = 'fade-in';
-
-        setScrollingProps();
-
-        currentTimeout = setTimeout(() => {
-          inner!.style.setProperty('--trans-x', '0');
-          updateScrollDuration();
-          inner!.style.setProperty('--opacity', '1');
-        }, 250) as any;
-      } else if (animationStep.current === 'fade-in') {
-        animationStep.current = 'pause-left';
-
-        setScrollingProps();
-
-        currentTimeout = setTimeout(() => {
-          animationStep.current = 'scrolling-right';
-          updateScrollDuration();
-          inner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
-        }, pauseAtEnds || 0) as any;
+      if (animationStep.current === 'pause-left') {
+        if (onComplete?.() ?? false) {
+          return;
+        } else {
+          currentTimeout = setTimeout(() => {
+            animationStep.current = 'scrolling-right';
+            updateScrollDuration();
+            inner!.style.setProperty('--trans-x', `-${innerWidth}px`);
+          }, pauseWhenDone || 0) as any;
+        }
       } else if (animationStep.current === 'scrolling-right') {
         animationStep.current = 'pause-right';
 
-        setScrollingProps();
-
         currentTimeout = setTimeout(() => {
-          if (oneWayScroll) {
-            animationStep.current = 'fade-out';
+          animationStep.current = 'pause-left';
 
-            inner!.style.removeProperty('--transition-time');
-            inner!.style.setProperty('--opacity', '0');
-
-            currentTimeout = setTimeout(() => {
-              animationStep.current = 'scrolling-right';
-
-              setScrollingProps();
-              updateScrollDuration();
-
-              inner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
-            }, pauseAtEnds || 0) as any;
-            return;
-          }
-
-          animationStep.current = 'scrolling-left';
-
-          setScrollingProps();
-          updateScrollDuration();
-
-          inner!.style.setProperty('--trans-x', '0');
-        }, pauseAtEnds || 0) as any;
-      } else if (animationStep.current === 'scrolling-left') {
-        animationStep.current = 'pause-left';
-
-        outer!.style.setProperty('--scrolled', '0');
-        currentTimeout = setTimeout(() => {
-          animationStep.current = 'scrolling-right';
-
-          setScrollingProps();
-          updateScrollDuration();
-
-          inner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
+          inner!.style.setProperty('--transition-time', '0.001ms');
+          inner!.style.setProperty('--trans-x', `${outerWidth}px`);
         }, pauseAtEnds || 0) as any;
       }
     }
@@ -148,50 +102,42 @@ function SlideyScrollText({ children, className, classNameInner, pauseAtEnds = 4
     if (previousElContent.current !== inner!.innerHTML) {
       previousElContent.current = inner!.innerHTML;
 
-      outer!.style.removeProperty('--edge-fade');
       inner!.style.removeProperty('--trans-x');
       inner!.style.removeProperty('--transition-time');
-      inner!.style.removeProperty('--opacity');
-      outer!.style.removeProperty('--show-fade-left');
-      outer!.style.removeProperty('--show-fade-right');
 
       animationStep.current = 'pause-left';
     }
 
     if (innerWidth > outerWidth) {
-      outer!.style.removeProperty('--edge-fade');
-      inner!.style.removeProperty('--trans-x');
+      inner!.style.setProperty('--trans-x', `${outerWidth}px`);
       inner!.style.removeProperty('--transition-time');
-      inner!.style.removeProperty('--opacity');
-      outer!.style.removeProperty('--show-fade-left');
-      outer!.style.removeProperty('--show-fade-right');
 
       animationStep.current = 'pause-left';
 
       currentTimeout = setTimeout(() => {
         animationStep.current = 'scrolling-right';
 
-        setScrollingProps();
         updateScrollDuration();
 
-        inner!.style.setProperty('--trans-x', `-${innerWidth - outerWidth}px`);
+        inner!.style.setProperty('--trans-x', `-${innerWidth}px`);
       }, pauseAtEnds || 0) as any;
 
       inner?.addEventListener('transitionend', transitionEndHandler);
     } else {
-      outer!.style.removeProperty('--edge-fade');
-      inner!.style.removeProperty('--trans-x');
       inner!.style.removeProperty('--transition-time');
-      inner!.style.removeProperty('--opacity');
-      outer!.style.removeProperty('--show-fade-left');
-      outer!.style.removeProperty('--show-fade-right');
+      inner!.style.setProperty('--trans-x', '0');
+
+      completeIfNotScrollTimeout = setTimeout(() => onComplete?.(), callCompleteIfNotScrolling || 0) as any;
     }
+
+    onStart?.(innerWidth > outerWidth);
 
     return () => {
       clearTimeout(currentTimeout);
+      clearTimeout(completeIfNotScrollTimeout);
       inner?.removeEventListener('transitionend', transitionEndHandler);
     };
-  });
+  }, [callCompleteIfNotScrolling, onStart, onComplete, previousElContent, pauseAtEnds, pauseWhenDone, scrollSpeed]);
 
   return (
     <div className={clsx('slidey-scroll-text', className)} ref={outerRef}>
