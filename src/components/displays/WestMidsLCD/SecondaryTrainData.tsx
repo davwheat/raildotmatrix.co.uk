@@ -1,5 +1,4 @@
 import React from 'react';
-import { TrainService } from '../../../api/GetNextTrainsAtStation';
 import { combineLocations } from './combineLocations';
 
 import ArrowSVG from './css/board/arrow.svg';
@@ -7,6 +6,15 @@ import ArrowSVG from './css/board/arrow.svg';
 import './css/board/secondaryTrainData.less';
 import FadeBetween from './FadeBetween';
 import SlideyScrollText from './SlideyScrollText';
+
+import dayjs from 'dayjs';
+import dayjsUtc from 'dayjs/plugin/utc';
+import dayjsTz from 'dayjs/plugin/timezone';
+
+dayjs.extend(dayjsUtc);
+dayjs.extend(dayjsTz);
+
+import type { IMyTrainService } from '../../../api/ProcessServices';
 
 function ordinal(number: number) {
   const ordinals = ['th', 'st', 'nd', 'rd'];
@@ -21,23 +29,12 @@ function ordinal(number: number) {
   );
 }
 
-export default function SecondaryTrainData({ train, position }: { train: TrainService; position: number }) {
-  const { etd, std, sta } = train;
-  const isOnTime = train.etd === 'On time' || etd === std;
-  const isCancelled = train.isCancelled;
-
+export default function SecondaryTrainData({ train, position }: { train: IMyTrainService; position: number }) {
   const finalColumnElements: React.ReactNode[] = [];
 
-  finalColumnElements.push(
-    <span className={isCancelled ? 'flash' : ''}>
-      {isOnTime && 'On time'}
-      {!isOnTime && isCancelled && 'Cancelled'}
-      {!isOnTime && !isCancelled && etd === 'Delayed' && etd}
-      {!isOnTime && !isCancelled && etd !== 'Delayed' && `Exp ${etd}`}
-    </span>
-  );
+  finalColumnElements.push(<span className={train.cancelled ? 'flash' : ''}>{train.displayedDepartureTime('Exp ')}</span>);
 
-  if ((train.length || 0) > 0 && !isCancelled) {
+  if ((train.length || 0) > 0 && !train.cancelled) {
     finalColumnElements.push(
       <>
         {train.length}
@@ -55,13 +52,13 @@ export default function SecondaryTrainData({ train, position }: { train: TrainSe
         <img src={ArrowSVG} />
       </div>
 
-      <div className="time">{std ?? sta}</div>
+      <div className="time">{dayjs(train.scheduledDeparture).format('HH:mm')}</div>
 
-      <SlideyScrollText className="dest" classNameInner="dest-inner" oneWayScroll>
-        {combineLocations(train.currentDestinations ?? train.destination)}
+      <SlideyScrollText className="dest" classNameInner="dest-inner">
+        {combineLocations(train.destinations)}
       </SlideyScrollText>
 
-      <div className="status" data-on-time={isOnTime && !isCancelled}>
+      <div className="status" data-on-time={`${!train.isDelayed() && !train.cancelled}`}>
         <FadeBetween elements={finalColumnElements} />
       </div>
     </div>

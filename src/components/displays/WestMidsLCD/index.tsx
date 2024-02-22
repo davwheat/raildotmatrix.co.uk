@@ -8,7 +8,7 @@ import './css/index.less';
 import PageLink from '../../common/PageLink';
 import { ZoomDiv } from '../ZoomDiv';
 
-const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) => {
+const BlackboxLandscapeLcd = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) => {
   let searchParams: URLSearchParams | null = null;
 
   if (typeof window !== 'undefined') {
@@ -83,4 +83,4 @@ const WestMidsLCD = React.forwardRef<any, any>(({ station, editBoardCallback }, 
   );
 });
 
-export default WestMidsLCD;
+export default BlackboxLandscapeLcd;

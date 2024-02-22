@@ -1,16 +1,18 @@
 import React from 'react';
 
-import Select, { createFilter } from 'react-select';
+import Select, { SingleValue, createFilter } from 'react-select';
+
+interface Option {
+  label: string;
+  value: string;
+}
 
 interface IProps {
-  label: React.ReactChild;
-  helpText?: React.ReactChild;
+  label: React.ReactNode;
+  helpText?: React.ReactNode;
   placeholder?: string;
-  autocompleteOptions: {
-    label: string;
-    value: string;
-  }[];
-  onChange?: (value: string) => void;
+  autocompleteOptions: Option[];
+  onChange?: (value: SingleValue<string>) => void;
   value?: string;
 }
 
@@ -27,7 +29,7 @@ export default function AutocompleteSelect({ label, helpText, placeholder, autoc
         components={{
           MenuList,
         }}
-        menuPortalTarget={typeof window !== 'undefined' && document.querySelector('body')}
+        menuPortalTarget={typeof window !== 'undefined' ? document.querySelector('body') : undefined}
         theme={(theme) => ({
           ...theme,
           colors: {
@@ -49,7 +51,7 @@ export default function AutocompleteSelect({ label, helpText, placeholder, autoc
 }
 
 interface IMenuListProps {
-  children: React.ReactChild;
+  children: React.ReactNode;
 }
 
 function MenuList(props: IMenuListProps) {

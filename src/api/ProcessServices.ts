@@ -115,13 +115,13 @@ class Service implements IMyTrainService {
     return dayjs(this.estimatedDeparture).diff(dayjs(this.scheduledDeparture), 'minute') >= 1;
   }
 
-  displayedDepartureTime(): string {
+  displayedDepartureTime(timePrefix: string | undefined = undefined): string {
     if (this.cancelled) return 'Cancelled';
     if (this.hasDeparted || this.hasArrived) return 'Arrived';
     if (!this.estimatedDeparture) return 'Delayed';
     if (!this.isDelayed()) return 'On time';
-    if (this.estimatedDeparture) return dayjs(this.estimatedDeparture).format('HH:mm');
-    return dayjs(this.scheduledDeparture).format('HH:mm');
+    if (this.estimatedDeparture) return `${timePrefix ?? ''}${dayjs(this.estimatedDeparture).format('HH:mm')}`;
+    return `${timePrefix ?? ''}${dayjs(this.scheduledDeparture).format('HH:mm')}`;
   }
 
   constructor({
@@ -216,8 +216,13 @@ export interface IMyTrainService {
   cancelReason: string | null;
   delayReason: string | null;
 
+  /**
+   * Returns whether the estimated departure is later than the scheduled departure.
+   *
+   * This **does not** account for cancelled services.
+   */
   isDelayed(): boolean;
-  displayedDepartureTime(): string;
+  displayedDepartureTime(timePrefix?: string): string;
 }
 
 export function getLegacyTocName(tocCode: string) {
