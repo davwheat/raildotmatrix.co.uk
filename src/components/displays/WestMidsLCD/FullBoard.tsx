@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-import GetNextTrainsAtStation, { ApiResponse, TrainService } from '../../../api/GetNextTrainsAtStation';
-
 import './css/board/index.less';
 
 import BoardHeader from './BoardHeader';
@@ -30,22 +28,6 @@ const UPDATE_INTERVAL_SECS = 20;
 
 function isValidResponseApi(response: StaffServicesResponse | null | { error: true }): response is StaffServicesResponse {
   return response !== null && !(response as any).error && (response as any).trainServices;
-}
-
-function getRealDeptTime(trainService: TrainService, stdForDelayed: boolean = false): string | null {
-  let realDeptTime: string | null = null;
-
-  if (trainService?.isCancelled || trainService?.etd === 'On time') {
-    realDeptTime = trainService.std!;
-  } else if (trainService?.etd === 'Delayed') {
-    if (stdForDelayed) {
-      realDeptTime = trainService.std!;
-    }
-  } else {
-    realDeptTime = trainService.etd!;
-  }
-
-  return realDeptTime;
 }
 
 export default function FullBoard({ station, platformNumber, useLegacyTocNames = false }: IProps) {
@@ -82,7 +64,10 @@ export default function FullBoard({ station, platformNumber, useLegacyTocNames =
     };
   }, [setTrainData, setDataInfo, dataInfo, station, loadTrainData]);
 
-  const services = isError || !trainData.trainServices ? null : processServices(trainData.trainServices, /*platforms ??*/ null, !!useLegacyTocNames);
+  const services =
+    isError || !trainData.trainServices
+      ? null
+      : processServices(trainData.trainServices, /*platforms ??*/ null, !!useLegacyTocNames, station).filter((s) => !s.hasDeparted);
 
   if (isError || services === null || services.length === 0) {
     return (

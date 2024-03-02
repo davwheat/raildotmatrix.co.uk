@@ -7,6 +7,7 @@ import { Association, AssociationCategory } from '../../functions/api/getService
 import dayjs from 'dayjs';
 import dayjsUtc from 'dayjs/plugin/utc';
 import dayjsTz from 'dayjs/plugin/timezone';
+import { crsToStationName } from '../functions/crsToStationName';
 
 dayjs.extend(dayjsUtc);
 dayjs.extend(dayjsTz);
@@ -78,8 +79,12 @@ class Service implements IMyTrainService {
   length: number | null;
   toc: string;
   passengerCallPoints: IPassengerCallPoint[];
+  id: string;
   private _cancelReason: NonNullable<StaffServicesResponse['trainServices']>[number]['cancelReason'];
   private _delayReason: NonNullable<StaffServicesResponse['trainServices']>[number]['delayReason'];
+
+  private _boardStationCrs: string;
+  private _boardStationName: string;
 
   get cancelReason(): string | null {
     if (!this._cancelReason) return null;
@@ -111,13 +116,23 @@ class Service implements IMyTrainService {
     return reason;
   }
 
-  isDelayed(): boolean {
-    return dayjs(this.estimatedDeparture).diff(dayjs(this.scheduledDeparture), 'minute') >= 1;
+  isDelayed(useActualDepTime: boolean = false): boolean {
+    return dayjs(useActualDepTime ? this.actualDeparture : this.estimatedDeparture).diff(dayjs(this.scheduledDeparture), 'minute') >= 1;
   }
 
   displayedDepartureTime(timePrefix: string | undefined = undefined): string {
     if (this.cancelled) return 'Cancelled';
-    if (this.hasDeparted || this.hasArrived) return 'Arrived';
+    if (this.hasDeparted || this.hasArrived) {
+      if (this.origins.every((o) => this._boardStationName !== o.name)) {
+        return 'Arrived';
+      } else {
+        // This is the origin. We can't use etd if it's departed.
+        const depTime = this.actualDeparture || this.estimatedDeparture || this.scheduledDeparture!!;
+
+        if (!this.isDelayed(this.hasDeparted)) return 'On time';
+        return `${timePrefix ?? ''}${dayjs(depTime).format('HH:mm')}`;
+      }
+    }
     if (!this.estimatedDeparture) return 'Delayed';
     if (!this.isDelayed()) return 'On time';
     if (this.estimatedDeparture) return `${timePrefix ?? ''}${dayjs(this.estimatedDeparture).format('HH:mm')}`;
@@ -141,6 +156,8 @@ class Service implements IMyTrainService {
     passengerCallPoints,
     cancelReason,
     delayReason,
+    boardStationCrs,
+    id,
   }: {
     destinations: { name: string; via: null | string }[];
     origins: { name: string; via: null | string }[];
@@ -158,6 +175,8 @@ class Service implements IMyTrainService {
     passengerCallPoints: IPassengerCallPoint[];
     cancelReason: NonNullable<StaffServicesResponse['trainServices']>[number]['cancelReason'];
     delayReason: NonNullable<StaffServicesResponse['trainServices']>[number]['delayReason'];
+    boardStationCrs: string;
+    id: string;
   }) {
     this.destinations = destinations;
     this.origins = origins;
@@ -175,6 +194,10 @@ class Service implements IMyTrainService {
     this.passengerCallPoints = passengerCallPoints;
     this._cancelReason = cancelReason;
     this._delayReason = delayReason;
+    this._boardStationCrs = boardStationCrs;
+    this.id = id;
+
+    this._boardStationName = crsToStationName(this._boardStationCrs) || '';
   }
 }
 
@@ -199,6 +222,8 @@ interface IPassengerCallPoint {
 }
 
 export interface IMyTrainService {
+  id: string;
+
   destinations: { name: string; via: null | string }[];
   origins: { name: string; via: null | string }[];
   cancelled: boolean;
@@ -296,7 +321,8 @@ export function getLegacyTocName(tocCode: string) {
 export function processServices(
   services: NonNullable<StaffServicesResponse['trainServices']>,
   platforms: string[] | null,
-  useLegacyTocNames: boolean
+  useLegacyTocNames: boolean,
+  boardStationCrs: string
 ): IMyTrainService[] {
   const applicableServices = services.filter((s) => {
     if (!s.isPassengerService || s.isOperationalCall || !s.stdSpecified) {
@@ -325,7 +351,10 @@ export function processServices(
           const assoc = (location.associations || []).map((association) => {
             return {
               type: association.category,
-              service: association.category === AssociationCategory.Divide ? processAssociatedService(association, service) || undefined : undefined,
+              service:
+                association.category === AssociationCategory.Divide
+                  ? processAssociatedService(association, service, boardStationCrs) || undefined
+                  : undefined,
             };
           });
 
@@ -375,6 +404,8 @@ export function processServices(
         toc: useLegacyTocNames ? getLegacyTocName(service.operatorCode) || service.operator : service.operator,
 
         passengerCallPoints: stops,
+        boardStationCrs: boardStationCrs,
+        id: `${boardStationCrs}_${service.rid}`,
       });
     })
     .sort((a, b) => {
@@ -386,7 +417,8 @@ export function processServices(
 
 function processAssociatedService(
   association: Association<AssociationCategory.Divide>,
-  ogService: NonNullable<StaffServicesResponse['trainServices']>[number]
+  ogService: NonNullable<StaffServicesResponse['trainServices']>[number],
+  boardStationCrs: string
 ): IMyTrainService | null {
   const service = association.service;
 
@@ -424,6 +456,8 @@ function processAssociatedService(
 
     length: stop1.length,
     toc: ogService.operator,
+    boardStationCrs: boardStationCrs,
+    id: `${boardStationCrs}_${service.rid}`,
 
     passengerCallPoints: service.locations
       // Non-passenger stops
