@@ -156,6 +156,7 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
 }
 
 function _CallingPoints({ pointsText, onComplete }: { pointsText: string[]; onComplete?: () => void }) {
+  console.log('calling points rendered');
   return (
     <SlideyScrollText
       onComplete={() => {
@@ -175,9 +176,7 @@ function _CallingPoints({ pointsText, onComplete }: { pointsText: string[]; onCo
 }
 
 const CallingPoints = React.memo(_CallingPoints, (prev, next) => {
-  const eq = prev.pointsText.join('') === next.pointsText.join('');
+  console.log('calling points props changed, but not rerendering');
 
-  console.log('calling points eq', eq);
-
-  return eq;
+  return true;
 });
