@@ -65,7 +65,9 @@ export default function FullBoard({ station, platformNumber, useLegacyTocNames =
   }, [setTrainData, setDataInfo, dataInfo, station, loadTrainData]);
 
   const services =
-    isError || !trainData.trainServices ? null : processServices(trainData.trainServices, /*platforms ??*/ null, !!useLegacyTocNames, station);
+    isError || !trainData.trainServices
+      ? null
+      : processServices(trainData.trainServices, /*platforms ??*/ null, !!useLegacyTocNames, station).filter((s) => !s.hasDeparted);
 
   if (isError || services === null || services.length === 0) {
     return (
