@@ -64,16 +64,20 @@ const BlackboxLandscapeLcd = React.forwardRef<any, any>(({ station, editBoardCal
   return (
     <>
       <div className="board-settings" ref={settingsRef}>
-        <PageLink
-          style={{
-            cursor: 'pointer',
-            zIndex: 1000,
-          }}
-          afterExit={editBoardCallback}
-        >
-          Edit board
-        </PageLink>
-        <br />
+        {!searchParams?.get('from-railannouncements.co.uk') && (
+          <>
+            <PageLink
+              style={{
+                cursor: 'pointer',
+                zIndex: 1000,
+              }}
+              afterExit={editBoardCallback}
+            >
+              Edit board
+            </PageLink>
+            <br />
+          </>
+        )}
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
       <ZoomDiv>

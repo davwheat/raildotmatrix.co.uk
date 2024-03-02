@@ -10,6 +10,12 @@ import NoSSR from '@mpth/react-no-ssr';
 import { ZoomDiv } from '../ZoomDiv';
 
 const Class700PIS = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) => {
+  let searchParams: URLSearchParams | null = null;
+
+  if (typeof window !== 'undefined') {
+    searchParams = window && new URLSearchParams(window.location.search);
+  }
+
   const [settings, setSettings] = useStateWithLocalStorage('class700LcdBoardSettings', {
     hideSettings: false,
   });
@@ -59,16 +65,20 @@ const Class700PIS = React.forwardRef<any, any>(({ station, editBoardCallback }, 
   return (
     <>
       <div className="board-settings" ref={settingsRef}>
-        <PageLink
-          style={{
-            cursor: 'pointer',
-            zIndex: 1000,
-          }}
-          afterExit={editBoardCallback}
-        >
-          Edit board
-        </PageLink>
-        <br />
+        {!searchParams?.get('from-railannouncements.co.uk') && (
+          <>
+            <PageLink
+              style={{
+                cursor: 'pointer',
+                zIndex: 1000,
+              }}
+              afterExit={editBoardCallback}
+            >
+              Edit board
+            </PageLink>
+            <br />
+          </>
+        )}
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
 
