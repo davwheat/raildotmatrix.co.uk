@@ -45,6 +45,22 @@
     --duration: 1.5s;
     animation: flash var(--duration) linear infinite;
   }
+
+  @keyframes slide-out-to-right {
+    0% {
+      transform: translateX(0);
+    }
+
+    50%,
+    100% {
+      transform: translateX(var(--board-width));
+    }
+  }
+
+  .slide-out-to-right {
+    animation: slide-out-to-right 2.5s cubic-bezier(0.55, 0.09, 0.68, 0.53);
+    animation-delay: 250ms;
+  }
 }
 
 .main {

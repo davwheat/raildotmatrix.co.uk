@@ -19,6 +19,7 @@ interface IProps {
   ordinal: string;
   service: IMyTrainService;
   showAdditionalDetails?: boolean;
+  className?: string;
 }
 
 const DESTINATION_MAX_LENGTH = 21;
@@ -39,7 +40,9 @@ function getDestinationAsStrings(destination: IMyTrainService['destinations'][nu
   }
 }
 
-export default function TrainService({ ordinal, service, showAdditionalDetails = false }: IProps) {
+export default React.forwardRef(TrainService);
+
+function TrainService({ ordinal, service, showAdditionalDetails = false, className }: IProps, ref: React.Ref<HTMLDivElement>) {
   const getDestinationPages = useCallback(
     function getDestinationPages(): string[] {
       return service.destinations.map((d, i) => getDestinationAsStrings(d, i)).flat();
@@ -53,7 +56,7 @@ export default function TrainService({ ordinal, service, showAdditionalDetails =
 
   return (
     <>
-      <div className="trainService">
+      <div ref={ref} className={clsx('trainService', className)}>
         <span className="ordinal">{ordinal}</span>
         <span className="std time">
           {dayjs(service.scheduledDeparture)

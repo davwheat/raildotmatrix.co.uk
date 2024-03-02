@@ -79,6 +79,7 @@ class Service implements IMyTrainService {
   length: number | null;
   toc: string;
   passengerCallPoints: IPassengerCallPoint[];
+  id: string;
   private _cancelReason: NonNullable<StaffServicesResponse['trainServices']>[number]['cancelReason'];
   private _delayReason: NonNullable<StaffServicesResponse['trainServices']>[number]['delayReason'];
 
@@ -156,6 +157,7 @@ class Service implements IMyTrainService {
     cancelReason,
     delayReason,
     boardStationCrs,
+    id,
   }: {
     destinations: { name: string; via: null | string }[];
     origins: { name: string; via: null | string }[];
@@ -174,6 +176,7 @@ class Service implements IMyTrainService {
     cancelReason: NonNullable<StaffServicesResponse['trainServices']>[number]['cancelReason'];
     delayReason: NonNullable<StaffServicesResponse['trainServices']>[number]['delayReason'];
     boardStationCrs: string;
+    id: string;
   }) {
     this.destinations = destinations;
     this.origins = origins;
@@ -192,6 +195,7 @@ class Service implements IMyTrainService {
     this._cancelReason = cancelReason;
     this._delayReason = delayReason;
     this._boardStationCrs = boardStationCrs;
+    this.id = id;
 
     this._boardStationName = crsToStationName(this._boardStationCrs) || '';
   }
@@ -218,6 +222,8 @@ interface IPassengerCallPoint {
 }
 
 export interface IMyTrainService {
+  id: string;
+
   destinations: { name: string; via: null | string }[];
   origins: { name: string; via: null | string }[];
   cancelled: boolean;
@@ -399,6 +405,7 @@ export function processServices(
 
         passengerCallPoints: stops,
         boardStationCrs: boardStationCrs,
+        id: `${boardStationCrs}_${service.rid}`,
       });
     })
     .sort((a, b) => {
@@ -450,6 +457,7 @@ function processAssociatedService(
     length: stop1.length,
     toc: ogService.operator,
     boardStationCrs: boardStationCrs,
+    id: `${boardStationCrs}_${service.rid}`,
 
     passengerCallPoints: service.locations
       // Non-passenger stops
