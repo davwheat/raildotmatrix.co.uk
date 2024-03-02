@@ -59,8 +59,8 @@ export default function TrainService({ ordinal, service, showAdditionalDetails =
           {dayjs(service.scheduledDeparture)
             .format('HH:mm')
             .split('')
-            .map((c) => (
-              <span>{c}</span>
+            .map((c, i) => (
+              <span key={i}>{c}</span>
             ))}
         </span>
         <span className="destination">
@@ -74,8 +74,8 @@ export default function TrainService({ ordinal, service, showAdditionalDetails =
           {etd.includes(':') ? (
             <>
               Expt{' '}
-              {etd.split('').map((c) => (
-                <span>{c}</span>
+              {etd.split('').map((c, i) => (
+                <span key={i}>{c}</span>
               ))}
             </>
           ) : (
