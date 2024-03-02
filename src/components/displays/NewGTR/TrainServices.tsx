@@ -25,8 +25,7 @@ export default function TrainServices({ services }: IProps) {
     if (animateServiceOut) {
       const animEnd = () => {
         console.log('slide out animation end');
-
-        window.setTimeout(() => setAnimateServiceOut(null), 250);
+        setAnimateServiceOut(null);
       };
 
       firstServiceRef.current?.addEventListener('animationend', animEnd);
