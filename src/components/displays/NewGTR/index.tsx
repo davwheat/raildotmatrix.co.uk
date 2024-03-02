@@ -88,16 +88,20 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
   return (
     <>
       <div className="board-settings" ref={settingsRef}>
-        <PageLink
-          style={{
-            cursor: 'pointer',
-            zIndex: 1000,
-          }}
-          afterExit={editBoardCallback}
-        >
-          Edit board
-        </PageLink>
-        <br />
+        {!searchParams?.get('from-railannouncements.co.uk') && (
+          <>
+            <PageLink
+              style={{
+                cursor: 'pointer',
+                zIndex: 1000,
+              }}
+              afterExit={editBoardCallback}
+            >
+              Edit board
+            </PageLink>
+            <br />
+          </>
+        )}
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
         <br />
         <ToggleSwitch checked={settings.animateClockDigits} ref={animateClockDigitsRef} label="Animate clock digits" onChange={updateState} />
