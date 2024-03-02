@@ -65,7 +65,7 @@ export default function FullBoard({ station, animateClockDigits, platforms, useL
     };
   }, [setTrainData, setDataInfo, dataInfo, station, loadTrainData]);
 
-  const services = isError || !trainData.trainServices ? null : processServices(trainData.trainServices, platforms ?? null, !!useLegacyTocNames);
+  const services = isError || !trainData.trainServices ? null : processServices(trainData.trainServices, platforms ?? null, !!useLegacyTocNames, station);
 
   if (!services || services.length === 0) {
     return (
