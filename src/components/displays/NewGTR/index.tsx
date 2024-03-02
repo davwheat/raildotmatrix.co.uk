@@ -105,7 +105,9 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
         <label htmlFor="color-select">Color</label>
         <select id="color-select" ref={colorRef} value={settings.color} onChange={updateState} style={{ textTransform: 'capitalize', marginLeft: 4 }}>
           {Object.entries(BoardColors).map(([color]) => (
-            <option key={color} value={color}>{color}</option>
+            <option key={color} value={color}>
+              {color}
+            </option>
           ))}
         </select>
         {platforms && <p>Only showing platform(s) {platforms.join(',')}</p>}
