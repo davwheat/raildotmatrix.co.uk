@@ -7,8 +7,8 @@ import TrainServices from './TrainServices';
 
 import './css/board.less';
 
-import type { StaffServicesResponse } from '../../../api/GetNextTrainsAtStationStaff';
 import { processServices } from '../../../api/ProcessServices';
+import { isValidResponseApi, useServiceInformation } from '../../../hooks/useServiceInformation';
 
 interface IProps {
   platforms?: string[];
@@ -17,58 +17,12 @@ interface IProps {
   useLegacyTocNames?: boolean;
 }
 
-function loadTrainData(station: string, setTrainData: (data: any) => void) {
-  const ac = new AbortController();
-
-  GetNextTrainsAtStationStaff(station, { minOffset: 0 }, ac).then((data) => {
-    setTrainData(data);
-  });
-
-  return ac;
-}
-
-const UPDATE_INTERVAL_SECS = 20;
-
-function isValidResponseApi(response: StaffServicesResponse | null | { error: true }): response is StaffServicesResponse {
-  return response !== null && !(response as any).error && (response as any).trainServices;
-}
-
 export default function FullBoard({ station, animateClockDigits, platforms, useLegacyTocNames }: IProps) {
-  const [trainData, setTrainData] = useState<StaffServicesResponse | null | { error: true }>(null);
-  const [dataInfo, setDataInfo] = useState({
-    loadingData: false,
-    lastUpdated: 0,
-  });
+  const [trainData] = useServiceInformation(station);
 
-  const isError = !isValidResponseApi(trainData);
-
-  const loadData = useCallback(() => {
-    loadTrainData(station, (data: StaffServicesResponse | null | { error: true }) => {
-      setTrainData(data);
-      setDataInfo({ lastUpdated: Date.now(), loadingData: false });
-    });
-  }, [station, setTrainData, setDataInfo]);
-
-  useEffect(() => {
-    if (dataInfo.loadingData) return;
-
-    if (dataInfo.lastUpdated === 0) {
-      loadData();
-    }
-
-    const key = setInterval(() => {
-      loadData();
-    }, UPDATE_INTERVAL_SECS * 1000);
-
-    return () => {
-      clearInterval(key);
-    };
-  }, [setTrainData, setDataInfo, dataInfo, station, loadTrainData]);
-
-  const services =
-    isError || !trainData.trainServices
-      ? null
-      : processServices(trainData.trainServices, platforms ?? null, !!useLegacyTocNames, station).filter((s) => !s.hasDeparted);
+  const services = isValidResponseApi(trainData)
+    ? processServices(trainData.trainServices!!, platforms ?? null, !!useLegacyTocNames, station).filter((s) => !s.hasDeparted)
+    : null;
 
   if (!services || services.length === 0) {
     return (
