@@ -324,13 +324,15 @@ export function processServices(
   useLegacyTocNames: boolean,
   boardStationCrs: string
 ): IMyTrainService[] {
+  platforms = platforms?.map((p) => p.toUpperCase()) ?? null;
+
   const applicableServices = services.filter((s) => {
     if (!s.isPassengerService || s.isOperationalCall || !s.stdSpecified) {
       return false;
     }
 
     // Platform filtering
-    if (platforms && platforms.length > 0 && !platforms.includes(s.platform)) {
+    if (platforms && platforms.length > 0 && !platforms.includes(s.platform.toUpperCase())) {
       return false;
     }
 
