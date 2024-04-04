@@ -2,6 +2,8 @@ import React from 'react';
 import { Link, PageProps, navigate } from 'gatsby';
 import NoSSR from '@mpth/react-no-ssr';
 
+import './common/css/board-page.less';
+
 interface BoardPageSettings {
   requireStation: boolean;
 }

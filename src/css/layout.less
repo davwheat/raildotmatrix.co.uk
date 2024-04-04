@@ -1,12 +1,7 @@
 .noOverflow() {
   -webkit-clip-path: inset(0); /* safari*/
   clip-path: inset(0);
-  clip: rect(
-    0px,
-    auto,
-    auto,
-    0px
-  ); /* IE11/Edge (not that IE11 supports sticky anyway!) */
+  clip: rect(0px, auto, auto, 0px); /* IE11/Edge (not that IE11 supports sticky anyway!) */
 }
 
 html {
@@ -15,11 +10,10 @@ html {
   color: #fff;
   height: 100vh;
   width: 100vw;
-  overflow: hidden;
 }
 
 .displayFont() {
-  font-family: "Dot Matrix", Consolas, monospace;
+  font-family: 'Dot Matrix', Consolas, monospace;
 }
 
 .display {
@@ -60,7 +54,7 @@ html {
   }
 
   .animated-text--content::after {
-    content: "\00a0";
+    content: '\00a0';
     display: inline-block;
     height: 1.5ex;
     background: currentColor;
@@ -74,17 +68,16 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
   width: 100vw;
-  overflow: hidden;
 }
 
 main {
   width: 100vw;
   max-width: 1200px;
   padding: 32px;
+  padding-bottom: 72px;
   background: rgba(128, 128, 128, 0.1);
-  .noOverflow();
 
   header {
     display: inline-block;
@@ -154,12 +147,12 @@ main {
   }
 
   &::after {
-    content: " ";
+    content: ' ';
     display: inline-block;
     height: 18px;
     width: 18px;
-    -webkit-mask-image: url("/img/train.svg");
-    mask-image: url("/img/train.svg");
+    -webkit-mask-image: url('/img/train.svg');
+    mask-image: url('/img/train.svg');
     background: #fff;
     transform: translateY(-1px);
     margin-left: 4px;
