@@ -114,7 +114,7 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
             </option>
           ))}
         </select>
-        {platforms && <p>Only showing platform(s) {platforms.join(',')}</p>}
+        {platforms?.length && <p>Only showing platform(s) {platforms.join(',')}</p>}
       </div>
       <ZoomDiv>
         <div style={{ '--color': BoardColors[settings.color] } as any}>
@@ -123,6 +123,7 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
             animateClockDigits={settings.animateClockDigits}
             platforms={platforms}
             useLegacyTocNames={!!searchParams?.get('useLegacyTocNames')}
+            showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
           />
         </div>
       </ZoomDiv>
