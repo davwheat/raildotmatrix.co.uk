@@ -22,7 +22,9 @@ export default function FullBoard({ station, animateClockDigits, platforms, useL
   const [trainData] = useServiceInformation(station);
 
   const services = isValidResponseApi(trainData)
-    ? processServices(trainData.trainServices!!, platforms ?? null, !!useLegacyTocNames, station, showUnconfirmedPlatforms).filter((s) => !s.hasDeparted)
+    ? processServices(trainData.trainServices!!, platforms ?? null, !!useLegacyTocNames, station, showUnconfirmedPlatforms).filter(
+        (s) => !s.hasDeparted
+      )
     : null;
 
   if (!services || services.length === 0) {
