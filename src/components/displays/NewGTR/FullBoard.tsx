@@ -15,13 +15,14 @@ interface IProps {
   station: string;
   animateClockDigits?: boolean;
   useLegacyTocNames?: boolean;
+  showUnconfirmedPlatforms: boolean;
 }
 
-export default function FullBoard({ station, animateClockDigits, platforms, useLegacyTocNames }: IProps) {
+export default function FullBoard({ station, animateClockDigits, platforms, useLegacyTocNames, showUnconfirmedPlatforms }: IProps) {
   const [trainData] = useServiceInformation(station);
 
   const services = isValidResponseApi(trainData)
-    ? processServices(trainData.trainServices!!, platforms ?? null, !!useLegacyTocNames, station).filter((s) => !s.hasDeparted)
+    ? processServices(trainData.trainServices!!, platforms ?? null, !!useLegacyTocNames, station, showUnconfirmedPlatforms).filter((s) => !s.hasDeparted)
     : null;
 
   if (!services || services.length === 0) {

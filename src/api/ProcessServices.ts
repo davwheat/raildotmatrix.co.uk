@@ -322,7 +322,8 @@ export function processServices(
   services: NonNullable<StaffServicesResponse['trainServices']>,
   platforms: string[] | null,
   useLegacyTocNames: boolean,
-  boardStationCrs: string
+  boardStationCrs: string,
+  showUnconfirmedPlatforms: boolean = false
 ): IMyTrainService[] {
   platforms = platforms?.map((p) => p.toUpperCase()) ?? null;
 
@@ -331,8 +332,12 @@ export function processServices(
       return false;
     }
 
+    if (showUnconfirmedPlatforms && s.platform === null) {
+      return true;
+    }
+
     // Platform filtering
-    if (platforms && platforms.length > 0 && !platforms.includes(s.platform.toUpperCase())) {
+    if (platforms && platforms.length > 0 && (s.platform === null || !platforms.includes(s.platform.toUpperCase()))) {
       return false;
     }
 

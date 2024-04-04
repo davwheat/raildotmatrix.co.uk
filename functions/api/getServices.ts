@@ -88,7 +88,7 @@ interface TrainService {
   departureTypeSpecified: boolean;
   departureSource: string | null;
   departureSourceInstance: any;
-  platform: string;
+  platform: string | null;
   platformIsHidden: boolean;
   serviceIsSupressed: boolean;
   adhocAlerts: any;
