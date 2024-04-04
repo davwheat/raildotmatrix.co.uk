@@ -31,7 +31,7 @@ class CallPoint implements IPassengerCallPoint {
 
     if (!time) return null;
 
-    return dayjs(time).format('HH:mm');
+    return dayjs.tz(time).format('HH:mm');
   }
 
   constructor({
@@ -117,7 +117,7 @@ class Service implements IMyTrainService {
   }
 
   isDelayed(useActualDepTime: boolean = false): boolean {
-    return dayjs(useActualDepTime ? this.actualDeparture : this.estimatedDeparture).diff(dayjs(this.scheduledDeparture), 'minute') >= 1;
+    return dayjs.tz(useActualDepTime ? this.actualDeparture : this.estimatedDeparture).diff(dayjs.tz(this.scheduledDeparture), 'minute') >= 1;
   }
 
   displayedDepartureTime(timePrefix: string | undefined = undefined): string {
@@ -130,13 +130,13 @@ class Service implements IMyTrainService {
         const depTime = this.actualDeparture || this.estimatedDeparture || this.scheduledDeparture!!;
 
         if (!this.isDelayed(this.hasDeparted)) return 'On time';
-        return `${timePrefix ?? ''}${dayjs(depTime).format('HH:mm')}`;
+        return `${timePrefix ?? ''}${dayjs.tz(depTime).format('HH:mm')}`;
       }
     }
     if (!this.estimatedDeparture) return 'Delayed';
     if (!this.isDelayed()) return 'On time';
-    if (this.estimatedDeparture) return `${timePrefix ?? ''}${dayjs(this.estimatedDeparture).format('HH:mm')}`;
-    return `${timePrefix ?? ''}${dayjs(this.scheduledDeparture).format('HH:mm')}`;
+    if (this.estimatedDeparture) return `${timePrefix ?? ''}${dayjs.tz(this.estimatedDeparture).format('HH:mm')}`;
+    return `${timePrefix ?? ''}${dayjs.tz(this.scheduledDeparture).format('HH:mm')}`;
   }
 
   constructor({
@@ -379,10 +379,10 @@ export function processServices(
           return new CallPoint({
             name: location.locationName,
             isCancelled: service.isCancelled || location.isCancelled,
-            scheduledDeparture: location.stdSpecified ? dayjs(location.std).toDate() : null,
-            estimatedDeparture: location.etdSpecified ? dayjs(location.etd).toDate() : null,
-            scheduledArrival: location.staSpecified ? dayjs(location.sta).toDate() : null,
-            estimatedArrival: location.etaSpecified ? dayjs(location.eta).toDate() : null,
+            scheduledDeparture: location.stdSpecified ? dayjs.tz(location.std).toDate() : null,
+            estimatedDeparture: location.etdSpecified ? dayjs.tz(location.etd).toDate() : null,
+            scheduledArrival: location.staSpecified ? dayjs.tz(location.sta).toDate() : null,
+            estimatedArrival: location.etaSpecified ? dayjs.tz(location.eta).toDate() : null,
             length: currentLength,
             associations: assoc,
           });
@@ -397,14 +397,14 @@ export function processServices(
         cancelReason: service.cancelReason,
         delayReason: service.delayReason,
 
-        scheduledDeparture: service.stdSpecified ? dayjs(service.std).toDate() : null,
-        estimatedDeparture: service.etdSpecified ? dayjs(service.etd).toDate() : null,
-        actualDeparture: service.atdSpecified ? dayjs(service.atd).toDate() : null,
+        scheduledDeparture: service.stdSpecified ? dayjs.tz(service.std).toDate() : null,
+        estimatedDeparture: service.etdSpecified ? dayjs.tz(service.etd).toDate() : null,
+        actualDeparture: service.atdSpecified ? dayjs.tz(service.atd).toDate() : null,
         hasDeparted: !!service.atdSpecified,
 
-        scheduledArrival: service.staSpecified ? dayjs(service.sta).toDate() : null,
-        estimatedArrival: service.etaSpecified ? dayjs(service.eta).toDate() : null,
-        actualArrival: service.ataSpecified ? dayjs(service.ata).toDate() : null,
+        scheduledArrival: service.staSpecified ? dayjs.tz(service.sta).toDate() : null,
+        estimatedArrival: service.etaSpecified ? dayjs.tz(service.eta).toDate() : null,
+        actualArrival: service.ataSpecified ? dayjs.tz(service.ata).toDate() : null,
         hasArrived: !!service.ataSpecified,
 
         length: serviceLength,
@@ -451,14 +451,14 @@ function processAssociatedService(
     cancelReason: service.cancelReason,
     delayReason: service.delayReason,
 
-    scheduledDeparture: service.stdSpecified ? dayjs(service.std).toDate() : null,
-    estimatedDeparture: service.etdSpecified ? dayjs(service.etd).toDate() : null,
-    actualDeparture: service.atdSpecified ? dayjs(service.atd).toDate() : null,
+    scheduledDeparture: service.stdSpecified ? dayjs.tz(service.std).toDate() : null,
+    estimatedDeparture: service.etdSpecified ? dayjs.tz(service.etd).toDate() : null,
+    actualDeparture: service.atdSpecified ? dayjs.tz(service.atd).toDate() : null,
     hasDeparted: !!service.atdSpecified,
 
-    scheduledArrival: service.staSpecified ? dayjs(service.sta).toDate() : null,
-    estimatedArrival: service.etaSpecified ? dayjs(service.eta).toDate() : null,
-    actualArrival: service.ataSpecified ? dayjs(service.ata).toDate() : null,
+    scheduledArrival: service.staSpecified ? dayjs.tz(service.sta).toDate() : null,
+    estimatedArrival: service.etaSpecified ? dayjs.tz(service.eta).toDate() : null,
+    actualArrival: service.ataSpecified ? dayjs.tz(service.ata).toDate() : null,
     hasArrived: !!service.ataSpecified,
 
     length: stop1.length,
@@ -474,10 +474,10 @@ function processAssociatedService(
           new CallPoint({
             name: location.locationName,
             isCancelled: association.isCancelled || location.isCancelled,
-            scheduledDeparture: location.stdSpecified ? dayjs(location.std).toDate() : null,
-            estimatedDeparture: location.etdSpecified ? dayjs(location.etd).toDate() : null,
-            scheduledArrival: location.staSpecified ? dayjs(location.sta).toDate() : null,
-            estimatedArrival: location.etaSpecified ? dayjs(location.eta).toDate() : null,
+            scheduledDeparture: location.stdSpecified ? dayjs.tz(location.std).toDate() : null,
+            estimatedDeparture: location.etdSpecified ? dayjs.tz(location.etd).toDate() : null,
+            scheduledArrival: location.staSpecified ? dayjs.tz(location.sta).toDate() : null,
+            estimatedArrival: location.etaSpecified ? dayjs.tz(location.eta).toDate() : null,
             associations: [],
             length: stop1.length,
           })
