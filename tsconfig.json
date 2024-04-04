@@ -11,7 +11,7 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "strictNullChecks": true,
+    "strictNullChecks": true
     // "paths": {
     //   "@components/*": ["./src/components/*"],
     //   "@data/*": ["./src/data/*"],
@@ -25,5 +25,5 @@
     //   "@atoms": ["./src/atoms"]
     // }
   },
-  "exclude": ["node_modules", "build", "scripts", "acceptance-tests", "webpack", "jest", "src/setupTests.ts"],
+  "exclude": ["node_modules", "build", "scripts", "acceptance-tests", "webpack", "jest", "src/setupTests.ts"]
 }

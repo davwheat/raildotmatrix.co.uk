@@ -10,14 +10,12 @@
   },
   "prettier": "@flarum/prettier-config",
   "dependencies": {
-    "@fontsource/poppins": "^5.0.8",
+    "@fontsource/poppins": "^5.0.13",
     "@mpth/react-no-ssr": "^1.0.1",
     "clsx": "^2.1.0",
     "dayjs": "^1.11.10",
-    "english-a-an": "^2.4.0",
-    "english-a-an-list": "^2.4.0",
     "gatsby": "^5.13.3",
-    "gatsby-plugin-cloudflare-pages": "^1.0.2",
+    "gatsby-plugin-cloudflare-pages": "^1.0.3",
     "gatsby-plugin-less": "^7.13.1",
     "gatsby-plugin-manifest": "^5.13.1",
     "gatsby-plugin-react-head": "https://github.com/davwheat/gatsby-plugin-react-head",
@@ -36,17 +34,17 @@
     "uk-railway-stations": "^1.5.2"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240129.0",
+    "@cloudflare/workers-types": "^4.20240403.0",
     "@flarum/prettier-config": "^1.0.0",
     "@types/color": "^3.0.6",
-    "@types/react": "^18.2.48",
+    "@types/react": "^18.2.74",
     "@types/throttle-debounce": "^5.0.2",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "cross-env": "^7.0.3",
     "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.32",
-    "prettier": "^3.2.4",
-    "typescript": "^5.3.3",
-    "wrangler": "^3.25.0"
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.3",
+    "wrangler": "^3.46.0"
   },
   "keywords": [
     "gatsby"
@@ -70,5 +68,5 @@
   "bugs": {
     "url": "https://github.com/gatsbyjs/gatsby/issues"
   },
-  "packageManager": "yarn@4.1.0"
+  "packageManager": "yarn@4.1.1"
 }
