@@ -1,14 +1,12 @@
-.dot-matrix {
-  --gap: 36px;
+.daktronics-data-display-dot-matrix {
+  --gap: calc(~'1em / 7 * 2.5');
   --ordinal-width: 3ch;
   --std-width: 4.5ch;
-  --etd-width: 9.5ch;
+  --etd-width: 8.2ch;
 }
 
-.dot-matrix .trainService {
+.daktronics-data-display-dot-matrix .trainService {
   display: grid;
-
-  height: 1em;
 
   grid-template-columns: var(--ordinal-width) var(--std-width) 1fr var(--etd-width);
   gap: var(--gap);

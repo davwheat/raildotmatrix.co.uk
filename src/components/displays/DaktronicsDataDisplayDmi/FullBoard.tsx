@@ -1,6 +1,6 @@
 import React from 'react';
 
-import CallNreMessage from './CallNreMessage';
+import NoServicesMessage from './NoServicesMessage';
 import Clock from './Clock';
 import TrainServices from './TrainServices';
 
@@ -12,12 +12,11 @@ import { isValidResponseApi, useServiceInformation } from '../../../hooks/useSer
 interface IProps {
   platforms?: string[];
   station: string;
-  animateClockDigits?: boolean;
   useLegacyTocNames?: boolean;
   showUnconfirmedPlatforms: boolean;
 }
 
-export default function FullBoard({ station, animateClockDigits, platforms, useLegacyTocNames, showUnconfirmedPlatforms }: IProps) {
+export default function FullBoard({ station, platforms, useLegacyTocNames, showUnconfirmedPlatforms }: IProps) {
   const [trainData] = useServiceInformation(station);
 
   const services = isValidResponseApi(trainData)
@@ -28,17 +27,17 @@ export default function FullBoard({ station, animateClockDigits, platforms, useL
 
   if (!services || services.length === 0) {
     return (
-      <article className="dot-matrix">
-        <CallNreMessage />
-        <Clock animateDigits={animateClockDigits} />
+      <article className="daktronics-data-display-dot-matrix">
+        <NoServicesMessage />
+        <Clock />
       </article>
     );
   }
 
   return (
-    <article className="dot-matrix">
+    <article className="daktronics-data-display-dot-matrix">
       <TrainServices services={services} />
-      <Clock animateDigits={animateClockDigits} />
+      <Clock />
     </article>
   );
 }

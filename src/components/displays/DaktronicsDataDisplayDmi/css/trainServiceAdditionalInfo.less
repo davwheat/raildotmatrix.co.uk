@@ -1,0 +1,97 @@
+.daktronics-data-display-dot-matrix {
+  @keyframes info-in {
+    0% {
+      opacity: 1;
+      transform: translateY(110%);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes info-out {
+    0% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateY(0);
+    }
+  }
+
+  .trainServiceAdditional {
+    position: relative;
+
+    // No overflow
+    clip-path: inset(0);
+
+    > * {
+      position: absolute;
+      height: 1.3em;
+      display: flex;
+      top: 0;
+      left: 0;
+      right: 0;
+
+      opacity: 0;
+      transition: opacity 0.2s linear 0.5s;
+
+      &.shown {
+        opacity: 1;
+      }
+
+      &:not(.shown) {
+        transition-delay: 0s;
+      }
+    }
+
+    .info {
+      &.shown {
+        // Initial state
+        opacity: 1;
+        transform: translateY(110%);
+
+        animation: info-in 0.2s linear forwards;
+        animation-fill-mode: forwards;
+        animation-delay: 0.5s;
+      }
+
+      &:not(.shown) {
+        // transition-delay: 0s;
+        animation: info-out 0.2s linear forwards;
+        animation-fill-mode: forwards;
+      }
+    }
+
+    .callingAt {
+      min-width: calc(var(--ordinal-width) + var(--std-width) + var(--gap) * 2);
+      padding-right: 16px;
+      flex-shrink: 0;
+
+      // Handle pluralisation in CSS to make the JS simpler
+      &Point {
+        &:not(:last-child)::after {
+          content: ', ';
+        }
+
+        // Only one calling point
+        &:first-child:last-child::after {
+          text-transform: unset;
+          content: ' only.';
+        }
+
+        &:not(:first-child):last-child::after {
+          content: '.';
+        }
+
+        &:last-child {
+          text-transform: uppercase;
+        }
+      }
+    }
+  }
+}

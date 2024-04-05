@@ -1,0 +1,24 @@
+
+.daktronics-data-display-dot-matrix .swapBetween {
+  position: relative;
+  overflow: hidden;
+  height: 1.3em;
+
+  > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    transform: translateY(0);
+
+    transition: transform 0.25s linear;
+  }
+
+  &--noAnimate {
+    > * {
+      transition: none;
+    }
+  }
+}

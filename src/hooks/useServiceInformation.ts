@@ -44,6 +44,10 @@ export function useServiceInformation(
         return;
       }
 
+      if (e.data.source === 'react-devtools-content-script') {
+        return;
+      }
+
       if (!receiveDataFromParentIframe) {
         console.log('Received first train service info message. Disabling automatic data updates via API.');
         setReceiveDataFromParentIframe(true);
