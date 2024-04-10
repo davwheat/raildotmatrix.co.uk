@@ -9,8 +9,6 @@ dayjs.extend(dayjsTz);
 
 dayjs.tz.setDefault('Europe/London');
 
-import './css/trainService.less';
-
 import SwapBetween from './SwapBetween';
 import TrainServiceAdditionalInfo from './TrainServiceAdditionalInfo';
 import clsx from 'clsx';
@@ -58,29 +56,71 @@ function TrainService({ ordinal, service, showAdditionalDetails = false, classNa
 
   return (
     <>
-      <div ref={ref} className={clsx('trainService', className)}>
+      <div
+        ref={ref}
+        className={className}
+        css={{
+          '--gap': 'calc(1em / 7 * 2.5)',
+          '--ordinal-width': '3ch',
+          '--std-width': '4.5ch',
+          '--etd-width': '8.2ch',
+
+          display: 'grid',
+          gridTemplateColumns: 'var(--ordinal-width) var(--std-width) 1fr var(--etd-width)',
+          gap: 'var(--gap)',
+        }}
+      >
         <span className="ordinal">{ordinal}</span>
-        <span className="std time">
+        <span>
           {dayjs
             .tz(service.scheduledDeparture)
             .format('HHmm')
             .split('')
             .map((c, i) => (
-              <span key={i}>{c}</span>
+              <span
+                key={i}
+                css={{
+                  display: 'inline-block',
+                  width: '1ch',
+                  textAlign: 'center',
+                }}
+              >
+                {c}
+              </span>
             ))}
         </span>
         <span className="destination">
-          <SwapBetween key={pages.length} animate={false} interval={3_000}>
+          <SwapBetween key={pages.length} animate={false} interval={3_000} css={{ height: '100%' }}>
             {pages.map((d, i) => (
-              <span key={i}>{d}</span>
+              <span
+                key={i}
+                css={{
+                  display: 'inline-block',
+                  width: '100%',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {d}
+              </span>
             ))}
           </SwapBetween>
         </span>
-        <span className={clsx('etd time', { flash: isCancelled })}>
-          {etd.includes(':') ? (
+        <span css={{ textAlign: 'right', marginRight: -4 }}>
+          {etd.match(/\d{4}/) ? (
             <>
               {etd.split('').map((c, i) => (
-                <span key={i}>{c}</span>
+                <span
+                  key={i}
+                  css={{
+                    display: 'inline-block',
+                    width: '1ch',
+                    textAlign: 'center',
+                  }}
+                >
+                  {c}
+                </span>
               ))}
             </>
           ) : (
