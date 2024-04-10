@@ -24,14 +24,14 @@ class CallPoint implements IPassengerCallPoint {
   length: number | null;
   associations: IAssociation[];
 
-  displayedArrivalTime(): string | null {
+  displayedArrivalTime(formatString: string = 'HH:mm'): string | null {
     if (this.isCancelled) return null;
 
     const time = this.estimatedArrival || this.scheduledArrival;
 
     if (!time) return null;
 
-    return dayjs.tz(time).format('HH:mm');
+    return dayjs.tz(time).format(formatString);
   }
 
   constructor({
@@ -120,7 +120,7 @@ class Service implements IMyTrainService {
     return dayjs.tz(useActualDepTime ? this.actualDeparture : this.estimatedDeparture).diff(dayjs.tz(this.scheduledDeparture), 'minute') >= 1;
   }
 
-  displayedDepartureTime(timePrefix: string | undefined = undefined): string {
+  displayedDepartureTime(timePrefix: string | undefined = undefined, formatString: string = 'HH:mm'): string {
     if (this.cancelled) return 'Cancelled';
     if (this.hasDeparted || this.hasArrived) {
       if (this.origins.every((o) => this._boardStationName !== o.name)) {
@@ -130,13 +130,13 @@ class Service implements IMyTrainService {
         const depTime = this.actualDeparture || this.estimatedDeparture || this.scheduledDeparture!!;
 
         if (!this.isDelayed(this.hasDeparted)) return 'On time';
-        return `${timePrefix ?? ''}${dayjs.tz(depTime).format('HH:mm')}`;
+        return `${timePrefix ?? ''}${dayjs.tz(depTime).format(formatString)}`;
       }
     }
     if (!this.estimatedDeparture) return 'Delayed';
     if (!this.isDelayed()) return 'On time';
-    if (this.estimatedDeparture) return `${timePrefix ?? ''}${dayjs.tz(this.estimatedDeparture).format('HH:mm')}`;
-    return `${timePrefix ?? ''}${dayjs.tz(this.scheduledDeparture).format('HH:mm')}`;
+    if (this.estimatedDeparture) return `${timePrefix ?? ''}${dayjs.tz(this.estimatedDeparture).format(formatString)}`;
+    return `${timePrefix ?? ''}${dayjs.tz(this.scheduledDeparture).format(formatString)}`;
   }
 
   constructor({
@@ -218,7 +218,7 @@ interface IPassengerCallPoint {
   estimatedArrival: Date | null;
   length: number | null;
   associations: IAssociation[];
-  displayedArrivalTime(): string | null;
+  displayedArrivalTime(formatString?: string): string | null;
 }
 
 export interface IMyTrainService {
@@ -247,7 +247,7 @@ export interface IMyTrainService {
    * This **does not** account for cancelled services.
    */
   isDelayed(): boolean;
-  displayedDepartureTime(timePrefix?: string): string;
+  displayedDepartureTime(timePrefix?: string, formatString?: string): string;
 }
 
 export function getLegacyTocName(tocCode: string) {
