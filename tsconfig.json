@@ -11,7 +11,7 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "strictNullChecks": true,
+    "strictNullChecks": true
     // "paths": {
     //   "@components/*": ["./src/components/*"],
     //   "@data/*": ["./src/data/*"],
