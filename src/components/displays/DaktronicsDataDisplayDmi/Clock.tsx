@@ -24,6 +24,16 @@ function getLastNumber(num: string): string {
 
 interface IProps {}
 
+const hideThenShow = keyframes`
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+`;
+
 export default function Clock({}: IProps) {
   const [time, setTime] = useState(getTimeNumerics());
 
@@ -60,13 +70,21 @@ export default function Clock({}: IProps) {
 
             // Handle colons
             '&:nth-of-type(3n)': {
-              '--width': '0.6ch',
               opacity: '1 !important',
               transform: 'translateY(-0.5px)',
             },
           }}
         >
-          {t !== ':' ? <ClockDigit digit={t} /> : t}
+          {t !== ':' ? (
+            <ClockDigit digit={t} />
+          ) : (
+            <span
+              css={{ animation: hideThenShow, animationDuration: '250ms', animationTimingFunction: 'step-end', animationFillMode: 'none' }}
+              key={`${time}-${i}`}
+            >
+              {t}
+            </span>
+          )}
         </div>
       ))}
     </div>
@@ -76,7 +94,6 @@ export default function Clock({}: IProps) {
 const digitBase = css`
   --dot-height: calc(100% / 9);
   --dot-width: calc(100% / 8);
-  --dot-width: 12px;
 
   width: var(--width);
   position: absolute;
