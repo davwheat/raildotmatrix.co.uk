@@ -49,10 +49,14 @@ export default function Clock({}: IProps) {
 
   return (
     <div
-      className="row"
       css={{
+        display: 'flex',
+        alignItems: 'center',
+
         fontFamily: 'DataDisplay Clock',
         justifyContent: 'center',
+        height: 'var(--row-height)',
+        marginTop: 'auto',
       }}
     >
       {[...time].map((t, i) => (

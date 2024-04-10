@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import clsx from 'clsx';
 
-import './css/swapBetween.less';
-
 interface IProps {
   interval: number;
   animate?: boolean;
@@ -24,13 +22,40 @@ export default function SwapBetween({ interval, animate = true, children, classN
   }, [shownChild, setShownChild, interval]);
 
   return (
-    <div data-showing={shownChild} className={clsx('swapBetween', { 'swapBetween--noAnimate': !animate }, className)}>
+    <div
+      data-showing={shownChild}
+      className={className}
+      css={{
+        position: 'relative',
+        overflow: 'hidden',
+        height: 'var(--row-height)',
+      }}
+    >
       {children.map((c, i) => (
         <div
           key={i}
-          style={{
-            transform: shownChild === i ? 'translateY(0)' : shownChild < i ? 'translateY(105%)' : 'translateY(-105%)',
-          }}
+          css={[
+            {
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              height: '100%',
+              width: '100%',
+
+              transform: 'translateY(0)',
+              transition: 'transform 0.25s linear',
+            },
+            shownChild === i
+              ? { transform: 'translateY(0)' }
+              : shownChild < i
+                ? { transform: 'translateY(105%)' }
+                : { transform: 'translateY(-105%)' },
+            animate
+              ? {}
+              : {
+                  transition: 'none',
+                },
+          ]}
         >
           {c}
         </div>

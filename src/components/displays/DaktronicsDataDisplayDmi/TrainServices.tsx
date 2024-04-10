@@ -1,14 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import TrainService from './TrainService';
-
 import SwapBetween from './SwapBetween';
+
+import { keyframes } from '@emotion/react';
 
 import type { IMyTrainService } from '../../../api/ProcessServices';
 
 interface IProps {
   services: IMyTrainService[];
 }
+
+const slideOut = keyframes`
+  0% {
+    transform: translateX(0);
+  }
+
+  28.57%,
+  100% {
+    transform: translateX(var(--board-width));
+  }
+`;
 
 export default function TrainServices({ services }: IProps) {
   const firstService: IMyTrainService | undefined = services[0];
@@ -49,7 +61,12 @@ export default function TrainServices({ services }: IProps) {
 
     return (
       <>
-        <TrainService ref={firstServiceRef} ordinal="1st" service={animateServiceOut} className="slide-out-to-right" />
+        <TrainService
+          ref={firstServiceRef}
+          ordinal="1st"
+          service={animateServiceOut}
+          css={{ animationName: slideOut, animationDuration: '1400ms', animationDelay: '150ms', animationTimingFunction: 'linear' }}
+        />
         <div className="trainServiceAdditional" />
       </>
     );

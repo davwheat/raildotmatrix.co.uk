@@ -3,10 +3,54 @@ import React, { useEffect } from 'react';
 import SlideyScrollText from './SlideyScrollText';
 import clsx from 'clsx';
 
-import './css/trainServiceAdditionalInfo.less';
+import { keyframes, css } from '@emotion/react';
 
 import { AssociationCategory } from '../../../../functions/api/getServices';
 import type { IAssociation, IMyTrainService } from '../../../api/ProcessServices';
+
+const infoIn = keyframes`
+  0% {
+    opacity: 1;
+    transform: translateY(110%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const infoOut = keyframes`
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+`;
+
+const infoPage = css`
+  position: absolute;
+  height: 1.3em;
+  display: flex;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  opacity: 0;
+  transition: opacity 0.2s linear 0.5s;
+
+  &.shown {
+    opacity: 1;
+  }
+
+  &:not(.shown) {
+    transition-delay: 0s;
+  }
+`;
 
 interface IProps {
   service: IMyTrainService;
@@ -17,7 +61,7 @@ function getServiceInfo(service: IMyTrainService): string {
 
   const portions: string[] = [];
 
-  portions.push(`${toc ? ` ${toc}` : ''} service${length ? ` formed of ${length} coaches` : ''}.`);
+  portions.push(`${toc ? ` ${toc}` : ''} service.`);
 
   if (service.cancelled) {
     if (service.cancelReason) portions.push(service.cancelReason);
@@ -29,7 +73,7 @@ function getServiceInfo(service: IMyTrainService): string {
 }
 
 interface InfoPage {
-  prefix: string;
+  prefix?: string;
   callPoints: string[];
 }
 
@@ -74,8 +118,7 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
       const pos = i + 1 === assocCount ? 'Rear' : 'Middle';
 
       return {
-        prefix: `${pos} ${s.length ? `${s.length} ` : ''}coaches:`,
-        callPoints: [...pointsToDivide, ...stops.map((p) => p.name)],
+        callPoints: [`${pos} ${s.length ? `${s.length} ` : ''}coaches: `, ...pointsToDivide, ...stops.map((p) => p.name)],
       };
     });
 
@@ -83,13 +126,12 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
       // No splits
       return [
         {
-          prefix: 'Calling at:',
-          callPoints: ogServicePoints,
+          callPoints: ['Calling at ', ...ogServicePoints, !!service.length ? `Formed of ${length} coaches.` : ''],
         },
       ];
     } else {
       const ogLengthEnd = service.passengerCallPoints.at(-1)!!.length;
-      return [{ prefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches:`, callPoints: ogServicePoints }, ...assocServices];
+      return [{ callPoints: [`Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches: `, ...ogServicePoints] }, ...assocServices];
     }
   }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map((a) => a.passengerCallPoints))]);
 
@@ -99,8 +141,35 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
   console.log(service);
 
   return (
-    <div className="trainServiceAdditional">
-      <div className={clsx('info', { shown: shownPage === 0 })}>
+    <div
+      css={{
+        height: 'var(--row-height)',
+        position: 'relative',
+        clipPath: 'inset(0)',
+      }}
+    >
+      <div
+        className={clsx({ shown: shownPage === 0 })}
+        css={[
+          infoPage,
+          shownPage === 0
+            ? {
+                opacity: 1,
+                transform: 'translateY(110%)',
+                animationName: infoIn,
+                animationDuration: '0.2s',
+                animationFillMode: 'forwards',
+                animationTimingFunction: 'linear',
+                animationDelay: '0.5s',
+              }
+            : {
+                animationName: infoOut,
+                animationDuration: '0.2s',
+                animationFillMode: 'forwards',
+                animationTimingFunction: 'linear',
+              },
+        ]}
+      >
         <SlideyScrollText
           callCompleteIfNotScrolling={8_000}
           onComplete={() => {
@@ -116,8 +185,18 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
       </div>
 
       {callingPointPages.map((page, i) => (
-        <div key={i} className={clsx('callingPoints', { shown: shownPage === i + 1 })}>
-          <div className="callingAt">{page.prefix}</div>
+        <div key={i} className={clsx({ shown: shownPage === i + 1 })} css={infoPage}>
+          {page.prefix && (
+            <div
+              css={{
+                minWidth: 'calc(var(--ordinal-width) + var(--std-width) + var(--gap) * 2)',
+                paddingRight: 16,
+                flexShrink: 0,
+              }}
+            >
+              {page.prefix}
+            </div>
+          )}
           {shownPage === i + 1 && (
             <CallingPoints
               pointsText={page.callPoints}
@@ -145,7 +224,30 @@ function _CallingPoints({ pointsText, onComplete }: { pointsText: string[]; onCo
       }}
     >
       {pointsText.map((p, i) => (
-        <span className="callingAtPoint" key={i}>
+        <span
+          key={i}
+          css={{
+            // First child is always the "Calling at" text
+
+            '&:not(:last-child):not(:first-child)::after': {
+              content: '", "',
+            },
+
+            // Only one calling point
+            '&:nth-child(2):last-child::after': {
+              textTransform: 'unset',
+              content: '" only."',
+            },
+
+            '&:not(:nth-child(2)):last-child::after': {
+              content: '"."',
+            },
+
+            '&:last-child': {
+              textTransform: 'uppercase',
+            },
+          }}
+        >
           {p}
         </span>
       ))}

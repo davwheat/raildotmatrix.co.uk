@@ -52,7 +52,6 @@ function TrainService({ ordinal, service, showAdditionalDetails = false, classNa
 
   const pages = getDestinationPages();
   const etd = service.displayedDepartureTime(undefined, 'HHmm');
-  const isCancelled = service.cancelled;
 
   return (
     <>
@@ -68,9 +67,10 @@ function TrainService({ ordinal, service, showAdditionalDetails = false, classNa
           display: 'grid',
           gridTemplateColumns: 'var(--ordinal-width) var(--std-width) 1fr var(--etd-width)',
           gap: 'var(--gap)',
+          height: 'var(--row-height)',
         }}
       >
-        <span className="ordinal">{ordinal}</span>
+        <span>{ordinal}</span>
         <span>
           {dayjs
             .tz(service.scheduledDeparture)
@@ -89,7 +89,7 @@ function TrainService({ ordinal, service, showAdditionalDetails = false, classNa
               </span>
             ))}
         </span>
-        <span className="destination">
+        <span>
           <SwapBetween key={pages.length} animate={false} interval={3_000} css={{ height: '100%' }}>
             {pages.map((d, i) => (
               <span

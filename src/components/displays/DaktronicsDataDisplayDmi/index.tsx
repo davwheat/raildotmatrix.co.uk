@@ -1,11 +1,8 @@
-import React, { useRef, useEffect, useCallback } from 'react';
-import FullBoard from './FullBoard';
-import ToggleSwitch from '../../common/form/ToggleSwitch';
-import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage';
-import { debounce } from 'throttle-debounce';
+import React from 'react';
 
-import './css/index.less';
-import PageLink from '../../common/PageLink';
+import BoardSettings from '../../common/BoardSettings';
+
+import FullBoard from './FullBoard';
 import { ZoomDiv } from '../ZoomDiv';
 
 interface IProps {
@@ -15,82 +12,15 @@ interface IProps {
 
 export default function DaktronicsDataDisplay({ station, editBoardCallback }: IProps) {
   let searchParams: URLSearchParams | null = null;
-
   if (typeof window !== 'undefined') {
     searchParams = window && new URLSearchParams(window.location.search);
   }
-
-  const hideSettings = searchParams?.get('hideSettings');
-
-  const [settings, setSettings] = useStateWithLocalStorage('daktronicsDataDisplayBoardSettings', {
-    hideSettings: !!hideSettings,
-  });
-
-  const settingsRef = useRef<HTMLDivElement>(null);
-  const hideRef = useRef<HTMLInputElement>(null);
-
-  function updateState() {
-    setSettings({
-      hideSettings: !!hideRef.current?.checked,
-    });
-
-    if (!hideRef.current?.checked) {
-      settingsRef.current?.classList.remove('hide');
-    }
-  }
-
-  const updateHidden = useCallback(() => {
-    settingsRef.current!.classList[settings.hideSettings ? 'add' : 'remove']('hide');
-  }, [settings.hideSettings]);
-
-  const debouncedHide = debounce(1000, updateHidden);
-
-  useEffect(() => {
-    updateHidden();
-
-    if (!settings.hideSettings) {
-      return;
-    }
-
-    function handler() {
-      settingsRef.current?.classList.remove('hide');
-
-      debouncedHide();
-    }
-
-    const events = ['click', 'mousemove', 'mouseover', 'mousemove', 'touchmove', 'touchstart', 'touchend', 'focus'];
-
-    events.forEach((e) => window.addEventListener(e, handler));
-
-    return () => {
-      debouncedHide.cancel();
-      events.forEach((e) => window.removeEventListener(e, handler));
-    };
-  }, [settings.hideSettings]);
 
   const platforms = searchParams?.getAll('platform');
 
   return (
     <>
-      <div className="board-settings" ref={settingsRef}>
-        {!searchParams?.get('from-railannouncements.co.uk') && (
-          <>
-            <PageLink
-              style={{
-                cursor: 'pointer',
-                zIndex: 1000,
-              }}
-              afterExit={editBoardCallback}
-            >
-              Edit board
-            </PageLink>
-            <br />
-          </>
-        )}
-        <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
-        <br />
-        {platforms?.length && <p>Only showing platform(s) {platforms.join(',')}</p>}
-      </div>
+      <BoardSettings>{!!platforms?.length && <p>Only showing platform(s) {platforms.join(',')}</p>}</BoardSettings>{' '}
       <ZoomDiv>
         <div>
           <FullBoard

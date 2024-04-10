@@ -1,9 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 
-import clsx from 'clsx';
-
-import './css/slideyScrollText.less';
-
 interface IProps {
   children: React.ReactNode;
   className?: string;
@@ -140,8 +136,28 @@ function SlideyScrollText({
   }, [callCompleteIfNotScrolling, onStart, onComplete, previousElContent, pauseAtEnds, pauseWhenDone, scrollSpeed]);
 
   return (
-    <div className={clsx('slidey-scroll-text', className)} ref={outerRef}>
-      <span className={clsx('slidey-scroll-text-inner', classNameInner)} ref={innerRef}>
+    <div
+      className={className}
+      ref={outerRef}
+      css={{
+        overflow: 'hidden',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <span
+        className={classNameInner}
+        ref={innerRef}
+        css={{
+          '--trans-x': '100%',
+          '--opacity': 1,
+
+          display: 'block',
+          width: 'max-content',
+          opacity: 'var(--opacity)',
+          transform: 'translateX(var(--trans-x))',
+          transition: 'transform linear var(--transition-time, 0s), opacity linear 0.5s',
+        }}
+      >
         {children}
       </span>
     </div>
