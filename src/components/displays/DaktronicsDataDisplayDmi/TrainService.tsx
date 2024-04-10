@@ -27,7 +27,7 @@ interface IProps {
 const DESTINATION_MAX_LENGTH = 21;
 
 function getDestinationAsStrings(destination: IMyTrainService['destinations'][number], index: number): string[] {
-  const andText = index > 0 ? 'and ' : '';
+  const andText = index > 0 ? '& ' : '';
   const name = `${andText}${destination.name}`;
   const via = destination.via || '';
 
