@@ -7,6 +7,8 @@ import dayjsTz from 'dayjs/plugin/timezone';
 dayjs.extend(dayjsUtc);
 dayjs.extend(dayjsTz);
 
+dayjs.tz.setDefault('Europe/London');
+
 import './css/trainService.less';
 
 import SwapBetween from './SwapBetween';
@@ -59,7 +61,8 @@ function TrainService({ ordinal, service, showAdditionalDetails = false, classNa
       <div ref={ref} className={clsx('trainService', className)}>
         <span className="ordinal">{ordinal}</span>
         <span className="std time">
-          {dayjs(service.scheduledDeparture)
+          {dayjs
+            .tz(service.scheduledDeparture)
             .format('HH:mm')
             .split('')
             .map((c, i) => (
