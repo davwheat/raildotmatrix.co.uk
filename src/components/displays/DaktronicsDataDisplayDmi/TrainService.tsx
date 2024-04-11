@@ -100,6 +100,7 @@ function TrainService({ ordinal, service, showAdditionalDetails = false, classNa
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
+                  textTransform: 'var(--destination-text-transform, none)' as any,
                 }}
               >
                 {d}

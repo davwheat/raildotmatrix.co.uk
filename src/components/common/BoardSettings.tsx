@@ -64,7 +64,7 @@ export default function BoardSettings({ children, editBoardCallback }: IBoardSet
   }, [settings.hideSettings]);
 
   return (
-    <div className="board-settings" ref={settingsRef} css={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="board-settings" ref={settingsRef} css={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {!searchParams?.get('from-railannouncements.co.uk') && (
         <PageLink
           style={{

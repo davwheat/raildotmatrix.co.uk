@@ -4,7 +4,6 @@ import NoServicesMessage from './NoServicesMessage';
 import Clock from './Clock';
 import TrainServices from './TrainServices';
 
-// import './css/board.less';
 import './css/font.less';
 
 import { css } from '@emotion/react';
@@ -17,6 +16,7 @@ interface IProps {
   station: string;
   useLegacyTocNames?: boolean;
   showUnconfirmedPlatforms: boolean;
+  hasCasing: boolean;
 }
 
 const base = css`
@@ -43,7 +43,7 @@ const base = css`
   flex-direction: column;
 `;
 
-export default function FullBoard({ station, platforms, useLegacyTocNames, showUnconfirmedPlatforms }: IProps) {
+export default function FullBoard({ station, platforms, useLegacyTocNames, showUnconfirmedPlatforms, hasCasing }: IProps) {
   const [trainData] = useServiceInformation(station);
 
   const services = isValidResponseApi(trainData)
@@ -52,9 +52,11 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
       )
     : null;
 
+  const css = [base, hasCasing && { '--board-height': '580px', padding: 84, paddingLeft: 96 }];
+
   if (!services || services.length === 0) {
     return (
-      <article css={base}>
+      <article css={css}>
         <NoServicesMessage />
         <Clock />
       </article>
@@ -62,7 +64,7 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
   }
 
   return (
-    <article css={base}>
+    <article css={css}>
       <TrainServices services={services} />
       <Clock />
     </article>
