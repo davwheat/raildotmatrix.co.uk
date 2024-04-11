@@ -11,6 +11,15 @@ import { css } from '@emotion/react';
 import { processServices } from '../../../api/ProcessServices';
 import { isValidResponseApi, useServiceInformation } from '../../../hooks/useServiceInformation';
 
+const BOARD_WIDTH = 2250;
+const BOARD_HEIGHT = 470;
+
+const X_PAD = 24;
+const Y_PAD = 24;
+
+const X_PAD_CASING = X_PAD + 78;
+const Y_PAD_CASING = Y_PAD + 74;
+
 interface IProps {
   platforms?: string[];
   station: string;
@@ -20,14 +29,14 @@ interface IProps {
 }
 
 const base = css`
-  --board-width: 2250px;
-  --board-height: 470px;
+  --board-width: ${BOARD_WIDTH}px;
+  --board-height: ${BOARD_HEIGHT}px;
   --row-height: calc(var(--board-height) / 4);
 
   width: var(--board-width);
   height: var(--board-height);
   background: #000;
-  padding: 24px;
+  padding: ${Y_PAD}px ${X_PAD}px;
 
   user-select: none;
 
@@ -52,7 +61,14 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
       )
     : null;
 
-  const css = [base, hasCasing && { '--board-height': '580px', padding: 84, paddingLeft: 96 }];
+  const css = [
+    base,
+    hasCasing && {
+      '--board-width': `${BOARD_WIDTH + 2 * (X_PAD_CASING - X_PAD)}px`,
+      '--board-height': `${BOARD_HEIGHT + 2 * (Y_PAD_CASING - Y_PAD)}px`,
+      padding: `${Y_PAD_CASING}px ${X_PAD_CASING}px`,
+    },
+  ];
 
   if (!services || services.length === 0) {
     return (
