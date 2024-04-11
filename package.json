@@ -16,7 +16,7 @@
     "@mpth/react-no-ssr": "^1.0.1",
     "clsx": "^2.1.0",
     "dayjs": "^1.11.10",
-    "gatsby": "^5.13.3",
+    "gatsby": "^5.13.4",
     "gatsby-plugin-cloudflare-pages": "^1.0.3",
     "gatsby-plugin-emotion": "^8.13.1",
     "gatsby-plugin-less": "^7.13.1",
@@ -37,17 +37,17 @@
     "uk-railway-stations": "^1.5.2"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240403.0",
+    "@cloudflare/workers-types": "^4.20240405.0",
     "@flarum/prettier-config": "^1.0.0",
     "@types/color": "^3.0.6",
-    "@types/react": "^18.2.74",
+    "@types/react": "^18.2.75",
     "@types/throttle-debounce": "^5.0.2",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "cross-env": "^7.0.3",
     "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.32",
     "prettier": "^3.2.5",
-    "typescript": "^5.4.3",
-    "wrangler": "^3.46.0"
+    "typescript": "^5.4.5",
+    "wrangler": "^3.49.0"
   },
   "keywords": [
     "gatsby"
