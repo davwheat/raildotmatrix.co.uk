@@ -7,6 +7,7 @@ import { keyframes, css } from '@emotion/react';
 
 import { AssociationCategory } from '../../../../functions/api/getServices';
 import type { IAssociation, IMyTrainService } from '../../../api/ProcessServices';
+import { CallingPoints } from './CallingPoints';
 
 const infoIn = keyframes`
   0% {
@@ -73,7 +74,9 @@ function getServiceInfo(service: IMyTrainService): string {
 }
 
 interface InfoPage {
-  prefix?: string;
+  fixedPrefix?: string;
+  scrollingPrefix?: string;
+  scrollingSuffix?: string;
   callPoints: string[];
 }
 
@@ -118,7 +121,8 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
       const pos = i + 1 === assocCount ? 'Rear' : 'Middle';
 
       return {
-        callPoints: [`${pos} ${s.length ? `${s.length} ` : ''}coaches: `, ...pointsToDivide, ...stops.map((p) => p.name)],
+        callPoints: [...pointsToDivide, ...stops.map((p) => p.name)],
+        scrollingPrefix: `${pos} ${s.length ? `${s.length} ` : ''}coaches: `,
       };
     });
 
@@ -126,12 +130,14 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
       // No splits
       return [
         {
-          callPoints: ['Calling at ', ...ogServicePoints, !!service.length ? `Formed of ${length} coaches.` : ''],
+          callPoints: ogServicePoints,
+          scrollingPrefix: 'Calling at ',
+          scrollingSuffix: !!service.length ? ` Formed of ${service.length} coaches.` : undefined,
         },
       ];
     } else {
       const ogLengthEnd = service.passengerCallPoints.at(-1)!!.length;
-      return [{ callPoints: [`Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches: `, ...ogServicePoints] }, ...assocServices];
+      return [{ callPoints: ogServicePoints, scrollingPrefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches: ` }, ...assocServices];
     }
   }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map((a) => a.passengerCallPoints))]);
 
@@ -186,7 +192,7 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
 
       {callingPointPages.map((page, i) => (
         <div key={i} className={clsx({ shown: shownPage === i + 1 })} css={infoPage}>
-          {page.prefix && (
+          {page.fixedPrefix && (
             <div
               css={{
                 minWidth: 'calc(var(--ordinal-width) + var(--std-width) + var(--gap) * 2)',
@@ -194,12 +200,14 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
                 flexShrink: 0,
               }}
             >
-              {page.prefix}
+              {page.fixedPrefix}
             </div>
           )}
           {shownPage === i + 1 && (
             <CallingPoints
               pointsText={page.callPoints}
+              scrollingPrefix={page.scrollingPrefix}
+              scrollingSuffix={page.scrollingSuffix}
               onComplete={() => {
                 console.log('next from call p', i + 1);
                 nextPage();
@@ -211,52 +219,3 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
     </div>
   );
 }
-
-function _CallingPoints({ pointsText, onComplete }: { pointsText: string[]; onComplete?: () => void }) {
-  console.log('calling points rendered');
-  return (
-    <SlideyScrollText
-      onComplete={() => {
-        onComplete?.();
-
-        // Stop animation
-        return true;
-      }}
-    >
-      {pointsText.map((p, i) => (
-        <span
-          key={i}
-          css={{
-            // First child is always the "Calling at" text
-
-            '&:not(:last-child):not(:first-child)::after': {
-              content: '", "',
-            },
-
-            // Only one calling point
-            '&:nth-child(2):last-child::after': {
-              textTransform: 'unset',
-              content: '" only."',
-            },
-
-            '&:not(:nth-child(2)):last-child::after': {
-              content: '"."',
-            },
-
-            '&:last-child': {
-              textTransform: 'uppercase',
-            },
-          }}
-        >
-          {p}
-        </span>
-      ))}
-    </SlideyScrollText>
-  );
-}
-
-const CallingPoints = React.memo(_CallingPoints, (prev, next) => {
-  console.log('calling points props changed, but not rerendering');
-
-  return true;
-});
