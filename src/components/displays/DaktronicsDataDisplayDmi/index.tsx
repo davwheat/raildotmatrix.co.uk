@@ -80,6 +80,8 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
           )}
 
           <FullBoard
+            // Force re-render as text-transform can affect scrolling calling points
+            key={`${customBoardSettings.boardStyle}`}
             hasCasing={customBoardSettings.showCasing}
             station={station}
             platforms={platforms}
