@@ -6,6 +6,7 @@ interface IProps {
   classNameInner?: string;
   pauseWhenDone?: false | number;
   scrollSpeed?: number;
+  alwaysScroll?: boolean;
   /**
    * @returns `true` if the animation should be stopped, `false` otherwise.
    */
@@ -29,6 +30,7 @@ function SlideyScrollText({
   callCompleteIfNotScrolling = 5_000,
   onStart,
   onComplete,
+  alwaysScroll = false,
 }: IProps) {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
@@ -104,7 +106,7 @@ function SlideyScrollText({
       animationStep.current = 'pause-left';
     }
 
-    if (innerWidth > outerWidth) {
+    if (alwaysScroll || innerWidth > outerWidth) {
       inner!.style.setProperty('--trans-x', `${outerWidth}px`);
       inner!.style.removeProperty('--transition-time');
 
@@ -126,14 +128,14 @@ function SlideyScrollText({
       completeIfNotScrollTimeout = setTimeout(() => onComplete?.(), callCompleteIfNotScrolling || 0) as any;
     }
 
-    onStart?.(innerWidth > outerWidth);
+    onStart?.(alwaysScroll || innerWidth > outerWidth);
 
     return () => {
       clearTimeout(currentTimeout);
       clearTimeout(completeIfNotScrollTimeout);
       inner?.removeEventListener('transitionend', transitionEndHandler);
     };
-  }, [callCompleteIfNotScrolling, onStart, onComplete, previousElContent, pauseAtEnds, pauseWhenDone, scrollSpeed]);
+  }, [callCompleteIfNotScrolling, onStart, onComplete, previousElContent, pauseAtEnds, pauseWhenDone, scrollSpeed, alwaysScroll]);
 
   return (
     <div

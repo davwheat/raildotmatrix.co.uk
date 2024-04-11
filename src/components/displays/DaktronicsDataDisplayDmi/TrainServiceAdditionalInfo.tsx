@@ -41,6 +41,8 @@ const infoPage = css`
   left: 0;
   right: 0;
 
+  min-width: 100%;
+
   opacity: 0;
   transition: opacity 0.2s linear 0.5s;
 
@@ -177,6 +179,8 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
         ]}
       >
         <SlideyScrollText
+          css={{ minWidth: '100%' }}
+          alwaysScroll
           callCompleteIfNotScrolling={8_000}
           onComplete={() => {
             shownPage === 0 && nextPage();

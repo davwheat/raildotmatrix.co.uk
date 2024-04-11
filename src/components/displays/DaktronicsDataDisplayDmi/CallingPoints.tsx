@@ -14,6 +14,8 @@ function _CallingPoints({ pointsText, scrollingPrefix = null, scrollingSuffix = 
 
   return (
     <SlideyScrollText
+      css={{ minWidth: '100%' }}
+      alwaysScroll
       onComplete={() => {
         onComplete?.();
 
