@@ -16,11 +16,15 @@ interface IProps {
 
 const BoardStyles = {
   Southern: {
-    '--destination-text-transform': 'none',
+    '--calling-points-text-transform': 'none',
     '--casing-color': '#db9426',
   },
   Southeastern: {
-    '--destination-text-transform': 'uppercase',
+    '--calling-points-text-transform': 'uppercase',
+    '--casing-color': '#db9426',
+  },
+  'Southeastern (Blue)': {
+    '--calling-points-text-transform': 'uppercase',
     '--casing-color': '#11185a',
   },
 } as const;
@@ -30,7 +34,7 @@ interface IBoardSettings {
   showCasing: boolean;
 }
 
-export default function DaktronicsDataDisplay({ station, editBoardCallback }: IProps) {
+export default function DaktronicsDataDisplay({ station }: IProps) {
   let searchParams: URLSearchParams | null = null;
   if (typeof window !== 'undefined') {
     searchParams = window && new URLSearchParams(window.location.search);

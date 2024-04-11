@@ -46,6 +46,8 @@ function _CallingPoints({ pointsText, scrollingPrefix = null, scrollingSuffix = 
               '&:last-child': {
                 textTransform: 'uppercase',
               },
+
+              textTransform: 'var(--calling-points-text-transform)' as any,
             }}
           >
             {p}
