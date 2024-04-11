@@ -22,6 +22,14 @@ module.exports = {
   plugins: [
     ...PROD_PLUGINS,
     {
+      resolve: 'gatsby-plugin-react-svg',
+      options: {
+        rule: {
+          include: /\.inline\.svg$/,
+        },
+      },
+    },
+    {
       resolve: `gatsby-plugin-emotion`,
       options: {
         sourceMap: true,
