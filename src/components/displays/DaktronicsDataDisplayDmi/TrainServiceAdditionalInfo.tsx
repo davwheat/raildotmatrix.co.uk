@@ -66,6 +66,8 @@ function getServiceInfo(service: IMyTrainService): string {
 
   portions.push(`${toc ? ` ${toc}` : ''} service.`);
 
+  if (!!length) portions.push(`Formed of ${length} coaches.`);
+
   if (service.cancelled) {
     if (service.cancelReason) portions.push(service.cancelReason);
   } else if (service.isDelayed()) {
@@ -134,7 +136,6 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
         {
           callPoints: ogServicePoints,
           scrollingPrefix: 'Calling at ',
-          scrollingSuffix: !!service.length ? ` Formed of ${service.length} coaches.` : undefined,
         },
       ];
     } else {
