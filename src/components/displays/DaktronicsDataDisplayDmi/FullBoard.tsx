@@ -20,9 +20,9 @@ interface IProps {
 }
 
 const base = css`
-  --board-width: 2200px;
+  --board-width: 2250px;
   --board-height: 470px;
-  --row-height: 120px;
+  --row-height: calc(var(--board-height) / 4);
 
   width: var(--board-width);
   height: var(--board-height);
@@ -41,7 +41,6 @@ const base = css`
 
   display: flex;
   flex-direction: column;
-  gap: var(--gap);
 `;
 
 export default function FullBoard({ station, platforms, useLegacyTocNames, showUnconfirmedPlatforms }: IProps) {
