@@ -33,13 +33,8 @@ function _CallingPoints({ pointsText, scrollingPrefix = null, scrollingSuffix = 
                 content: '", "',
               },
 
-              // Only one calling point
-              '&:first-child:last-child::after': {
-                textTransform: 'unset',
-                content: '" only."',
-              },
-
-              '&:not(:first-child):last-child::after': {
+              // Last calling point
+              '&:last-child::after': {
                 content: '"."',
               },
 
