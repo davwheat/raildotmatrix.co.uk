@@ -5,14 +5,16 @@ const AbbreviatedStations: Record<string, string> = {
   HXX: 'Heathrow T123',
   LSP: 'Liverpool South Pkwy',
   MAN: 'Manchester Picc',
+  PAD: 'London Padd',
   PMH: 'Portsmouth Hbr',
   PMS: 'Portsmouth & SSea',
   SOA: 'Southampton Arpt Pwy',
   SOU: 'Southampton Ctl',
   SLQ: 'St Leonards WS',
-  STP: 'London St Pancras Intl',
+  STP: 'St Pancras Intl',
   WOF: 'Worcester Fgt St',
   WOP: 'Worcestershire Pkwy',
+  WSM: 'Weston S Mare',
 };
 
 export function getStationWithOverride(crs: string, name: string): string {
