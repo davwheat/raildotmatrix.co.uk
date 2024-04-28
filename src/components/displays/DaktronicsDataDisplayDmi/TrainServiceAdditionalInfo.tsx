@@ -126,7 +126,7 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
 
       return {
         callPoints: [...pointsToDivide, ...stops.map((p) => p.name)],
-        scrollingPrefix: `${pos} ${s.length ? `${s.length} ` : ''}coaches: `,
+        scrollingPrefix: `${pos} ${s.length ? `${s.length} ` : ''}coaches calling at: `,
       };
     });
 
@@ -140,7 +140,10 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
       ];
     } else {
       const ogLengthEnd = service.passengerCallPoints.at(-1)!!.length;
-      return [{ callPoints: ogServicePoints, scrollingPrefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches: ` }, ...assocServices];
+      return [
+        { callPoints: ogServicePoints, scrollingPrefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches calling at: ` },
+        ...assocServices,
+      ];
     }
   }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map((a) => a.passengerCallPoints))]);
 
