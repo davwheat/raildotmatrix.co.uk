@@ -46,7 +46,7 @@ const base = css`
 
   font-family: 'DataDisplay';
   color: hsl(39, 100%, 45%);
-  font-size: 44px;
+  font-size: 40px;
 
   position: relative;
 
