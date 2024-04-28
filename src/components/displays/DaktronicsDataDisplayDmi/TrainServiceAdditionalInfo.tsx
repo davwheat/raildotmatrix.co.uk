@@ -35,7 +35,7 @@ const infoOut = keyframes`
 
 const infoPage = css`
   position: absolute;
-  height: 1.3em;
+  height: 80px;
   display: flex;
   top: 0;
   left: 0;
