@@ -3,7 +3,8 @@
  *
  * Many of these will never appear on the boards, but I might as well add them in anyway.
  *
- * The list below is made up of every station from [my Darwin API](https://national-rail-api.davwheat.dev/crs/) which has a name over 21 chars.
+ * The list below is made up of every station from [my Darwin API](https://national-rail-api.davwheat.dev/crs/) which has a name over 21 chars
+ * and some additional manual entries.
  */
 const AbbreviatedStations: Record<string, string> = {
   // Max 21 chars:
@@ -33,12 +34,14 @@ const AbbreviatedStations: Record<string, string> = {
   CCB: 'Cardiff Ctrl Bus Stn',
   CGT: 'Cattering Garr Tesco',
   CHC: 'Charing Cross',
+  CHX: 'Charing Cross',
   CHZ: 'Chatsworth House',
   CIN: 'Cricket Inn Road',
   CIR: 'Caledonian Rd & Barn',
   CPG: 'Chipping Norton W St',
   CPY: 'Clapham',
   CSD: "Cobham & Stoke d'A",
+  CST: 'Cannon Street',
   CSW: "Chestfld & Sw'cliffe",
   CTB: 'Castlebay Barra',
   CTW: "Church & O'twistle",
@@ -59,7 +62,7 @@ const AbbreviatedStations: Record<string, string> = {
   FKH: 'Folkestone Harbour',
   FNY: 'Finchley Rd & Frognal',
   FSB: 'Fishbourne',
-  FST: 'London Fenchurch St',
+  FST: 'Fenchurch Street',
   GLT: 'Glenrothes w Thornton',
   GNH: 'Greenhithe',
   GSN: 'Garston',
@@ -81,10 +84,11 @@ const AbbreviatedStations: Record<string, string> = {
   LCH: 'Lochmaddy (Bus)',
   LET: 'Letchworth Gdn Cty',
   LHE: 'Loch Eil Outw Bound',
+  LIV: 'Liverpool Lime St',
   LPY: 'Liverpool S Parkway',
   LRB: 'London Road',
   LRD: 'London Road',
-  LST: 'London Liverpool St',
+  LST: 'Liverpool Street',
   LTV: 'Lichfield T V',
   LVS: 'Liverpool Landing Stg',
   LZZ: 'Leeds Whitehall (Bus)',
@@ -141,6 +145,7 @@ const AbbreviatedStations: Record<string, string> = {
   SOZ: 'Southport, Lord St',
   SRB: 'Stirling Bus Stn',
   SRF: 'Stretford Metrolink',
+  SSS: 'Sheerness',
   STI: 'Stadium of Light',
   STJ: 'Severn Tunnel Jn',
   STP: 'Lon St Pancras Intl',
@@ -173,6 +178,7 @@ const AbbreviatedStations: Record<string, string> = {
   WNR: 'Windsor & Eton',
   WOF: 'Worcester Fgt St',
   WOP: 'Worcestershire Pkwy',
+  WOS: 'Worcester S H',
   WOX: 'Workington Bus Stn',
   WSM: 'Weston S Mare',
   WTC: 'Whitchurch',
