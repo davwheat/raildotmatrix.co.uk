@@ -65,8 +65,8 @@ class CallPoint implements IPassengerCallPoint {
 }
 
 class Service implements IMyTrainService {
-  destinations: { name: string; via: null | string }[];
-  origins: { name: string; via: null | string }[];
+  destinations: { name: string; via: null | string; crs: string }[];
+  origins: { name: string; via: null | string; crs: string }[];
   cancelled: boolean;
   scheduledDeparture: Date | null;
   estimatedDeparture: Date | null;
@@ -159,8 +159,8 @@ class Service implements IMyTrainService {
     boardStationCrs,
     id,
   }: {
-    destinations: { name: string; via: null | string }[];
-    origins: { name: string; via: null | string }[];
+    destinations: { name: string; via: null | string; crs: string }[];
+    origins: { name: string; via: null | string; crs: string }[];
     cancelled: boolean;
     scheduledDeparture: Date | null;
     estimatedDeparture: Date | null;
@@ -224,8 +224,8 @@ interface IPassengerCallPoint {
 export interface IMyTrainService {
   id: string;
 
-  destinations: { name: string; via: null | string }[];
-  origins: { name: string; via: null | string }[];
+  destinations: { name: string; via: null | string; crs: string }[];
+  origins: { name: string; via: null | string; crs: string }[];
   cancelled: boolean;
   scheduledDeparture: Date | null;
   estimatedDeparture: Date | null;
@@ -389,8 +389,8 @@ export function processServices(
         });
 
       return new Service({
-        destinations: (service.currentDestinations || service.destination).map((d) => ({ name: d.locationName, via: d.via })),
-        origins: (service.currentOrigins || service.origin).map((o) => ({ name: o.locationName, via: o.via })),
+        destinations: (service.currentDestinations || service.destination).map((d) => ({ name: d.locationName, via: d.via, crs: d.crs })),
+        origins: (service.currentOrigins || service.origin).map((o) => ({ name: o.locationName, via: o.via, crs: o.crs })),
 
         cancelled: service.isCancelled,
 
@@ -443,8 +443,9 @@ function processAssociatedService(
     ).map((d) => ({
       name: d.locationName,
       via: 'via' in d ? d.via : null,
+      crs: d.crs,
     })),
-    origins: ogOrigins.map((o) => ({ name: o.locationName, via: o.via })),
+    origins: ogOrigins.map((o) => ({ name: o.locationName, via: o.via, crs: o.crs })),
 
     cancelled: association.isCancelled,
 

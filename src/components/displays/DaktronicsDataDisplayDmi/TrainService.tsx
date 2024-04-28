@@ -11,7 +11,8 @@ dayjs.tz.setDefault('Europe/London');
 
 import SwapBetween from './SwapBetween';
 import TrainServiceAdditionalInfo from './TrainServiceAdditionalInfo';
-import clsx from 'clsx';
+
+import { getStationWithOverride } from './abbreviatedStations';
 
 import type { IMyTrainService } from '../../../api/ProcessServices';
 
@@ -22,22 +23,13 @@ interface IProps {
   className?: string;
 }
 
-const DESTINATION_MAX_LENGTH = 21;
-
 function getDestinationAsStrings(destination: IMyTrainService['destinations'][number], index: number): string[] {
+  const stnName = getStationWithOverride(destination.crs, destination.name);
+
   const andText = index > 0 ? '& ' : '';
-  const name = `${andText}${destination.name}`;
-  const via = destination.via || '';
+  const name = `${andText}${stnName}`;
 
-  if (!via) return [name];
-
-  const whole = `${name} ${via}`.trim();
-
-  if (whole.length <= DESTINATION_MAX_LENGTH) {
-    return [whole];
-  } else {
-    return [name, via];
-  }
+  return [name];
 }
 
 export default React.forwardRef(TrainService);
@@ -45,7 +37,7 @@ export default React.forwardRef(TrainService);
 function TrainService({ ordinal, service, showAdditionalDetails = false, className }: IProps, ref: React.Ref<HTMLDivElement>) {
   const getDestinationPages = useCallback(
     function getDestinationPages(): string[] {
-      return service.destinations.map((d, i) => getDestinationAsStrings(d, i)).flat();
+      return service.destinations.map((d, i, arr) => getDestinationAsStrings(d, i)).flat();
     },
     [service, getDestinationAsStrings]
   );
