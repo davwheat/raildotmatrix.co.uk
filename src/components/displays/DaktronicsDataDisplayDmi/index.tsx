@@ -36,6 +36,7 @@ const BoardStyles = {
 interface IBoardSettings {
   boardStyle: keyof typeof BoardStyles;
   showCasing: boolean;
+  worldlinePowered: boolean;
 }
 
 export default function DaktronicsDataDisplay({ station }: IProps) {
@@ -47,6 +48,7 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
   const [customBoardSettings, setCustomBoardSettings] = useStateWithLocalStorage<IBoardSettings>('dataDisplayBoardSettings', {
     boardStyle: 'Southern',
     showCasing: true,
+    worldlinePowered: false,
   });
 
   const platforms = searchParams?.getAll('platform');
@@ -58,6 +60,12 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
           checked={customBoardSettings.showCasing}
           label="Show board casing"
           onChange={(e) => setCustomBoardSettings((s) => ({ ...s, showCasing: e.currentTarget.checked }))}
+        />
+
+        <ToggleSwitch
+          checked={customBoardSettings.worldlinePowered}
+          label="Worldline-driven (capitalised locations)"
+          onChange={(e) => setCustomBoardSettings((s) => ({ ...s, worldlinePowered: e.currentTarget.checked }))}
         />
 
         <label htmlFor="style">Style</label>
@@ -78,7 +86,16 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
       </BoardSettings>
 
       <ZoomDiv>
-        <div css={[{ position: 'relative' }, BoardStyles[customBoardSettings.boardStyle]]}>
+        <div
+          css={[
+            { position: 'relative' },
+            BoardStyles[customBoardSettings.boardStyle],
+            customBoardSettings.worldlinePowered && {
+              '--calling-points-text-transform': 'uppercase',
+              '--destination-text-transform': 'uppercase',
+            },
+          ]}
+        >
           {customBoardSettings.showCasing && (
             <BoardAsset css={{ position: 'absolute', inset: 0, zIndex: 1, color: 'var(--casing-color)', pointerEvents: 'none' }} />
           )}
