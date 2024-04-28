@@ -27,6 +27,10 @@ const BoardStyles = {
     '--calling-points-text-transform': 'uppercase',
     '--casing-color': '#11185a',
   },
+  'ATW/TfW (Green-Blue)': {
+    '--calling-points-text-transform': 'uppercase',
+    '--casing-color': '#1b4b47',
+  },
 } as const;
 
 interface IBoardSettings {
