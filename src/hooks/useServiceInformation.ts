@@ -39,7 +39,7 @@ export function useServiceInformation(
 
   const onMessage = useCallback(
     (e: MessageEvent) => {
-      if (!RAILANNOUNCEMENTS_ORIGINS.includes(e.origin)) {
+      if (!RAILANNOUNCEMENTS_ORIGINS.includes(e.origin) && e.origin !== window.location.origin) {
         console.error('Invalid iframe message origin:', e.origin);
         return;
       }
