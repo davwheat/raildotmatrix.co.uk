@@ -200,6 +200,7 @@ const AbbreviatedStations: Record<string, string> = {
   WDY: 'Woodley, Hunt Inn',
   WEN: 'Wells-Next-Sea',
   WER: 'Wedgwood Rd Bdge',
+  WGC: 'Welwyn Gdn City',
   WGN: 'Wigan Nth Western',
   WHH: 'Whitehill (Bus)',
   WHP: 'Wst Hampstead TL',
