@@ -1,14 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import clsx from 'clsx';
 
 interface IProps {
   interval: number;
   animate?: boolean;
   children: NonNullable<React.ReactNode>[];
   className?: string;
+  alwaysSlideUp?: boolean;
 }
 
-export default function SwapBetween({ interval, animate = true, children, className }: IProps) {
+function getStyle(i: number, shownChild: number, alwaysSlideUp: boolean) {
+  if (i === shownChild) {
+    return { transform: 'translateY(0)' };
+  }
+
+  if (alwaysSlideUp) {
+    if (i < shownChild) {
+      return { opacity: 0, transform: 'translateY(105%)' };
+    } else {
+      return { opacity: 0, transform: 'translateY(105%)' };
+    }
+  }
+
+  if (i < shownChild) {
+    return { transform: 'translateY(105%)' };
+  } else {
+    return { transform: 'translateY(-105%)' };
+  }
+}
+
+export default function SwapBetween({ interval, animate = true, children, className, alwaysSlideUp = false }: IProps) {
   const [shownChild, setShownChild] = useState(0);
 
   useEffect(() => {
@@ -45,16 +65,10 @@ export default function SwapBetween({ interval, animate = true, children, classN
               transform: 'translateY(0)',
               transition: 'transform 0.25s linear',
             },
-            shownChild === i
-              ? { transform: 'translateY(0)' }
-              : shownChild < i
-                ? { transform: 'translateY(105%)' }
-                : { transform: 'translateY(-105%)' },
-            animate
-              ? {}
-              : {
-                  transition: 'none',
-                },
+            getStyle(i, shownChild, alwaysSlideUp),
+            !animate && {
+              transition: 'none',
+            },
           ]}
         >
           {c}
