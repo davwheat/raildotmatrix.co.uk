@@ -52,6 +52,10 @@ const serviceBase = css`
   grid-template-columns: var(--ordinal-width) var(--std-width) 1fr var(--etd-width);
   gap: var(--gap);
   height: var(--row-height);
+
+  & > * {
+    min-width: 0;
+  }
 `;
 
 const destinationBase = css`
