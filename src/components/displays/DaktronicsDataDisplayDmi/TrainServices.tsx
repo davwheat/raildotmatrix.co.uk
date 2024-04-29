@@ -82,7 +82,7 @@ export default function TrainServices({ services }: IProps) {
     <>
       {firstService && <TrainService ordinal="1st" service={firstService} tripleLine={isFirstSplitting} showAdditionalDetails />}
 
-      {!isFirstSplitting && (
+      {!isFirstSplitting && !isSecondSplitting && (
         <>
           {services.length >= 3 && !isThirdSplitting ? (
             <SwapBetween interval={12_000} alwaysSlideUp>
