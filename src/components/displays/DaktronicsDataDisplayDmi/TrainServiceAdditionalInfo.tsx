@@ -144,10 +144,7 @@ function _TrainServiceAdditionalInfo({ service }: IProps) {
       ];
     } else {
       const ogLengthEnd = service.passengerCallPoints.at(-1)!!.length;
-      return [
-        { callPoints: ogServicePoints, scrollingPrefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches calling at` },
-        ...assocServices,
-      ];
+      return [{ callPoints: ogServicePoints, scrollingPrefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches calling at` }, ...assocServices];
     }
   }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map((a) => a.passengerCallPoints))]);
 
