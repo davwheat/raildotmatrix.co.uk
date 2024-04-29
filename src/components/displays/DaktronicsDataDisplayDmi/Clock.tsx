@@ -57,7 +57,7 @@ export default function Clock({}: IProps) {
         justifyContent: 'center',
         height: 'var(--row-height)',
         marginTop: 'auto',
-        fontSize: '1.75em',
+        fontSize: '2em',
       }}
     >
       {[...time].map((t, i) => (
