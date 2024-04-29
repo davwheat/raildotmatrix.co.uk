@@ -60,11 +60,9 @@ interface IProps {
 }
 
 function getServiceInfo(service: IMyTrainService): string {
-  const { toc, length } = service;
+  const { length } = service;
 
-  const portions: string[] = [];
-
-  portions.push(`${toc ? ` ${toc}` : ''} service.`);
+  const portions: string[] = [' service.'];
 
   if (!!length) portions.push(`Formed of ${length} coaches.`);
 
@@ -77,6 +75,12 @@ function getServiceInfo(service: IMyTrainService): string {
   return portions.join(' ');
 }
 
+function getServiceInfoPrefix(service: IMyTrainService): string {
+  const { toc } = service;
+
+  return `${toc ? `${toc}` : 'A'}`;
+}
+
 interface InfoPage {
   fixedPrefix?: string;
   scrollingPrefix?: string;
@@ -84,7 +88,7 @@ interface InfoPage {
   callPoints: string[];
 }
 
-export default function TrainServiceAdditionalInfo({ service }: IProps) {
+function _TrainServiceAdditionalInfo({ service }: IProps) {
   const associatedServices = React.useMemo(
     () =>
       service.passengerCallPoints
@@ -126,7 +130,7 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
 
       return {
         callPoints: [...pointsToDivide, ...stops.map((p) => p.name)],
-        scrollingPrefix: `${pos} ${s.length ? `${s.length} ` : ''}coaches calling at: `,
+        scrollingPrefix: `${pos} ${s.length ? `${s.length} ` : ''}coaches calling at`,
       };
     });
 
@@ -135,19 +139,20 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
       return [
         {
           callPoints: ogServicePoints,
-          scrollingPrefix: 'Calling at ',
+          scrollingPrefix: 'Calling at',
         },
       ];
     } else {
       const ogLengthEnd = service.passengerCallPoints.at(-1)!!.length;
       return [
-        { callPoints: ogServicePoints, scrollingPrefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches calling at: ` },
+        { callPoints: ogServicePoints, scrollingPrefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches calling at` },
         ...assocServices,
       ];
     }
   }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map((a) => a.passengerCallPoints))]);
 
   const serviceInfo = React.useMemo(() => getServiceInfo(service), [JSON.stringify(service)]);
+  const serviceInfoPrefix = React.useMemo(() => getServiceInfoPrefix(service), [JSON.stringify(service)]);
 
   console.log(callingPointPages);
   console.log(service);
@@ -183,7 +188,7 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
         ]}
       >
         <SlideyScrollText
-          css={{ minWidth: '100%' }}
+          css={{ minWidth: '100%', whiteSpace: 'preserve' }}
           alwaysScroll
           callCompleteIfNotScrolling={8_000}
           onComplete={() => {
@@ -193,6 +198,7 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
 
             return true;
           }}
+          slideDownText={serviceInfoPrefix}
         >
           {serviceInfo}
         </SlideyScrollText>
@@ -227,3 +233,11 @@ export default function TrainServiceAdditionalInfo({ service }: IProps) {
     </div>
   );
 }
+
+const TrainServiceAdditionalInfo = React.memo(_TrainServiceAdditionalInfo, (prev, next) => {
+  console.log('train service additional info changed, but not rerendering');
+
+  return true;
+});
+
+export default TrainServiceAdditionalInfo;

@@ -4,12 +4,12 @@ import SlideyScrollText from './SlideyScrollText';
 
 interface ICallingPointsProps {
   pointsText: string[];
-  scrollingPrefix?: React.ReactNode;
+  scrollingPrefix?: string;
   scrollingSuffix?: React.ReactNode;
   onComplete?: () => void;
 }
 
-function _CallingPoints({ pointsText, scrollingPrefix = null, scrollingSuffix = null, onComplete }: ICallingPointsProps) {
+function _CallingPoints({ pointsText, scrollingPrefix = undefined, scrollingSuffix = null, onComplete }: ICallingPointsProps) {
   console.log('calling points rendered');
 
   return (
@@ -22,9 +22,10 @@ function _CallingPoints({ pointsText, scrollingPrefix = null, scrollingSuffix = 
         // Stop animation
         return true;
       }}
+      slideDownText={scrollingPrefix}
     >
-      {scrollingPrefix}
       <span>
+        {' '}
         {pointsText.map((p, i) => (
           <span
             key={i}
