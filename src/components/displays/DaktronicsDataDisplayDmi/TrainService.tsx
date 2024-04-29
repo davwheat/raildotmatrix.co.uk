@@ -71,7 +71,7 @@ function TrainService({ ordinal, service, showAdditionalDetails = false, tripleL
   );
 
   const pages = getDestinationPages();
-  const etd = service.displayedDepartureTime(undefined, 'HHmm');
+  const etd = service.displayedDepartureTime(undefined, 'HHmm', null);
 
   return (
     <>

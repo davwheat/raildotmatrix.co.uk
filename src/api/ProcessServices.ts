@@ -120,7 +120,11 @@ class Service implements IMyTrainService {
     return dayjs.tz(useActualDepTime ? this.actualDeparture : this.estimatedDeparture).diff(dayjs.tz(this.scheduledDeparture), 'minute') >= 1;
   }
 
-  displayedDepartureTime(timePrefix: string | undefined = undefined, formatString: string = 'HH:mm'): string {
+  displayedDepartureTime(
+    timePrefix: string | undefined = undefined,
+    formatString: string = 'HH:mm',
+    onTimeText: string | undefined = 'On time'
+  ): string {
     if (this.cancelled) return 'Cancelled';
     if (this.hasDeparted || this.hasArrived) {
       if (this.origins.every((o) => this._boardStationName !== o.name)) {
@@ -129,12 +133,12 @@ class Service implements IMyTrainService {
         // This is the origin. We can't use etd if it's departed.
         const depTime = this.actualDeparture || this.estimatedDeparture || this.scheduledDeparture!!;
 
-        if (!this.isDelayed(this.hasDeparted)) return 'On time';
+        if (!this.isDelayed(this.hasDeparted)) return onTimeText ?? dayjs.tz(this.scheduledDeparture).format(formatString);
         return `${timePrefix ?? ''}${dayjs.tz(depTime).format(formatString)}`;
       }
     }
     if (!this.estimatedDeparture) return 'Delayed';
-    if (!this.isDelayed()) return 'On time';
+    if (!this.isDelayed()) return onTimeText ?? dayjs.tz(this.scheduledDeparture).format(formatString);
     if (this.estimatedDeparture) return `${timePrefix ?? ''}${dayjs.tz(this.estimatedDeparture).format(formatString)}`;
     return `${timePrefix ?? ''}${dayjs.tz(this.scheduledDeparture).format(formatString)}`;
   }
@@ -247,7 +251,7 @@ export interface IMyTrainService {
    * This **does not** account for cancelled services.
    */
   isDelayed(): boolean;
-  displayedDepartureTime(timePrefix?: string, formatString?: string): string;
+  displayedDepartureTime(timePrefix?: string, formatString?: string, onTimeText?: string | null): string;
 }
 
 export function getLegacyTocName(tocCode: string) {
