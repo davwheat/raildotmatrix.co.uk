@@ -51,7 +51,7 @@ function SlideyScrollText({
   alwaysScroll = false,
   slideDownText = undefined,
   slideDownPause = 1_500,
-  slideDownTime = 350,
+  slideDownTime = 400,
 }: IProps) {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);

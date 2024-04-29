@@ -63,7 +63,7 @@ export default function SwapBetween({ interval, animate = true, children, classN
               width: '100%',
 
               transform: 'translateY(0)',
-              transition: 'transform 0.25s linear',
+              transition: 'transform 400ms linear',
             },
             getStyle(i, shownChild, alwaysSlideUp),
             !animate && {
