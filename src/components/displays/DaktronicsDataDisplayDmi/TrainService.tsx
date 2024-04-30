@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { css } from '@emotion/react';
 
@@ -22,7 +22,7 @@ interface IProps {
   ordinal: string;
   service: IMyTrainService;
   showAdditionalDetails?: boolean;
-  tripleLine?: boolean;
+  tripleLineIfRequired?: boolean;
   className?: string;
 }
 
@@ -47,26 +47,51 @@ const serviceBase = css`
   --ordinal-width: 3.25ch;
   --std-width: 4.5ch;
   --etd-width: 8.2ch;
+  --row-count: 1;
 
   display: grid;
   grid-template-columns: var(--ordinal-width) var(--std-width) 1fr var(--etd-width);
-  gap: var(--gap);
-  height: var(--row-height);
+  grid-template-rows: repeat(var(--row-count), var(--row-height));
+  column-gap: var(--gap);
 
   & > * {
     min-width: 0;
   }
+
+  &[data-triple-line='true'] {
+    --row-count: 2;
+  }
+
+  &[data-triple-line='true'] ~ :has(&) {
+    display: none;
+  }
 `;
 
 const destinationBase = css`
-  display: inline-block;
-  width: 100%;
-  white-space: nowrap;
+  display: inline;
   overflow: hidden;
   text-transform: var(--destination-text-transform, none);
 `;
 
-function TrainService({ ordinal, service, showAdditionalDetails = false, tripleLine = false, className }: IProps, ref: React.Ref<HTMLDivElement>) {
+const destinationContainer = css`
+  grid-row: 1 / span var(--row-count);
+  grid-column: 3 / span 2;
+  position: relative;
+  line-height: var(--row-height);
+  transform: translateY(-12px);
+`;
+
+const destinationTextBlocker = css`
+  width: calc(var(--gap) + var(--etd-width));
+  height: calc(var(--gap) + var(--row-height));
+  float: right;
+`;
+
+function TrainService(
+  { ordinal, service, showAdditionalDetails = false, tripleLineIfRequired = false, className }: IProps,
+  ref: React.Ref<HTMLDivElement>
+) {
+  const [requiresTripleLine, setRequiresTripleLine] = React.useState(tripleLineIfRequired);
   const getDestinationPages = useCallback(
     function getDestinationPages(): string[] {
       return service.destinations.map((d, i, arr) => getDestinationAsStrings(d, i, arr.length)).flat();
@@ -74,13 +99,29 @@ function TrainService({ ordinal, service, showAdditionalDetails = false, tripleL
     [service, getDestinationAsStrings]
   );
 
+  const destinationRef = React.useRef<HTMLSpanElement>(null);
+  const cellRef = React.useRef<HTMLSpanElement>(null);
+
+  console.log(`Requires triple line: ${requiresTripleLine}`);
+
+  useEffect(() => {
+    if (!destinationRef.current || !cellRef.current) return;
+
+    const rowHeight = cellRef.current.offsetHeight;
+    const textHeight = destinationRef.current.offsetHeight;
+
+    const _requiresTripleLine = textHeight > rowHeight;
+
+    if (_requiresTripleLine !== requiresTripleLine) setRequiresTripleLine(_requiresTripleLine);
+  }, [JSON.stringify(service.destinations), requiresTripleLine, tripleLineIfRequired]);
+
   const pages = getDestinationPages();
   const etd = service.displayedDepartureTime(undefined, 'HHmm', null);
 
   return (
     <>
-      <div ref={ref} className={className} css={serviceBase}>
-        <span>{ordinal}</span>
+      <div ref={ref} className={className} css={serviceBase} data-triple-line={requiresTripleLine}>
+        <span ref={cellRef}>{ordinal}</span>
         <span>
           {dayjs
             .tz(service.scheduledDeparture)
@@ -99,20 +140,23 @@ function TrainService({ ordinal, service, showAdditionalDetails = false, tripleL
               </span>
             ))}
         </span>
-        <span>
-          {tripleLine ? (
-            <span css={destinationBase}>{pages[0]}</span>
+        <span css={destinationContainer}>
+          {tripleLineIfRequired ? (
+            <span css={destinationBase} ref={destinationRef}>
+              <span css={destinationTextBlocker} />
+              {pages.join('')}
+            </span>
           ) : (
             <SwapBetween key={pages.length} animate={false} interval={3_000} css={{ height: '100%' }}>
               {pages.map((d, i) => (
-                <span key={i} css={destinationBase}>
+                <span key={`${i}__${d}`} css={destinationBase}>
                   {d}
                 </span>
               ))}
             </SwapBetween>
           )}
         </span>
-        <span css={{ textAlign: 'right', marginRight: -4 }}>
+        <span css={{ textAlign: 'right', marginRight: -4, gridColumn: '4 / span 1', gridRow: '1 / span 1' }}>
           {etd.match(/\d{4}/) ? (
             <>
               {etd.split('').map((c, i) => (
@@ -133,16 +177,6 @@ function TrainService({ ordinal, service, showAdditionalDetails = false, tripleL
           )}
         </span>
       </div>
-
-      {tripleLine && (
-        <div css={serviceBase}>
-          <span />
-          <span />
-          <span css={{ gridColumn: 'span 2' }}>
-            <span css={destinationBase}>{pages.slice(1).join('')}</span>
-          </span>
-        </div>
-      )}
 
       {showAdditionalDetails && <TrainServiceAdditionalInfo service={service} />}
     </>

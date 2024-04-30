@@ -74,15 +74,14 @@ export default function TrainServices({ services }: IProps) {
 
   console.log('services rerendered!');
 
-  const isFirstSplitting = firstService?.destinations.length > 1;
   const isSecondSplitting = secondService?.destinations.length > 1;
   const isThirdSplitting = thirdService?.destinations.length > 1;
 
   return (
     <>
-      {firstService && <TrainService ordinal="1st" service={firstService} tripleLine={isFirstSplitting} showAdditionalDetails />}
+      {firstService && <TrainService ordinal="1st" service={firstService} tripleLineIfRequired showAdditionalDetails />}
 
-      {!isFirstSplitting && !isSecondSplitting && (
+      {!isSecondSplitting && (
         <>
           {services.length >= 3 && !isThirdSplitting ? (
             <SwapBetween interval={12_000} alwaysSlideUp>
