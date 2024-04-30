@@ -159,7 +159,7 @@ function _TrainServiceAdditionalInfo({ service }: IProps) {
       css={{
         height: 'var(--row-height)',
         position: 'relative',
-        clipPath: 'inset(0)',
+        clipPath: 'inset(-1px)',
       }}
     >
       <div
