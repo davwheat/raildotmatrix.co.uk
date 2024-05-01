@@ -13,7 +13,7 @@ interface IProps {
 
 const clipService = keyframes`
   0% {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    clip-path: polygon(0 0, 100% 0, 100% var(--row-height), 0 var(--row-height));
   }
 
   75%,
@@ -21,8 +21,8 @@ const clipService = keyframes`
     clip-path: polygon(
       calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px) 0,
       calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px) 0,
-      calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px) 100%,
-      calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px) 100%
+      calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px) var(--row-height),
+      calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px) var(--row-height)
     )
   }
 `;
