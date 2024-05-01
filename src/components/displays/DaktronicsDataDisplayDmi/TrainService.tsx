@@ -62,7 +62,8 @@ const serviceBase = css`
     --row-count: 2;
   }
 
-  &[data-triple-line='true'] ~ :has(&) {
+  &[data-triple-line='true'] ~ :has(&),
+  &[data-triple-line='true'] ~ & {
     display: none;
   }
 `;
