@@ -119,7 +119,7 @@ export default function TrainServices({ services }: IProps) {
               zIndex: 1,
               transform: 'translateX(-200%)',
               transformOrigin: 'left',
-              animation: `${spinnerText} 300ms step-end infinite, ${spinnerMovement} var(--animation-duration) calc(100ms + var(--animation-delay)) linear infinite`,
+              animation: `${spinnerText} 200ms step-end infinite, ${spinnerMovement} var(--animation-duration) calc(100ms + var(--animation-delay)) linear infinite`,
             },
           }}
         />
