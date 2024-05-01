@@ -65,7 +65,7 @@ export default function TrainServices({ services }: IProps) {
           ref={firstServiceRef}
           ordinal="1st"
           service={animateServiceOut}
-          css={{ animationName: slideOut, animationDuration: '1400ms', animationDelay: '150ms', animationTimingFunction: 'linear' }}
+          tripleLineIfRequired
         />
         <div className="trainServiceAdditional" />
       </>
