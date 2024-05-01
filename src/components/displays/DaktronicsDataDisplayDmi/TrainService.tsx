@@ -84,7 +84,7 @@ const destinationContainer = css`
 
 const destinationTextBlocker = css`
   width: calc(var(--gap) + var(--etd-width));
-  height: calc(var(--gap) + var(--row-height));
+  height: var(--row-height);
   float: right;
 `;
 
