@@ -32,6 +32,13 @@ export default function TrainServices({ services }: IProps) {
 
   const [animateServiceOut, setAnimateServiceOut] = useState<IMyTrainService | null>(null);
 
+  if (firstService?.id !== firstServiceLastRender.current?.id) {
+    console.log('first service changed -- animating last service out');
+
+    firstServiceLastRender.current && setAnimateServiceOut(firstServiceLastRender.current);
+    firstServiceLastRender.current = firstService;
+  }
+
   useEffect(() => {
     if (animateServiceOut) {
       const animEnd = () => {
@@ -46,13 +53,6 @@ export default function TrainServices({ services }: IProps) {
 
         firstServiceRef.current?.removeEventListener('animationend', animEnd);
       };
-    }
-
-    if (firstService?.id !== firstServiceLastRender.current?.id) {
-      console.log('first service changed -- animating last service out');
-
-      firstServiceLastRender.current && setAnimateServiceOut(firstServiceLastRender.current);
-      firstServiceLastRender.current = firstService;
     }
   }, [firstService, firstServiceLastRender, animateServiceOut, setAnimateServiceOut]);
 
