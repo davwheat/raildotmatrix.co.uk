@@ -80,6 +80,7 @@ const destinationContainer = css`
   position: relative;
   line-height: var(--row-height);
   transform: translateY(-12px);
+  clip-path: inset(0);
 `;
 
 const destinationTextBlocker = css`
