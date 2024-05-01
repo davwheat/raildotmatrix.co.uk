@@ -40,7 +40,13 @@ const base = css`
   width: var(--board-width);
   height: var(--board-height);
   background: #000;
-  padding: ${Y_PAD_TOP}px ${X_PAD}px ${Y_PAD_BOTTOM}px ${X_PAD}px;
+
+  
+  '--pad-top': ${Y_PAD_TOP}px;
+  '--pad-bottom': ${Y_PAD_BOTTOM}px;
+  '--pad-left': ${X_PAD}px;
+  '--pad-right': ${X_PAD}px;
+  padding: var(--pad-top) var(--pad-right) var(--pad-bottom) var(--pad-left);
 
   user-select: none;
 
@@ -70,7 +76,10 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
     hasCasing && {
       '--board-width': `${BOARD_WIDTH + 2 * (X_PAD_CASING - X_PAD)}px`,
       '--board-height': `${BOARD_HEIGHT + Y_PAD_TOP_CASING + Y_PAD_BOTTOM_CASING - Y_PAD_TOP - Y_PAD_BOTTOM}px`,
-      padding: `${Y_PAD_TOP_CASING}px ${X_PAD_CASING}px ${Y_PAD_BOTTOM_CASING}px ${X_PAD_CASING}px`,
+      '--pad-top': `${Y_PAD_TOP_CASING}px`,
+      '--pad-bottom': `${Y_PAD_BOTTOM_CASING}px`,
+      '--pad-left': `${X_PAD_CASING}px`,
+      '--pad-right': `${X_PAD_CASING}px`,
     },
   ];
 

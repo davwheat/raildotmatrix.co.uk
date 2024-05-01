@@ -23,6 +23,7 @@ interface IProps {
   service: IMyTrainService;
   showAdditionalDetails?: boolean;
   tripleLineIfRequired?: boolean;
+  clipToFirstLine?: boolean;
   className?: string;
 }
 
@@ -90,7 +91,7 @@ const destinationTextBlocker = css`
 `;
 
 function TrainService(
-  { ordinal, service, showAdditionalDetails = false, tripleLineIfRequired = false, className }: IProps,
+  { ordinal, service, showAdditionalDetails = false, tripleLineIfRequired = false, clipToFirstLine = false, className }: IProps,
   ref: React.Ref<HTMLDivElement>
 ) {
   const [requiresTripleLine, setRequiresTripleLine] = React.useState(tripleLineIfRequired);
@@ -122,7 +123,19 @@ function TrainService(
 
   return (
     <>
-      <div ref={ref} className={className} css={serviceBase} data-triple-line={requiresTripleLine}>
+      <div
+        ref={ref}
+        className={className}
+        css={serviceBase}
+        data-triple-line={requiresTripleLine}
+        style={
+          !clipToFirstLine
+            ? undefined
+            : {
+                clipPath: 'polygon(0 0, 100% 0, 100% var(--row-height), 0 var(--row-height))',
+              }
+        }
+      >
         <span ref={cellRef}>{ordinal}</span>
         <span>
           {dayjs

@@ -11,14 +11,42 @@ interface IProps {
   services: IMyTrainService[];
 }
 
-const slideOut = keyframes`
+const clipService = keyframes`
+  0% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  75%,
+  100% {
+    clip-path: polygon(
+      calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px) 0,
+      calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px) 0,
+      calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px) 100%,
+      calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px) 100%
+    )
+  }
+`;
+
+const spinnerMovement = keyframes`
   0% {
     transform: translateX(0);
   }
 
-  28.57%,
+  75%,
   100% {
-    transform: translateX(var(--board-width));
+    transform: translateX(calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px));
+  }
+`;
+
+// Custom font chars for the clear-down
+const spinnerText = keyframes`
+  0% {
+    content: '×';
+  }
+
+  50%,
+  100% {
+    content: '÷';
   }
 `;
 
@@ -66,6 +94,34 @@ export default function TrainServices({ services }: IProps) {
           ordinal="1st"
           service={animateServiceOut}
           tripleLineIfRequired
+          clipToFirstLine
+          css={{
+            animationName: clipService,
+            animationDuration: 'var(--animation-duration)',
+            animationDelay: 'var(--animation-delay)',
+            animationTimingFunction: 'linear',
+            position: 'relative',
+
+            '&, & ~ span': {
+              '--animation-duration': '3500ms',
+              '--animation-delay': '150ms',
+            },
+          }}
+        />
+        <span
+          css={{
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 'var(--pad-top)',
+              left: 'var(--pad-left)',
+              height: 'var(--row-height)',
+              zIndex: 1,
+              transform: 'translateX(-200%)',
+              transformOrigin: 'left',
+              animation: `${spinnerText} 300ms step-end infinite, ${spinnerMovement} var(--animation-duration) calc(100ms + var(--animation-delay)) linear infinite`,
+            },
+          }}
         />
         <div className="trainServiceAdditional" />
       </>
