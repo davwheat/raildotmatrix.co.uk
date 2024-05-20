@@ -7,10 +7,12 @@ import timezone from 'dayjs/plugin/timezone';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+dayjs.tz.setDefault('Europe/London');
+
 import './css/clock.less';
 
 function getTimeNumerics(): string {
-  return dayjs().tz('Europe/London').format('HH:mm:ss');
+  return dayjs.tz().format('HH:mm:ss');
 }
 
 function getLastNumber(num: string): string {

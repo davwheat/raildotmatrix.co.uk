@@ -8,6 +8,8 @@ import dayjsTz from 'dayjs/plugin/timezone';
 dayjs.extend(dayjsUtc);
 dayjs.extend(dayjsTz);
 
+dayjs.tz.setDefault('Europe/London');
+
 import './SmallClock.less';
 import useInterval from '../../../../hooks/useInterval';
 
@@ -21,10 +23,10 @@ export default function SmallClock() {
   return (
     <div className="clock">
       <div className="time">
-        <span className="text t900">{dayjs(currentTime).tz('Europe/London').format('HH:mm')}</span>
+        <span className="text t900">{dayjs.tz(currentTime).format('HH:mm')}</span>
       </div>
       <div className="date">
-        <span className="text t900">{dayjs(currentTime).tz('Europe/London').format('D/M/YYYY')}</span>
+        <span className="text t900">{dayjs.tz(currentTime).format('D/M/YYYY')}</span>
       </div>
     </div>
   );
