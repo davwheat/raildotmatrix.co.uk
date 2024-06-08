@@ -140,7 +140,13 @@ export default function TrainServices({ services }: IProps) {
       {!isSecondSplitting && (
         <>
           {services.length >= 3 && !isThirdSplitting ? (
-            <SwapBetween interval={12_000} alwaysSlideUp>
+            <SwapBetween
+              interval={12_000}
+              alwaysSlideUp
+              css={{
+                clipPath: `polygon(0 0, 100% 0, 100% calc(var(--row-height) - var(--background-row-y-offset)), 0 calc(var(--row-height) - var(--background-row-y-offset)))`,
+              }}
+            >
               {secondService && <TrainService ordinal="2nd" service={secondService} />}
               {thirdService && <TrainService ordinal="3rd" service={thirdService} />}
             </SwapBetween>
