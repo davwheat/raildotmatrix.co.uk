@@ -53,6 +53,7 @@ export default function Clock({}: IProps) {
         background: 'var(--dmi-row-background)',
         backgroundClip: 'padding-box',
         padding: '4px 8px',
+        paddingRight: 0,
 
         width: 'max-content',
         margin: 'auto',
