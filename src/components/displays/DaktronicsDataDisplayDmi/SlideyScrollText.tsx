@@ -63,7 +63,7 @@ function SlideyScrollText({
 
   const animationStep = useRef<'pause-left' | 'scrolling' | 'pause-right' | 'slide-down'>('pause-left');
 
-  console.log('Rendering SlideyScrollText');
+  console.log('[SCROLL] Rendering SlideyScrollText');
 
   useEffect(() => {
     const { current: outer } = outerRef;
@@ -114,7 +114,7 @@ function SlideyScrollText({
     function setUpSlideDown() {
       if (!slideDown) return;
 
-      console.log('Sliding down setup');
+      console.log('[SCROLL] Sliding down setup');
       inner!.style.setProperty('--trans-y', '-100%');
       inner!.style.setProperty('--trans-x', `${outerWidth - slideDownWidth}px`);
       inner!.style.setProperty('--transition-time', '0.0001ms');
@@ -122,7 +122,7 @@ function SlideyScrollText({
     }
 
     function startSlideDown() {
-      console.log('Starting slide down');
+      console.log('[SCROLL] Starting slide down');
 
       animationStep.current = 'slide-down';
 
@@ -132,7 +132,7 @@ function SlideyScrollText({
       };
 
       setTimeout(() => {
-        console.log('Sliding down');
+        console.log('[SCROLL] Sliding down');
         inner!.style.setProperty('--trans-y', '0');
         inner!.style.setProperty('--transition-time', `${slideDownTime}ms`);
       }, DEBUG_DELAY);
@@ -145,10 +145,10 @@ function SlideyScrollText({
     }
 
     function transitionEndHandler() {
-      console.log('** transitionEndHandler');
+      console.log('[SCROLL] ** transitionEndHandler');
 
       if (animationStep.current === 'pause-left') {
-        console.log('Pause left complete');
+        console.log('[SCROLL] Pause left complete');
 
         if (onComplete?.() ?? false) {
           return;
@@ -156,7 +156,7 @@ function SlideyScrollText({
           currentTimeout = window.setTimeout(startScrollOrSlideDown, (pauseWhenDone || 0) + DEBUG_DELAY);
         }
       } else if (animationStep.current === 'scrolling') {
-        console.log('Scrolling complete');
+        console.log('[SCROLL] Scrolling complete');
 
         animationStep.current = 'pause-right';
 
@@ -168,17 +168,18 @@ function SlideyScrollText({
             inner!.style.setProperty('--trans-x', `${outerWidth}px`);
 
             setUpSlideDown();
+            currentTimeout = window.setTimeout(startScrollOrSlideDown, (pauseAtEnds || 0) + DEBUG_DELAY);
           },
           (pauseAtEnds || 0) + DEBUG_DELAY
         );
       } else if (animationStep.current === 'slide-down') {
-        console.log('Slide down complete');
+        console.log('[SCROLL] Slide down complete');
 
         currentTimeout = window.setTimeout(startScroll, (slideDownPause || 0) + DEBUG_DELAY);
       }
     }
 
-    console.log('SlideyScrollText effect');
+    console.log('[SCROLL] SlideyScrollText effect');
 
     if (previousElContent.current !== inner!.innerHTML) {
       previousElContent.current = inner!.innerHTML;
@@ -190,7 +191,7 @@ function SlideyScrollText({
     }
 
     if (alwaysScroll || innerWidth > outerWidth) {
-      console.log('Starting first scroll');
+      console.log('[SCROLL] Starting first scroll');
 
       inner!.style.setProperty('--trans-x', `${outerWidth}px`);
       setUpSlideDown();
@@ -198,7 +199,6 @@ function SlideyScrollText({
       inner!.style.removeProperty('--transition-time');
 
       animationStep.current = 'pause-left';
-
       currentTimeout = window.setTimeout(startScrollOrSlideDown, (pauseAtEnds || 0) + DEBUG_DELAY);
 
       inner?.addEventListener('transitionend', transitionEndHandler);
