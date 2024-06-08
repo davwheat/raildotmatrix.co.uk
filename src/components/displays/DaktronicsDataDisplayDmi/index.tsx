@@ -20,15 +20,15 @@ const BoardStyles = {
     '--casing-color': '#db9426',
   },
   Southeastern: {
-    '--calling-points-text-transform': 'uppercase',
+    '--calling-points-text-transform': 'none',
     '--casing-color': '#db9426',
   },
   'Southeastern (Blue)': {
-    '--calling-points-text-transform': 'uppercase',
+    '--calling-points-text-transform': 'none',
     '--casing-color': '#11185a',
   },
   'ATW/TfW (Green-Blue)': {
-    '--calling-points-text-transform': 'uppercase',
+    '--calling-points-text-transform': 'none',
     '--casing-color': '#1b4b47',
   },
 } as const;
@@ -97,7 +97,7 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
           ]}
         >
           {customBoardSettings.showCasing && (
-            <BoardAsset css={{ position: 'absolute', inset: 0, zIndex: 1, color: 'var(--casing-color)', pointerEvents: 'none' }} />
+            <BoardAsset css={{ position: 'absolute', inset: 0, zIndex: 2, color: 'var(--casing-color)', pointerEvents: 'none' }} />
           )}
 
           <FullBoard
