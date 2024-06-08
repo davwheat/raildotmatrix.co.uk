@@ -51,6 +51,26 @@ const spinnerText = keyframes`
   }
 `;
 
+const slideUpFromBottom = keyframes`
+  0% {
+    transform: translateY(calc(3 * var(--row-height)));
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+`;
+
+const slideUpFromCurrentRow = keyframes`
+  0% {
+    transform: translateY(var(--row-height));
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+`;
+
 export default function TrainServices({ services, worldlinePowered }: IProps) {
   const firstService: IMyTrainService | undefined = services[0];
   const secondService: IMyTrainService | undefined = services[1];
@@ -60,6 +80,7 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
   const firstServiceRef = useRef<HTMLDivElement>(null);
 
   const [animateServiceOut, setAnimateServiceOut] = useState<IMyTrainService | null>(null);
+  const [animateServiceIn, setAnimateServiceIn] = useState<boolean>(false);
 
   if (firstService?.id !== firstServiceLastRender.current?.id) {
     console.log('first service changed -- animating last service out');
@@ -71,19 +92,32 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
   useEffect(() => {
     if (animateServiceOut) {
       const animEnd = () => {
-        console.log('slide out animation end');
+        console.log('clear down animation end');
+        if (firstService) setAnimateServiceIn(true);
         setAnimateServiceOut(null);
       };
 
       firstServiceRef.current?.addEventListener('animationend', animEnd);
 
       return () => {
-        console.log('cleanup');
+        console.log('clear down cleanup');
 
         firstServiceRef.current?.removeEventListener('animationend', animEnd);
       };
+    } else if (animateServiceIn) {
+      const animEnd = () => {
+        console.log('post clear down slide in animation end');
+        setAnimateServiceIn(false);
+      };
+
+      firstServiceRef.current?.addEventListener('animationend', animEnd);
+
+      return () => {
+        console.log('post clear down slide in cleanup');
+        firstServiceRef.current?.removeEventListener('animationend', animEnd);
+      };
     }
-  }, [firstService, firstServiceLastRender, animateServiceOut, setAnimateServiceOut]);
+  }, [firstService, firstServiceLastRender, animateServiceIn, animateServiceOut, setAnimateServiceOut, setAnimateServiceIn]);
 
   if (animateServiceOut) {
     console.log('rendering animating service out');
@@ -101,6 +135,7 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
             animationDuration: 'var(--animation-duration)',
             animationDelay: 'var(--animation-delay)',
             animationTimingFunction: 'linear',
+            animationFillMode: 'forwards',
             position: 'relative',
 
             '&, & ~ span': {
@@ -112,6 +147,7 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
         />
         <span
           css={{
+            height: 'var(--row-height)',
             '&::before': {
               content: '""',
               position: 'absolute',
@@ -125,7 +161,48 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
             },
           }}
         />
-        <div className="trainServiceAdditional" />
+        <div
+          className="trainServiceAdditional"
+          css={{
+            height: 'var(--row-height)',
+          }}
+        />
+      </>
+    );
+  } else if (animateServiceIn) {
+    console.log('rendering animating service out');
+
+    return (
+      <>
+        <div
+          css={{
+            position: 'relative',
+            clipPath: `polygon(
+              0 0,                            100% 0,                           100% calc(var(--row-height) - var(--background-row-y-offset)),      0 calc(var(--row-height) - var(--background-row-y-offset)),
+              0 var(--row-height),            100% var(--row-height),           100% calc(2 * var(--row-height) - var(--background-row-y-offset)),  0 calc(2 * var(--row-height) - var(--background-row-y-offset)),
+              0 calc(2 * var(--row-height)),  100% calc(2 * var(--row-height)), 100% calc(3 * var(--row-height) - var(--background-row-y-offset)),  0 calc(3 * var(--row-height) - var(--background-row-y-offset))
+            )`,
+          }}
+        >
+          <TrainService
+            ref={firstServiceRef}
+            ordinal="1st"
+            service={firstService}
+            tripleLineIfRequired
+            clipToFirstLine
+            css={{
+              animationName: slideUpFromBottom,
+              animationDuration: '1.6s',
+              animationTimingFunction: 'linear',
+              animationFillMode: 'forwards',
+
+              position: 'relative',
+            }}
+            worldlinePowered={worldlinePowered}
+          />
+        </div>
+        <span css={{ height: 'var(--row-height)' }} />
+        <div className="trainServiceAdditional" css={{ height: 'var(--row-height)' }} />
       </>
     );
   }
@@ -135,13 +212,17 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
   const isSecondSplitting = secondService?.destinations.length > 1;
   const isThirdSplitting = thirdService?.destinations.length > 1;
 
+  console.log(firstService);
+  console.log(secondService);
+  console.log(thirdService);
+
   return (
     <>
       {firstService && (
         <TrainService ordinal="1st" service={firstService} tripleLineIfRequired showAdditionalDetails worldlinePowered={worldlinePowered} />
       )}
 
-      {!isSecondSplitting && (
+      {!isSecondSplitting ? (
         <>
           {services.length >= 3 && !isThirdSplitting ? (
             <SwapBetween
@@ -155,9 +236,27 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
               {thirdService && <TrainService ordinal="3rd" service={thirdService} worldlinePowered={worldlinePowered} />}
             </SwapBetween>
           ) : (
-            !isSecondSplitting && <>{secondService && <TrainService ordinal="2nd" service={secondService} worldlinePowered={worldlinePowered} />}</>
+            <>
+              {secondService && (
+                <TrainService
+                  css={{
+                    animationName: slideUpFromCurrentRow,
+                    animationDelay: '100ms',
+                    animationDuration: '400ms',
+                    animationFillMode: 'forwards',
+                    animationTimingFunction: 'linear',
+                  }}
+                  ordinal="2nd"
+                  service={secondService}
+                  worldlinePowered={worldlinePowered}
+                />
+              )}
+            </>
           )}
         </>
+      ) : (
+        // Spacer row
+        <div css={{ height: 'var(--row-height)' }} />
       )}
     </>
   );

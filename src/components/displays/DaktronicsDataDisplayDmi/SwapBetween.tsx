@@ -29,7 +29,11 @@ function getStyle(i: number, shownChild: number, alwaysSlideUp: boolean) {
 }
 
 export default function SwapBetween({ interval, animate = true, children, className, alwaysSlideUp = false }: IProps) {
-  const [shownChild, setShownChild] = useState(0);
+  const [shownChild, setShownChild] = useState(-1);
+
+  useEffect(() => {
+    setShownChild(0);
+  }, []);
 
   useEffect(() => {
     const key = setInterval(() => {

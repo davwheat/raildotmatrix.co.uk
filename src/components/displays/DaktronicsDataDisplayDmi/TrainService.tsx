@@ -56,6 +56,13 @@ const serviceBase = css`
   grid-template-rows: repeat(var(--row-count), var(--row-height));
   column-gap: var(--gap);
 
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(var(--row-height) - var(--background-row-y-offset)),
+    0 calc(var(--row-height) - var(--background-row-y-offset))
+  );
+
   & > * {
     min-width: 0;
   }
@@ -129,13 +136,19 @@ function TrainService(
         className={className}
         css={serviceBase}
         data-triple-line={requiresTripleLine}
-        style={
-          !clipToFirstLine
-            ? undefined
+        style={{
+          ...(!clipToFirstLine && !requiresTripleLine
+            ? {}
             : {
-                clipPath: 'polygon(0 0, 100% 0, 100% var(--row-height), 0 var(--row-height))',
-              }
-        }
+                clipPath: !clipToFirstLine
+                  ? `polygon(
+                  0 0, 100% 0, 100% calc(100% - var(--background-row-y-offset)), 0 calc(100% - var(--background-row-y-offset)),
+                  0 100%, 100% 100%, 100% calc(200% - var(--background-row-y-offset)), 0 calc(200% - var(--background-row-y-offset)),
+                  0 200%, 100% 200%, 100% calc(300% - var(--background-row-y-offset)), 0 calc(300% - var(--background-row-y-offset))
+                )`
+                  : 'polygon(0 0, 100% 0, 100% var(--row-height), 0 var(--row-height))',
+              }),
+        }}
       >
         <span ref={cellRef}>{ordinal}</span>
         <span>
