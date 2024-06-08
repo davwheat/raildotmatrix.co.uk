@@ -50,6 +50,8 @@ export default function Clock({}: IProps) {
   return (
     <div
       css={{
+        background: 'var(--dmi-row-background)',
+        backgroundClip: 'padding-box',
         padding: '4px 8px',
 
         width: 'max-content',

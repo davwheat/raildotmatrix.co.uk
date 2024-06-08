@@ -80,7 +80,7 @@ const destinationContainer = css`
   grid-column: 3 / span 2;
   position: relative;
   line-height: var(--row-height);
-  transform: translateY(-12px);
+  transform: translateY(-9.5px);
   clip-path: inset(0);
 `;
 

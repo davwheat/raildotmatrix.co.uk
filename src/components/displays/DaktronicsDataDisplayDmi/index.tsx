@@ -68,6 +68,12 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
           onChange={(e) => setCustomBoardSettings((s) => ({ ...s, worldlinePowered: e.currentTarget.checked }))}
         />
 
+        <ToggleSwitch
+          checked={!customBoardSettings.withBackground}
+          label="Black background"
+          onChange={(e) => setCustomBoardSettings((s) => ({ ...s, withBackground: !e.currentTarget.checked }))}
+        />
+
         <label htmlFor="style">Style</label>
         <select
           id="style"
@@ -94,6 +100,10 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
               '--calling-points-text-transform': 'uppercase',
               '--destination-text-transform': 'uppercase',
             },
+            customBoardSettings.withBackground && {
+              '--dmi-row-background': '#35241a',
+              '--dmi-background': '#0c0806',
+            },
           ]}
         >
           {customBoardSettings.showCasing && (
@@ -102,7 +112,7 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
 
           <FullBoard
             // Force re-render as text-transform can affect scrolling calling points
-            key={`${customBoardSettings.boardStyle}`}
+            key={`${customBoardSettings.boardStyle}.${customBoardSettings.worldlinePowered}`}
             hasCasing={customBoardSettings.showCasing}
             station={station}
             platforms={platforms}
