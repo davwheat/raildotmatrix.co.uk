@@ -50,14 +50,17 @@ export default function Clock({}: IProps) {
   return (
     <div
       css={{
+        padding: '4px 8px',
+
+        width: 'max-content',
+        margin: 'auto',
+
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
 
         fontFamily: 'DataDisplay Clock',
         justifyContent: 'center',
-        height: 'var(--row-height)',
         marginTop: 'auto',
-        fontSize: '2em',
       }}
     >
       {[...time].map((t, i) => (
@@ -71,12 +74,11 @@ export default function Clock({}: IProps) {
             width: 'var(--width)',
             textAlign: 'center',
             position: 'relative',
-            height: '1em',
+            lineHeight: '2em',
 
             // Handle colons
             '&:nth-of-type(3n)': {
               opacity: '1 !important',
-              transform: 'translateY(-0.5px)',
             },
           }}
         >
