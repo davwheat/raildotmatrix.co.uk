@@ -37,6 +37,7 @@ interface IBoardSettings {
   boardStyle: keyof typeof BoardStyles;
   showCasing: boolean;
   worldlinePowered: boolean;
+  withBackground: boolean;
 }
 
 export default function DaktronicsDataDisplay({ station }: IProps) {
@@ -49,6 +50,7 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
     boardStyle: 'Southern',
     showCasing: true,
     worldlinePowered: false,
+    withBackground: false,
   });
 
   const platforms = searchParams?.getAll('platform');
@@ -97,7 +99,7 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
             { position: 'relative' },
             BoardStyles[customBoardSettings.boardStyle],
             customBoardSettings.worldlinePowered && {
-              '--calling-points-text-transform': 'uppercase',
+              '--calling-points-text-transform': 'none',
               '--destination-text-transform': 'uppercase',
             },
             customBoardSettings.withBackground && {
@@ -118,6 +120,7 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
             platforms={platforms}
             useLegacyTocNames={!!searchParams?.get('useLegacyTocNames')}
             showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
+            worldlinePowered={customBoardSettings.worldlinePowered}
           />
         </div>
       </ZoomDiv>

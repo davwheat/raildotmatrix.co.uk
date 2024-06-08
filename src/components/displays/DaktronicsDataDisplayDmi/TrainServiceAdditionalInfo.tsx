@@ -6,8 +6,9 @@ import clsx from 'clsx';
 import { keyframes, css } from '@emotion/react';
 
 import { AssociationCategory } from '../../../../functions/api/getServices';
+import { CallingPoint, CallingPoints } from './CallingPoints';
+
 import type { IAssociation, IMyTrainService } from '../../../api/ProcessServices';
-import { CallingPoints } from './CallingPoints';
 
 const infoIn = keyframes`
   0% {
@@ -57,25 +58,40 @@ const infoPage = css`
 
 interface IProps {
   service: IMyTrainService;
+  worldlinePowered: boolean;
 }
 
-function getServiceInfo(service: IMyTrainService): string {
-  const { length } = service;
+function getServiceInfo(service: IMyTrainService, worldlinePowered: boolean): string {
+  const { toc, length } = service;
 
-  const portions: string[] = [' service.'];
+  if (worldlinePowered) {
+    const portions: string[] = [!!length ? `A ${toc} service which has ${length} coaches.` : `A ${toc} service.`];
 
-  if (!!length) portions.push(`Formed of ${length} coaches.`);
+    if (service.cancelled) {
+      if (service.cancelReason) portions.push(service.cancelReason);
+    } else if (service.isDelayed()) {
+      if (service.delayReason) portions.push(service.delayReason);
+    }
 
-  if (service.cancelled) {
-    if (service.cancelReason) portions.push(service.cancelReason);
-  } else if (service.isDelayed()) {
-    if (service.delayReason) portions.push(service.delayReason);
+    return portions.join(' ');
+  } else {
+    const portions: string[] = [' service.'];
+
+    if (!!length) portions.push(`Formed of ${length} coaches.`);
+
+    if (service.cancelled) {
+      if (service.cancelReason) portions.push(service.cancelReason);
+    } else if (service.isDelayed()) {
+      if (service.delayReason) portions.push(service.delayReason);
+    }
+
+    return portions.join(' ');
   }
-
-  return portions.join(' ');
 }
 
-function getServiceInfoPrefix(service: IMyTrainService): string {
+function getServiceInfoPrefix(service: IMyTrainService, worldlinePowered: boolean): string {
+  if (worldlinePowered) return '';
+
   const { toc } = service;
 
   return `${toc ? `${toc}` : 'A'}`;
@@ -88,7 +104,7 @@ interface InfoPage {
   callPoints: string[];
 }
 
-function _TrainServiceAdditionalInfo({ service }: IProps) {
+function _TrainServiceAdditionalInfo({ service, worldlinePowered }: IProps) {
   const associatedServices = React.useMemo(
     () =>
       service.passengerCallPoints
@@ -99,7 +115,7 @@ function _TrainServiceAdditionalInfo({ service }: IProps) {
     [JSON.stringify(service)]
   );
 
-  const pageCount = 2 + associatedServices.length;
+  const pageCount = worldlinePowered ? 1 : 2 + associatedServices.length;
 
   const [shownPage, setShownPage] = React.useState(0);
 
@@ -130,7 +146,7 @@ function _TrainServiceAdditionalInfo({ service }: IProps) {
 
       return {
         callPoints: [...pointsToDivide, ...stops.map((p) => p.name)],
-        scrollingPrefix: `${pos} ${s.length ? `${s.length} ` : ''}coaches calling at:`,
+        scrollingPrefix: `${pos} ${s.length ? `${s.length} ` : ''}coaches calling at${worldlinePowered ? '' : ':'}`,
       };
     });
 
@@ -139,17 +155,23 @@ function _TrainServiceAdditionalInfo({ service }: IProps) {
       return [
         {
           callPoints: ogServicePoints,
-          scrollingPrefix: 'Calling at:',
+          scrollingPrefix: `Calling at${worldlinePowered ? '' : ':'}`,
         },
       ];
     } else {
       const ogLengthEnd = service.passengerCallPoints.at(-1)!!.length;
-      return [{ callPoints: ogServicePoints, scrollingPrefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches calling at:` }, ...assocServices];
+      return [
+        {
+          callPoints: ogServicePoints,
+          scrollingPrefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches calling at${worldlinePowered ? '' : ':'}`,
+        },
+        ...assocServices,
+      ];
     }
-  }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map((a) => a.passengerCallPoints))]);
+  }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map((a) => a.passengerCallPoints)), worldlinePowered]);
 
-  const serviceInfo = React.useMemo(() => getServiceInfo(service), [JSON.stringify(service)]);
-  const serviceInfoPrefix = React.useMemo(() => getServiceInfoPrefix(service), [JSON.stringify(service)]);
+  const serviceInfo = React.useMemo(() => getServiceInfo(service, worldlinePowered), [JSON.stringify(service), worldlinePowered]);
+  const serviceInfoPrefix = React.useMemo(() => getServiceInfoPrefix(service, worldlinePowered), [JSON.stringify(service), worldlinePowered]);
 
   console.log(callingPointPages);
   console.log(service);
@@ -198,6 +220,19 @@ function _TrainServiceAdditionalInfo({ service }: IProps) {
           slideDownText={serviceInfoPrefix}
         >
           {serviceInfo}
+          {worldlinePowered &&
+            callingPointPages.map((page, i) => (
+              <React.Fragment key={i}>
+                {' '}
+                <span>
+                  {page.scrollingPrefix}{' '}
+                  {page.callPoints.map((p, i) => (
+                    <CallingPoint key={i} text={p} worldlinePowered />
+                  ))}{' '}
+                  {page.scrollingSuffix}
+                </span>
+              </React.Fragment>
+            ))}
         </SlideyScrollText>
       </div>
 

@@ -9,6 +9,7 @@ import type { IMyTrainService } from '../../../api/ProcessServices';
 
 interface IProps {
   services: IMyTrainService[];
+  worldlinePowered: boolean;
 }
 
 const clipService = keyframes`
@@ -50,7 +51,7 @@ const spinnerText = keyframes`
   }
 `;
 
-export default function TrainServices({ services }: IProps) {
+export default function TrainServices({ services, worldlinePowered }: IProps) {
   const firstService: IMyTrainService | undefined = services[0];
   const secondService: IMyTrainService | undefined = services[1];
   const thirdService: IMyTrainService | undefined = services[2];
@@ -107,6 +108,7 @@ export default function TrainServices({ services }: IProps) {
               '--animation-delay': '150ms',
             },
           }}
+          worldlinePowered={worldlinePowered}
         />
         <span
           css={{
@@ -135,7 +137,9 @@ export default function TrainServices({ services }: IProps) {
 
   return (
     <>
-      {firstService && <TrainService ordinal="1st" service={firstService} tripleLineIfRequired showAdditionalDetails />}
+      {firstService && (
+        <TrainService ordinal="1st" service={firstService} tripleLineIfRequired showAdditionalDetails worldlinePowered={worldlinePowered} />
+      )}
 
       {!isSecondSplitting && (
         <>
@@ -147,11 +151,11 @@ export default function TrainServices({ services }: IProps) {
                 clipPath: `polygon(0 0, 100% 0, 100% calc(var(--row-height) - var(--background-row-y-offset)), 0 calc(var(--row-height) - var(--background-row-y-offset)))`,
               }}
             >
-              {secondService && <TrainService ordinal="2nd" service={secondService} />}
-              {thirdService && <TrainService ordinal="3rd" service={thirdService} />}
+              {secondService && <TrainService ordinal="2nd" service={secondService} worldlinePowered={worldlinePowered} />}
+              {thirdService && <TrainService ordinal="3rd" service={thirdService} worldlinePowered={worldlinePowered} />}
             </SwapBetween>
           ) : (
-            !isSecondSplitting && <>{secondService && <TrainService ordinal="2nd" service={secondService} />}</>
+            !isSecondSplitting && <>{secondService && <TrainService ordinal="2nd" service={secondService} worldlinePowered={worldlinePowered} />}</>
           )}
         </>
       )}

@@ -29,6 +29,7 @@ interface IProps {
   useLegacyTocNames?: boolean;
   showUnconfirmedPlatforms: boolean;
   hasCasing: boolean;
+  worldlinePowered: boolean;
 }
 
 const base = css`
@@ -83,7 +84,7 @@ const base = css`
   flex-direction: column;
 `;
 
-export default function FullBoard({ station, platforms, useLegacyTocNames, showUnconfirmedPlatforms, hasCasing }: IProps) {
+export default function FullBoard({ station, platforms, useLegacyTocNames, showUnconfirmedPlatforms, hasCasing, worldlinePowered }: IProps) {
   const [trainData] = useServiceInformation(station);
 
   const services = isValidResponseApi(trainData)
@@ -117,7 +118,7 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
 
   return (
     <article css={css}>
-      <TrainServices services={services} />
+      <TrainServices services={services} worldlinePowered={worldlinePowered} />
       <Clock />
     </article>
   );
