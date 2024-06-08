@@ -15,10 +15,10 @@ function getTimeNumerics(): string {
   return dayjs.tz().format('HH:mm:ss');
 }
 
-function getLastNumber(num: string): string {
+function getLastNumber(num: string, maxNum: number): string {
   const int = parseInt(num);
 
-  if (int === 0) return '9';
+  if (int === 0) return `${maxNum}`;
   else return (int - 1).toString();
 }
 
@@ -86,7 +86,7 @@ export default function Clock({}: IProps) {
           }}
         >
           {t !== ':' ? (
-            <ClockDigit digit={t} />
+            <ClockDigit digit={t} pos={i} />
           ) : (
             <span
               css={{ animation: hideThenShow, animationDuration: '250ms', animationTimingFunction: 'step-end', animationFillMode: 'none' }}
@@ -166,7 +166,14 @@ const squashIn = keyframes`
   }
 `;
 
-function ClockDigit({ digit }: { digit: string }) {
+function ClockDigit({ digit, pos }: { digit: string; pos: number }) {
+  let maxNum = 9;
+
+  // Hour digit 1
+  if (pos === 0) maxNum = 2;
+  // Min/Second digit 1
+  if (pos === 3 || pos === 6) maxNum = 5;
+
   return (
     <>
       <div
@@ -178,7 +185,7 @@ function ClockDigit({ digit }: { digit: string }) {
           },
         ]}
       >
-        {getLastNumber(digit)}
+        {getLastNumber(digit, maxNum)}
       </div>
       <div
         key={`${digit}-2`}
