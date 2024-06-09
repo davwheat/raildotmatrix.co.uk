@@ -127,7 +127,7 @@ class Service implements IMyTrainService {
   ): string {
     if (this.cancelled) return 'Cancelled';
     if (this.hasDeparted || this.hasArrived) {
-      if (this.origins.every((o) => this._boardStationName !== o.name)) {
+      if (!this.origins.some((o) => this._boardStationCrs === o.crs)) {
         return 'Arrived';
       } else {
         // This is the origin. We can't use etd if it's departed.
