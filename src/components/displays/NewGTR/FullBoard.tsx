@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 
-import GetNextTrainsAtStationStaff from '../../../api/GetNextTrainsAtStationStaff';
 import CallNreMessage from './CallNreMessage';
 import Clock from './Clock';
 import TrainServices from './TrainServices';

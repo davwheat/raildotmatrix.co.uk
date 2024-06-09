@@ -21,7 +21,23 @@ module.exports = {
   },
   plugins: [
     ...PROD_PLUGINS,
-
+    {
+      resolve: 'gatsby-plugin-react-svg',
+      options: {
+        rule: {
+          include: /\.inline\.svg$/,
+        },
+      },
+    },
+    {
+      resolve: `gatsby-plugin-emotion`,
+      options: {
+        sourceMap: true,
+        autoLabel: 'always',
+        labelFormat: `[local]`,
+        cssPropOptimization: true,
+      },
+    },
     'gatsby-plugin-webpack-bundle-analyser-v2',
     `gatsby-plugin-webpack-size`,
     `gatsby-plugin-react-head`,

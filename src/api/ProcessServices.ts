@@ -24,14 +24,14 @@ class CallPoint implements IPassengerCallPoint {
   length: number | null;
   associations: IAssociation[];
 
-  displayedArrivalTime(): string | null {
+  displayedArrivalTime(formatString: string = 'HH:mm'): string | null {
     if (this.isCancelled) return null;
 
     const time = this.estimatedArrival || this.scheduledArrival;
 
     if (!time) return null;
 
-    return dayjs.tz(time).format('HH:mm');
+    return dayjs.tz(time).format(formatString);
   }
 
   constructor({
@@ -65,8 +65,8 @@ class CallPoint implements IPassengerCallPoint {
 }
 
 class Service implements IMyTrainService {
-  destinations: { name: string; via: null | string }[];
-  origins: { name: string; via: null | string }[];
+  destinations: { name: string; via: null | string; crs: string }[];
+  origins: { name: string; via: null | string; crs: string }[];
   cancelled: boolean;
   scheduledDeparture: Date | null;
   estimatedDeparture: Date | null;
@@ -120,23 +120,27 @@ class Service implements IMyTrainService {
     return dayjs.tz(useActualDepTime ? this.actualDeparture : this.estimatedDeparture).diff(dayjs.tz(this.scheduledDeparture), 'minute') >= 1;
   }
 
-  displayedDepartureTime(timePrefix: string | undefined = undefined): string {
+  displayedDepartureTime(
+    timePrefix: string | undefined = undefined,
+    formatString: string = 'HH:mm',
+    onTimeText: string | undefined = 'On time'
+  ): string {
     if (this.cancelled) return 'Cancelled';
     if (this.hasDeparted || this.hasArrived) {
-      if (this.origins.every((o) => this._boardStationName !== o.name)) {
+      if (!this.origins.some((o) => this._boardStationCrs === o.crs)) {
         return 'Arrived';
       } else {
         // This is the origin. We can't use etd if it's departed.
         const depTime = this.actualDeparture || this.estimatedDeparture || this.scheduledDeparture!!;
 
-        if (!this.isDelayed(this.hasDeparted)) return 'On time';
-        return `${timePrefix ?? ''}${dayjs.tz(depTime).format('HH:mm')}`;
+        if (!this.isDelayed(this.hasDeparted)) return onTimeText ?? dayjs.tz(this.scheduledDeparture).format(formatString);
+        return `${timePrefix ?? ''}${dayjs.tz(depTime).format(formatString)}`;
       }
     }
     if (!this.estimatedDeparture) return 'Delayed';
-    if (!this.isDelayed()) return 'On time';
-    if (this.estimatedDeparture) return `${timePrefix ?? ''}${dayjs.tz(this.estimatedDeparture).format('HH:mm')}`;
-    return `${timePrefix ?? ''}${dayjs.tz(this.scheduledDeparture).format('HH:mm')}`;
+    if (!this.isDelayed()) return onTimeText ?? dayjs.tz(this.scheduledDeparture).format(formatString);
+    if (this.estimatedDeparture) return `${timePrefix ?? ''}${dayjs.tz(this.estimatedDeparture).format(formatString)}`;
+    return `${timePrefix ?? ''}${dayjs.tz(this.scheduledDeparture).format(formatString)}`;
   }
 
   constructor({
@@ -159,8 +163,8 @@ class Service implements IMyTrainService {
     boardStationCrs,
     id,
   }: {
-    destinations: { name: string; via: null | string }[];
-    origins: { name: string; via: null | string }[];
+    destinations: { name: string; via: null | string; crs: string }[];
+    origins: { name: string; via: null | string; crs: string }[];
     cancelled: boolean;
     scheduledDeparture: Date | null;
     estimatedDeparture: Date | null;
@@ -218,14 +222,14 @@ interface IPassengerCallPoint {
   estimatedArrival: Date | null;
   length: number | null;
   associations: IAssociation[];
-  displayedArrivalTime(): string | null;
+  displayedArrivalTime(formatString?: string): string | null;
 }
 
 export interface IMyTrainService {
   id: string;
 
-  destinations: { name: string; via: null | string }[];
-  origins: { name: string; via: null | string }[];
+  destinations: { name: string; via: null | string; crs: string }[];
+  origins: { name: string; via: null | string; crs: string }[];
   cancelled: boolean;
   scheduledDeparture: Date | null;
   estimatedDeparture: Date | null;
@@ -247,7 +251,7 @@ export interface IMyTrainService {
    * This **does not** account for cancelled services.
    */
   isDelayed(): boolean;
-  displayedDepartureTime(timePrefix?: string): string;
+  displayedDepartureTime(timePrefix?: string, formatString?: string, onTimeText?: string | null): string;
 }
 
 export function getLegacyTocName(tocCode: string) {
@@ -353,7 +357,15 @@ export function processServices(
 
       const stops = service.subsequentLocations
         // Non-passenger stops
-        .filter((l) => l.crs && (service.isCancelled ? true : !l.isCancelled) && !l.isOperational && !l.isPass)
+        .filter((s) => {
+          if (!s.crs) return false;
+          // Force the calling point if the train divides here
+          if (s.associations?.filter((a) => a.category === AssociationCategory.Divide).length) return true;
+          if ((s.isCancelled && !service.isCancelled) || s.isOperational || s.isPass) return false;
+          // Ignore pick-up only
+          // if (s.activities === 'U') return false;
+          return true;
+        })
         .map((location) => {
           const assoc = (location.associations || []).map((association) => {
             return {
@@ -389,8 +401,8 @@ export function processServices(
         });
 
       return new Service({
-        destinations: (service.currentDestinations || service.destination).map((d) => ({ name: d.locationName, via: d.via })),
-        origins: (service.currentOrigins || service.origin).map((o) => ({ name: o.locationName, via: o.via })),
+        destinations: (service.currentDestinations || service.destination).map((d) => ({ name: d.locationName, via: d.via, crs: d.crs })),
+        origins: (service.currentOrigins || service.origin).map((o) => ({ name: o.locationName, via: o.via, crs: o.crs })),
 
         cancelled: service.isCancelled,
 
@@ -443,8 +455,9 @@ function processAssociatedService(
     ).map((d) => ({
       name: d.locationName,
       via: 'via' in d ? d.via : null,
+      crs: d.crs,
     })),
-    origins: ogOrigins.map((o) => ({ name: o.locationName, via: o.via })),
+    origins: ogOrigins.map((o) => ({ name: o.locationName, via: o.via, crs: o.crs })),
 
     cancelled: association.isCancelled,
 

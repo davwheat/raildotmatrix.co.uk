@@ -72,6 +72,7 @@ export default function IndexPage({ location: { search } }: PageProps) {
               label="Display type"
               options={[
                 { value: 'infotec-landscape-dmi', label: 'Infotec landscape DMI' },
+                { value: 'daktronics-data-display-dmi', label: 'Daktronics (Data Display) DMI' },
                 { value: 'blackbox-landscape-lcd', label: 'Blackbox landscape LCD' },
               ]}
               placeholder="Choose a display"
