@@ -34,7 +34,7 @@
     "react-head": "^3.4.2",
     "react-select": "^5.8.0",
     "throttle-debounce": "^5.0.0",
-    "uk-railway-stations": "^1.5.2"
+    "uk-railway-stations": "^1.6.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240605.0",
