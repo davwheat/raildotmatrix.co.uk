@@ -239,7 +239,7 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
             <>
               {secondService ? (
                 <TrainService
-                  css={{
+                  style={{
                     animationName: slideUpFromCurrentRow,
                     animationDelay: '100ms',
                     animationDuration: '400ms',

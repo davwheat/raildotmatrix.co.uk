@@ -26,6 +26,7 @@ interface IProps {
   clipToFirstLine?: boolean;
   className?: string;
   worldlinePowered: boolean;
+  style?: React.CSSProperties;
 }
 
 function getDestinationAsStrings(destination: IMyTrainService['destinations'][number], index: number, count: number): string[] {
@@ -100,7 +101,16 @@ const destinationTextBlocker = css`
 `;
 
 function TrainService(
-  { ordinal, service, showAdditionalDetails = false, tripleLineIfRequired = false, clipToFirstLine = false, className, worldlinePowered }: IProps,
+  {
+    ordinal,
+    service,
+    showAdditionalDetails = false,
+    tripleLineIfRequired = false,
+    clipToFirstLine = false,
+    className,
+    style,
+    worldlinePowered,
+  }: IProps,
   ref: React.Ref<HTMLDivElement>
 ) {
   const [requiresTripleLine, setRequiresTripleLine] = React.useState(tripleLineIfRequired);
@@ -138,6 +148,7 @@ function TrainService(
         css={serviceBase}
         data-triple-line={requiresTripleLine}
         style={{
+          ...style,
           ...(!clipToFirstLine && !requiresTripleLine
             ? {}
             : {
