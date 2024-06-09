@@ -32,7 +32,7 @@ export default function SwapBetween({ interval, animate = true, children, classN
   const [shownChild, setShownChild] = useState(-1);
 
   useEffect(() => {
-    setShownChild(0);
+    setTimeout(() => setShownChild(0));
   }, []);
 
   useEffect(() => {
