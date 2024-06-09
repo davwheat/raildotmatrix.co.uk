@@ -159,6 +159,7 @@ function TrainService(
                   0 200%, 100% 200%, 100% calc(300% - var(--background-row-y-offset)), 0 calc(300% - var(--background-row-y-offset))
                 )`
                   : 'polygon(0 0, 100% 0, 100% var(--row-height), 0 var(--row-height))',
+                '--row-count': clipToFirstLine ? 1 : undefined,
               }),
         }}
       >

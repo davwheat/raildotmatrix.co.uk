@@ -80,7 +80,7 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
   const firstServiceRef = useRef<HTMLDivElement>(null);
 
   const [animateServiceOut, setAnimateServiceOut] = useState<IMyTrainService | null>(null);
-  const [animateServiceIn, setAnimateServiceIn] = useState<boolean>(false);
+  const [animateServiceIn, setAnimateServiceIn] = useState<boolean>(true);
 
   if (firstService?.id !== firstServiceLastRender.current?.id) {
     console.log('first service changed -- animating last service out');
