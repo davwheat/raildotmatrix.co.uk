@@ -96,7 +96,7 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
   const css = [
     base,
     hasCasing && {
-      'mask-image': `url(${boardFill})`,
+      'maskImage': `url(${boardFill})`,
 
       '--board-width': `${BOARD_WIDTH + 2 * (X_PAD_CASING - X_PAD)}px`,
       '--board-height': `${BOARD_HEIGHT + Y_PAD_TOP_CASING + Y_PAD_BOTTOM_CASING - Y_PAD_TOP - Y_PAD_BOTTOM}px`,
