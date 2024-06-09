@@ -44,7 +44,7 @@ export function useServiceInformation(
         return;
       }
 
-      if ((e.data.source as string).startsWith('react-devtools-')) {
+      if ((e.data.source as string | undefined)?.startsWith('react-devtools-')) {
         return;
       }
 
