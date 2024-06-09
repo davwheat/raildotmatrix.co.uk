@@ -72,7 +72,8 @@ const serviceBase = css`
   }
 
   &[data-triple-line='true'] ~ :has(&),
-  &[data-triple-line='true'] ~ & {
+  &[data-triple-line='true'] ~ &,
+  &[data-triple-line='true'] ~ #space-filler {
     display: none;
   }
 `;

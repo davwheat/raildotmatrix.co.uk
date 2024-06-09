@@ -252,14 +252,14 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
                 />
               ) : (
                 // Spacer row
-                <div css={{ height: 'var(--row-height)' }} />
+                <div id="space-filler" css={{ height: 'var(--row-height)' }} />
               )}
             </>
           )}
         </>
       ) : (
         // Spacer row
-        <div css={{ height: 'var(--row-height)' }} />
+        <div id="space-filler" css={{ height: 'var(--row-height)' }} />
       )}
     </>
   );
