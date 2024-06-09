@@ -257,6 +257,7 @@ function _TrainServiceAdditionalInfo({ service, worldlinePowered }: IProps) {
               onComplete={() => {
                 console.log('next from call p', i + 1);
                 nextPage();
+                return true;
               }}
             />
           )}

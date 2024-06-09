@@ -151,6 +151,7 @@ function SlideyScrollText({
         console.log('[SCROLL] Pause left complete');
 
         if (onComplete?.() ?? false) {
+          console.log('[SCROLL] onComplete returned true - Finished');
           return;
         } else {
           currentTimeout = window.setTimeout(startScrollOrSlideDown, (pauseWhenDone || 0) + DEBUG_DELAY);
@@ -166,9 +167,6 @@ function SlideyScrollText({
 
             inner!.style.setProperty('--transition-time', '0.001ms');
             inner!.style.setProperty('--trans-x', `${outerWidth}px`);
-
-            setUpSlideDown();
-            currentTimeout = window.setTimeout(startScrollOrSlideDown, (pauseAtEnds || 0) + DEBUG_DELAY);
           },
           (pauseAtEnds || 0) + DEBUG_DELAY
         );
