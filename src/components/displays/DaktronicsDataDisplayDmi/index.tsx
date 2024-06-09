@@ -15,19 +15,15 @@ interface IProps {
 }
 
 const BoardStyles = {
-  Southern: {
+  Yellow: {
     '--calling-points-text-transform': 'none',
     '--casing-color': '#db9426',
   },
-  Southeastern: {
-    '--calling-points-text-transform': 'none',
-    '--casing-color': '#db9426',
-  },
-  'Southeastern (Blue)': {
+  Blue: {
     '--calling-points-text-transform': 'none',
     '--casing-color': '#11185a',
   },
-  'ATW/TfW (Green-Blue)': {
+  'Green/Blue': {
     '--calling-points-text-transform': 'none',
     '--casing-color': '#1b4b47',
   },
