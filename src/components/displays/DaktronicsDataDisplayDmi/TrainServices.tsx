@@ -237,7 +237,7 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
             </SwapBetween>
           ) : (
             <>
-              {secondService && (
+              {secondService ? (
                 <TrainService
                   css={{
                     animationName: slideUpFromCurrentRow,
@@ -250,6 +250,9 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
                   service={secondService}
                   worldlinePowered={worldlinePowered}
                 />
+              ) : (
+                // Spacer row
+                <div css={{ height: 'var(--row-height)' }} />
               )}
             </>
           )}
