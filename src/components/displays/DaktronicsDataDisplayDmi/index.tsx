@@ -43,7 +43,7 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
   }
 
   const [customBoardSettings, setCustomBoardSettings] = useStateWithLocalStorage<IBoardSettings>('dataDisplayBoardSettings', {
-    boardStyle: 'Southern',
+    boardStyle: 'Yellow',
     showCasing: true,
     worldlinePowered: false,
     withBackground: false,
