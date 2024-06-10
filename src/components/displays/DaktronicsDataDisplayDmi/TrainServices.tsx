@@ -64,10 +64,12 @@ const slideUpFromBottom = keyframes`
 const slideUpFromCurrentRow = keyframes`
   0% {
     transform: translateY(var(--row-height));
+    clip-path: polygon(0 calc(-1 * var(--row-height)), 100% calc(-1 * var(--row-height)), 100% calc(0px - var(--background-row-y-offset)), 0 calc(0px - var(--background-row-y-offset)));
   }
 
   100% {
     transform: translateY(0);
+    clip-path: polygon(0 0, 100% 0, 100% calc(var(--row-height) - var(--background-row-y-offset)), 0 calc(var(--row-height) - var(--background-row-y-offset)));
   }
 `;
 
@@ -212,9 +214,9 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
   const isSecondSplitting = secondService?.destinations.length > 1;
   const isThirdSplitting = thirdService?.destinations.length > 1;
 
-  console.log(firstService);
-  console.log(secondService);
-  console.log(thirdService);
+  console.log('1', firstService);
+  console.log('2', secondService);
+  console.log('3', thirdService);
 
   return (
     <>
@@ -238,18 +240,16 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
           ) : (
             <>
               {secondService ? (
-                <TrainService
-                  style={{
+                <div
+                  css={{
                     animationName: slideUpFromCurrentRow,
-                    animationDelay: '100ms',
                     animationDuration: '400ms',
                     animationFillMode: 'forwards',
                     animationTimingFunction: 'linear',
                   }}
-                  ordinal="2nd"
-                  service={secondService}
-                  worldlinePowered={worldlinePowered}
-                />
+                >
+                  <TrainService ordinal="2nd" service={secondService} worldlinePowered={worldlinePowered} />
+                </div>
               ) : (
                 // Spacer row
                 <div id="space-filler" css={{ height: 'var(--row-height)' }} />
