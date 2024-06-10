@@ -231,6 +231,10 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
               interval={12_000}
               alwaysSlideUp
               css={{
+                animationName: slideUpFromCurrentRow,
+                animationDuration: '400ms',
+                animationFillMode: 'forwards',
+                animationTimingFunction: 'linear',
                 clipPath: `polygon(0 0, 100% 0, 100% calc(var(--row-height) - var(--background-row-y-offset)), 0 calc(var(--row-height) - var(--background-row-y-offset)))`,
               }}
             >
