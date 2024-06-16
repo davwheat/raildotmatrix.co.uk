@@ -401,8 +401,16 @@ export function processServices(
         });
 
       return new Service({
-        destinations: (service.currentDestinations || service.destination).map((d) => ({ name: d.locationName, via: d.via, crs: d.crs })),
-        origins: (service.currentOrigins || service.origin).map((o) => ({ name: o.locationName, via: o.via, crs: o.crs })),
+        destinations: (service.isCancelled ? service.destination : service.currentDestinations || service.destination).map((d) => ({
+          name: d.locationName,
+          via: d.via,
+          crs: d.crs,
+        })),
+        origins: (service.isCancelled ? service.origin : service.currentOrigins || service.origin).map((o) => ({
+          name: o.locationName,
+          via: o.via,
+          crs: o.crs,
+        })),
 
         cancelled: service.isCancelled,
 
