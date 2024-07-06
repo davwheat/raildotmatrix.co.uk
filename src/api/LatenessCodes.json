@@ -500,9 +500,5 @@
   "918": "This train has been delayed by a short-notice change to the timetable",
   "919": "This train has been delayed by misuse of a level crossing",
   "920": "This train has been delayed by a member of train crew being unavailable",
-  "731": "This train has been delayed by a fault with the radio system between the driver and the signaller earlier on this train's journey",
-  "732": "This train has been delayed by a fault with the radio system between the driver and the signaller earlier today",
-  "735": "This train has been delayed by signalling staff being taken ill earlier on this train's journey",
-  "736": "This train has been delayed by signalling staff being taken ill earlier today",
-  "833": "This train has been delayed by signalling staff being taken ill"
+  "921": "This train has been delayed by a member of train crew being unavailable earlier"
 }
