@@ -46,7 +46,7 @@ interface InfoPage {
   callPoints: string[];
 }
 
-export default function TrainServiceAdditionalInfo({ service }: IProps) {
+function _TrainServiceAdditionalInfo({ service }: IProps) {
   const associatedServices = React.useMemo(
     () =>
       service.passengerCallPoints
@@ -174,6 +174,14 @@ function _CallingPoints({ pointsText, onComplete }: { pointsText: string[]; onCo
     </SlideyScrollText>
   );
 }
+
+const TrainServiceAdditionalInfo = React.memo(_TrainServiceAdditionalInfo, (prev, next) => {
+  console.log('train service additional info changed, but not rerendering');
+
+  return true;
+});
+
+export default TrainServiceAdditionalInfo;
 
 const CallingPoints = React.memo(_CallingPoints, (prev, next) => {
   console.log('calling points props changed, but not rerendering');
