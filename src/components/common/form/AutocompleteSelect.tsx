@@ -1,19 +1,19 @@
-import React from 'react';
+import React from 'react'
 
-import Select, { SingleValue, createFilter } from 'react-select';
+import Select, { SingleValue, createFilter } from 'react-select'
 
 interface Option {
-  label: string;
-  value: string;
+  label: string
+  value: string
 }
 
 interface IProps {
-  label: React.ReactNode;
-  helpText?: React.ReactNode;
-  placeholder?: string;
-  autocompleteOptions: Option[];
-  onChange?: (value: SingleValue<string>) => void;
-  value?: string;
+  label: React.ReactNode
+  helpText?: React.ReactNode
+  placeholder?: string
+  autocompleteOptions: Option[]
+  onChange?: (value: SingleValue<string>) => void
+  value?: string
 }
 
 export default function AutocompleteSelect({ label, helpText, placeholder, autocompleteOptions, onChange, ...props }: IProps) {
@@ -30,7 +30,7 @@ export default function AutocompleteSelect({ label, helpText, placeholder, autoc
           MenuList,
         }}
         menuPortalTarget={typeof window !== 'undefined' ? document.querySelector('body') : undefined}
-        theme={(theme) => ({
+        theme={theme => ({
           ...theme,
           colors: {
             ...theme.colors,
@@ -47,18 +47,18 @@ export default function AutocompleteSelect({ label, helpText, placeholder, autoc
       />
       {helpText && <p className="form-textbox--help-text">{helpText}</p>}
     </label>
-  );
+  )
 }
 
 interface IMenuListProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 function MenuList(props: IMenuListProps) {
-  const children = props.children;
+  const children = props.children
 
   if (!Array.isArray(children) || children.length === 0) {
-    return <div className="form-textbox--autocomplete-dropdown">{children}</div>;
+    return <div className="form-textbox--autocomplete-dropdown">{children}</div>
   }
 
   return (
@@ -68,8 +68,8 @@ function MenuList(props: IMenuListProps) {
           <div className="form-textbox--autocomplete-dropdown-item" key={i}>
             {key}
           </div>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

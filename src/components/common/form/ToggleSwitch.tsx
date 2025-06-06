@@ -1,12 +1,12 @@
-import React from 'react';
+import React from 'react'
 
-import './css/ToggleSwitch.less';
+import './css/ToggleSwitch.less'
 
 interface IProps {
-  label: string;
-  onChange: React.ChangeEventHandler<HTMLInputElement>;
-  checked: boolean;
-  defaultChecked?: boolean;
+  label: string
+  onChange: React.ChangeEventHandler<HTMLInputElement>
+  checked: boolean
+  defaultChecked?: boolean
 }
 
 const ToggleSwitch = React.forwardRef<HTMLInputElement, IProps>(({ label, onChange, checked, defaultChecked }: IProps, ref) => {
@@ -20,7 +20,7 @@ const ToggleSwitch = React.forwardRef<HTMLInputElement, IProps>(({ label, onChan
         </div>
       </label>
     </div>
-  );
-});
+  )
+})
 
-export default ToggleSwitch;
+export default ToggleSwitch

@@ -1,16 +1,16 @@
-import React from 'react';
-import { getCallingPoints } from './CallingPoints';
+import React from 'react'
+import { getCallingPoints } from './CallingPoints'
 
-import '../css/stoppingDiagram.less';
+import '../css/stoppingDiagram.less'
 
 export default function StoppingDiagramBigScreen() {
-  const callingPoints = getCallingPoints('names');
+  const callingPoints = getCallingPoints('names')
 
-  const truncCallingPoints = callingPoints.slice(0, 3);
+  const truncCallingPoints = callingPoints.slice(0, 3)
 
-  if (callingPoints.length >= 4) truncCallingPoints.push(callingPoints[callingPoints.length - 1]);
+  if (callingPoints.length >= 4) truncCallingPoints.push(callingPoints[callingPoints.length - 1])
 
-  const isTruncated = callingPoints.length > 4;
+  const isTruncated = callingPoints.length > 4
 
   // TODO: Add Class 700 clipart above first line
 
@@ -29,8 +29,8 @@ export default function StoppingDiagramBigScreen() {
               {i === 0 && <span className="text t900">NEXT</span>}
             </div>
           </>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

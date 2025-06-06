@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 
-import dayjs from 'dayjs';
+import dayjs from 'dayjs'
 
-import dayjsUtc from 'dayjs/plugin/utc';
-import dayjsTz from 'dayjs/plugin/timezone';
+import dayjsUtc from 'dayjs/plugin/utc'
+import dayjsTz from 'dayjs/plugin/timezone'
 
-dayjs.extend(dayjsUtc);
-dayjs.extend(dayjsTz);
+dayjs.extend(dayjsUtc)
+dayjs.extend(dayjsTz)
 
-dayjs.tz.setDefault('Europe/London');
+dayjs.tz.setDefault('Europe/London')
 
-import './SmallClock.less';
-import useInterval from '../../../../hooks/useInterval';
+import './SmallClock.less'
+import useInterval from '../../../../hooks/useInterval'
 
 export default function SmallClock() {
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [currentTime, setCurrentTime] = useState<Date>(new Date())
 
   useInterval(() => {
-    setCurrentTime(new Date());
-  }, 1000);
+    setCurrentTime(new Date())
+  }, 1000)
 
   return (
     <div className="clock">
@@ -29,5 +29,5 @@ export default function SmallClock() {
         <span className="text t900">{dayjs.tz(currentTime).format('D/M/YYYY')}</span>
       </div>
     </div>
-  );
+  )
 }

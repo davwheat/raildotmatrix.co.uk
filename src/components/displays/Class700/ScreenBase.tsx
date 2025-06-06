@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import CallingPointsBigScreen, { getCallingPoints } from './BigScreen/CallingPoints';
-import CoachInfoBigScreen from './BigScreen/CoachInfo';
-import DestinationBigScreen, { getDestination } from './BigScreen/Destination';
-import NextStopBigScreen from './BigScreen/NextStop';
-import StoppingDiagramBigScreen from './BigScreen/StoppingDiagram';
-import { getUrlParam } from './getUrlParam';
-import CallingPointsSmallScreen from './SmallScreen/CallingPoints';
-import DestinationSmallScreen from './SmallScreen/Destination';
-import NextStopSmallScreen from './SmallScreen/NextStop';
-import StoppingDiagramSmallScreen from './SmallScreen/StoppingDiagram';
+import React, { useEffect, useState } from 'react'
+import CallingPointsBigScreen, { getCallingPoints } from './BigScreen/CallingPoints'
+import CoachInfoBigScreen from './BigScreen/CoachInfo'
+import DestinationBigScreen, { getDestination } from './BigScreen/Destination'
+import NextStopBigScreen from './BigScreen/NextStop'
+import StoppingDiagramBigScreen from './BigScreen/StoppingDiagram'
+import { getUrlParam } from './getUrlParam'
+import CallingPointsSmallScreen from './SmallScreen/CallingPoints'
+import DestinationSmallScreen from './SmallScreen/Destination'
+import NextStopSmallScreen from './SmallScreen/NextStop'
+import StoppingDiagramSmallScreen from './SmallScreen/StoppingDiagram'
 
 export const ValidScreenStages = [
   'destination',
@@ -22,7 +22,7 @@ export const ValidScreenStages = [
   'stopping diagram',
   'no route',
   'short platform',
-] as const;
+] as const
 
 export const ScreenStagesCycle: (typeof ValidScreenStages)[number][] = [
   'destination',
@@ -34,63 +34,63 @@ export const ScreenStagesCycle: (typeof ValidScreenStages)[number][] = [
   // 'tfl status',
   // 'cctv',
   'stopping diagram',
-];
+]
 
 export function validateScreenStage(stage: string): boolean {
-  return (ValidScreenStages as Readonly<string[]>).includes(stage);
+  return (ValidScreenStages as Readonly<string[]>).includes(stage)
 }
 
 function getNextScreen(screen: (typeof ValidScreenStages)[number]): (typeof ValidScreenStages)[number] {
-  const nextIndex = (ScreenStagesCycle.indexOf(screen) + 1) % ScreenStagesCycle.length;
-  return ScreenStagesCycle[nextIndex];
+  const nextIndex = (ScreenStagesCycle.indexOf(screen) + 1) % ScreenStagesCycle.length
+  return ScreenStagesCycle[nextIndex]
 }
 
 function isNextStopDestination(): boolean {
-  const destination = getDestination('crs');
-  const callingPoints = getCallingPoints('crs');
+  const destination = getDestination('crs')
+  const callingPoints = getCallingPoints('crs')
 
   if (callingPoints.length === 1 && destination === callingPoints[0]) {
     // Next station is last stop.
     // In this case, we don't show the "Destination" screen.
-    return true;
+    return true
   }
 
-  return false;
+  return false
 }
 
 export default function ScreenBase({}) {
   const [screenStage, setScreenStage] = useState<(typeof ValidScreenStages)[number]>(
-    getUrlParam('screenStage') ?? (isNextStopDestination() ? 'next stop' : 'destination')
-  );
-  const shouldScrollStages = getUrlParam('scrollStages') === 'true';
+    getUrlParam('screenStage') ?? (isNextStopDestination() ? 'next stop' : 'destination'),
+  )
+  const shouldScrollStages = getUrlParam('scrollStages') === 'true'
 
   function scrollToNextScreen() {
-    let nextStage = getNextScreen(screenStage);
+    let nextStage = getNextScreen(screenStage)
 
     if (isNextStopDestination()) {
       while (nextStage === 'destination' || nextStage === 'calling points') {
-        nextStage = getNextScreen(nextStage);
+        nextStage = getNextScreen(nextStage)
       }
     }
 
-    setScreenStage(nextStage);
+    setScreenStage(nextStage)
   }
 
   // TODO: use callback to switch after scroll complete for calling points
   useEffect(() => {
-    let to: number | null = null;
+    let to: number | null = null
     if (shouldScrollStages) {
-      to = window.setTimeout(scrollToNextScreen, screenStage === 'calling points' ? 45 * 1000 : 10 * 1000);
+      to = window.setTimeout(scrollToNextScreen, screenStage === 'calling points' ? 45 * 1000 : 10 * 1000)
     }
 
     return () => {
-      to !== null && clearTimeout(to);
-    };
-  }, [scrollToNextScreen, shouldScrollStages, screenStage, setScreenStage]);
+      to !== null && clearTimeout(to)
+    }
+  }, [scrollToNextScreen, shouldScrollStages, screenStage, setScreenStage])
 
-  console.log(screenStage);
+  console.log(screenStage)
 
-  const { big: BigScreen, small: SmallScreen } = getScreens(screenStage);
+  const { big: BigScreen, small: SmallScreen } = getScreens(screenStage)
 
   return (
     <div className="class700">
@@ -112,7 +112,7 @@ export default function ScreenBase({}) {
         <BigScreen />
       </div>
     </div>
-  );
+  )
 }
 
 function getScreens(screenStage: (typeof ValidScreenStages)[number]): { small: () => JSX.Element | null; big: () => JSX.Element | null } {
@@ -121,36 +121,36 @@ function getScreens(screenStage: (typeof ValidScreenStages)[number]): { small: (
       return {
         small: DestinationSmallScreen,
         big: DestinationBigScreen,
-      };
+      }
 
     case 'next stop':
       return {
         small: NextStopSmallScreen,
         big: NextStopBigScreen,
-      };
+      }
 
     case 'calling points':
       return {
         small: CallingPointsSmallScreen,
         big: CallingPointsBigScreen,
-      };
+      }
 
     case 'coach info':
       return {
         small: () => null,
         big: CoachInfoBigScreen,
-      };
+      }
 
     case 'stopping diagram':
       return {
         small: StoppingDiagramSmallScreen,
         big: StoppingDiagramBigScreen,
-      };
+      }
 
     default:
       return {
         small: () => null,
         big: () => null,
-      };
+      }
   }
 }

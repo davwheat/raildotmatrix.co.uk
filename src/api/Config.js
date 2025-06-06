@@ -3,4 +3,4 @@
 export default {
   // apiKey: ApiKey,
   endpoint: `https://national-rail-api.davwheat.dev`,
-};
+}

@@ -1,5 +1,5 @@
-import React from 'react';
-import SmallClock from '../reusable/SmallClock';
+import React from 'react'
+import SmallClock from '../reusable/SmallClock'
 
 export default function DestinationSmallScreen() {
   return (
@@ -9,5 +9,5 @@ export default function DestinationSmallScreen() {
 
       <SmallClock />
     </div>
-  );
+  )
 }

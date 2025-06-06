@@ -1,17 +1,17 @@
-import React from 'react';
+import React from 'react'
 
-import './css/Select.less';
+import './css/Select.less'
 
 interface IProps {
-  label: string;
-  helpText?: string;
-  placeholder?: string;
+  label: string
+  helpText?: string
+  placeholder?: string
   options: {
-    label: string;
-    value: string;
-  }[];
-  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
-  value: string;
+    label: string
+    value: string
+  }[]
+  onChange?: React.ChangeEventHandler<HTMLSelectElement>
+  value: string
 }
 
 export default function Select({ label, helpText, placeholder, options, onChange, ...props }: IProps) {
@@ -24,7 +24,7 @@ export default function Select({ label, helpText, placeholder, options, onChange
             {placeholder}
           </option>
         )}
-        {options.map((o) => (
+        {options.map(o => (
           <option key={o.value} value={o.value}>
             {o.label}
           </option>
@@ -33,5 +33,5 @@ export default function Select({ label, helpText, placeholder, options, onChange
 
       {helpText && <p className="form-select--help-text">{helpText}</p>}
     </label>
-  );
+  )
 }

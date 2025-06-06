@@ -1,7 +1,7 @@
-import React from 'react';
+import React from 'react'
 
-import { useStaticQuery, graphql } from 'gatsby';
-import { Meta, Title } from 'react-head';
+import { useStaticQuery, graphql } from 'gatsby'
+import { Meta, Title } from 'react-head'
 
 function Seo({ title }: { title: string }) {
   const { site } = useStaticQuery(graphql`
@@ -14,9 +14,9 @@ function Seo({ title }: { title: string }) {
         }
       }
     }
-  `);
+  `)
 
-  const metaDescription = site.siteMetadata.description;
+  const metaDescription = site.siteMetadata.description
 
   return (
     <>
@@ -25,7 +25,7 @@ function Seo({ title }: { title: string }) {
       {/* @ts-expect-error */}
       <Meta name="description" content={metaDescription} />
     </>
-  );
+  )
 }
 
-export default Seo;
+export default Seo

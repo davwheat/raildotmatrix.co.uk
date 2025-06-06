@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 
 export default function NoServicesMessage() {
   return (
@@ -7,5 +7,5 @@ export default function NoServicesMessage() {
       <div css={{ justifyContent: 'center', height: 'var(--row-height)', textAlign: 'center' }}>CUSTOMER INFORMATION SYSTEM</div>
       <div css={{ height: 'var(--row-height)' }} />
     </>
-  );
+  )
 }

@@ -1,42 +1,42 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'
 
-import Layout from '../components/Layout';
-import Seo from '../components/Seo';
-import TypewriterText from '../components/common/TypewriterText';
-import PageLink from '../components/common/PageLink';
+import Layout from '../components/Layout'
+import Seo from '../components/Seo'
+import TypewriterText from '../components/common/TypewriterText'
+import PageLink from '../components/common/PageLink'
 
-import Form, { AutocompleteSelect, Select } from '../components/common/form';
+import Form, { AutocompleteSelect, Select } from '../components/common/form'
 
-import Attribution from '../components/common/Attribution';
+import Attribution from '../components/common/Attribution'
 
-import type { PageProps } from 'gatsby';
+import type { PageProps } from 'gatsby'
 
 export default function IndexPage({ location: { search } }: PageProps) {
-  const [autocomplete, setAutocomplete] = useState([{ label: 'Loading stations...', value: 'VIC' }]);
+  const [autocomplete, setAutocomplete] = useState([{ label: 'Loading stations...', value: 'VIC' }])
 
-  const searchParams = new URLSearchParams(search);
-  const stn = searchParams.get('station');
-  const type = searchParams.get('type');
+  const searchParams = new URLSearchParams(search)
+  const stn = searchParams.get('station')
+  const type = searchParams.get('type')
 
   const [BoardSettings, setBoardSettings] = useState({
     station: stn || '',
     type: type || 'infotec-landscape-dmi',
-  });
+  })
 
   function ChooseStation(stn: { label: string; value: string }) {
-    console.log(stn);
+    console.log(stn)
 
     setBoardSettings({
       type: BoardSettings.type,
       station: stn.value,
-    });
+    })
   }
 
   function ChooseDisplay(display: { label: string; value: string }) {
     setBoardSettings({
       type: display.target.value,
       station: BoardSettings.station,
-    });
+    })
   }
 
   // Fetch live autocomplete data from API
@@ -44,14 +44,14 @@ export default function IndexPage({ location: { search } }: PageProps) {
     if (autocomplete[0].label === 'Loading stations...') {
       import('uk-railway-stations').then(({ default: data }) => {
         setAutocomplete(
-          data.map((data) => ({
+          data.map(data => ({
             label: `${data.stationName} (${data.crsCode})`,
             value: data.crsCode,
-          }))
-        );
-      });
+          })),
+        )
+      })
     }
-  }, [autocomplete, setAutocomplete]);
+  }, [autocomplete, setAutocomplete])
 
   return (
     <Layout>
@@ -91,5 +91,5 @@ export default function IndexPage({ location: { search } }: PageProps) {
 
       <Attribution />
     </Layout>
-  );
+  )
 }

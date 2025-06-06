@@ -1,9 +1,9 @@
-import React from 'react';
+import React from 'react'
 
-import NRE from '../../images/NRE_Powered_logo.png';
+import NRE from '../../images/NRE_Powered_logo.png'
 
-import './css/attribution.less';
-import PageLink from './PageLink';
+import './css/attribution.less'
+import PageLink from './PageLink'
 
 export default function Attribution() {
   return (
@@ -20,5 +20,5 @@ export default function Attribution() {
       </footer>
       <p className="attribution--required-minimum">Powered by National Rail Enquiries</p>
     </>
-  );
+  )
 }

@@ -1,12 +1,12 @@
-import React from 'react';
-import { getUrlParam } from '../getUrlParam';
+import React from 'react'
+import { getUrlParam } from '../getUrlParam'
 
-import EndCoach from '../assets/endcoach.inline.svg';
-import Coach from '../assets/coach.inline.svg';
+import EndCoach from '../assets/endcoach.inline.svg'
+import Coach from '../assets/coach.inline.svg'
 
 export default function CoachInfoBigScreen() {
-  let coach = getUrlParam('coach') ?? 1;
-  let coaches = getUrlParam('coaches') ?? 12;
+  let coach = getUrlParam('coach') ?? 1
+  let coaches = getUrlParam('coaches') ?? 12
 
   return (
     <div className="coachInfo splitLines splitLines--offset">
@@ -24,7 +24,7 @@ export default function CoachInfoBigScreen() {
             ◀ FRONT
           </span>
 
-          {Array.from({ length: coaches }, (_, i) => i + 1).map((coachNum) => {
+          {Array.from({ length: coaches }, (_, i) => i + 1).map(coachNum => {
             if (coachNum === 1) {
               return (
                 <EndCoach
@@ -34,7 +34,7 @@ export default function CoachInfoBigScreen() {
                   height={25}
                   data-active={coachNum.toString() === coach}
                 />
-              );
+              )
             } else {
               return (
                 <Coach
@@ -44,7 +44,7 @@ export default function CoachInfoBigScreen() {
                   height={25}
                   data-active={coachNum.toString() === coach}
                 />
-              );
+              )
             }
           })}
 
@@ -69,5 +69,5 @@ export default function CoachInfoBigScreen() {
         </div>
       </div>
     </div>
-  );
+  )
 }

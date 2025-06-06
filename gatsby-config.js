@@ -8,7 +8,7 @@ const PROD_PLUGINS =
           },
         },
       ]
-    : [];
+    : []
 
 module.exports = {
   siteMetadata: {
@@ -69,4 +69,4 @@ module.exports = {
       },
     },
   ],
-};
+}

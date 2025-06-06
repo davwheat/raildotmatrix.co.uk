@@ -1,30 +1,30 @@
-import React from 'react';
+import React from 'react'
 
-import CallNreMessage from './CallNreMessage';
-import Clock from './Clock';
-import TrainServices from './TrainServices';
+import CallNreMessage from './CallNreMessage'
+import Clock from './Clock'
+import TrainServices from './TrainServices'
 
-import './css/board.less';
+import './css/board.less'
 
-import { processServices } from '../../../api/ProcessServices';
-import { isValidResponseApi, useServiceInformation } from '../../../hooks/useServiceInformation';
+import { processServices } from '../../../api/ProcessServices'
+import { isValidResponseApi, useServiceInformation } from '../../../hooks/useServiceInformation'
 
 interface IProps {
-  platforms?: string[];
-  station: string;
-  animateClockDigits?: boolean;
-  useLegacyTocNames?: boolean;
-  showUnconfirmedPlatforms: boolean;
+  platforms?: string[]
+  station: string
+  animateClockDigits?: boolean
+  useLegacyTocNames?: boolean
+  showUnconfirmedPlatforms: boolean
 }
 
 export default function FullBoard({ station, animateClockDigits, platforms, useLegacyTocNames, showUnconfirmedPlatforms }: IProps) {
-  const [trainData] = useServiceInformation(station);
+  const [trainData] = useServiceInformation(station)
 
   const services = isValidResponseApi(trainData)
     ? processServices(trainData.trainServices!!, platforms ?? null, !!useLegacyTocNames, station, showUnconfirmedPlatforms).filter(
-        (s) => !s.hasDeparted
+        s => !s.hasDeparted,
       )
-    : null;
+    : null
 
   if (!services || services.length === 0) {
     return (
@@ -32,7 +32,7 @@ export default function FullBoard({ station, animateClockDigits, platforms, useL
         <CallNreMessage />
         <Clock animateDigits={animateClockDigits} />
       </article>
-    );
+    )
   }
 
   return (
@@ -40,5 +40,5 @@ export default function FullBoard({ station, animateClockDigits, platforms, useL
       <TrainServices services={services} />
       <Clock animateDigits={animateClockDigits} />
     </article>
-  );
+  )
 }

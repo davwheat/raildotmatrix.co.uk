@@ -1,52 +1,52 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react'
 
-import TrainService from './TrainService';
+import TrainService from './TrainService'
 
-import SwapBetween from './SwapBetween';
-import Separator from './Separator';
+import SwapBetween from './SwapBetween'
+import Separator from './Separator'
 
-import type { IMyTrainService } from '../../../api/ProcessServices';
+import type { IMyTrainService } from '../../../api/ProcessServices'
 
 interface IProps {
-  services: IMyTrainService[];
+  services: IMyTrainService[]
 }
 
 export default function TrainServices({ services }: IProps) {
-  const firstService: IMyTrainService | undefined = services[0];
-  const secondService: IMyTrainService | undefined = services[1];
-  const thirdService: IMyTrainService | undefined = services[2];
+  const firstService: IMyTrainService | undefined = services[0]
+  const secondService: IMyTrainService | undefined = services[1]
+  const thirdService: IMyTrainService | undefined = services[2]
 
-  const firstServiceLastRender = useRef<IMyTrainService | undefined>(firstService);
-  const firstServiceRef = useRef<HTMLDivElement>(null);
+  const firstServiceLastRender = useRef<IMyTrainService | undefined>(firstService)
+  const firstServiceRef = useRef<HTMLDivElement>(null)
 
-  const [animateServiceOut, setAnimateServiceOut] = useState<IMyTrainService | null>(null);
+  const [animateServiceOut, setAnimateServiceOut] = useState<IMyTrainService | null>(null)
 
   if (firstService?.id !== firstServiceLastRender.current?.id) {
-    console.log('first service changed -- animating last service out');
+    console.log('first service changed -- animating last service out')
 
-    firstServiceLastRender.current && setAnimateServiceOut(firstServiceLastRender.current);
-    firstServiceLastRender.current = firstService;
+    firstServiceLastRender.current && setAnimateServiceOut(firstServiceLastRender.current)
+    firstServiceLastRender.current = firstService
   }
 
   useEffect(() => {
     if (animateServiceOut) {
       const animEnd = () => {
-        console.log('slide out animation end');
-        setAnimateServiceOut(null);
-      };
+        console.log('slide out animation end')
+        setAnimateServiceOut(null)
+      }
 
-      firstServiceRef.current?.addEventListener('animationend', animEnd);
+      firstServiceRef.current?.addEventListener('animationend', animEnd)
 
       return () => {
-        console.log('cleanup');
+        console.log('cleanup')
 
-        firstServiceRef.current?.removeEventListener('animationend', animEnd);
-      };
+        firstServiceRef.current?.removeEventListener('animationend', animEnd)
+      }
     }
-  }, [firstService, firstServiceLastRender, animateServiceOut, setAnimateServiceOut]);
+  }, [firstService, firstServiceLastRender, animateServiceOut, setAnimateServiceOut])
 
   if (animateServiceOut) {
-    console.log('rendering animating service out');
+    console.log('rendering animating service out')
 
     return (
       <>
@@ -54,10 +54,10 @@ export default function TrainServices({ services }: IProps) {
         <div className="trainServiceAdditional" />
         <Separator />
       </>
-    );
+    )
   }
 
-  console.log('services rerendered!');
+  console.log('services rerendered!')
 
   return (
     <>
@@ -74,5 +74,5 @@ export default function TrainServices({ services }: IProps) {
         <>{secondService && <TrainService ordinal="2nd" service={secondService} />}</>
       )}
     </>
-  );
+  )
 }
