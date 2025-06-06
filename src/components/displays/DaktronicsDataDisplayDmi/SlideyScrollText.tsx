@@ -125,7 +125,6 @@ function SlideyScrollText({
       console.log('[SCROLL] Starting slide down')
 
       animationStep.current = 'slide-down'
-
       ;() => {
         // Force reflow
         const _ = slideDown?.offsetLeft
