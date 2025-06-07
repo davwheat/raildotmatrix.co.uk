@@ -47,7 +47,8 @@ const base = css`
 
   --background-row-y-offset: 20px;
 
-  background: linear-gradient(
+  background:
+    linear-gradient(
       to bottom,
       transparent calc(var(--pad-top)),
       var(--dmi-row-background) calc(var(--pad-top) + 0.00001px),
