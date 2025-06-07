@@ -1,6 +1,6 @@
-import React from 'react';
+import React from 'react'
 
-import './css/call-nre.less';
+import './css/call-nre.less'
 
 export default function CallNreMessage() {
   return (
@@ -9,5 +9,5 @@ export default function CallNreMessage() {
       <div className="row">or call National Rail Enquiries</div>
       <div className="row">on 03457 48 49 50</div>
     </div>
-  );
+  )
 }

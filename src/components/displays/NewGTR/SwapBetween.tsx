@@ -1,27 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import clsx from 'clsx';
+import React, { useEffect, useState } from 'react'
+import clsx from 'clsx'
 
-import './css/swapBetween.less';
+import './css/swapBetween.less'
 
 interface IProps {
-  interval: number;
-  animate?: boolean;
-  children: NonNullable<React.ReactNode>[];
-  className?: string;
+  interval: number
+  animate?: boolean
+  children: NonNullable<React.ReactNode>[]
+  className?: string
 }
 
 export default function SwapBetween({ interval, animate = true, children, className }: IProps) {
-  const [shownChild, setShownChild] = useState(0);
+  const [shownChild, setShownChild] = useState(0)
 
   useEffect(() => {
     const key = setInterval(() => {
-      setShownChild((v) => (v + 1) % children.length);
-    }, interval);
+      setShownChild(v => (v + 1) % children.length)
+    }, interval)
 
     return () => {
-      clearInterval(key);
-    };
-  }, [shownChild, setShownChild, interval]);
+      clearInterval(key)
+    }
+  }, [shownChild, setShownChild, interval])
 
   return (
     <div data-showing={shownChild} className={clsx('swapBetween', { 'swapBetween--noAnimate': !animate }, className)}>
@@ -36,5 +36,5 @@ export default function SwapBetween({ interval, animate = true, children, classN
         </div>
       ))}
     </div>
-  );
+  )
 }

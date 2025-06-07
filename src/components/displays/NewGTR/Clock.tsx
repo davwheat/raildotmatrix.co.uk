@@ -1,43 +1,43 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'
 
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
-dayjs.tz.setDefault('Europe/London');
+dayjs.tz.setDefault('Europe/London')
 
-import './css/clock.less';
+import './css/clock.less'
 
 function getTimeNumerics(): string {
-  return dayjs.tz().format('HH:mm:ss');
+  return dayjs.tz().format('HH:mm:ss')
 }
 
 function getLastNumber(num: string): string {
-  const int = parseInt(num);
+  const int = parseInt(num)
 
-  if (int === 0) return '9';
-  else return (int - 1).toString();
+  if (int === 0) return '9'
+  else return (int - 1).toString()
 }
 
 interface IProps {
-  animateDigits?: boolean;
+  animateDigits?: boolean
 }
 
 export default function Clock({ animateDigits = false }: IProps) {
-  const [time, setTime] = useState(getTimeNumerics());
+  const [time, setTime] = useState(getTimeNumerics())
 
   useEffect(() => {
     let key = window.setInterval(() => {
-      setTime(getTimeNumerics());
-    }, 200);
+      setTime(getTimeNumerics())
+    }, 200)
 
     return () => {
-      window.clearInterval(key);
-    };
-  }, [setTime]);
+      window.clearInterval(key)
+    }
+  }, [setTime])
 
   return (
     <div className="row clock">
@@ -48,7 +48,7 @@ export default function Clock({ animateDigits = false }: IProps) {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 function ClockDigit({ digit }: { digit: string }) {
@@ -61,5 +61,5 @@ function ClockDigit({ digit }: { digit: string }) {
         {digit}
       </div>
     </>
-  );
+  )
 }

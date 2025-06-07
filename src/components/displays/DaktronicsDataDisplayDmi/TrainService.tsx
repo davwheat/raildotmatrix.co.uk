@@ -1,49 +1,49 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react'
 
-import { css } from '@emotion/react';
+import { css } from '@emotion/react'
 
-import dayjs from 'dayjs';
-import dayjsUtc from 'dayjs/plugin/utc';
-import dayjsTz from 'dayjs/plugin/timezone';
+import dayjs from 'dayjs'
+import dayjsUtc from 'dayjs/plugin/utc'
+import dayjsTz from 'dayjs/plugin/timezone'
 
-dayjs.extend(dayjsUtc);
-dayjs.extend(dayjsTz);
+dayjs.extend(dayjsUtc)
+dayjs.extend(dayjsTz)
 
-dayjs.tz.setDefault('Europe/London');
+dayjs.tz.setDefault('Europe/London')
 
-import SwapBetween from './SwapBetween';
-import TrainServiceAdditionalInfo from './TrainServiceAdditionalInfo';
+import SwapBetween from './SwapBetween'
+import TrainServiceAdditionalInfo from './TrainServiceAdditionalInfo'
 
-import { getStationWithOverride } from './abbreviatedStations';
+import { getStationWithOverride } from './abbreviatedStations'
 
-import type { IMyTrainService } from '../../../api/ProcessServices';
+import type { IMyTrainService } from '../../../api/ProcessServices'
 
 interface IProps {
-  ordinal: string;
-  service: IMyTrainService;
-  showAdditionalDetails?: boolean;
-  tripleLineIfRequired?: boolean;
-  clipToFirstLine?: boolean;
-  className?: string;
-  worldlinePowered: boolean;
-  style?: React.CSSProperties;
+  ordinal: string
+  service: IMyTrainService
+  showAdditionalDetails?: boolean
+  tripleLineIfRequired?: boolean
+  clipToFirstLine?: boolean
+  className?: string
+  worldlinePowered: boolean
+  style?: React.CSSProperties
 }
 
 function getDestinationAsStrings(destination: IMyTrainService['destinations'][number], index: number, count: number): string[] {
-  const stnName = getStationWithOverride(destination.crs, destination.name);
+  const stnName = getStationWithOverride(destination.crs, destination.name)
 
-  let suffix = '';
+  let suffix = ''
   if (count > 1) {
-    if (count - index === 2) suffix = ' & ';
-    if (count - index > 2) suffix = ', ';
+    if (count - index === 2) suffix = ' & '
+    if (count - index > 2) suffix = ', '
   }
 
-  const name = `${stnName}${suffix}`;
+  const name = `${stnName}${suffix}`
 
-  return [name];
+  return [name]
 }
 
-export default React.forwardRef(TrainService);
+export default React.forwardRef(TrainService)
 
 const serviceBase = css`
   --gap: calc(1em / 7 * 2.5);
@@ -77,13 +77,13 @@ const serviceBase = css`
   &[data-triple-line='true'] ~ #space-filler {
     display: none;
   }
-`;
+`
 
 const destinationBase = css`
   display: inline;
   overflow: hidden;
   text-transform: var(--destination-text-transform, none);
-`;
+`
 
 const destinationContainer = css`
   grid-row: 1 / span var(--row-count);
@@ -92,13 +92,13 @@ const destinationContainer = css`
   line-height: var(--row-height);
   transform: translateY(-9.5px);
   clip-path: inset(0);
-`;
+`
 
 const destinationTextBlocker = css`
   width: calc(var(--gap) + var(--etd-width));
   height: var(--row-height);
   float: right;
-`;
+`
 
 function TrainService(
   {
@@ -111,34 +111,34 @@ function TrainService(
     style,
     worldlinePowered,
   }: IProps,
-  ref: React.Ref<HTMLDivElement>
+  ref: React.Ref<HTMLDivElement>,
 ) {
-  const [requiresTripleLine, setRequiresTripleLine] = React.useState(tripleLineIfRequired);
+  const [requiresTripleLine, setRequiresTripleLine] = React.useState(tripleLineIfRequired)
   const getDestinationPages = useCallback(
     function getDestinationPages(): string[] {
-      return service.destinations.map((d, i, arr) => getDestinationAsStrings(d, i, arr.length)).flat();
+      return service.destinations.map((d, i, arr) => getDestinationAsStrings(d, i, arr.length)).flat()
     },
-    [service, getDestinationAsStrings]
-  );
+    [service, getDestinationAsStrings],
+  )
 
-  const destinationRef = React.useRef<HTMLSpanElement>(null);
-  const cellRef = React.useRef<HTMLSpanElement>(null);
+  const destinationRef = React.useRef<HTMLSpanElement>(null)
+  const cellRef = React.useRef<HTMLSpanElement>(null)
 
-  console.log(`Requires triple line: ${requiresTripleLine}`);
+  console.log(`Requires triple line: ${requiresTripleLine}`)
 
   useEffect(() => {
-    if (!destinationRef.current || !cellRef.current) return;
+    if (!destinationRef.current || !cellRef.current) return
 
-    const rowHeight = cellRef.current.offsetHeight;
-    const textHeight = destinationRef.current.offsetHeight;
+    const rowHeight = cellRef.current.offsetHeight
+    const textHeight = destinationRef.current.offsetHeight
 
-    const _requiresTripleLine = textHeight > rowHeight;
+    const _requiresTripleLine = textHeight > rowHeight
 
-    if (_requiresTripleLine !== requiresTripleLine) setRequiresTripleLine(_requiresTripleLine);
-  }, [JSON.stringify(service.destinations), requiresTripleLine, tripleLineIfRequired]);
+    if (_requiresTripleLine !== requiresTripleLine) setRequiresTripleLine(_requiresTripleLine)
+  }, [JSON.stringify(service.destinations), requiresTripleLine, tripleLineIfRequired])
 
-  const pages = getDestinationPages();
-  const etd = service.displayedDepartureTime(undefined, 'HHmm', null);
+  const pages = getDestinationPages()
+  const etd = service.displayedDepartureTime(undefined, 'HHmm', null)
 
   return (
     <>
@@ -222,5 +222,5 @@ function TrainService(
 
       {showAdditionalDetails && <TrainServiceAdditionalInfo worldlinePowered={worldlinePowered} service={service} />}
     </>
-  );
+  )
 }

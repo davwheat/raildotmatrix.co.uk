@@ -1,18 +1,18 @@
-import React from 'react';
-import { crsToStationName } from '../../../../functions/crsToStationName';
-import { getUrlParam } from '../getUrlParam';
+import React from 'react'
+import { crsToStationName } from '../../../../functions/crsToStationName'
+import { getUrlParam } from '../getUrlParam'
 
 export function getDestination(format: 'crs' | 'name' = 'name') {
-  let destination = getUrlParam('dest');
+  let destination = getUrlParam('dest')
 
-  format === 'name' && (destination &&= crsToStationName(destination));
-  destination ??= 'Unknown';
+  format === 'name' && (destination &&= crsToStationName(destination))
+  destination ??= 'Unknown'
 
-  return destination;
+  return destination
 }
 
 export default function DestinationBigScreen() {
-  const destination = getDestination();
+  const destination = getDestination()
 
   return (
     <div className="destination splitLines">
@@ -23,5 +23,5 @@ export default function DestinationBigScreen() {
         <span className="text t900">{destination}</span>
       </div>
     </div>
-  );
+  )
 }

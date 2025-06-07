@@ -1,14 +1,14 @@
-import React from 'react';
-import { crsToStationName } from '../../../../functions/crsToStationName';
-import SlideyScrollText from '../SlideyScrollText';
-import { getCallingPoints } from './CallingPoints';
-import { getDestination } from './Destination';
+import React from 'react'
+import { crsToStationName } from '../../../../functions/crsToStationName'
+import SlideyScrollText from '../SlideyScrollText'
+import { getCallingPoints } from './CallingPoints'
+import { getDestination } from './Destination'
 
 export default function NextStopBigScreen() {
-  const destination = getDestination('crs');
-  const nextStop = getCallingPoints('crs')[0];
+  const destination = getDestination('crs')
+  const nextStop = getCallingPoints('crs')[0]
 
-  const isFinalStop = nextStop === destination;
+  const isFinalStop = nextStop === destination
 
   return (
     <div className="destination splitLines">
@@ -22,5 +22,5 @@ export default function NextStopBigScreen() {
         </span>
       </SlideyScrollText>
     </div>
-  );
+  )
 }

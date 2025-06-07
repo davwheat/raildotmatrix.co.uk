@@ -1,26 +1,26 @@
-import React from 'react';
+import React from 'react'
 
-import SlideyScrollText from './SlideyScrollText';
+import SlideyScrollText from './SlideyScrollText'
 
 interface ICallingPointsProps {
-  pointsText: string[];
-  scrollingPrefix?: string;
-  scrollingSuffix?: React.ReactNode;
-  onComplete?: () => void;
+  pointsText: string[]
+  scrollingPrefix?: string
+  scrollingSuffix?: React.ReactNode
+  onComplete?: () => void
 }
 
 function _CallingPoints({ pointsText, scrollingPrefix = undefined, scrollingSuffix = null, onComplete }: ICallingPointsProps) {
-  console.log('calling points rendered');
+  console.log('calling points rendered')
 
   return (
     <SlideyScrollText
       css={{ minWidth: '100%' }}
       alwaysScroll
       onComplete={() => {
-        onComplete?.();
+        onComplete?.()
 
         // Stop animation
-        return true;
+        return true
       }}
       slideDownText={scrollingPrefix}
     >
@@ -32,12 +32,12 @@ function _CallingPoints({ pointsText, scrollingPrefix = undefined, scrollingSuff
       </span>
       {scrollingSuffix}
     </SlideyScrollText>
-  );
+  )
 }
 
 interface ICallingPointProps {
-  text: string;
-  worldlinePowered?: boolean;
+  text: string
+  worldlinePowered?: boolean
 }
 
 export function CallingPoint({ text, worldlinePowered }: ICallingPointProps) {
@@ -79,11 +79,11 @@ export function CallingPoint({ text, worldlinePowered }: ICallingPointProps) {
     >
       {text}
     </span>
-  );
+  )
 }
 
 export const CallingPoints = React.memo(_CallingPoints, (prev, next) => {
-  console.log('calling points props changed, but not rerendering');
+  console.log('calling points props changed, but not rerendering')
 
-  return true;
-});
+  return true
+})

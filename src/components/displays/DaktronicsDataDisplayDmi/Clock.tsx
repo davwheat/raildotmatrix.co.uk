@@ -1,25 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'
 
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
-dayjs.tz.setDefault('Europe/London');
+dayjs.tz.setDefault('Europe/London')
 
-import { css, keyframes } from '@emotion/react';
+import { css, keyframes } from '@emotion/react'
 
 function getTimeNumerics(): string {
-  return dayjs.tz().format('HH:mm:ss');
+  return dayjs.tz().format('HH:mm:ss')
 }
 
 function getLastNumber(num: string, maxNum: number): string {
-  const int = parseInt(num);
+  const int = parseInt(num)
 
-  if (int === 0) return `${maxNum}`;
-  else return (int - 1).toString();
+  if (int === 0) return `${maxNum}`
+  else return (int - 1).toString()
 }
 
 interface IProps {}
@@ -32,20 +32,20 @@ const hideThenShow = keyframes`
   100% {
     opacity: 1;
   }
-`;
+`
 
 export default function Clock({}: IProps) {
-  const [time, setTime] = useState(getTimeNumerics());
+  const [time, setTime] = useState(getTimeNumerics())
 
   useEffect(() => {
     let key = window.setInterval(() => {
-      setTime(getTimeNumerics());
-    }, 200);
+      setTime(getTimeNumerics())
+    }, 200)
 
     return () => {
-      window.clearInterval(key);
-    };
-  }, [setTime]);
+      window.clearInterval(key)
+    }
+  }, [setTime])
 
   return (
     <div
@@ -98,7 +98,7 @@ export default function Clock({}: IProps) {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 const digitBase = css`
@@ -114,7 +114,7 @@ const digitBase = css`
   animation-duration: var(--flip-duration);
   animation-timing-function: steps(var(--step-count), start);
   animation-fill-mode: forwards;
-`;
+`
 
 const squashOut = keyframes`
   0% {
@@ -139,7 +139,7 @@ const squashOut = keyframes`
     );
     opacity: 0;
   }
-`;
+`
 
 const squashIn = keyframes`
   0% {
@@ -164,15 +164,15 @@ const squashIn = keyframes`
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
     opacity: 1;
   }
-`;
+`
 
 function ClockDigit({ digit, pos }: { digit: string; pos: number }) {
-  let maxNum = 9;
+  let maxNum = 9
 
   // Hour digit 1
-  if (pos === 0) maxNum = 2;
+  if (pos === 0) maxNum = 2
   // Min/Second digit 1
-  if (pos === 3 || pos === 6) maxNum = 5;
+  if (pos === 3 || pos === 6) maxNum = 5
 
   return (
     <>
@@ -207,5 +207,5 @@ function ClockDigit({ digit, pos }: { digit: string; pos: number }) {
         {digit}
       </div>
     </>
-  );
+  )
 }

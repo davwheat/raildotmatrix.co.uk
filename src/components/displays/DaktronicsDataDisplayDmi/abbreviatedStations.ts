@@ -264,8 +264,8 @@ const AbbreviatedStations: Record<string, string> = {
   ZPC: 'Piccadilly Circ. LU',
   ZTH: 'Tower Hill LU',
   ZTU: 'Turnham Green LU',
-};
+}
 
 export function getStationWithOverride(crs: string, name: string): string {
-  return AbbreviatedStations[crs] ?? name;
+  return AbbreviatedStations[crs] ?? name
 }

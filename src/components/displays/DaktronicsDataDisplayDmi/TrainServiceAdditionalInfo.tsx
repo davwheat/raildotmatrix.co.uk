@@ -1,14 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from 'react'
 
-import SlideyScrollText from './SlideyScrollText';
-import clsx from 'clsx';
+import SlideyScrollText from './SlideyScrollText'
+import clsx from 'clsx'
 
-import { keyframes, css } from '@emotion/react';
+import { keyframes, css } from '@emotion/react'
 
-import { AssociationCategory } from '../../../../functions/api/getServices';
-import { CallingPoint, CallingPoints } from './CallingPoints';
+import { AssociationCategory } from '../../../../functions/api/getServices'
+import { CallingPoint, CallingPoints } from './CallingPoints'
 
-import type { IAssociation, IMyTrainService } from '../../../api/ProcessServices';
+import type { IAssociation, IMyTrainService } from '../../../api/ProcessServices'
 
 const infoIn = keyframes`
   0% {
@@ -20,7 +20,7 @@ const infoIn = keyframes`
     opacity: 1;
     transform: translateY(0);
   }
-`;
+`
 
 const infoOut = keyframes`
   0% {
@@ -32,7 +32,7 @@ const infoOut = keyframes`
     opacity: 0;
     transform: translateY(0);
   }
-`;
+`
 
 const infoPage = css`
   position: absolute;
@@ -54,101 +54,101 @@ const infoPage = css`
   &:not(.shown) {
     transition-delay: 0s;
   }
-`;
+`
 
 interface IProps {
-  service: IMyTrainService;
-  worldlinePowered: boolean;
+  service: IMyTrainService
+  worldlinePowered: boolean
 }
 
 function getServiceInfo(service: IMyTrainService, worldlinePowered: boolean): string {
-  const { toc, length } = service;
+  const { toc, length } = service
 
   if (worldlinePowered) {
-    const portions: string[] = [!!length ? `A ${toc} service which has ${length} coaches.` : `A ${toc} service.`];
+    const portions: string[] = [!!length ? `A ${toc} service which has ${length} coaches.` : `A ${toc} service.`]
 
     if (service.cancelled) {
-      if (service.cancelReason) portions.push(service.cancelReason);
+      if (service.cancelReason) portions.push(service.cancelReason)
     } else if (service.isDelayed()) {
-      if (service.delayReason) portions.push(service.delayReason);
+      if (service.delayReason) portions.push(service.delayReason)
     }
 
-    return portions.join(' ');
+    return portions.join(' ')
   } else {
-    const portions: string[] = [' service.'];
+    const portions: string[] = [' service.']
 
-    if (!!length) portions.push(`Formed of ${length} coaches.`);
+    if (!!length) portions.push(`Formed of ${length} coaches.`)
 
     if (service.cancelled) {
-      if (service.cancelReason) portions.push(service.cancelReason);
+      if (service.cancelReason) portions.push(service.cancelReason)
     } else if (service.isDelayed()) {
-      if (service.delayReason) portions.push(service.delayReason);
+      if (service.delayReason) portions.push(service.delayReason)
     }
 
-    return portions.join(' ');
+    return portions.join(' ')
   }
 }
 
 function getServiceInfoPrefix(service: IMyTrainService, worldlinePowered: boolean): string {
-  if (worldlinePowered) return '';
+  if (worldlinePowered) return ''
 
-  const { toc } = service;
+  const { toc } = service
 
-  return `${toc ? `${toc}` : 'A'}`;
+  return `${toc ? `${toc}` : 'A'}`
 }
 
 interface InfoPage {
-  fixedPrefix?: string;
-  scrollingPrefix?: string;
-  scrollingSuffix?: string;
-  callPoints: string[];
+  fixedPrefix?: string
+  scrollingPrefix?: string
+  scrollingSuffix?: string
+  callPoints: string[]
 }
 
 function _TrainServiceAdditionalInfo({ service, worldlinePowered }: IProps) {
   const associatedServices = React.useMemo(
     () =>
       service.passengerCallPoints
-        .map((s) => s.associations)
+        .map(s => s.associations)
         .flat(1)
         .filter((a): a is IAssociation<AssociationCategory.Divide> => a.type === AssociationCategory.Divide)
-        .map((a) => a.service),
-    [JSON.stringify(service)]
-  );
+        .map(a => a.service),
+    [JSON.stringify(service)],
+  )
 
-  const pageCount = worldlinePowered ? 1 : 2 + associatedServices.length;
+  const pageCount = worldlinePowered ? 1 : 2 + associatedServices.length
 
-  const [shownPage, setShownPage] = React.useState(0);
+  const [shownPage, setShownPage] = React.useState(0)
 
   const nextPage = React.useCallback(() => {
-    setShownPage((p) => {
-      if (p + 1 >= pageCount) return 0;
-      return p + 1;
-    });
-  }, [pageCount]);
+    setShownPage(p => {
+      if (p + 1 >= pageCount) return 0
+      return p + 1
+    })
+  }, [pageCount])
 
   useEffect(() => {
-    if (shownPage >= pageCount) setShownPage(0);
-  }, [shownPage, pageCount]);
+    if (shownPage >= pageCount) setShownPage(0)
+  }, [shownPage, pageCount])
 
   // Memoise to prevent early animation end
   const callingPointPages: InfoPage[] = React.useMemo(() => {
-    const ogServicePoints = service.passengerCallPoints.map((p) => p.name);
+    const ogServicePoints = service.passengerCallPoints.map(p => p.name)
 
-    const assocCount = associatedServices.length;
+    const assocCount = associatedServices.length
 
     const assocServices = associatedServices.map((s, i): InfoPage => {
-      const [stop1, ...stops] = s.passengerCallPoints;
+      const [stop1, ...stops] = s.passengerCallPoints
 
-      const ogServiceDivideIndex = service.passengerCallPoints.findIndex((p) => p.name === stop1.name);
-      const pointsToDivide = ogServicePoints.slice(0, ogServiceDivideIndex + 1);
+      const ogServiceDivideIndex = service.passengerCallPoints.findIndex(p => p.name === stop1.name)
+      const pointsToDivide = ogServicePoints.slice(0, ogServiceDivideIndex + 1)
 
-      const pos = i + 1 === assocCount ? 'Rear' : 'Middle';
+      const pos = i + 1 === assocCount ? 'Rear' : 'Middle'
 
       return {
-        callPoints: [...pointsToDivide, ...stops.map((p) => p.name)],
+        callPoints: [...pointsToDivide, ...stops.map(p => p.name)],
         scrollingPrefix: `${pos} ${s.length ? `${s.length} ` : ''}coaches calling at${worldlinePowered ? '' : ':'}`,
-      };
-    });
+      }
+    })
 
     if (assocServices.length === 0) {
       // No splits
@@ -157,24 +157,24 @@ function _TrainServiceAdditionalInfo({ service, worldlinePowered }: IProps) {
           callPoints: ogServicePoints,
           scrollingPrefix: `Calling at${worldlinePowered ? '' : ':'}`,
         },
-      ];
+      ]
     } else {
-      const ogLengthEnd = service.passengerCallPoints.at(-1)!!.length;
+      const ogLengthEnd = service.passengerCallPoints.at(-1)!!.length
       return [
         {
           callPoints: ogServicePoints,
           scrollingPrefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches calling at${worldlinePowered ? '' : ':'}`,
         },
         ...assocServices,
-      ];
+      ]
     }
-  }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map((a) => a.passengerCallPoints)), worldlinePowered]);
+  }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map(a => a.passengerCallPoints)), worldlinePowered])
 
-  const serviceInfo = React.useMemo(() => getServiceInfo(service, worldlinePowered), [JSON.stringify(service), worldlinePowered]);
-  const serviceInfoPrefix = React.useMemo(() => getServiceInfoPrefix(service, worldlinePowered), [JSON.stringify(service), worldlinePowered]);
+  const serviceInfo = React.useMemo(() => getServiceInfo(service, worldlinePowered), [JSON.stringify(service), worldlinePowered])
+  const serviceInfoPrefix = React.useMemo(() => getServiceInfoPrefix(service, worldlinePowered), [JSON.stringify(service), worldlinePowered])
 
-  console.log(callingPointPages);
-  console.log(service);
+  console.log(callingPointPages)
+  console.log(service)
 
   return (
     <div
@@ -211,11 +211,11 @@ function _TrainServiceAdditionalInfo({ service, worldlinePowered }: IProps) {
           alwaysScroll
           callCompleteIfNotScrolling={8_000}
           onComplete={() => {
-            shownPage === 0 && nextPage();
+            shownPage === 0 && nextPage()
             // Stop animation
-            console.log('next from info');
+            console.log('next from info')
 
-            return true;
+            return true
           }}
           slideDownText={serviceInfoPrefix}
         >
@@ -255,22 +255,22 @@ function _TrainServiceAdditionalInfo({ service, worldlinePowered }: IProps) {
               scrollingPrefix={page.scrollingPrefix}
               scrollingSuffix={page.scrollingSuffix}
               onComplete={() => {
-                console.log('next from call p', i + 1);
-                nextPage();
-                return true;
+                console.log('next from call p', i + 1)
+                nextPage()
+                return true
               }}
             />
           )}
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 const TrainServiceAdditionalInfo = React.memo(_TrainServiceAdditionalInfo, (prev, next) => {
-  console.log('train service additional info changed, but not rerendering');
+  console.log('train service additional info changed, but not rerendering')
 
-  return true;
-});
+  return true
+})
 
-export default TrainServiceAdditionalInfo;
+export default TrainServiceAdditionalInfo

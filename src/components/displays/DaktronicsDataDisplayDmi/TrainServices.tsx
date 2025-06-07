@@ -1,15 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react'
 
-import TrainService from './TrainService';
-import SwapBetween from './SwapBetween';
+import TrainService from './TrainService'
+import SwapBetween from './SwapBetween'
 
-import { keyframes } from '@emotion/react';
+import { keyframes } from '@emotion/react'
 
-import type { IMyTrainService } from '../../../api/ProcessServices';
+import type { IMyTrainService } from '../../../api/ProcessServices'
 
 interface IProps {
-  services: IMyTrainService[];
-  worldlinePowered: boolean;
+  services: IMyTrainService[]
+  worldlinePowered: boolean
 }
 
 const clipService = keyframes`
@@ -26,7 +26,7 @@ const clipService = keyframes`
       calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px) var(--row-height)
     )
   }
-`;
+`
 
 const spinnerMovement = keyframes`
   0% {
@@ -37,7 +37,7 @@ const spinnerMovement = keyframes`
   100% {
     transform: translateX(calc(var(--board-width) - var(--pad-right) - var(--pad-left) + 100px));
   }
-`;
+`
 
 // Custom font chars for the clear-down
 const spinnerText = keyframes`
@@ -49,7 +49,7 @@ const spinnerText = keyframes`
   100% {
     content: '÷';
   }
-`;
+`
 
 const slideUpFromBottom = keyframes`
   0% {
@@ -59,7 +59,7 @@ const slideUpFromBottom = keyframes`
   100% {
     transform: translateY(0);
   }
-`;
+`
 
 const slideUpFromCurrentRow = keyframes`
   0% {
@@ -71,58 +71,58 @@ const slideUpFromCurrentRow = keyframes`
     transform: translateY(0);
     clip-path: polygon(0 0, 100% 0, 100% calc(var(--row-height) - var(--background-row-y-offset)), 0 calc(var(--row-height) - var(--background-row-y-offset)));
   }
-`;
+`
 
 export default function TrainServices({ services, worldlinePowered }: IProps) {
-  const firstService: IMyTrainService | undefined = services[0];
-  const secondService: IMyTrainService | undefined = services[1];
-  const thirdService: IMyTrainService | undefined = services[2];
+  const firstService: IMyTrainService | undefined = services[0]
+  const secondService: IMyTrainService | undefined = services[1]
+  const thirdService: IMyTrainService | undefined = services[2]
 
-  const firstServiceLastRender = useRef<IMyTrainService | undefined>(firstService);
-  const firstServiceRef = useRef<HTMLDivElement>(null);
+  const firstServiceLastRender = useRef<IMyTrainService | undefined>(firstService)
+  const firstServiceRef = useRef<HTMLDivElement>(null)
 
-  const [animateServiceOut, setAnimateServiceOut] = useState<IMyTrainService | null>(null);
-  const [animateServiceIn, setAnimateServiceIn] = useState<boolean>(true);
+  const [animateServiceOut, setAnimateServiceOut] = useState<IMyTrainService | null>(null)
+  const [animateServiceIn, setAnimateServiceIn] = useState<boolean>(true)
 
   if (firstService?.id !== firstServiceLastRender.current?.id) {
-    console.log('first service changed -- animating last service out');
+    console.log('first service changed -- animating last service out')
 
-    firstServiceLastRender.current && setAnimateServiceOut(firstServiceLastRender.current);
-    firstServiceLastRender.current = firstService;
+    firstServiceLastRender.current && setAnimateServiceOut(firstServiceLastRender.current)
+    firstServiceLastRender.current = firstService
   }
 
   useEffect(() => {
     if (animateServiceOut) {
       const animEnd = () => {
-        console.log('clear down animation end');
-        if (firstService) setAnimateServiceIn(true);
-        setAnimateServiceOut(null);
-      };
+        console.log('clear down animation end')
+        if (firstService) setAnimateServiceIn(true)
+        setAnimateServiceOut(null)
+      }
 
-      firstServiceRef.current?.addEventListener('animationend', animEnd);
+      firstServiceRef.current?.addEventListener('animationend', animEnd)
 
       return () => {
-        console.log('clear down cleanup');
+        console.log('clear down cleanup')
 
-        firstServiceRef.current?.removeEventListener('animationend', animEnd);
-      };
+        firstServiceRef.current?.removeEventListener('animationend', animEnd)
+      }
     } else if (animateServiceIn) {
       const animEnd = () => {
-        console.log('post clear down slide in animation end');
-        setAnimateServiceIn(false);
-      };
+        console.log('post clear down slide in animation end')
+        setAnimateServiceIn(false)
+      }
 
-      firstServiceRef.current?.addEventListener('animationend', animEnd);
+      firstServiceRef.current?.addEventListener('animationend', animEnd)
 
       return () => {
-        console.log('post clear down slide in cleanup');
-        firstServiceRef.current?.removeEventListener('animationend', animEnd);
-      };
+        console.log('post clear down slide in cleanup')
+        firstServiceRef.current?.removeEventListener('animationend', animEnd)
+      }
     }
-  }, [firstService, firstServiceLastRender, animateServiceIn, animateServiceOut, setAnimateServiceOut, setAnimateServiceIn]);
+  }, [firstService, firstServiceLastRender, animateServiceIn, animateServiceOut, setAnimateServiceOut, setAnimateServiceIn])
 
   if (animateServiceOut) {
-    console.log('rendering animating service out');
+    console.log('rendering animating service out')
 
     return (
       <>
@@ -170,9 +170,9 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
           }}
         />
       </>
-    );
+    )
   } else if (animateServiceIn) {
-    console.log('rendering animating service out');
+    console.log('rendering animating service out')
 
     return (
       <>
@@ -206,17 +206,17 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
         <span css={{ height: 'var(--row-height)' }} />
         <div className="trainServiceAdditional" css={{ height: 'var(--row-height)' }} />
       </>
-    );
+    )
   }
 
-  console.log('services rerendered!');
+  console.log('services rerendered!')
 
-  const isSecondSplitting = secondService?.destinations.length > 1;
-  const isThirdSplitting = thirdService?.destinations.length > 1;
+  const isSecondSplitting = secondService?.destinations.length > 1
+  const isThirdSplitting = thirdService?.destinations.length > 1
 
-  console.log('1', firstService);
-  console.log('2', secondService);
-  console.log('3', thirdService);
+  console.log('1', firstService)
+  console.log('2', secondService)
+  console.log('3', thirdService)
 
   return (
     <>
@@ -266,5 +266,5 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
         <div id="space-filler" css={{ height: 'var(--row-height)' }} />
       )}
     </>
-  );
+  )
 }

@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Find existing build status comment
         continue-on-error: true
@@ -51,7 +51,7 @@ jobs:
             </table>
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
@@ -64,7 +64,7 @@ jobs:
         run: yarn format:check
 
       - name: Restore Gatsby cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: gatsbyCache
         with:
           path: ./.cache
@@ -78,7 +78,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
 

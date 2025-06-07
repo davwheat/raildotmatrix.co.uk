@@ -8,19 +8,18 @@
     "email": "hi@davwheat.dev",
     "url": "https://davwheat.dev/"
   },
-  "prettier": "@flarum/prettier-config",
   "dependencies": {
     "@emotion/core": "^11.0.0",
-    "@emotion/styled": "^11.11.5",
-    "@fontsource/poppins": "^5.0.14",
+    "@emotion/styled": "^11.14.0",
+    "@fontsource/poppins": "^5.2.6",
     "@mpth/react-no-ssr": "^1.0.1",
     "clsx": "^2.1.1",
-    "dayjs": "^1.11.11",
-    "gatsby": "^5.13.6",
+    "dayjs": "^1.11.13",
+    "gatsby": "^5.14.4",
     "gatsby-plugin-cloudflare-pages": "^1.0.3",
-    "gatsby-plugin-emotion": "^8.13.1",
-    "gatsby-plugin-less": "^7.13.1",
-    "gatsby-plugin-manifest": "^5.13.1",
+    "gatsby-plugin-emotion": "^8.14.0",
+    "gatsby-plugin-less": "^7.14.0",
+    "gatsby-plugin-manifest": "^5.14.0",
     "gatsby-plugin-react-head": "https://github.com/davwheat/gatsby-plugin-react-head",
     "gatsby-plugin-react-svg": "^3.3.0",
     "gatsby-plugin-remove-console": "^0.0.2",
@@ -32,22 +31,22 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-head": "^3.4.2",
-    "react-select": "^5.8.0",
-    "throttle-debounce": "^5.0.0",
-    "uk-railway-stations": "^1.6.0"
+    "react-select": "^5.10.1",
+    "throttle-debounce": "^5.0.2",
+    "uk-railway-stations": "^1.8.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240620.0",
+    "@cloudflare/workers-types": "^4.20250606.0",
     "@flarum/prettier-config": "^1.0.0",
     "@types/color": "^3.0.6",
-    "@types/react": "^18.3.3",
+    "@types/react": "^18.3.23",
     "@types/throttle-debounce": "^5.0.2",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "cross-env": "^7.0.3",
     "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.32",
-    "prettier": "^3.3.2",
-    "typescript": "^5.5.2",
-    "wrangler": "^3.61.0"
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3",
+    "wrangler": "4.19.1"
   },
   "keywords": [
     "gatsby"
@@ -64,5 +63,5 @@
     "serve": "yarn wrangler pages dev public/",
     "clean": "gatsby clean"
   },
-  "packageManager": "yarn@4.2.2"
+  "packageManager": "yarn@4.9.2"
 }

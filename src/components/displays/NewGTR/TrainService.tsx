@@ -1,60 +1,60 @@
-import React, { useCallback } from 'react';
+import React, { useCallback } from 'react'
 
-import dayjs from 'dayjs';
-import dayjsUtc from 'dayjs/plugin/utc';
-import dayjsTz from 'dayjs/plugin/timezone';
+import dayjs from 'dayjs'
+import dayjsUtc from 'dayjs/plugin/utc'
+import dayjsTz from 'dayjs/plugin/timezone'
 
-dayjs.extend(dayjsUtc);
-dayjs.extend(dayjsTz);
+dayjs.extend(dayjsUtc)
+dayjs.extend(dayjsTz)
 
-dayjs.tz.setDefault('Europe/London');
+dayjs.tz.setDefault('Europe/London')
 
-import './css/trainService.less';
+import './css/trainService.less'
 
-import SwapBetween from './SwapBetween';
-import TrainServiceAdditionalInfo from './TrainServiceAdditionalInfo';
-import clsx from 'clsx';
+import SwapBetween from './SwapBetween'
+import TrainServiceAdditionalInfo from './TrainServiceAdditionalInfo'
+import clsx from 'clsx'
 
-import type { IMyTrainService } from '../../../api/ProcessServices';
+import type { IMyTrainService } from '../../../api/ProcessServices'
 
 interface IProps {
-  ordinal: string;
-  service: IMyTrainService;
-  showAdditionalDetails?: boolean;
-  className?: string;
+  ordinal: string
+  service: IMyTrainService
+  showAdditionalDetails?: boolean
+  className?: string
 }
 
-const DESTINATION_MAX_LENGTH = 21;
+const DESTINATION_MAX_LENGTH = 21
 
 function getDestinationAsStrings(destination: IMyTrainService['destinations'][number], index: number): string[] {
-  const andText = index > 0 ? 'and ' : '';
-  const name = `${andText}${destination.name}`;
-  const via = destination.via || '';
+  const andText = index > 0 ? 'and ' : ''
+  const name = `${andText}${destination.name}`
+  const via = destination.via || ''
 
-  if (!via) return [name];
+  if (!via) return [name]
 
-  const whole = `${name} ${via}`.trim();
+  const whole = `${name} ${via}`.trim()
 
   if (whole.length <= DESTINATION_MAX_LENGTH) {
-    return [whole];
+    return [whole]
   } else {
-    return [name, via];
+    return [name, via]
   }
 }
 
-export default React.forwardRef(TrainService);
+export default React.forwardRef(TrainService)
 
 function TrainService({ ordinal, service, showAdditionalDetails = false, className }: IProps, ref: React.Ref<HTMLDivElement>) {
   const getDestinationPages = useCallback(
     function getDestinationPages(): string[] {
-      return service.destinations.map((d, i) => getDestinationAsStrings(d, i)).flat();
+      return service.destinations.map((d, i) => getDestinationAsStrings(d, i)).flat()
     },
-    [service, getDestinationAsStrings]
-  );
+    [service, getDestinationAsStrings],
+  )
 
-  const pages = getDestinationPages();
-  const etd = service.displayedDepartureTime();
-  const isCancelled = service.cancelled;
+  const pages = getDestinationPages()
+  const etd = service.displayedDepartureTime()
+  const isCancelled = service.cancelled
 
   return (
     <>
@@ -91,5 +91,5 @@ function TrainService({ ordinal, service, showAdditionalDetails = false, classNa
       </div>
       {showAdditionalDetails && <TrainServiceAdditionalInfo service={service} />}
     </>
-  );
+  )
 }

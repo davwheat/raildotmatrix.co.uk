@@ -1,35 +1,35 @@
-import React from 'react';
+import React from 'react'
 
-import NoServicesMessage from './NoServicesMessage';
-import Clock from './Clock';
-import TrainServices from './TrainServices';
+import NoServicesMessage from './NoServicesMessage'
+import Clock from './Clock'
+import TrainServices from './TrainServices'
 
-import './css/font.less';
-import boardFill from './board-fill.svg';
+import './css/font.less'
+import boardFill from './board-fill.svg'
 
-import { css } from '@emotion/react';
+import { css } from '@emotion/react'
 
-import { processServices } from '../../../api/ProcessServices';
-import { isValidResponseApi, useServiceInformation } from '../../../hooks/useServiceInformation';
+import { processServices } from '../../../api/ProcessServices'
+import { isValidResponseApi, useServiceInformation } from '../../../hooks/useServiceInformation'
 
-const BOARD_WIDTH = 2250;
-const BOARD_HEIGHT = 450;
+const BOARD_WIDTH = 2250
+const BOARD_HEIGHT = 450
 
-const X_PAD = 24;
-const Y_PAD_TOP = 32;
-const Y_PAD_BOTTOM = 16;
+const X_PAD = 24
+const Y_PAD_TOP = 32
+const Y_PAD_BOTTOM = 16
 
-const X_PAD_CASING = X_PAD + 78;
-const Y_PAD_TOP_CASING = Y_PAD_TOP + 74;
-const Y_PAD_BOTTOM_CASING = Y_PAD_BOTTOM + 94;
+const X_PAD_CASING = X_PAD + 78
+const Y_PAD_TOP_CASING = Y_PAD_TOP + 74
+const Y_PAD_BOTTOM_CASING = Y_PAD_BOTTOM + 94
 
 interface IProps {
-  platforms?: string[];
-  station: string;
-  useLegacyTocNames?: boolean;
-  showUnconfirmedPlatforms: boolean;
-  hasCasing: boolean;
-  worldlinePowered: boolean;
+  platforms?: string[]
+  station: string
+  useLegacyTocNames?: boolean
+  showUnconfirmedPlatforms: boolean
+  hasCasing: boolean
+  worldlinePowered: boolean
 }
 
 const base = css`
@@ -82,16 +82,16 @@ const base = css`
 
   display: flex;
   flex-direction: column;
-`;
+`
 
 export default function FullBoard({ station, platforms, useLegacyTocNames, showUnconfirmedPlatforms, hasCasing, worldlinePowered }: IProps) {
-  const [trainData] = useServiceInformation(station);
+  const [trainData] = useServiceInformation(station)
 
   const services = isValidResponseApi(trainData)
     ? processServices(trainData.trainServices!!, platforms ?? null, !!useLegacyTocNames, station, showUnconfirmedPlatforms).filter(
-        (s) => !s.hasDeparted
+        s => !s.hasDeparted,
       )
-    : null;
+    : null
 
   const css = [
     base,
@@ -105,7 +105,7 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
       '--pad-left': `${X_PAD_CASING}px`,
       '--pad-right': `${X_PAD_CASING}px`,
     },
-  ];
+  ]
 
   if (!services || services.length === 0) {
     return (
@@ -113,7 +113,7 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
         <NoServicesMessage />
         <Clock />
       </article>
-    );
+    )
   }
 
   return (
@@ -121,5 +121,5 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
       <TrainServices services={services} worldlinePowered={worldlinePowered} />
       <Clock />
     </article>
-  );
+  )
 }

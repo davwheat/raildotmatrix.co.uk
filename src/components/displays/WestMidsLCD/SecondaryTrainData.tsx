@@ -1,46 +1,46 @@
-import React from 'react';
-import { combineLocations } from './combineLocations';
+import React from 'react'
+import { combineLocations } from './combineLocations'
 
-import ArrowSVG from './css/board/arrow.svg';
+import ArrowSVG from './css/board/arrow.svg'
 
-import './css/board/secondaryTrainData.less';
-import FadeBetween from './FadeBetween';
-import SlideyScrollText from './SlideyScrollText';
+import './css/board/secondaryTrainData.less'
+import FadeBetween from './FadeBetween'
+import SlideyScrollText from './SlideyScrollText'
 
-import dayjs from 'dayjs';
-import dayjsUtc from 'dayjs/plugin/utc';
-import dayjsTz from 'dayjs/plugin/timezone';
+import dayjs from 'dayjs'
+import dayjsUtc from 'dayjs/plugin/utc'
+import dayjsTz from 'dayjs/plugin/timezone'
 
-dayjs.extend(dayjsUtc);
-dayjs.extend(dayjsTz);
+dayjs.extend(dayjsUtc)
+dayjs.extend(dayjsTz)
 
-import type { IMyTrainService } from '../../../api/ProcessServices';
+import type { IMyTrainService } from '../../../api/ProcessServices'
 
 function ordinal(number: number) {
-  const ordinals = ['th', 'st', 'nd', 'rd'];
-  const toHundredNum = number % 100;
-  const ord = ordinals[(toHundredNum - 20) % 10] || ordinals[toHundredNum] || ordinals[0];
+  const ordinals = ['th', 'st', 'nd', 'rd']
+  const toHundredNum = number % 100
+  const ord = ordinals[(toHundredNum - 20) % 10] || ordinals[toHundredNum] || ordinals[0]
 
   return (
     <>
       {number}
       <sup>{ord}</sup>
     </>
-  );
+  )
 }
 
 export default function SecondaryTrainData({ train, position }: { train: IMyTrainService; position: number }) {
-  const finalColumnElements: React.ReactNode[] = [];
+  const finalColumnElements: React.ReactNode[] = []
 
-  finalColumnElements.push(<span className={train.cancelled ? 'flash' : ''}>{train.displayedDepartureTime('Exp ')}</span>);
+  finalColumnElements.push(<span className={train.cancelled ? 'flash' : ''}>{train.displayedDepartureTime('Exp ')}</span>)
 
   if ((train.length || 0) > 0 && !train.cancelled) {
     finalColumnElements.push(
       <>
         {train.length}
         {train.length === 1 ? ' carriage' : ' carriages'}
-      </>
-    );
+      </>,
+    )
   }
 
   return (
@@ -62,5 +62,5 @@ export default function SecondaryTrainData({ train, position }: { train: IMyTrai
         <FadeBetween elements={finalColumnElements} />
       </div>
     </div>
-  );
+  )
 }
