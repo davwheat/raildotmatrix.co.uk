@@ -360,7 +360,7 @@ async function processService(env: Env, service: TrainService): Promise<void> {
 
     // Split into array with groups of two chars
     if (activities) {
-      location.activities = (activities?.match(/.{2}/g) || []).map(a => a.trim())
+      location.activities = Array.isArray(activities) ? activities : (activities?.match(/.{2}/g) || []).map(a => a.trim())
     }
   }
 }
@@ -582,7 +582,9 @@ async function getBoardFromRdm(
 
         if (service.activities) {
           // Split into array with groups of two chars
-          service.activities = (service.activities as any as string | undefined)?.match(/.{2}/g) || []
+          service.activities = Array.isArray(service.activities)
+            ? service.activities
+            : (service.activities as any as string | undefined)?.match(/.{2}/g) || []
         }
 
         return service

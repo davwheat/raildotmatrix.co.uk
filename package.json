@@ -46,7 +46,7 @@
     "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.32",
     "prettier": "^3.3.2",
     "typescript": "^5.5.2",
-    "wrangler": "^3.61.0"
+    "wrangler": "4"
   },
   "keywords": [
     "gatsby"
