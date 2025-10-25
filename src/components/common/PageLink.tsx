@@ -1,18 +1,15 @@
 import React, { useState } from 'react'
-import { navigate } from 'gatsby'
+import { Link, navigate } from 'gatsby'
 
 interface IProps {
   onClick?: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => boolean
   className?: string
   children: React.ReactNode
   to?: string
-  afterExit?: () => void
   [x: string]: unknown
 }
 
-export default function PageLink({ onClick, className, children, to, afterExit, ...props }: IProps) {
-  const [isExiting, setIsExiting] = useState(false)
-
+export default function PageLink({ onClick, className, children, to, ...props }: IProps) {
   let classes = ''
 
   if (className) {
@@ -21,36 +18,17 @@ export default function PageLink({ onClick, className, children, to, afterExit, 
     classes = 'train-link'
   }
 
-  if (isExiting) {
-    classes += ' train-link__exiting'
+  const isExternal = to ? /^https?:\/\//.test(to) : false
+
+  const LinkComponent = isExternal ? 'a' : Link
+
+  const attrs = {
+    ...(isExternal ? { href: to } : { to }),
   }
 
   return (
-    <a
-      tabIndex={to ? undefined : 0}
-      href={to}
-      className={classes}
-      {...props}
-      onClick={e => {
-        e.preventDefault()
-
-        if (typeof onClick === 'function') {
-          const h = onClick(e)
-
-          if (h === false) {
-            return
-          }
-        }
-
-        setIsExiting(true)
-
-        setTimeout(() => {
-          typeof to !== 'undefined' && navigate(to)
-          typeof afterExit === 'function' && afterExit()
-        }, 1100)
-      }}
-    >
+    <LinkComponent tabIndex={to ? undefined : 0} className={classes} onClick={onClick} {...attrs} {...props}>
       <span>{children}</span>
-    </a>
+    </LinkComponent>
   )
 }

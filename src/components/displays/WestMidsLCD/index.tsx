@@ -67,11 +67,12 @@ const BlackboxLandscapeLcd = React.forwardRef<any, any>(({ station, editBoardCal
         {!searchParams?.get('from-railannouncements.co.uk') && (
           <>
             <PageLink
+              to="#"
               style={{
                 cursor: 'pointer',
                 zIndex: 1000,
               }}
-              afterExit={editBoardCallback}
+              onClick={editBoardCallback}
             >
               Edit board
             </PageLink>

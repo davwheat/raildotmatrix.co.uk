@@ -13,7 +13,8 @@ export default function createBoardPage(Component: React.ComponentType<any>, { r
     const urlParams = new URLSearchParams(search)
 
     const attrs = {
-      editBoardCallback: () => {
+      editBoardCallback: (e: React.MouseEvent) => {
+        e.preventDefault()
         navigate('/board')
       },
       station: urlParams.get('station') || '',
