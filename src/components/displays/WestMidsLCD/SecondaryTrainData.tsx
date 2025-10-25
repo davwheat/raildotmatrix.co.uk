@@ -14,6 +14,8 @@ import dayjsTz from 'dayjs/plugin/timezone'
 dayjs.extend(dayjsUtc)
 dayjs.extend(dayjsTz)
 
+dayjs.tz.setDefault('Europe/London')
+
 import type { IMyTrainService } from '../../../api/ProcessServices'
 
 function ordinal(number: number) {
@@ -52,7 +54,7 @@ export default function SecondaryTrainData({ train, position }: { train: IMyTrai
         <img src={ArrowSVG} />
       </div>
 
-      <div className="time">{dayjs(train.scheduledDeparture).format('HH:mm')}</div>
+      <div className="time">{dayjs.tz(train.scheduledDeparture).format('HH:mm')}</div>
 
       <SlideyScrollText className="dest" classNameInner="dest-inner">
         {combineLocations(train.destinations)}

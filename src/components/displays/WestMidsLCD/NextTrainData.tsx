@@ -13,12 +13,14 @@ import dayjsTz from 'dayjs/plugin/timezone'
 dayjs.extend(dayjsUtc)
 dayjs.extend(dayjsTz)
 
+dayjs.tz.setDefault('Europe/London')
+
 import type { IAssociation, IMyTrainService } from '../../../api/ProcessServices'
 
 const NextTrainTopRow = React.memo(({ service }: { service: IMyTrainService }) => {
   return (
     <div className="top-row">
-      <div className="time">{dayjs(service.scheduledDeparture).format('HH:mm')}</div>
+      <div className="time">{dayjs.tz(service.scheduledDeparture).format('HH:mm')}</div>
 
       <SlideyScrollText className="dest" classNameInner="dest-inner">
         {combineLocations(service.destinations)}
@@ -46,7 +48,7 @@ function pluralise(strings: string[]): string {
 const NextTrainThirdRow = React.memo(({ callingPointText, extraText }: ThirdRowProps) => {
   return (
     <div className="third-row">
-      <SlideyScrollText className="trainInfo" scrollSpeed={350}>
+      <SlideyScrollText className="trainInfo">
         {callingPointText}
         {extraText && <>. {extraText.endsWith('.') ? extraText : <>{extraText}.</>}</>}
       </SlideyScrollText>

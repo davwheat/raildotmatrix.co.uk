@@ -8,6 +8,8 @@ import dayjsTz from 'dayjs/plugin/timezone'
 dayjs.extend(dayjsUtc)
 dayjs.extend(dayjsTz)
 
+dayjs.tz.setDefault('Europe/London')
+
 import './css/board/header.less'
 
 export default function BoardHeader({ platformNumber, stationName }: { platformNumber: number | null; stationName: string }) {
@@ -33,5 +35,5 @@ function Clock() {
     }
   })
 
-  return <div className="clock tab-nums">{dayjs(currentTime).format('HH:mm:ss')}</div>
+  return <div className="clock tab-nums">{dayjs.tz(currentTime).format('HH:mm:ss')}</div>
 }
