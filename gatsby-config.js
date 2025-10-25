@@ -1,15 +1,3 @@
-const PROD_PLUGINS =
-  process.env.NODE_ENV === 'production'
-    ? [
-        {
-          resolve: 'gatsby-plugin-remove-console',
-          options: {
-            exclude: ['error', 'warn'],
-          },
-        },
-      ]
-    : []
-
 module.exports = {
   siteMetadata: {
     title: `Rail Dot Matrix`,
@@ -20,7 +8,6 @@ module.exports = {
     DEV_SSR: true,
   },
   plugins: [
-    ...PROD_PLUGINS,
     {
       resolve: 'gatsby-plugin-react-svg',
       options: {
@@ -38,8 +25,6 @@ module.exports = {
         cssPropOptimization: true,
       },
     },
-    'gatsby-plugin-webpack-bundle-analyser-v2',
-    `gatsby-plugin-webpack-size`,
     `gatsby-plugin-react-head`,
     {
       resolve: `gatsby-plugin-cloudflare-pages`,
