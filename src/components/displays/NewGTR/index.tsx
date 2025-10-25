@@ -91,11 +91,12 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
         {!searchParams?.get('from-railannouncements.co.uk') && (
           <>
             <PageLink
+              to="#"
               style={{
                 cursor: 'pointer',
                 zIndex: 1000,
               }}
-              afterExit={editBoardCallback}
+              onClick={editBoardCallback}
             >
               Edit board
             </PageLink>
@@ -120,7 +121,7 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
             </option>
           ))}
         </select>
-        {platforms?.length && <p>Only showing platform(s) {platforms.join(',')}</p>}
+        {(platforms?.length ?? 0) > 0 && <p>Only showing platform(s) {platforms!.join(',')}</p>}
       </div>
       <ZoomDiv>
         <div style={{ '--color': BoardColors[settings.color] } as any}>

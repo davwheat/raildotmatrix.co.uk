@@ -68,11 +68,12 @@ const Class700PIS = React.forwardRef<any, any>(({ station, editBoardCallback }, 
         {!searchParams?.get('from-railannouncements.co.uk') && (
           <>
             <PageLink
+              to="#"
               style={{
                 cursor: 'pointer',
                 zIndex: 1000,
               }}
-              afterExit={editBoardCallback}
+              onClick={editBoardCallback}
             >
               Edit board
             </PageLink>
