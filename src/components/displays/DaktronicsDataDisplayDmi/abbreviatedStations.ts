@@ -78,6 +78,7 @@ const AbbreviatedStations: Record<string, string> = {
   FKC: 'Folkestone Ctl',
   FKG: 'Falkirk Grahamstn',
   FKH: 'Folkestone Hbr',
+  FNB: 'Farnborough',
   FNY: 'Finchley Road & F',
   FSB: 'Fishbourne',
   FST: 'Fenchurch Street',
@@ -148,6 +149,7 @@ const AbbreviatedStations: Record<string, string> = {
   PPK: 'Possilpark & Park',
   PRA: 'Prestwick Airport',
   PRR: 'Princes Risboro',
+  PTA: 'Port Talbot Pkwy',
   PWC: 'Prestwich Mtrolink',
   PYG: 'Paisley Gilmour St',
   QRB: 'Queenstown Road',
@@ -224,7 +226,7 @@ const AbbreviatedStations: Record<string, string> = {
   WMW: 'Walthamstow Q Rd',
   WNC: 'Windsor & Eton',
   WNR: 'Windsor & Eton',
-  WOF: 'Worcester Fgt St',
+  WOF: 'Worcester Fte St',
   WON: 'Walton-on-Naze',
   WOP: 'Worcestershire Pw',
   WOS: 'Worcester S H',
@@ -234,6 +236,7 @@ const AbbreviatedStations: Record<string, string> = {
   WWC: 'Woolwich',
   XBO: 'Melksham Mkt Pl',
   XBV: 'Minehead Butlins',
+  XCB: 'Aberdare',
   XCF: 'Cardiff Intl Airpt',
   XDJ: 'Plymth Saltash Rd',
   XDM: 'Chipp. Bath Road',
@@ -264,6 +267,7 @@ const AbbreviatedStations: Record<string, string> = {
   ZPC: 'Piccadilly Circ. LU',
   ZTH: 'Tower Hill LU',
   ZTU: 'Turnham Green LU',
+  ZUM: 'Upminster LU',
 }
 
 export function getStationWithOverride(crs: string, name: string): string {
