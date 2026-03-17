@@ -7,6 +7,7 @@ import { debounce } from 'throttle-debounce'
 import './css/index.less'
 import PageLink from '../../common/PageLink'
 import { ZoomDiv } from '../ZoomDiv'
+import { getDisabledPlatforms } from '../../../api/ProcessServices'
 
 interface IProps {
   station: string
@@ -121,7 +122,7 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
             </option>
           ))}
         </select>
-        {(platforms?.length ?? 0) > 0 && <p>Only showing platform(s) {platforms!.join(',')}</p>}
+        {(platforms?.length ?? 0) > 0 && <p>Hiding platform(s) {getDisabledPlatforms(platforms!).join(', ')}</p>}
       </div>
       <ZoomDiv>
         <div style={{ '--color': BoardColors[settings.color] } as any}>

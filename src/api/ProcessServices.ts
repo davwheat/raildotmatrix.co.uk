@@ -9,6 +9,21 @@ import dayjsUtc from 'dayjs/plugin/utc'
 import dayjsTz from 'dayjs/plugin/timezone'
 import { crsToStationName } from '../functions/crsToStationName'
 
+const ALL_PLATFORMS: string[] = [
+  '0',
+  ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].flatMap(n => [`${n}`, `${n}a`, `${n}b`, `${n}c`, `${n}d`]),
+  ...[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24].map(n => `${n}`),
+  'a',
+  'b',
+  'c',
+  'd',
+]
+
+export function getDisabledPlatforms(enabledPlatforms: string[]): string[] {
+  const enabled = new Set(enabledPlatforms.map(p => p.toLowerCase()))
+  return ALL_PLATFORMS.filter(p => !enabled.has(p))
+}
+
 dayjs.extend(dayjsUtc)
 dayjs.extend(dayjsTz)
 
@@ -336,12 +351,12 @@ export function processServices(
       return false
     }
 
-    if (showUnconfirmedPlatforms && s.platform === null) {
+    if (showUnconfirmedPlatforms && !s.platform) {
       return true
     }
 
     // Platform filtering
-    if (platforms && platforms.length > 0 && (s.platform === null || !platforms.includes(s.platform.toUpperCase()))) {
+    if (platforms && platforms.length > 0 && (!s.platform || !platforms.includes(s.platform.toUpperCase()))) {
       return false
     }
 

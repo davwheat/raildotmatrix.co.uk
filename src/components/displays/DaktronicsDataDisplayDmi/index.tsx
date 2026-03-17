@@ -8,6 +8,7 @@ import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
 
 import BoardAsset from './board-outline.inline.svg'
 import ToggleSwitch from '../../common/form/ToggleSwitch'
+import { getDisabledPlatforms } from '../../../api/ProcessServices'
 
 interface IProps {
   station: string
@@ -86,7 +87,7 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
           ))}
         </select>
 
-        {!!platforms?.length && <p>Only showing platform(s) {platforms.join(',')}</p>}
+        {!!platforms?.length && <p>Hiding platform(s) {getDisabledPlatforms(platforms).join(', ')}</p>}
       </BoardSettings>
 
       <ZoomDiv>
