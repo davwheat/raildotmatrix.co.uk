@@ -336,12 +336,12 @@ export function processServices(
       return false
     }
 
-    if (showUnconfirmedPlatforms && s.platform === null) {
+    if (showUnconfirmedPlatforms && !s.platform) {
       return true
     }
 
     // Platform filtering
-    if (platforms && platforms.length > 0 && (s.platform === null || !platforms.includes(s.platform.toUpperCase()))) {
+    if (platforms && platforms.length > 0 && (!s.platform || !platforms.includes(s.platform.toUpperCase()))) {
       return false
     }
 
