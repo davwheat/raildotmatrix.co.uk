@@ -1,4 +1,5 @@
 import React from 'react'
+import { DataSourceProvider } from '../live/source'
 import { Link, PageProps, navigate } from 'gatsby'
 import NoSSR from '@mpth/react-no-ssr'
 
@@ -33,7 +34,9 @@ export default function createBoardPage(Component: React.ComponentType<any>, { r
 
     return (
       <NoSSR>
-        <Component {...attrs} />
+        <DataSourceProvider>
+          <Component {...attrs} />
+        </DataSourceProvider>
       </NoSSR>
     )
   }

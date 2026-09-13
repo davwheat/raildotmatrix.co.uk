@@ -1,13 +1,14 @@
 import React from 'react'
 
 import CallNreMessage from './CallNreMessage'
+import PlatformWarningMessage from './PlatformWarningMessage'
 import Clock from './Clock'
 import TrainServices from './TrainServices'
 
 import './css/board.less'
 
-import { processServices } from '../../../api/ProcessServices'
-import { isValidResponseApi, useServiceInformation } from '../../../hooks/useServiceInformation'
+import { useServiceInformation } from '../../../hooks/useServiceInformation'
+import { noticeKind } from '../../../live/overrideNotice'
 
 interface IProps {
   platforms?: string[]
@@ -18,15 +19,11 @@ interface IProps {
 }
 
 export default function FullBoard({ station, animateClockDigits, platforms, useLegacyTocNames, showUnconfirmedPlatforms }: IProps) {
-  const [trainData] = useServiceInformation(station)
+  const { services, overrides } = useServiceInformation(station, platforms ?? null, !!useLegacyTocNames, showUnconfirmedPlatforms)
 
-  const services = isValidResponseApi(trainData)
-    ? processServices(trainData.trainServices!!, platforms ?? null, !!useLegacyTocNames, station, showUnconfirmedPlatforms).filter(
-        s => !s.hasDeparted,
-      )
-    : null
+  const warning = noticeKind(overrides)
 
-  if (!services || services.length === 0) {
+  if (!services || (services.length === 0 && !warning)) {
     return (
       <article className="dot-matrix">
         <CallNreMessage />
@@ -37,7 +34,7 @@ export default function FullBoard({ station, animateClockDigits, platforms, useL
 
   return (
     <article className="dot-matrix">
-      <TrainServices services={services} />
+      {warning ? <PlatformWarningMessage kind={warning} /> : <TrainServices services={services} />}
       <Clock animateDigits={animateClockDigits} />
     </article>
   )

@@ -175,16 +175,10 @@ function _CallingPoints({ pointsText, onComplete }: { pointsText: string[]; onCo
   )
 }
 
-const TrainServiceAdditionalInfo = React.memo(_TrainServiceAdditionalInfo, (prev, next) => {
-  console.log('train service additional info changed, but not rerendering')
-
-  return true
+const TrainServiceAdditionalInfo = React.memo(_TrainServiceAdditionalInfo, (previous, next) => {
+  return JSON.stringify(previous) === JSON.stringify(next)
 })
 
 export default TrainServiceAdditionalInfo
 
-const CallingPoints = React.memo(_CallingPoints, (prev, next) => {
-  console.log('calling points props changed, but not rerendering')
-
-  return true
-})
+const CallingPoints = React.memo(_CallingPoints)

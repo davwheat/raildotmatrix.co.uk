@@ -29,7 +29,7 @@ dayjs.extend(dayjsTz)
 
 dayjs.tz.setDefault('Europe/London')
 
-class CallPoint implements IPassengerCallPoint {
+export class CallPoint implements IPassengerCallPoint {
   name: string
   isCancelled: boolean
   scheduledDeparture: Date | null
@@ -79,7 +79,7 @@ class CallPoint implements IPassengerCallPoint {
   }
 }
 
-class Service implements IMyTrainService {
+export class Service implements IMyTrainService {
   destinations: { name: string; via: null | string; crs: string }[]
   origins: { name: string; via: null | string; crs: string }[]
   cancelled: boolean

@@ -1,6 +1,7 @@
 import React from 'react'
 
 import NoServicesMessage from './NoServicesMessage'
+import PlatformWarningMessage from './PlatformWarningMessage'
 import Clock from './Clock'
 import TrainServices from './TrainServices'
 
@@ -9,8 +10,8 @@ import boardFill from './board-fill.svg'
 
 import { css } from '@emotion/react'
 
-import { processServices } from '../../../api/ProcessServices'
-import { isValidResponseApi, useServiceInformation } from '../../../hooks/useServiceInformation'
+import { useServiceInformation } from '../../../hooks/useServiceInformation'
+import { noticeKind } from '../../../live/overrideNotice'
 
 const BOARD_WIDTH = 2250
 const BOARD_HEIGHT = 450
@@ -86,13 +87,7 @@ const base = css`
 `
 
 export default function FullBoard({ station, platforms, useLegacyTocNames, showUnconfirmedPlatforms, hasCasing, worldlinePowered }: IProps) {
-  const [trainData] = useServiceInformation(station)
-
-  const services = isValidResponseApi(trainData)
-    ? processServices(trainData.trainServices!!, platforms ?? null, !!useLegacyTocNames, station, showUnconfirmedPlatforms).filter(
-        s => !s.hasDeparted,
-      )
-    : null
+  const { services, overrides } = useServiceInformation(station, platforms ?? null, !!useLegacyTocNames, showUnconfirmedPlatforms)
 
   const css = [
     base,
@@ -108,7 +103,9 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
     },
   ]
 
-  if (!services || services.length === 0) {
+  const warning = noticeKind(overrides)
+
+  if (!services || (services.length === 0 && !warning)) {
     return (
       <article css={css}>
         <NoServicesMessage />
@@ -119,7 +116,11 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
 
   return (
     <article css={css}>
-      <TrainServices services={services} worldlinePowered={worldlinePowered} />
+      {warning ? (
+        <PlatformWarningMessage kind={warning} />
+      ) : (
+        services.length > 0 && <TrainServices services={services} worldlinePowered={worldlinePowered} />
+      )}
       <Clock />
     </article>
   )

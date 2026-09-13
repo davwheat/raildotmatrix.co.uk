@@ -267,10 +267,8 @@ function _TrainServiceAdditionalInfo({ service, worldlinePowered }: IProps) {
   )
 }
 
-const TrainServiceAdditionalInfo = React.memo(_TrainServiceAdditionalInfo, (prev, next) => {
-  console.log('train service additional info changed, but not rerendering')
-
-  return true
+const TrainServiceAdditionalInfo = React.memo(_TrainServiceAdditionalInfo, (previous, next) => {
+  return JSON.stringify(previous) === JSON.stringify(next)
 })
 
 export default TrainServiceAdditionalInfo

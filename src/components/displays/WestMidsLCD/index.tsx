@@ -82,7 +82,12 @@ const BlackboxLandscapeLcd = React.forwardRef<any, any>(({ station, editBoardCal
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
       </div>
       <ZoomDiv>
-        <FullBoard ref={ref} station={station} useLegacyTocNames={!!searchParams?.get('useLegacyTocNames')} />
+        <FullBoard
+          station={station}
+          useLegacyTocNames={!!searchParams?.get('useLegacyTocNames')}
+          platforms={searchParams?.getAll('platform')}
+          showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
+        />
       </ZoomDiv>
     </>
   )

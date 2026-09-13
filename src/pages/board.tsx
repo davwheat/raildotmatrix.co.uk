@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { DataSourceProvider, useDataSource } from '../live/source'
 
 import Layout from '../components/Layout'
 import Seo from '../components/Seo'
@@ -11,7 +12,16 @@ import Attribution from '../components/common/Attribution'
 
 import type { PageProps } from 'gatsby'
 
-export default function IndexPage({ location: { search } }: PageProps) {
+export default function BoardSettingsPage(props: PageProps) {
+  return (
+    <DataSourceProvider>
+      <IndexPage {...props} />
+    </DataSourceProvider>
+  )
+}
+
+function IndexPage({ location: { search } }: PageProps) {
+  const { mode, baseUrl } = useDataSource()
   const [autocomplete, setAutocomplete] = useState([{ label: 'Loading stations...', value: 'VIC' }])
 
   const searchParams = new URLSearchParams(search)
@@ -32,7 +42,7 @@ export default function IndexPage({ location: { search } }: PageProps) {
     })
   }
 
-  function ChooseDisplay(display: { label: string; value: string }) {
+  function ChooseDisplay(display: React.ChangeEvent<HTMLSelectElement>) {
     setBoardSettings({
       type: display.target.value,
       station: BoardSettings.station,
@@ -66,7 +76,7 @@ export default function IndexPage({ location: { search } }: PageProps) {
               onChange={ChooseStation as any}
               label="Select a station"
               autocompleteOptions={autocomplete}
-              value={BoardSettings.station.value}
+              value={BoardSettings.station}
             />
             <Select
               label="Display type"
@@ -80,7 +90,11 @@ export default function IndexPage({ location: { search } }: PageProps) {
               value={BoardSettings.type}
             />
             <PageLink
-              to={BoardSettings.station && BoardSettings.type ? `/board/${BoardSettings.type}?station=${BoardSettings.station}` : undefined}
+              to={
+                BoardSettings.station && BoardSettings.type
+                  ? `/board/${BoardSettings.type}?${new URLSearchParams({ station: BoardSettings.station, dataSource: mode, liveServiceUrl: baseUrl })}`
+                  : undefined
+              }
               style={{ cursor: 'pointer' }}
             >
               Next

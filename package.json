@@ -58,7 +58,9 @@
     "format:check": "prettier --check \"**/*.{js,jsx,json,md,ts,tsx}\"",
     "start": "yarn develop",
     "serve": "yarn wrangler pages dev public/",
-    "clean": "gatsby clean"
+    "clean": "gatsby clean",
+    "test:live": "node scripts/test-live.mjs",
+    "test:visual": "node scripts/test-visual.mjs"
   },
-  "packageManager": "yarn@4.10.3"
+  "packageManager": "yarn@4.18.0"
 }
