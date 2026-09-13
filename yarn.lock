@@ -11843,15 +11843,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"msgpackr@npm:^1.5.4":
-  version: 1.10.1
-  resolution: "msgpackr@npm:1.10.1"
+"msgpackr@npm:^1.11.0":
+  version: 1.12.1
+  resolution: "msgpackr@npm:1.12.1"
   dependencies:
     msgpackr-extract: "npm:^3.0.2"
   dependenciesMeta:
     msgpackr-extract:
       optional: true
-  checksum: 10c0/2e6ed91af89ec15d1e5595c5b837a4adcbb185b0fbd4773d728ced89ab4abbdd3401f6777b193d487d9807e1cb0cf3da1ba9a0bd2d5a553e22355cea84a36bab
+  checksum: 10c0/145a6477ff46ad3154b999ad9f1d80070f50b01f5a12975aad683455fa8968f3e12503d8397a8828bc15fd297da9694fc7b8ae9f21d3df64f559caa10a3a4731
   languageName: node
   linkType: hard
 
@@ -12364,10 +12364,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ordered-binary@npm:^1.2.4":
-  version: 1.5.1
-  resolution: "ordered-binary@npm:1.5.1"
-  checksum: 10c0/fb4c74e07436d0bf33d3b537c18dccafb39a60750a64d8b8fbd55f0b0f8eb7dad710f663b9c2edd1d59e9a27e13b638099da901ecf1cc95cd40173f42cf70f9e
+"ordered-binary@npm:^1.5.3":
+  version: 1.6.1
+  resolution: "ordered-binary@npm:1.6.1"
+  checksum: 10c0/27aca7a681b859acdc3607784288462662a4a0575b1c727ef8710c3e81e3a7703d2d64e4401dbba049c50d4ec4d89acbe198fdf5ca975a4709962ecfc42f2bbf
   languageName: node
   linkType: hard
 
