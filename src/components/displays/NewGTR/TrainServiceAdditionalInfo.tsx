@@ -25,12 +25,22 @@ function aAnToc(toc: string): string {
   }
 }
 
+function combineNames(locations: IMyTrainService['origins']): string {
+  const names = locations.map(location => location.name)
+  if (names.length < 2) return names.join('')
+  return `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`
+}
+
 function getServiceInfo(service: IMyTrainService): string {
   const { toc, length } = service
 
   const portions: string[] = []
 
-  portions.push(`${aAnToc(toc)}${toc ? ` ${toc}` : ''} service${length ? ` formed of ${length} coaches` : ''}.`)
+  if (service.terminatesHere) {
+    portions.push(`${toc} service. This is the service from ${combineNames(service.origins)}.`)
+  } else {
+    portions.push(`${aAnToc(toc)}${toc ? ` ${toc}` : ''} service${length ? ` formed of ${length} coaches` : ''}.`)
+  }
 
   if (service.cancelled) {
     if (service.cancelReason) portions.push(service.cancelReason)
@@ -57,23 +67,11 @@ function _TrainServiceAdditionalInfo({ service }: IProps) {
     [JSON.stringify(service)],
   )
 
-  const pageCount = 2 + associatedServices.length
-
-  const [shownPage, setShownPage] = React.useState(0)
-
-  const nextPage = React.useCallback(() => {
-    setShownPage(p => {
-      if (p + 1 >= pageCount) return 0
-      return p + 1
-    })
-  }, [pageCount])
-
-  useEffect(() => {
-    if (shownPage >= pageCount) setShownPage(0)
-  }, [shownPage, pageCount])
-
   // Memoise to prevent early animation end
   const callingPointPages: InfoPage[] = React.useMemo(() => {
+    // A terminating service has nowhere left to call, so the service line is the whole story.
+    if (service.terminatesHere) return []
+
     const ogServicePoints = service.passengerCallPoints.map(p => {
       const aTime = p.displayedArrivalTime()
       return `${p.name}${aTime ? ` (${aTime})` : ''}`
@@ -113,7 +111,22 @@ function _TrainServiceAdditionalInfo({ service }: IProps) {
       const ogLengthEnd = service.passengerCallPoints.at(-1)!!.length
       return [{ prefix: `Front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches:`, callPoints: ogServicePoints }, ...assocServices]
     }
-  }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map(a => a.passengerCallPoints))])
+  }, [service.terminatesHere, JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map(a => a.passengerCallPoints))])
+
+  const pageCount = 1 + callingPointPages.length
+
+  const [shownPage, setShownPage] = React.useState(0)
+
+  const nextPage = React.useCallback(() => {
+    setShownPage(p => {
+      if (p + 1 >= pageCount) return 0
+      return p + 1
+    })
+  }, [pageCount])
+
+  useEffect(() => {
+    if (shownPage >= pageCount) setShownPage(0)
+  }, [shownPage, pageCount])
 
   const serviceInfo = React.useMemo(() => getServiceInfo(service), [JSON.stringify(service)])
 

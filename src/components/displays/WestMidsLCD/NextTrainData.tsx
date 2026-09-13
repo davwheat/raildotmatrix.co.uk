@@ -69,6 +69,9 @@ export default function NextTrain({ nextTrain }: { nextTrain: IMyTrainService })
 
   // Memoise to prevent early animation end
   const callingPointText: string = React.useMemo(() => {
+    // A terminating service has nowhere left to call, so where it came from is the useful thing to say.
+    if (nextTrain.terminatesHere) return `This is the service from ${pluralise(nextTrain.origins.map(origin => origin.name))}.`
+
     const ogServicePoints = nextTrain.passengerCallPoints.map(p => {
       const aTime = p.displayedArrivalTime()
       return `${p.name}${aTime ? ` (${aTime})` : ''}`
@@ -100,7 +103,12 @@ export default function NextTrain({ nextTrain }: { nextTrain: IMyTrainService })
       const ogLengthEnd = nextTrain.passengerCallPoints.at(-1)!!.length
       return [`Join the front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches for ${pluralise(ogServicePoints)}.`, ...assocServices].join(' ')
     }
-  }, [JSON.stringify(nextTrain.passengerCallPoints), JSON.stringify(associatedServices.map(a => a.passengerCallPoints))])
+  }, [
+    nextTrain.terminatesHere,
+    JSON.stringify(nextTrain.origins),
+    JSON.stringify(nextTrain.passengerCallPoints),
+    JSON.stringify(associatedServices.map(a => a.passengerCallPoints)),
+  ])
 
   return (
     <div className="nextTrain">

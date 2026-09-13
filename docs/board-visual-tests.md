@@ -30,7 +30,14 @@ copy of the baseline. Decide whether the change is a regression or an improvemen
 | `--repeat <n>`    | Capture each case `n` times and fail if the captures disagree. Use it when a case looks flaky. |
 | `--public <dir>`  | Serve a build from somewhere other than `public/`.                                             |
 
-Set `CHROME_PATH` if Chrome is not in one of the usual locations.
+Set `CHROME_PATH` if Chrome is not in one of the usual locations. The runner needs Node 22 or newer.
+
+### Baselines come from CI
+
+Text renders differently on different operating systems, so a baseline recorded on one will not match another. The committed baselines are the
+ones the `Board screenshots` workflow produces on Linux, and it commits any change back to the branch. Treat CI as the source of truth: run the
+tests locally to see a change, but expect a local `--update` on macOS or Windows to rewrite every baseline rather than only the ones you meant to
+change.
 
 ## What is covered
 
@@ -40,7 +47,7 @@ Each state in `tests/visual/fixtures.ts` is captured on each board in `tests/vis
 | ------------------ | ---------------------------------------------------------------------------------------------------------- |
 | `connecting`       | The socket is open but no snapshot has arrived. A board never says so, so this must match `no-departures`. |
 | `no-departures`    | A healthy feed with nothing to show.                                                                       |
-| `terminating-only` | An arrival with no onward departure, which must not reach a departure board.                               |
+| `terminating`      | A service ending its journey here, shown as "Terminates here".                                             |
 | `single-departure` | One straightforward service.                                                                               |
 | `busy-board`       | Five services competing for the board.                                                                     |
 | `delayed`          | A late running service, with its reason.                                                                   |

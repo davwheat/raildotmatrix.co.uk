@@ -3,6 +3,14 @@ import { CallPoint, Service, getLegacyTocName, type IMyTrainService } from '../a
 import type { Call, CISState, Endpoint, Location, Movement, PlatformOverride, Portion } from './types'
 
 const date = (value: string | null) => (value ? new Date(value) : null)
+
+/** A service ending its journey here has an arrival but no onward departure. */
+const terminatesHere = (movement: Movement) => !movement.departure.planned
+
+/** Boards count down to a departure; for a terminating service the arrival is the time passengers are waiting for. */
+const boardTimes = (movement: Movement) => (terminatesHere(movement) ? movement.arrival : movement.departure)
+
+const TERMINATES_HERE = { name: 'Terminates here', crs: '', via: null }
 const locationName = (location: Location) => location.name || location.crs || location.tpl
 const endpoint = (location: Endpoint) => ({ name: locationName(location), crs: location.crs || '', via: location.via?.text || null })
 
@@ -14,13 +22,14 @@ class LiveService extends Service {
     super({
       id: movement.id,
       boardStationCrs: movement.station.crs || '',
-      destinations: movement.destinations.map(endpoint),
+      destinations: terminatesHere(movement) ? [TERMINATES_HERE] : movement.destinations.map(endpoint),
+      terminatesHere: terminatesHere(movement),
       origins: movement.origins.map(endpoint),
       cancelled: movement.cancelled,
       cancelReason: null,
       delayReason: null,
-      scheduledDeparture: date(movement.departure.planned),
-      estimatedDeparture: movement.departure.unknown_delay ? null : date(movement.departure.estimated || movement.departure.planned),
+      scheduledDeparture: date(boardTimes(movement).planned),
+      estimatedDeparture: boardTimes(movement).unknown_delay ? null : date(boardTimes(movement).estimated || boardTimes(movement).planned),
       actualDeparture: date(movement.departure.actual),
       hasDeparted: false, // The server owns removal, including matched TD departures.
       scheduledArrival: date(movement.arrival.planned),
@@ -44,7 +53,7 @@ class LiveService extends Service {
     return this.movement.delay_reason.text
   }
   isDelayed() {
-    return this.movement.departure.unknown_delay || super.isDelayed()
+    return boardTimes(this.movement).unknown_delay || super.isDelayed()
   }
 }
 
@@ -117,7 +126,10 @@ export function displayServices(
   // Keep the server's ordering: TrainOrder takes priority within each platform.
   const services = state.ordering.flatMap(id => {
     const movement = state.movements.get(id)
-    if (!movement || movement.suppressed || !movement.passenger || movement.operational || !movement.departure.planned) return []
+    if (!movement || movement.suppressed || !movement.passenger || movement.operational) return []
+    // A terminating service is shown like any other, timed by its arrival. A train that only passes through is not a
+    // call at all: it is announced, if at all, by a platform override.
+    if (!movement.departure.planned && (!movement.arrival.planned || movement.kind === 'passing')) return []
     const platform = movement.platform.number?.toUpperCase()
     if (platform && overridden.has(platform)) return []
     // Darwin confirmation is separate from permission to display a platform.

@@ -61,11 +61,20 @@ interface IProps {
   worldlinePowered: boolean
 }
 
+function combineNames(locations: IMyTrainService['origins']): string {
+  const names = locations.map(location => location.name)
+  if (names.length < 2) return names.join('')
+  return `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`
+}
+
 function getServiceInfo(service: IMyTrainService, worldlinePowered: boolean): string {
   const { toc, length } = service
+  const fromOrigins = `This is the service from ${combineNames(service.origins)}.`
 
   if (worldlinePowered) {
-    const portions: string[] = [!!length ? `A ${toc} service which has ${length} coaches.` : `A ${toc} service.`]
+    const portions: string[] = service.terminatesHere
+      ? [`A ${toc} service.`, fromOrigins]
+      : [!!length ? `A ${toc} service which has ${length} coaches.` : `A ${toc} service.`]
 
     if (service.cancelled) {
       if (service.cancelReason) portions.push(service.cancelReason)
@@ -75,9 +84,11 @@ function getServiceInfo(service: IMyTrainService, worldlinePowered: boolean): st
 
     return portions.join(' ')
   } else {
+    // The scrolled prefix supplies the operator name, so this line opens mid-sentence.
     const portions: string[] = [' service.']
 
-    if (!!length) portions.push(`Formed of ${length} coaches.`)
+    if (service.terminatesHere) portions.push(fromOrigins)
+    else if (!!length) portions.push(`Formed of ${length} coaches.`)
 
     if (service.cancelled) {
       if (service.cancelReason) portions.push(service.cancelReason)
@@ -115,23 +126,11 @@ function _TrainServiceAdditionalInfo({ service, worldlinePowered }: IProps) {
     [JSON.stringify(service)],
   )
 
-  const pageCount = worldlinePowered ? 1 : 2 + associatedServices.length
-
-  const [shownPage, setShownPage] = React.useState(0)
-
-  const nextPage = React.useCallback(() => {
-    setShownPage(p => {
-      if (p + 1 >= pageCount) return 0
-      return p + 1
-    })
-  }, [pageCount])
-
-  useEffect(() => {
-    if (shownPage >= pageCount) setShownPage(0)
-  }, [shownPage, pageCount])
-
   // Memoise to prevent early animation end
   const callingPointPages: InfoPage[] = React.useMemo(() => {
+    // A terminating service has nowhere left to call, so the service line is the whole story.
+    if (service.terminatesHere) return []
+
     const ogServicePoints = service.passengerCallPoints.map(p => p.name)
 
     const assocCount = associatedServices.length
@@ -168,7 +167,27 @@ function _TrainServiceAdditionalInfo({ service, worldlinePowered }: IProps) {
         ...assocServices,
       ]
     }
-  }, [JSON.stringify(service.passengerCallPoints), JSON.stringify(associatedServices.map(a => a.passengerCallPoints)), worldlinePowered])
+  }, [
+    service.terminatesHere,
+    JSON.stringify(service.passengerCallPoints),
+    JSON.stringify(associatedServices.map(a => a.passengerCallPoints)),
+    worldlinePowered,
+  ])
+
+  const pageCount = worldlinePowered ? 1 : 1 + callingPointPages.length
+
+  const [shownPage, setShownPage] = React.useState(0)
+
+  const nextPage = React.useCallback(() => {
+    setShownPage(p => {
+      if (p + 1 >= pageCount) return 0
+      return p + 1
+    })
+  }, [pageCount])
+
+  useEffect(() => {
+    if (shownPage >= pageCount) setShownPage(0)
+  }, [shownPage, pageCount])
 
   const serviceInfo = React.useMemo(() => getServiceInfo(service, worldlinePowered), [JSON.stringify(service), worldlinePowered])
   const serviceInfoPrefix = React.useMemo(() => getServiceInfoPrefix(service, worldlinePowered), [JSON.stringify(service), worldlinePowered])

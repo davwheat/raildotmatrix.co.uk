@@ -244,17 +244,19 @@ export const FIXTURES: Record<string, Fixture> = {
     description: 'a healthy feed with nothing to show',
     snapshot: snapshot([]),
   },
-  'terminating-only': {
-    description: 'an arrival with no onward departure never reaches a departure board',
+  terminating: {
+    description: 'a service ending its journey here, shown in place of a destination as Terminates here',
     snapshot: snapshot([
       {
         ...victoriaService(),
         id: 'terminating',
+        kind: 'arrival',
         departure: noTimes(),
         arrival: times(240),
         destinations: [endpoint(STATION)],
         calling_points: [],
       },
+      bedfordService(),
     ]),
   },
   'single-departure': {

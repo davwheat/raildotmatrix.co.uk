@@ -81,6 +81,7 @@ export class CallPoint implements IPassengerCallPoint {
 
 export class Service implements IMyTrainService {
   destinations: { name: string; via: null | string; crs: string }[]
+  terminatesHere: boolean
   origins: { name: string; via: null | string; crs: string }[]
   cancelled: boolean
   scheduledDeparture: Date | null
@@ -160,6 +161,7 @@ export class Service implements IMyTrainService {
 
   constructor({
     destinations,
+    terminatesHere,
     origins,
     cancelled,
     scheduledDeparture,
@@ -179,6 +181,7 @@ export class Service implements IMyTrainService {
     id,
   }: {
     destinations: { name: string; via: null | string; crs: string }[]
+    terminatesHere: boolean
     origins: { name: string; via: null | string; crs: string }[]
     cancelled: boolean
     scheduledDeparture: Date | null
@@ -198,6 +201,7 @@ export class Service implements IMyTrainService {
     id: string
   }) {
     this.destinations = destinations
+    this.terminatesHere = terminatesHere
     this.origins = origins
     this.cancelled = cancelled
     this.scheduledDeparture = scheduledDeparture
@@ -244,6 +248,8 @@ export interface IMyTrainService {
   id: string
 
   destinations: { name: string; via: null | string; crs: string }[]
+  /** A service that ends its journey at this station, so it has a scheduled arrival but no onward departure. */
+  terminatesHere: boolean
   origins: { name: string; via: null | string; crs: string }[]
   cancelled: boolean
   scheduledDeparture: Date | null
@@ -416,6 +422,8 @@ export function processServices(
         })
 
       return new Service({
+        // The original API only ever lists services with a scheduled departure.
+        terminatesHere: false,
         destinations: (service.isCancelled ? service.destination : service.currentDestinations || service.destination).map(d => ({
           name: d.locationName,
           via: d.via,
@@ -472,6 +480,8 @@ function processAssociatedService(
   const ogOrigins = ogService.currentOrigins || ogService.origin
 
   return new Service({
+    // The original API only ever lists services with a scheduled departure.
+    terminatesHere: false,
     destinations: (applicableOgDest
       ? [applicableOgDest]
       : stop1.falseDest || [{ locationName: association.destination, crs: association.destCRS }]
