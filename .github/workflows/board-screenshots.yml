@@ -12,8 +12,7 @@ permissions:
   contents: write
 
 env:
-  # The screenshot runner uses import.meta.dirname and the global WebSocket, so it needs a newer Node than the build.
-  NODE_VERSION: 22.x
+  NODE_VERSION: 24.x
 
 jobs:
   screenshots:
@@ -25,19 +24,19 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Check out the branch itself rather than the merge commit, so the baselines can be pushed back to it.
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
 
       - name: Install Chrome
-        uses: browser-actions/setup-chrome@v1
+        uses: browser-actions/setup-chrome@v2
         id: chrome
         with:
           chrome-version: stable
@@ -78,7 +77,7 @@ jobs:
 
       - name: Upload failures
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: board-screenshot-failures
           path: tests/visual/failures
