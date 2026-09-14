@@ -9,8 +9,6 @@ dayjs.extend(dayjsTz)
 
 dayjs.tz.setDefault('Europe/London')
 
-import './css/trainService.less'
-
 import SwapBetween from './SwapBetween'
 import TrainServiceAdditionalInfo from './TrainServiceAdditionalInfo'
 import clsx from 'clsx'

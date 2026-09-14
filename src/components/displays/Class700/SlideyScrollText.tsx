@@ -2,8 +2,6 @@ import React, { useEffect, useRef } from 'react'
 
 import clsx from 'clsx'
 
-import './css/slideyScrollText.less'
-
 interface IProps {
   children: React.ReactNode
   className?: string

@@ -2,7 +2,7 @@ import React from 'react'
 
 import Select, { SingleValue, createFilter } from 'react-select'
 
-interface Option {
+export interface Option {
   label: string
   value: string
 }
@@ -12,19 +12,21 @@ interface IProps {
   helpText?: React.ReactNode
   placeholder?: string
   autocompleteOptions: Option[]
-  onChange?: (value: SingleValue<string>) => void
+  onChange?: (value: SingleValue<Option>) => void
   value?: string
 }
 
-export default function AutocompleteSelect({ label, helpText, placeholder, autocompleteOptions, onChange, ...props }: IProps) {
+export default function AutocompleteSelect({ label, helpText, placeholder, autocompleteOptions, onChange, value, ...props }: IProps) {
   return (
     <label className="form-textbox">
       {label}
       <Select
         onChange={onChange}
         className="form-textbox--input form-textbox--input__autocomplete"
-        label={placeholder}
+        placeholder={placeholder}
         options={autocompleteOptions}
+        // react-select selects by option, not by the CRS code the board settings page holds.
+        value={autocompleteOptions.find(option => option.value === value) ?? null}
         filterOption={createFilter({ ignoreAccents: false })}
         components={{
           MenuList,

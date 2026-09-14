@@ -1,8 +1,6 @@
 import React from 'react'
 import { getCallingPoints } from './CallingPoints'
 
-import '../css/stoppingDiagram.less'
-
 export default function StoppingDiagramBigScreen() {
   const callingPoints = getCallingPoints('names')
 

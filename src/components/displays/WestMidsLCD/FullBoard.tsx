@@ -1,28 +1,42 @@
 import React, { useRef } from 'react'
 
-import './css/board/index.less'
-
 import BoardHeader from './BoardHeader'
 import NextTrain from './NextTrainData'
 import SecondaryTrainData from './SecondaryTrainData'
-import { processServices } from '../../../api/ProcessServices'
-import { StaffServicesResponse } from '../../../api/GetNextTrainsAtStationStaff'
-import { isValidResponseApi, useServiceInformation } from '../../../hooks/useServiceInformation'
+import PlatformWarningMessage from './PlatformWarningMessage'
+import { useServiceInformation } from '../../../hooks/useServiceInformation'
+import { noticeKind } from '../../../live/overrideNotice'
 
 interface IProps {
   station: string
-  platformNumber: number
+  platformNumber?: number | null
   useLegacyTocNames?: boolean
+  platforms?: string[]
+  showUnconfirmedPlatforms?: boolean
 }
 
-export default function FullBoard({ station, platformNumber, useLegacyTocNames = false }: IProps) {
+export default function FullBoard({
+  station,
+  platformNumber = null,
+  useLegacyTocNames = false,
+  platforms,
+  showUnconfirmedPlatforms = false,
+}: IProps) {
   const boardRef = useRef<HTMLDivElement>(null)
 
-  const [trainData, dataInfo] = useServiceInformation(station)
+  const { services, overrides, stationName } = useServiceInformation(station, platforms ?? null, !!useLegacyTocNames, showUnconfirmedPlatforms)
 
-  const services = isValidResponseApi(trainData)
-    ? processServices(trainData.trainServices!!, /* platforms ?? */ null, !!useLegacyTocNames, station).filter(s => !s.hasDeparted)
-    : null
+  const warning = noticeKind(overrides)
+
+  if (warning) {
+    return (
+      <article className="tfwm-board tfwm-board__notice" ref={boardRef}>
+        <BoardHeader platformNumber={platformNumber} stationName={stationName} />
+
+        <PlatformWarningMessage kind={warning} />
+      </article>
+    )
+  }
 
   if (services === null || services.length === 0) {
     return (
@@ -38,29 +52,9 @@ export default function FullBoard({ station, platformNumber, useLegacyTocNames =
 
   const [firstService, secondService, thirdService] = services
 
-  if (dataInfo.loadingData) {
-    return (
-      <article className="tfwm-board tfwm-board__notice" ref={boardRef}>
-        <BoardHeader platformNumber={platformNumber} stationName={station} />
-      </article>
-    )
-  }
-
-  if (services.length === 0) {
-    return (
-      <article className="tfwm-board tfwm-board__notice" ref={boardRef}>
-        <BoardHeader platformNumber={platformNumber} stationName={station} />
-
-        <div className="fullscreenNotice">
-          <p>Please listen for announcements or call National&nbsp;Rail&nbsp;Enquiries on 03457 48 49 50</p>
-        </div>
-      </article>
-    )
-  }
-
   return (
     <article className="tfwm-board" ref={boardRef}>
-      <BoardHeader platformNumber={platformNumber} stationName={(trainData as StaffServicesResponse)?.locationName ?? station} />
+      <BoardHeader platformNumber={platformNumber} stationName={stationName} />
 
       {firstService && <NextTrain nextTrain={firstService} />}
 

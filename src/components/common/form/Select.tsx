@@ -1,7 +1,5 @@
 import React from 'react'
 
-import './css/Select.less'
-
 interface IProps {
   label: string
   helpText?: string

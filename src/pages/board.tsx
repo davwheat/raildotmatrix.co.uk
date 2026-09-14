@@ -1,20 +1,29 @@
 import React, { useEffect, useState } from 'react'
 
+import { applySourceParams, DataSourceProvider, useDataSource } from '../live/source'
+
 import Layout from '../components/Layout'
 import Seo from '../components/Seo'
 import TypewriterText from '../components/common/TypewriterText'
 import PageLink from '../components/common/PageLink'
+import Attribution from '../components/common/Attribution'
 
 import Form, { AutocompleteSelect, Select } from '../components/common/form'
 
-import Attribution from '../components/common/Attribution'
+export default function BoardSettingsPage() {
+  return (
+    <DataSourceProvider>
+      <IndexPage />
+    </DataSourceProvider>
+  )
+}
 
-import type { PageProps } from 'gatsby'
-
-export default function IndexPage({ location: { search } }: PageProps) {
+/** DataSourceProvider renders its children only after mount, so the query string is read from the address bar. */
+function IndexPage() {
+  const { mode, baseUrl } = useDataSource()
   const [autocomplete, setAutocomplete] = useState([{ label: 'Loading stations...', value: 'VIC' }])
 
-  const searchParams = new URLSearchParams(search)
+  const searchParams = new URLSearchParams(window.location.search)
   const stn = searchParams.get('station')
   const type = searchParams.get('type')
 
@@ -24,15 +33,19 @@ export default function IndexPage({ location: { search } }: PageProps) {
   })
 
   function ChooseStation(stn: { label: string; value: string }) {
-    console.log(stn)
-
     setBoardSettings({
       type: BoardSettings.type,
       station: stn.value,
     })
   }
 
-  function ChooseDisplay(display: { label: string; value: string }) {
+  function boardParams(station: string) {
+    const params = new URLSearchParams({ station })
+    applySourceParams(params, { mode, baseUrl })
+    return params
+  }
+
+  function ChooseDisplay(display: React.ChangeEvent<HTMLSelectElement>) {
     setBoardSettings({
       type: display.target.value,
       station: BoardSettings.station,
@@ -66,7 +79,7 @@ export default function IndexPage({ location: { search } }: PageProps) {
               onChange={ChooseStation as any}
               label="Select a station"
               autocompleteOptions={autocomplete}
-              value={BoardSettings.station.value}
+              value={BoardSettings.station}
             />
             <Select
               label="Display type"
@@ -80,7 +93,7 @@ export default function IndexPage({ location: { search } }: PageProps) {
               value={BoardSettings.type}
             />
             <PageLink
-              to={BoardSettings.station && BoardSettings.type ? `/board/${BoardSettings.type}?station=${BoardSettings.station}` : undefined}
+              to={BoardSettings.station && BoardSettings.type ? `/board/${BoardSettings.type}?${boardParams(BoardSettings.station)}` : undefined}
               style={{ cursor: 'pointer' }}
             >
               Next

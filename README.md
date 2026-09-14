@@ -10,7 +10,7 @@ See it live at [raildotmatrix.davwheat.dev](https://raildotmatrix.davwheat.dev/)
 
 You'll need:
 
-- [Node.js](https://nodejs.org/en/download) 20 or later (not tested on earlier versions)
+- [Node.js](https://nodejs.org/en/download) 22 or later (not tested on earlier versions)
 - [Yarn package manager](https://yarnpkg.com/getting-started/install)
 - [Git](https://git-scm.com/downloads)
 
@@ -20,19 +20,20 @@ When you have cloned the repository with Git, you should install all required de
 yarn install
 ```
 
-Then, you can run the Gatsby development server with:
+Then, you can run the Next.js development server with:
 
 ```bash
 yarn run start
 ```
 
-Finally, you need to start the backend worker to allow live data to be fetched from the Darwin API:
+Finally, in a second terminal, start the backend worker to allow live data to be fetched from the Darwin API:
 
 ```bash
 yarn run develop:workers
 ```
 
-You can then access the site at the URL provided from the last command. This is usually [`http://localhost:8788`](http://localhost:8788).
+You can then access the site at [`http://localhost:3000`](http://localhost:3000). The dev server forwards `/api/*` to the worker on port 8787, so
+both need to be running for live departures.
 
 ## Contributing
 
