@@ -12,7 +12,7 @@ import { getDisabledPlatforms } from '../../../api/ProcessServices'
 
 interface IProps {
   station: string
-  editBoardCallback: () => void
+  editBoardUrl: string
 }
 
 const BoardStyles = {
@@ -37,7 +37,7 @@ interface IBoardSettings {
   withBackground: boolean
 }
 
-export default function DaktronicsDataDisplay({ station }: IProps) {
+export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps) {
   let searchParams: URLSearchParams | null = null
   if (typeof window !== 'undefined') {
     searchParams = window && new URLSearchParams(window.location.search)
@@ -54,7 +54,7 @@ export default function DaktronicsDataDisplay({ station }: IProps) {
 
   return (
     <>
-      <BoardSettings>
+      <BoardSettings editBoardUrl={editBoardUrl}>
         <ToggleSwitch
           checked={customBoardSettings.showCasing}
           label="Show board casing"

@@ -10,7 +10,7 @@ import { getDisabledPlatforms } from '../../../api/ProcessServices'
 
 interface IProps {
   station: string
-  editBoardCallback: () => void
+  editBoardUrl: string
 }
 
 const BoardColors = {
@@ -18,7 +18,7 @@ const BoardColors = {
   white: '#efefef',
 } as const
 
-export default function NewGTR({ station, editBoardCallback }: IProps) {
+export default function NewGTR({ station, editBoardUrl }: IProps) {
   let searchParams: URLSearchParams | null = null
 
   if (typeof window !== 'undefined') {
@@ -91,12 +91,11 @@ export default function NewGTR({ station, editBoardCallback }: IProps) {
         {!searchParams?.get('from-railannouncements.co.uk') && (
           <>
             <PageLink
-              to="#"
+              to={editBoardUrl}
               style={{
                 cursor: 'pointer',
                 zIndex: 1000,
               }}
-              onClick={editBoardCallback}
             >
               Edit board
             </PageLink>

@@ -7,7 +7,7 @@ import { debounce } from 'throttle-debounce'
 import PageLink from '../../common/PageLink'
 import { ZoomDiv } from '../ZoomDiv'
 
-const BlackboxLandscapeLcd = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) => {
+const BlackboxLandscapeLcd = React.forwardRef<any, any>(({ station, editBoardUrl }, ref) => {
   let searchParams: URLSearchParams | null = null
 
   if (typeof window !== 'undefined') {
@@ -66,12 +66,11 @@ const BlackboxLandscapeLcd = React.forwardRef<any, any>(({ station, editBoardCal
         {!searchParams?.get('from-railannouncements.co.uk') && (
           <>
             <PageLink
-              to="#"
+              to={editBoardUrl}
               style={{
                 cursor: 'pointer',
                 zIndex: 1000,
               }}
-              onClick={editBoardCallback}
             >
               Edit board
             </PageLink>

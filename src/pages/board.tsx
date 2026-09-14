@@ -9,6 +9,16 @@ import PageLink from '../components/common/PageLink'
 import Attribution from '../components/common/Attribution'
 
 import Form, { AutocompleteSelect, Select } from '../components/common/form'
+import type { Option } from '../components/common/form'
+
+// Deliberately not a CRS code, so an unloaded list never reads as a selected station.
+const LoadingStations: Option = { label: 'Loading stations...', value: '__loading__' }
+
+const DisplayTypes: Option[] = [
+  { value: 'infotec-landscape-dmi', label: 'Infotec landscape DMI' },
+  { value: 'daktronics-data-display-dmi', label: 'Daktronics (Data Display) DMI' },
+  { value: 'blackbox-landscape-lcd', label: 'Blackbox landscape LCD' },
+]
 
 export default function BoardSettingsPage() {
   return (
@@ -21,40 +31,45 @@ export default function BoardSettingsPage() {
 /** DataSourceProvider renders its children only after mount, so the query string is read from the address bar. */
 function IndexPage() {
   const { mode, baseUrl } = useDataSource()
-  const [autocomplete, setAutocomplete] = useState([{ label: 'Loading stations...', value: 'VIC' }])
+  const [autocomplete, setAutocomplete] = useState<Option[]>([LoadingStations])
 
-  const searchParams = new URLSearchParams(window.location.search)
-  const stn = searchParams.get('station')
-  const type = searchParams.get('type')
+  const [boardSettings, setBoardSettings] = useState(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const type = searchParams.get('type')
 
-  const [BoardSettings, setBoardSettings] = useState({
-    station: stn || '',
-    type: type || 'infotec-landscape-dmi',
+    return {
+      station: searchParams.get('station') || '',
+      type: DisplayTypes.some(t => t.value === type) ? type! : DisplayTypes[0].value,
+    }
   })
 
-  function ChooseStation(stn: { label: string; value: string }) {
-    setBoardSettings({
-      type: BoardSettings.type,
-      station: stn.value,
-    })
-  }
+  // Options this page doesn't expose (platform filters, legacy TOC names, etc.) are carried through
+  // unchanged, so editing a board doesn't silently discard them.
+  const [passthroughParams] = useState(() => {
+    const params = new URLSearchParams(window.location.search)
+    params.delete('station')
+    params.delete('type')
+    return params.toString()
+  })
 
   function boardParams(station: string) {
-    const params = new URLSearchParams({ station })
+    const params = new URLSearchParams(passthroughParams)
+    params.set('station', station)
     applySourceParams(params, { mode, baseUrl })
     return params
   }
 
+  function ChooseStation(station: Option | null) {
+    setBoardSettings(settings => ({ ...settings, station: station?.value || '' }))
+  }
+
   function ChooseDisplay(display: React.ChangeEvent<HTMLSelectElement>) {
-    setBoardSettings({
-      type: display.target.value,
-      station: BoardSettings.station,
-    })
+    setBoardSettings(settings => ({ ...settings, type: display.target.value }))
   }
 
   // Fetch live autocomplete data from API
   useEffect(() => {
-    if (autocomplete[0].label === 'Loading stations...') {
+    if (autocomplete[0].label === LoadingStations.label) {
       import('uk-railway-stations').then(({ default: data }) => {
         setAutocomplete(
           data.map(data => ({
@@ -68,7 +83,7 @@ function IndexPage() {
 
   return (
     <Layout>
-      <Seo title="Choose dpearture board" />
+      <Seo title="Choose departure board" />
       <main>
         <header>
           <TypewriterText component="h1" className="display" cursor text="Board settings" time={500} />
@@ -76,24 +91,20 @@ function IndexPage() {
         <article>
           <Form>
             <AutocompleteSelect
-              onChange={ChooseStation as any}
+              onChange={ChooseStation}
               label="Select a station"
               autocompleteOptions={autocomplete}
-              value={BoardSettings.station}
+              value={boardSettings.station}
             />
             <Select
               label="Display type"
-              options={[
-                { value: 'infotec-landscape-dmi', label: 'Infotec landscape DMI' },
-                { value: 'daktronics-data-display-dmi', label: 'Daktronics (Data Display) DMI' },
-                { value: 'blackbox-landscape-lcd', label: 'Blackbox landscape LCD' },
-              ]}
+              options={DisplayTypes}
               placeholder="Choose a display"
-              onChange={ChooseDisplay as any}
-              value={BoardSettings.type}
+              onChange={ChooseDisplay}
+              value={boardSettings.type}
             />
             <PageLink
-              to={BoardSettings.station && BoardSettings.type ? `/board/${BoardSettings.type}?${boardParams(BoardSettings.station)}` : undefined}
+              to={boardSettings.station ? `/board/${boardSettings.type}?${boardParams(boardSettings.station)}` : undefined}
               style={{ cursor: 'pointer' }}
             >
               Next

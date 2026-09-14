@@ -9,3 +9,4 @@ export default function Form(props: React.ComponentPropsWithoutRef<'form'>) {
 }
 
 export { TextBox, AutocompleteSelect, Select }
+export type { Option } from './AutocompleteSelect'
