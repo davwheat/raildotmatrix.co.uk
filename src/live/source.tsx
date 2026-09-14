@@ -44,49 +44,54 @@ export function DataSourceProvider({ children }: { children: React.ReactNode }) 
 
   const boardPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/board/')
 
+  // The picker is a development tool, so built sites keep the default source unless a link overrides it. The
+  // comparison is against a literal the bundler inlines, which drops the controls from the production bundle.
+  const showControls = process.env.NODE_ENV === 'development' && !embedded
+
   return (
     <NoSSR>
       <SourceContext.Provider value={settings}>
-        <div
-          hidden={embedded}
-          className="data-source-settings"
-          style={{
-            position: boardPage ? 'fixed' : 'relative',
-            top: 8,
-            right: boardPage ? 8 : undefined,
-            zIndex: 1001,
-            padding: 16,
-            borderRadius: 8,
-            background: '#333',
-            color: '#fff',
-            maxWidth: 'calc(100vw - 32px)',
-            boxSizing: 'border-box',
-            fontSize: 16,
-          }}
-        >
-          <label>
-            Train data source{' '}
-            <select
-              aria-label="Train data source"
-              value={settings.mode}
-              onChange={event => update({ ...settings, mode: event.target.value as DataSource })}
-            >
-              <option value="original">Original</option>
-              <option value="websocket">Live WebSocket feed</option>
-            </select>
-          </label>
-          {settings.mode === 'websocket' && (
-            <label style={{ display: 'block', marginTop: 12 }}>
-              Service URL{' '}
-              <input
-                aria-label="Service URL"
-                key={settings.baseUrl}
-                defaultValue={settings.baseUrl}
-                onBlur={event => update({ ...settings, baseUrl: event.target.value.trim() })}
-              />
+        {showControls && (
+          <div
+            className="data-source-settings"
+            style={{
+              position: boardPage ? 'fixed' : 'relative',
+              top: 8,
+              right: boardPage ? 8 : undefined,
+              zIndex: 1001,
+              padding: 16,
+              borderRadius: 8,
+              background: '#333',
+              color: '#fff',
+              maxWidth: 'calc(100vw - 32px)',
+              boxSizing: 'border-box',
+              fontSize: 16,
+            }}
+          >
+            <label>
+              Train data source{' '}
+              <select
+                aria-label="Train data source"
+                value={settings.mode}
+                onChange={event => update({ ...settings, mode: event.target.value as DataSource })}
+              >
+                <option value="original">Original</option>
+                <option value="websocket">Live WebSocket feed</option>
+              </select>
             </label>
-          )}
-        </div>
+            {settings.mode === 'websocket' && (
+              <label style={{ display: 'block', marginTop: 12 }}>
+                Service URL{' '}
+                <input
+                  aria-label="Service URL"
+                  key={settings.baseUrl}
+                  defaultValue={settings.baseUrl}
+                  onBlur={event => update({ ...settings, baseUrl: event.target.value.trim() })}
+                />
+              </label>
+            )}
+          </div>
+        )}
         {children}
       </SourceContext.Provider>
     </NoSSR>

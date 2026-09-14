@@ -3,8 +3,11 @@
 Choose **Live WebSocket feed** in **Train data source**, on the board settings page or above any station board. **Original** remains the default.
 The selection and service URL are saved on the device. Switching closes the previous connection or aborts the outstanding original API request.
 
-The default service is `ws://localhost:8080`. Run Darwin Browser locally with its movement backfill complete, then run this site with
-`yarn develop`. The URL is a base URL: the client adds `/v1/cis/live?crs=...`.
+The **Train data source** and **Service URL** controls are a development tool: they render only under `yarn develop`, and a built site leaves
+them out. To select the WebSocket source on a built site, use the query parameters below.
+
+In development, the default service is `ws://localhost:8080`. Run Darwin Browser locally with its movement backfill complete, then run this site
+with `yarn develop`. The URL is a base URL: the client adds `/v1/cis/live?crs=...`.
 
 A direct link can override saved settings:
 
@@ -15,8 +18,10 @@ http://localhost:3000/board/infotec-landscape-dmi?station=ECR&dataSource=websock
 `dataSource=original` explicitly selects the original source. The announcement site passes these parameters to its embedded board; an embedded
 board hides the source controls so its parent owns the selection.
 
-To use the remote service later, change **Service URL**, or set `NEXT_PUBLIC_LIVE_SERVICE_URL` before building. HTTP(S) bases are converted to
-WS(S), and an optional URL path prefix is preserved. Use a WSS service when hosting the site over HTTPS. Local development uses HTTP and WS.
+To point the development site at a remote service, change **Service URL**, or set `NEXT_PUBLIC_LIVE_SERVICE_URL` before building. The built
+site's default comes from `NEXT_PUBLIC_LIVE_SERVICE_URL` in `.env.production`, which is committed because the value reaches the browser anyway.
+HTTP(S) bases are converted to WS(S), and an optional URL path prefix is preserved. Use a WSS service when hosting the site over HTTPS. Local
+development uses HTTP and WS.
 
 In WebSocket mode the board makes no train-data HTTP requests and ignores legacy iframe train-data messages. It reconnects only to the selected
 WebSocket service. A lost connection clears the board until a fresh snapshot arrives.
