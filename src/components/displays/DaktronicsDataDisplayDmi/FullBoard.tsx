@@ -5,7 +5,6 @@ import PlatformWarningMessage from './PlatformWarningMessage'
 import Clock from './Clock'
 import TrainServices from './TrainServices'
 
-import './css/font.less'
 import boardFill from './board-fill.svg'
 
 import { css } from '@emotion/react'

@@ -1,30 +1,29 @@
 import React, { useEffect, useState } from 'react'
+
 import { DataSourceProvider, useDataSource } from '../live/source'
 
 import Layout from '../components/Layout'
 import Seo from '../components/Seo'
 import TypewriterText from '../components/common/TypewriterText'
 import PageLink from '../components/common/PageLink'
+import Attribution from '../components/common/Attribution'
 
 import Form, { AutocompleteSelect, Select } from '../components/common/form'
 
-import Attribution from '../components/common/Attribution'
-
-import type { PageProps } from 'gatsby'
-
-export default function BoardSettingsPage(props: PageProps) {
+export default function BoardSettingsPage() {
   return (
     <DataSourceProvider>
-      <IndexPage {...props} />
+      <IndexPage />
     </DataSourceProvider>
   )
 }
 
-function IndexPage({ location: { search } }: PageProps) {
+/** DataSourceProvider renders its children only after mount, so the query string is read from the address bar. */
+function IndexPage() {
   const { mode, baseUrl } = useDataSource()
   const [autocomplete, setAutocomplete] = useState([{ label: 'Loading stations...', value: 'VIC' }])
 
-  const searchParams = new URLSearchParams(search)
+  const searchParams = new URLSearchParams(window.location.search)
   const stn = searchParams.get('station')
   const type = searchParams.get('type')
 
@@ -34,8 +33,6 @@ function IndexPage({ location: { search } }: PageProps) {
   })
 
   function ChooseStation(stn: { label: string; value: string }) {
-    console.log(stn)
-
     setBoardSettings({
       type: BoardSettings.type,
       station: stn.value,

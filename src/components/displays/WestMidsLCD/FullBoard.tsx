@@ -1,7 +1,5 @@
 import React, { useRef } from 'react'
 
-import './css/board/index.less'
-
 import BoardHeader from './BoardHeader'
 import NextTrain from './NextTrainData'
 import SecondaryTrainData from './SecondaryTrainData'

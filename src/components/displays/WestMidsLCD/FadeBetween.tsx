@@ -1,8 +1,6 @@
 import clsx from 'clsx'
 import React, { useEffect, useRef } from 'react'
 
-import './css/board/fadeBetween.less'
-
 interface IProps {
   elements: React.ReactNode[]
   secondsPerEl?: number

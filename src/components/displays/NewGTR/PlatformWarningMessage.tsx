@@ -1,7 +1,5 @@
 import React from 'react'
 
-import './css/platform-warning.less'
-
 import type { NoticeKind } from '../../../live/overrideNotice'
 
 const MESSAGES: Record<NoticeKind, string[]> = {

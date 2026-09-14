@@ -1,4 +1,4 @@
-import { AssociationCategory } from '../../functions/api/getServices'
+import { AssociationCategory } from '../api-types/get-services-types'
 import { CallPoint, Service, getLegacyTocName, type IMyTrainService } from '../api/ProcessServices'
 import type { Call, CISState, Endpoint, Location, Movement, PlatformOverride, Portion } from './types'
 

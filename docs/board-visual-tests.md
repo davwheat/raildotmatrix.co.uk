@@ -28,7 +28,7 @@ copy of the baseline. Decide whether the change is a regression or an improvemen
 | `--update`        | Rewrite the baselines from this run, and delete baselines no case produces any more.           |
 | `--filter <text>` | Run only cases whose `<board> <state>` contains the text, such as `--filter passing-train`.    |
 | `--repeat <n>`    | Capture each case `n` times and fail if the captures disagree. Use it when a case looks flaky. |
-| `--public <dir>`  | Serve a build from somewhere other than `public/`.                                             |
+| `--site <dir>`    | Serve a build from somewhere other than `out/`.                                                |
 
 Set `CHROME_PATH` if Chrome is not in one of the usual locations. The runner needs Node 22 or newer.
 

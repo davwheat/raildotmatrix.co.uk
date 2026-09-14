@@ -3,7 +3,6 @@ import { combineLocations } from './combineLocations'
 
 import ArrowSVG from './css/board/arrow.svg'
 
-import './css/board/secondaryTrainData.less'
 import FadeBetween from './FadeBetween'
 import SlideyScrollText from './SlideyScrollText'
 

@@ -1,4 +1,4 @@
-.noOverflow() {
+@mixin noOverflow {
   -webkit-clip-path: inset(0); /* safari*/
   clip-path: inset(0);
   clip: rect(0px, auto, auto, 0px); /* IE11/Edge (not that IE11 supports sticky anyway!) */
@@ -12,12 +12,12 @@ html {
   width: 100vw;
 }
 
-.displayFont() {
+@mixin displayFont {
   font-family: 'Dot Matrix', Consolas, monospace;
 }
 
 .display {
-  .displayFont();
+  @include displayFont;
 
   &--loud {
     letter-spacing: 2px;
@@ -132,7 +132,7 @@ main {
 }
 
 .train-link {
-  .displayFont();
+  @include displayFont;
   color: #fff;
   text-decoration: none;
   border-bottom: 1px solid currentColor;

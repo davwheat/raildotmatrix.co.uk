@@ -4,7 +4,6 @@ import ToggleSwitch from '../../common/form/ToggleSwitch'
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
 import { debounce } from 'throttle-debounce'
 
-import './css/index.less'
 import PageLink from '../../common/PageLink'
 import { ZoomDiv } from '../ZoomDiv'
 

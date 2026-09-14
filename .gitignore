@@ -57,9 +57,12 @@ typings/
 # dotenv environment variable files
 .env*
 
-# gatsby files
+# Next.js
+.next/
+out/
 .cache/
-public
+next-env.d.ts
+tsconfig.tsbuildinfo
 
 # Mac files
 .DS_Store

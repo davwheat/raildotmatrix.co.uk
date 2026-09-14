@@ -3,9 +3,7 @@ import React, { useEffect } from 'react'
 import SlideyScrollText from './SlideyScrollText'
 import clsx from 'clsx'
 
-import './css/trainServiceAdditionalInfo.less'
-
-import { AssociationCategory } from '../../../../functions/api/getServices'
+import { AssociationCategory } from '../../../api-types/get-services-types'
 import type { IAssociation, IMyTrainService } from '../../../api/ProcessServices'
 
 interface IProps {

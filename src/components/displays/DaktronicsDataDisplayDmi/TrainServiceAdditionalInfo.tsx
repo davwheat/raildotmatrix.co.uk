@@ -5,7 +5,7 @@ import clsx from 'clsx'
 
 import { keyframes, css } from '@emotion/react'
 
-import { AssociationCategory } from '../../../../functions/api/getServices'
+import { AssociationCategory } from '../../../api-types/get-services-types'
 import { CallingPoint, CallingPoints } from './CallingPoints'
 
 import type { IAssociation, IMyTrainService } from '../../../api/ProcessServices'

@@ -12,6 +12,8 @@
     opacity: var(--opacity);
 
     transform: translateX(var(--trans-x));
-    transition: transform linear var(--transition-time, 0s), opacity linear 0.5s;
+    transition:
+      transform linear var(--transition-time, 0s),
+      opacity linear 0.5s;
   }
 }

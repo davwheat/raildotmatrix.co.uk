@@ -1,6 +1,6 @@
-@import './font.less';
+@use './font';
 
-.noOverflow() {
+@mixin noOverflow {
   clip-path: inset(0);
 }
 

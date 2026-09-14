@@ -1,30 +1,14 @@
 import React from 'react'
+import Head from 'next/head'
 
-import { useStaticQuery, graphql } from 'gatsby'
-import { Meta, Title } from 'react-head'
+import { siteMetadata } from '../siteMetadata'
 
-function Seo({ title }: { title: string }) {
-  const { site } = useStaticQuery(graphql`
-    query {
-      site {
-        siteMetadata {
-          title
-          description
-          author
-        }
-      }
-    }
-  `)
-
-  const metaDescription = site.siteMetadata.description
-
+function Seo({ title }: { title?: string }) {
   return (
-    <>
-      {/* @ts-expect-error */}
-      <Title>{title ? `${title} | ${site.siteMetadata.title}` : site.siteMetadata.title}</Title>
-      {/* @ts-expect-error */}
-      <Meta name="description" content={metaDescription} />
-    </>
+    <Head>
+      <title>{title ? `${title} | ${siteMetadata.title}` : siteMetadata.title}</title>
+      <meta name="description" content={siteMetadata.description} />
+    </Head>
   )
 }
 

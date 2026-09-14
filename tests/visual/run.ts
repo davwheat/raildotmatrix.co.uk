@@ -18,7 +18,7 @@ interface Options {
   update: boolean
   filter: string | null
   repeat: number
-  publicDir: string
+  siteDir: string
 }
 
 function parseOptions(argv: string[]): Options {
@@ -31,7 +31,7 @@ function parseOptions(argv: string[]): Options {
     update: argv.includes('--update'),
     filter: value('--filter'),
     repeat: Math.max(1, Number(value('--repeat')) || 1),
-    publicDir: value('--public') ?? join(process.cwd(), 'public'),
+    siteDir: value('--site') ?? join(process.cwd(), 'out'),
   }
 }
 
@@ -46,7 +46,7 @@ async function main() {
   await mkdir(BASELINES, { recursive: true })
   await rm(FAILURES, { recursive: true, force: true })
 
-  const site = await serveStatic(options.publicDir)
+  const site = await serveStatic(options.siteDir)
   const feed = await serveFeed()
   let browser = await Browser.launch()
   const failures = new Set<string>()

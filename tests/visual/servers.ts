@@ -5,8 +5,7 @@ import { extname, join, normalize } from 'node:path'
 import { createRequire } from 'node:module'
 import { FIXTURES } from './fixtures'
 
-// Gatsby already ships ws; use it rather than adding a dependency, as scripts/test-live.mjs does with esbuild.
-// The bundle runs from a temporary directory, so resolve from the checkout instead of from the bundle.
+// The bundle runs from a temporary directory, so resolve ws from the checkout instead of from the bundle.
 const { WebSocketServer } = createRequire(join(import.meta.dirname, 'servers.ts'))('ws')
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -26,7 +25,9 @@ const CONTENT_TYPES: Record<string, string> = {
 
 async function resolveFile(root: string, pathname: string): Promise<string | null> {
   const candidate = join(root, normalize(pathname).replace(/^(\.\.[/\\])+/, ''))
-  for (const path of [candidate, join(candidate, 'index.html')]) {
+  // Next's export writes /board/infotec-landscape-dmi as a sibling .html file, which is how Cloudflare Pages
+  // resolves it too.
+  for (const path of [candidate, `${candidate}.html`, join(candidate, 'index.html')]) {
     try {
       if ((await stat(path)).isFile()) return path
     } catch {

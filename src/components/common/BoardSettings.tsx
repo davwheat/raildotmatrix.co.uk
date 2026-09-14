@@ -8,7 +8,7 @@ interface IBoardSettingsProps {
   children: React.ReactNode
 }
 
-export default function BoardSettings({ children, editBoardCallback }: IBoardSettingsProps) {
+export default function BoardSettings({ children }: IBoardSettingsProps) {
   let searchParams: URLSearchParams | null = null
 
   if (typeof window !== 'undefined') {

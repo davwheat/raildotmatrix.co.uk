@@ -5,18 +5,17 @@ import SEO from '../components/Seo'
 import TypewriterText from '../components/common/TypewriterText'
 import PageLink from '../components/common/PageLink'
 import useInterval from '../hooks/useInterval'
-import type { PageProps } from 'gatsby'
 
-export default function NotFoundPage(props: PageProps) {
-  const [timeString, setTimeString] = useState(`${padZero(new Date().getHours())}:${padZero(new Date().getMinutes())}`)
-
-  function padZero(input) {
-    if (input < 10) {
-      return `0${input}`
-    } else {
-      return `${input}`
-    }
+function padZero(input: number) {
+  if (input < 10) {
+    return `0${input}`
+  } else {
+    return `${input}`
   }
+}
+
+export default function NotFoundPage() {
+  const [timeString, setTimeString] = useState(`${padZero(new Date().getHours())}:${padZero(new Date().getMinutes())}`)
 
   function updateTimeString() {
     const date = new Date()
@@ -37,8 +36,8 @@ export default function NotFoundPage(props: PageProps) {
             prefix={
               <>
                 1st&nbsp;
-                {timeString.split('').map(c => (
-                  <span>{c}</span>
+                {timeString.split('').map((c, index) => (
+                  <span key={index}>{c}</span>
                 ))}
               </>
             }

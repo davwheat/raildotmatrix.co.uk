@@ -5,8 +5,6 @@ import PlatformWarningMessage from './PlatformWarningMessage'
 import Clock from './Clock'
 import TrainServices from './TrainServices'
 
-import './css/board.less'
-
 import { useServiceInformation } from '../../../hooks/useServiceInformation'
 import { noticeKind } from '../../../live/overrideNotice'
 

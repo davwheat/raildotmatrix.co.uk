@@ -3,9 +3,7 @@ import React from 'react'
 import { combineLocations } from './combineLocations'
 import SlideyScrollText from './SlideyScrollText'
 
-import './css/board/nextTrain.less'
-
-import { AssociationCategory } from '../../../../functions/api/getServices'
+import { AssociationCategory } from '../../../api-types/get-services-types'
 import dayjs from 'dayjs'
 import dayjsUtc from 'dayjs/plugin/utc'
 import dayjsTz from 'dayjs/plugin/timezone'

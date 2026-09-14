@@ -2,7 +2,7 @@ import LatenessCodes from './LatenessCodes.json'
 import CancellationCodes from './CancellationCodes.json'
 
 import type { StaffServicesResponse } from './GetNextTrainsAtStationStaff'
-import { Association, AssociationCategory } from '../../functions/api/getServices'
+import { Association, AssociationCategory } from '../api-types/get-services-types'
 
 import dayjs from 'dayjs'
 import dayjsUtc from 'dayjs/plugin/utc'
@@ -426,12 +426,12 @@ export function processServices(
         terminatesHere: false,
         destinations: (service.isCancelled ? service.destination : service.currentDestinations || service.destination).map(d => ({
           name: d.locationName,
-          via: d.via,
+          via: d.via ?? null,
           crs: d.crs,
         })),
         origins: (service.isCancelled ? service.origin : service.currentOrigins || service.origin).map(o => ({
           name: o.locationName,
-          via: o.via,
+          via: o.via ?? null,
           crs: o.crs,
         })),
 
@@ -487,10 +487,10 @@ function processAssociatedService(
       : stop1.falseDest || [{ locationName: association.destination, crs: association.destCRS }]
     ).map(d => ({
       name: d.locationName,
-      via: 'via' in d ? d.via : null,
+      via: 'via' in d ? (d.via ?? null) : null,
       crs: d.crs,
     })),
-    origins: ogOrigins.map(o => ({ name: o.locationName, via: o.via, crs: o.crs })),
+    origins: ogOrigins.map(o => ({ name: o.locationName, via: o.via ?? null, crs: o.crs })),
 
     cancelled: association.isCancelled,
 

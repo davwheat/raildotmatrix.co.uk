@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState } from 'react'
 import useStateWithLocalStorage from '../hooks/useStateWithLocalStorage'
 
 export type DataSource = 'original' | 'websocket'
-export const DEFAULT_LIVE_URL = process.env.GATSBY_LIVE_SERVICE_URL || 'ws://localhost:8080'
+export const DEFAULT_LIVE_URL = process.env.NEXT_PUBLIC_LIVE_SERVICE_URL || 'ws://localhost:8080'
 
 interface SourceSettings {
   mode: DataSource

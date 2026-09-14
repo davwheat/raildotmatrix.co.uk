@@ -4,7 +4,6 @@ import ToggleSwitch from '../../common/form/ToggleSwitch'
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
 import { debounce } from 'throttle-debounce'
 
-import './css/index.less'
 import PageLink from '../../common/PageLink'
 import NoSSR from '@mpth/react-no-ssr'
 import { ZoomDiv } from '../ZoomDiv'
@@ -25,7 +24,7 @@ const Class700PIS = React.forwardRef<any, any>(({ station, editBoardCallback }, 
 
   function updateState() {
     setSettings({
-      hideSettings: hideRef.current?.checked,
+      hideSettings: !!hideRef.current?.checked,
     })
 
     if (!hideRef.current?.checked) {
@@ -85,7 +84,7 @@ const Class700PIS = React.forwardRef<any, any>(({ station, editBoardCallback }, 
 
       <NoSSR>
         <ZoomDiv>
-          <ScreenBase ref={ref} />
+          <ScreenBase />
         </ZoomDiv>
       </NoSSR>
     </>

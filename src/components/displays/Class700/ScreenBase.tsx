@@ -60,7 +60,7 @@ function isNextStopDestination(): boolean {
 
 export default function ScreenBase({}) {
   const [screenStage, setScreenStage] = useState<(typeof ValidScreenStages)[number]>(
-    getUrlParam('screenStage') ?? (isNextStopDestination() ? 'next stop' : 'destination'),
+    (getUrlParam('screenStage') as (typeof ValidScreenStages)[number] | null) ?? (isNextStopDestination() ? 'next stop' : 'destination'),
   )
   const shouldScrollStages = getUrlParam('scrollStages') === 'true'
 
@@ -115,7 +115,10 @@ export default function ScreenBase({}) {
   )
 }
 
-function getScreens(screenStage: (typeof ValidScreenStages)[number]): { small: () => JSX.Element | null; big: () => JSX.Element | null } {
+function getScreens(screenStage: (typeof ValidScreenStages)[number]): {
+  small: () => React.JSX.Element | null
+  big: () => React.JSX.Element | null
+} {
   switch (screenStage) {
     case 'destination':
       return {

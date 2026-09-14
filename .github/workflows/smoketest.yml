@@ -69,14 +69,13 @@ jobs:
       - name: Verify formatting
         run: yarn format:check
 
-      - name: Restore Gatsby cache
+      - name: Restore Next.js cache
         uses: actions/cache@v6
-        id: gatsbyCache
         with:
-          path: ./.cache
-          key: ${{ runner.os }}-gatsby-cache-${{ secrets.CACHE_VERSION }}-${{ hashFiles('public') }}
+          path: ./.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('yarn.lock') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
           restore-keys: |
-            ${{ runner.os }}-gatsby-cache-${{ secrets.CACHE_VERSION }}-
+            ${{ runner.os }}-nextjs-${{ hashFiles('yarn.lock') }}-
 
       - name: Build site
         run: yarn build:ci
@@ -86,7 +85,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: ./public
+          path: ./out
 
       - name: Publish to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
@@ -94,10 +93,10 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # The project name and output directory are given here rather than in wrangler.toml, which this repo keeps
-          # to the runtime settings. Use the PR head branch if there is one, otherwise the current branch.
+          # The project name is given here rather than in wrangler.toml, which this repo keeps to the runtime
+          # settings. Use the PR head branch if there is one, otherwise the current branch.
           command:
-            pages deploy public --project-name=${{ env.CF_PAGES_PROJECT_NAME }} --branch=${{ github.event_name == 'pull_request' &&
+            pages deploy out --project-name=${{ env.CF_PAGES_PROJECT_NAME }} --branch=${{ github.event_name == 'pull_request' &&
             github.event.pull_request.head.ref || github.ref_name }}
 
       - name: Find existing build status comment

@@ -1,6 +1,12 @@
 import React from 'react'
 
-export default function TextBox({ label, helpText, placeholder }) {
+interface IProps {
+  label: React.ReactNode
+  helpText?: React.ReactNode
+  placeholder?: string
+}
+
+export default function TextBox({ label, helpText, placeholder }: IProps) {
   return (
     <label className="form-textbox">
       {label}

@@ -4,19 +4,19 @@ Choose **Live WebSocket feed** in **Train data source**, on the board settings p
 The selection and service URL are saved on the device. Switching closes the previous connection or aborts the outstanding original API request.
 
 The default service is `ws://localhost:8080`. Run Darwin Browser locally with its movement backfill complete, then run this site with
-`yarn develop --port 8000`. The URL is a base URL: the client adds `/v1/cis/live?crs=...`.
+`yarn develop`. The URL is a base URL: the client adds `/v1/cis/live?crs=...`.
 
 A direct link can override saved settings:
 
 ```
-http://localhost:8000/board/infotec-landscape-dmi?station=ECR&dataSource=websocket&liveServiceUrl=ws%3A%2F%2Flocalhost%3A8080
+http://localhost:3000/board/infotec-landscape-dmi?station=ECR&dataSource=websocket&liveServiceUrl=ws%3A%2F%2Flocalhost%3A8080
 ```
 
 `dataSource=original` explicitly selects the original source. The announcement site passes these parameters to its embedded board; an embedded
 board hides the source controls so its parent owns the selection.
 
-To use the remote service later, change **Service URL**, or set `GATSBY_LIVE_SERVICE_URL` before building. HTTP(S) bases are converted to WS(S),
-and an optional URL path prefix is preserved. Use a WSS service when hosting the site over HTTPS. Local development uses HTTP and WS.
+To use the remote service later, change **Service URL**, or set `NEXT_PUBLIC_LIVE_SERVICE_URL` before building. HTTP(S) bases are converted to
+WS(S), and an optional URL path prefix is preserved. Use a WSS service when hosting the site over HTTPS. Local development uses HTTP and WS.
 
 In WebSocket mode the board makes no train-data HTTP requests and ignores legacy iframe train-data messages. It reconnects only to the selected
 WebSocket service. A lost connection clears the board until a fresh snapshot arrives.

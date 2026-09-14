@@ -3,7 +3,8 @@ import { crsToStationName } from '../../../../functions/crsToStationName'
 import { getUrlParam } from '../getUrlParam'
 
 export function getDestination(format: 'crs' | 'name' = 'name') {
-  let destination = getUrlParam('dest')
+  const dest = getUrlParam('dest')
+  let destination = Array.isArray(dest) ? dest[0] : dest
 
   format === 'name' && (destination &&= crsToStationName(destination))
   destination ??= 'Unknown'

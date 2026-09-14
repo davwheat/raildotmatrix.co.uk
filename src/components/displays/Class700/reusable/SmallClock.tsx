@@ -10,7 +10,6 @@ dayjs.extend(dayjsTz)
 
 dayjs.tz.setDefault('Europe/London')
 
-import './SmallClock.less'
 import useInterval from '../../../../hooks/useInterval'
 
 export default function SmallClock() {
