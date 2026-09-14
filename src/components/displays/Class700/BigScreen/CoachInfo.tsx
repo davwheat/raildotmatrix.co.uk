@@ -5,8 +5,10 @@ import EndCoach from '../assets/endcoach.inline.svg'
 import Coach from '../assets/coach.inline.svg'
 
 export default function CoachInfoBigScreen() {
-  let coach = getUrlParam('coach') ?? 1
-  let coaches = getUrlParam('coaches') ?? 12
+  // Both are compared as strings when marking the active coach and as numbers when sizing the diagram.
+  const coach = String(getUrlParam('coach') ?? 1)
+  const coaches = Number(getUrlParam('coaches') ?? 12)
+  const coachNumber = Number(coach)
 
   return (
     <div className="coachInfo splitLines splitLines--offset">
@@ -48,7 +50,7 @@ export default function CoachInfoBigScreen() {
             }
           })}
 
-          {coach > 0 && coach < coaches && (
+          {coachNumber > 0 && coachNumber < coaches && (
             <div key="you-are-here" className="current-label">
               <span>▲</span>
               <span className="text t900 coach-here">YOU ARE HERE</span>

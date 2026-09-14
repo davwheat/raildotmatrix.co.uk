@@ -6,9 +6,10 @@ import ToggleSwitch from './form/ToggleSwitch'
 
 interface IBoardSettingsProps {
   children: React.ReactNode
+  editBoardUrl: string
 }
 
-export default function BoardSettings({ children, editBoardCallback }: IBoardSettingsProps) {
+export default function BoardSettings({ children, editBoardUrl }: IBoardSettingsProps) {
   let searchParams: URLSearchParams | null = null
 
   if (typeof window !== 'undefined') {
@@ -71,7 +72,7 @@ export default function BoardSettings({ children, editBoardCallback }: IBoardSet
             cursor: 'pointer',
             zIndex: 1000,
           }}
-          to="/board"
+          to={editBoardUrl}
         >
           Edit board
         </PageLink>

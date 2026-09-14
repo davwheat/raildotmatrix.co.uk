@@ -1,7 +1,5 @@
 import React from 'react'
 
-import './css/call-nre.less'
-
 export default function CallNreMessage() {
   return (
     <div className="main call-nre">

@@ -4,8 +4,9 @@ import TextBox from './Textbox'
 import AutocompleteSelect from './AutocompleteSelect'
 import Select from './Select'
 
-export default function Form(props) {
+export default function Form(props: React.ComponentPropsWithoutRef<'form'>) {
   return <form {...props}></form>
 }
 
 export { TextBox, AutocompleteSelect, Select }
+export type { Option } from './AutocompleteSelect'

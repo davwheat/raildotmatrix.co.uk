@@ -1,29 +1,24 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "lib": ["dom", "esnext"],
+    "module": "esnext",
+    "target": "es2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "jsx": "react-jsx",
     "jsxImportSource": "@emotion/react",
-    "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
     "strict": true,
+    "strictNullChecks": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "strictNullChecks": true
-    // "paths": {
-    //   "@components/*": ["./src/components/*"],
-    //   "@data/*": ["./src/data/*"],
-    //   "@assets/*": ["./src/assets/*"],
-    //   "@functions/*": ["./src/functions/*"],
-    //   "@types/*": ["./@types/*", "../node_modules/@types/*"],
-    //   "@styles/*": ["./src/styles/*"],
-    //   "@hooks/*": ["./src/hooks/*"],
-    //   "@leaflet/*": ["./src/leaflet/*"],
-    //   "@atoms/*": ["./src/atoms/*"],
-    //   "@atoms": ["./src/atoms"]
-    // }
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "noEmit": true,
+    "plugins": [{ "name": "next" }]
   },
-  "exclude": ["node_modules", "build", "scripts", "acceptance-tests", "webpack", "jest", "src/setupTests.ts"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "functions", "scripts", "out", ".next"]
 }

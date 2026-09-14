@@ -1,0 +1,84 @@
+name: Board screenshots
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+# Baselines are regenerated and committed back to the branch under test.
+permissions:
+  contents: write
+
+env:
+  NODE_VERSION: 24.x
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    name: Regenerate board screenshots
+
+    # A pull request from a fork cannot be pushed to, so there is nothing to commit the result of.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          # Check out the branch itself rather than the merge commit, so the baselines can be pushed back to it.
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v2
+        id: chrome
+        with:
+          chrome-version: stable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build site
+        run: yarn build
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+      - name: Regenerate baselines
+        # Two captures per case, so a board caught mid-animation fails the job instead of being committed as the
+        # baseline every later run is compared against.
+        run: yarn test:visual --update --repeat 2
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+
+      - name: Commit any changes
+        run: |
+          if git diff --quiet -- tests/visual/baselines; then
+            echo "Board screenshots are unchanged." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          {
+            echo "Board screenshots updated:"
+            echo
+            git diff --name-status -- tests/visual/baselines | sed 's/^/    /'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/visual/baselines
+          git commit -m 'chore: update board screenshots'
+          git push
+
+      - name: Upload failures
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: board-screenshot-failures
+          path: tests/visual/failures
+          if-no-files-found: ignore

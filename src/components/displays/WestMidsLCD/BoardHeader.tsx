@@ -10,8 +10,6 @@ dayjs.extend(dayjsTz)
 
 dayjs.tz.setDefault('Europe/London')
 
-import './css/board/header.less'
-
 export default function BoardHeader({ platformNumber, stationName }: { platformNumber: number | null; stationName: string }) {
   return (
     <header>

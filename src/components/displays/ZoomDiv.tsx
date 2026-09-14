@@ -19,7 +19,7 @@ function fillDiv(div: HTMLDivElement) {
   `
 }
 
-export function ZoomDiv({ children }) {
+export function ZoomDiv({ children }: { children: React.ReactNode }) {
   const boardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

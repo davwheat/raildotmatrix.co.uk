@@ -7,13 +7,8 @@ import { getDestination } from './Destination'
 export function getCallingPoints(format: 'crs' | 'names'): string[] {
   const destination = getDestination(format === 'crs' ? 'crs' : 'name')
 
-  let callingPoints: string[] = getUrlParam('stop') ?? []
-
-  if (typeof callingPoints === 'string') {
-    callingPoints = [callingPoints]
-  } else if (!Array.isArray(callingPoints)) {
-    callingPoints = []
-  }
+  const stops = getUrlParam('stop')
+  const callingPoints = Array.isArray(stops) ? stops : stops ? [stops] : []
 
   let mappedCallingPoints = callingPoints.filter(crs => !!crsToStationName(crs)).map(format === 'names' ? crsToStationName : x => x) as string[]
 

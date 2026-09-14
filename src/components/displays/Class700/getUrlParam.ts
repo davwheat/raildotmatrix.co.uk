@@ -1,11 +1,13 @@
-export function getUrlParam(key: string) {
+export type UrlParamValue = string | string[]
+
+export function getUrlParam(key: string): UrlParamValue | null {
   if (typeof window === 'undefined') return null
 
   return getQueryParams(window.location.search)[key] ?? null
 }
 
 function getQueryParams(queryString: string) {
-  const params = {}
+  const params: Record<string, string | string[]> = {}
 
   new URLSearchParams(queryString).forEach((value, key) => {
     let decodedKey = decodeURIComponent(key)
@@ -14,8 +16,9 @@ function getQueryParams(queryString: string) {
     if (decodedKey.endsWith('[]')) {
       // This key is part of an array
       decodedKey = decodedKey.replace('[]', '')
-      params[decodedKey] || (params[decodedKey] = [])
-      params[decodedKey].push(decodedValue)
+      const existing = params[decodedKey]
+      const values = Array.isArray(existing) ? existing : (params[decodedKey] = [])
+      values.push(decodedValue)
     } else {
       // Just a regular parameter
       params[decodedKey] = decodedValue

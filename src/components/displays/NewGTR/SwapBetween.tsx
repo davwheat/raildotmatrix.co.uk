@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import clsx from 'clsx'
 
-import './css/swapBetween.less'
-
 interface IProps {
   interval: number
   animate?: boolean

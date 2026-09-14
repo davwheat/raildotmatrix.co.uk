@@ -6,9 +6,7 @@ import TypewriterText from '../components/common/TypewriterText'
 import PageLink from '../components/common/PageLink'
 import Attribution from '../components/common/Attribution'
 
-import type { PageProps } from 'gatsby'
-
-export default function IndexPage(props: PageProps) {
+export default function IndexPage() {
   return (
     <Layout>
       <Seo title="Home" />
@@ -21,7 +19,7 @@ export default function IndexPage(props: PageProps) {
             View a real-time display of the next trains at your local UK railway station. This site uses live information from National Rail
             Enquiries under license from Rail Delivery Group.
           </p>
-          <PageLink to="board">Get started</PageLink>
+          <PageLink to="/board">Get started</PageLink>
         </article>
       </main>
 

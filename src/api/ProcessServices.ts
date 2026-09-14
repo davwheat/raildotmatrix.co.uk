@@ -2,7 +2,7 @@ import LatenessCodes from './LatenessCodes.json'
 import CancellationCodes from './CancellationCodes.json'
 
 import type { StaffServicesResponse } from './GetNextTrainsAtStationStaff'
-import { Association, AssociationCategory } from '../../functions/api/getServices'
+import { Association, AssociationCategory } from '../api-types/get-services-types'
 
 import dayjs from 'dayjs'
 import dayjsUtc from 'dayjs/plugin/utc'
@@ -29,7 +29,7 @@ dayjs.extend(dayjsTz)
 
 dayjs.tz.setDefault('Europe/London')
 
-class CallPoint implements IPassengerCallPoint {
+export class CallPoint implements IPassengerCallPoint {
   name: string
   isCancelled: boolean
   scheduledDeparture: Date | null
@@ -79,8 +79,9 @@ class CallPoint implements IPassengerCallPoint {
   }
 }
 
-class Service implements IMyTrainService {
+export class Service implements IMyTrainService {
   destinations: { name: string; via: null | string; crs: string }[]
+  terminatesHere: boolean
   origins: { name: string; via: null | string; crs: string }[]
   cancelled: boolean
   scheduledDeparture: Date | null
@@ -160,6 +161,7 @@ class Service implements IMyTrainService {
 
   constructor({
     destinations,
+    terminatesHere,
     origins,
     cancelled,
     scheduledDeparture,
@@ -179,6 +181,7 @@ class Service implements IMyTrainService {
     id,
   }: {
     destinations: { name: string; via: null | string; crs: string }[]
+    terminatesHere: boolean
     origins: { name: string; via: null | string; crs: string }[]
     cancelled: boolean
     scheduledDeparture: Date | null
@@ -198,6 +201,7 @@ class Service implements IMyTrainService {
     id: string
   }) {
     this.destinations = destinations
+    this.terminatesHere = terminatesHere
     this.origins = origins
     this.cancelled = cancelled
     this.scheduledDeparture = scheduledDeparture
@@ -244,6 +248,8 @@ export interface IMyTrainService {
   id: string
 
   destinations: { name: string; via: null | string; crs: string }[]
+  /** A service that ends its journey at this station, so it has a scheduled arrival but no onward departure. */
+  terminatesHere: boolean
   origins: { name: string; via: null | string; crs: string }[]
   cancelled: boolean
   scheduledDeparture: Date | null
@@ -416,14 +422,16 @@ export function processServices(
         })
 
       return new Service({
+        // The original API only ever lists services with a scheduled departure.
+        terminatesHere: false,
         destinations: (service.isCancelled ? service.destination : service.currentDestinations || service.destination).map(d => ({
           name: d.locationName,
-          via: d.via,
+          via: d.via ?? null,
           crs: d.crs,
         })),
         origins: (service.isCancelled ? service.origin : service.currentOrigins || service.origin).map(o => ({
           name: o.locationName,
-          via: o.via,
+          via: o.via ?? null,
           crs: o.crs,
         })),
 
@@ -472,15 +480,17 @@ function processAssociatedService(
   const ogOrigins = ogService.currentOrigins || ogService.origin
 
   return new Service({
+    // The original API only ever lists services with a scheduled departure.
+    terminatesHere: false,
     destinations: (applicableOgDest
       ? [applicableOgDest]
       : stop1.falseDest || [{ locationName: association.destination, crs: association.destCRS }]
     ).map(d => ({
       name: d.locationName,
-      via: 'via' in d ? d.via : null,
+      via: 'via' in d ? (d.via ?? null) : null,
       crs: d.crs,
     })),
-    origins: ogOrigins.map(o => ({ name: o.locationName, via: o.via, crs: o.crs })),
+    origins: ogOrigins.map(o => ({ name: o.locationName, via: o.via ?? null, crs: o.crs })),
 
     cancelled: association.isCancelled,
 

@@ -1,7 +1,5 @@
 import React from 'react'
 
-import './css/ToggleSwitch.less'
-
 interface IProps {
   label: string
   onChange: React.ChangeEventHandler<HTMLInputElement>

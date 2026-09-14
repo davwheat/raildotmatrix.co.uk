@@ -1,4 +1,4 @@
-import { StaffServicesResponse } from '../../functions/api/getServices'
+import { StaffServicesResponse } from '../api-types/get-services-types'
 
 export type { StaffServicesResponse }
 

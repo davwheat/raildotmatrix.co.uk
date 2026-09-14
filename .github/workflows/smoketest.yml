@@ -8,9 +8,14 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+  deployments: write
+  pull-requests: write
+
 env:
-  NODE_VERSION: 18.x
-  CF_PAGES_PROJECT_NAME: raildotmatrix
+  NODE_VERSION: 24.x
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
 jobs:
   smoketest:
@@ -19,11 +24,11 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Find existing build status comment
         continue-on-error: true
-        uses: peter-evans/find-comment@v2
+        uses: peter-evans/find-comment@v4
         if: github.event_name == 'pull_request'
         id: find_status_comment
         with:
@@ -33,7 +38,7 @@ jobs:
 
       - name: Create or update comment
         continue-on-error: true
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v5
         if: github.event_name == 'pull_request'
         with:
           issue-number: ${{ github.event.pull_request.number }}
@@ -51,7 +56,7 @@ jobs:
             </table>
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
@@ -63,14 +68,13 @@ jobs:
       - name: Verify formatting
         run: yarn format:check
 
-      - name: Restore Gatsby cache
-        uses: actions/cache@v4
-        id: gatsbyCache
+      - name: Restore Next.js cache
+        uses: actions/cache@v6
         with:
-          path: ./.cache
-          key: ${{ runner.os }}-gatsby-cache-${{ secrets.CACHE_VERSION }}-${{ hashFiles('public') }}
+          path: ./.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('yarn.lock') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
           restore-keys: |
-            ${{ runner.os }}-gatsby-cache-${{ secrets.CACHE_VERSION }}-
+            ${{ runner.os }}-nextjs-${{ hashFiles('yarn.lock') }}-
 
       - name: Build site
         run: yarn build:ci
@@ -78,26 +82,25 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
-          path: ./public
+          path: ./out
 
       - name: Publish to Cloudflare Pages
-        uses: cloudflare/pages-action@1
+        uses: cloudflare/wrangler-action@v4
         id: cf-pages-upload
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: ${{ env.CF_PAGES_PROJECT_NAME }}
-          directory: public # e.g. 'dist'
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          wranglerVersion: '3'
-          # Use PR head branch if available, otherwise use the current branch
-          branch: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
+          # The project name and output directory come from wrangler.toml. Use the PR head branch if there is
+          # one, otherwise the current branch.
+          command:
+            pages deploy --branch=${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref ||
+            github.ref_name }}
 
       - name: Find existing build status comment
         continue-on-error: true
-        uses: peter-evans/find-comment@v2
+        uses: peter-evans/find-comment@v4
         if: github.event_name == 'pull_request'
         id: find_current_status_comment
         with:
@@ -108,7 +111,7 @@ jobs:
       - name: Update comment
         continue-on-error: true
         if: github.event_name == 'pull_request' && steps.find_current_status_comment.outputs.comment-id != ''
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v5
         with:
           comment-id: ${{ steps.find_current_status_comment.outputs.comment-id }}
           edit-mode: replace
@@ -122,9 +125,9 @@ jobs:
             &nbsp;✅&nbsp; Deploy successful!
             </td></tr>
             <tr><td><strong>Preview URL:</strong></td><td>
-            <a href='${{ steps.cf-pages-upload.outputs.url }}'>${{ steps.cf-pages-upload.outputs.url }}</a>
+            <a href='${{ steps.cf-pages-upload.outputs.deployment-url }}'>${{ steps.cf-pages-upload.outputs.deployment-url }}</a>
             </td></tr>
             <tr><td><strong>Branch Preview URL:</strong></td><td>
-            <a href='${{ steps.cf-pages-upload.outputs.alias }}'>${{ steps.cf-pages-upload.outputs.alias }}</a>
+            <a href='${{ steps.cf-pages-upload.outputs.pages-deployment-alias-url }}'>${{ steps.cf-pages-upload.outputs.pages-deployment-alias-url }}</a>
             </td></tr>
             </table>

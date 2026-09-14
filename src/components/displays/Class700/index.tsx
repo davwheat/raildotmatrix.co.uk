@@ -4,12 +4,11 @@ import ToggleSwitch from '../../common/form/ToggleSwitch'
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
 import { debounce } from 'throttle-debounce'
 
-import './css/index.less'
 import PageLink from '../../common/PageLink'
 import NoSSR from '@mpth/react-no-ssr'
 import { ZoomDiv } from '../ZoomDiv'
 
-const Class700PIS = React.forwardRef<any, any>(({ station, editBoardCallback }, ref) => {
+const Class700PIS = React.forwardRef<any, any>(({ station, editBoardUrl }, ref) => {
   let searchParams: URLSearchParams | null = null
 
   if (typeof window !== 'undefined') {
@@ -25,7 +24,7 @@ const Class700PIS = React.forwardRef<any, any>(({ station, editBoardCallback }, 
 
   function updateState() {
     setSettings({
-      hideSettings: hideRef.current?.checked,
+      hideSettings: !!hideRef.current?.checked,
     })
 
     if (!hideRef.current?.checked) {
@@ -68,12 +67,11 @@ const Class700PIS = React.forwardRef<any, any>(({ station, editBoardCallback }, 
         {!searchParams?.get('from-railannouncements.co.uk') && (
           <>
             <PageLink
-              to="#"
+              to={editBoardUrl}
               style={{
                 cursor: 'pointer',
                 zIndex: 1000,
               }}
-              onClick={editBoardCallback}
             >
               Edit board
             </PageLink>
@@ -85,7 +83,7 @@ const Class700PIS = React.forwardRef<any, any>(({ station, editBoardCallback }, 
 
       <NoSSR>
         <ZoomDiv>
-          <ScreenBase ref={ref} />
+          <ScreenBase />
         </ZoomDiv>
       </NoSSR>
     </>

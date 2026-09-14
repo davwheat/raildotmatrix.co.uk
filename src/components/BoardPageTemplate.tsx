@@ -1,40 +1,41 @@
 import React from 'react'
-import { Link, PageProps, navigate } from 'gatsby'
+import Link from 'next/link'
 import NoSSR from '@mpth/react-no-ssr'
 
-import './common/css/board-page.less'
+import getEditBoardUrl from '../functions/getEditBoardUrl'
+import { DataSourceProvider } from '../live/source'
 
 interface BoardPageSettings {
   requireStation: boolean
 }
 
 export default function createBoardPage(Component: React.ComponentType<any>, { requireStation = true }: BoardPageSettings) {
-  return function BoardPageTemplate({ location: { search } }: PageProps) {
-    const urlParams = new URLSearchParams(search)
-
-    const attrs = {
-      editBoardCallback: (e: React.MouseEvent) => {
-        e.preventDefault()
-        navigate('/board')
-      },
-      station: urlParams.get('station') || '',
-    }
-
-    if (requireStation && attrs.station === '') {
-      return (
-        <NoSSR>
-          <div>
-            <p>Invalid station ({attrs.station || '<none>'}).</p>
-            <Link to="/board">Edit board</Link>
-          </div>
-        </NoSSR>
-      )
-    }
-
+  return function BoardPageTemplate() {
     return (
       <NoSSR>
-        <Component {...attrs} />
+        <Board component={Component} requireStation={requireStation} />
       </NoSSR>
     )
   }
+}
+
+/** Rendered only after mount, so the query string is read straight from the address bar. */
+function Board({ component: Component, requireStation }: { component: React.ComponentType<any>; requireStation: boolean }) {
+  const editBoardUrl = getEditBoardUrl(window.location.pathname, window.location.search)
+  const station = new URLSearchParams(window.location.search).get('station') || ''
+
+  if (requireStation && station === '') {
+    return (
+      <div>
+        <p>Invalid station ({station || '<none>'}).</p>
+        <Link href={editBoardUrl}>Edit board</Link>
+      </div>
+    )
+  }
+
+  return (
+    <DataSourceProvider>
+      <Component station={station} editBoardUrl={editBoardUrl} />
+    </DataSourceProvider>
+  )
 }
