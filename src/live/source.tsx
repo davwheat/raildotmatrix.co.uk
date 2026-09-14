@@ -5,7 +5,7 @@ import useStateWithLocalStorage from '../hooks/useStateWithLocalStorage'
 export type DataSource = 'original' | 'websocket'
 export const DEFAULT_LIVE_URL = process.env.NEXT_PUBLIC_LIVE_SERVICE_URL || 'ws://localhost:8080'
 
-interface SourceSettings {
+export interface SourceSettings {
   mode: DataSource
   baseUrl: string
 }
@@ -15,13 +15,18 @@ const DEFAULT_SETTINGS: SourceSettings = { mode: 'original', baseUrl: DEFAULT_LI
 const SourceContext = createContext<SourceSettings>(DEFAULT_SETTINGS)
 export const useDataSource = () => useContext(SourceContext)
 
-/** Keeps a shared link as short as its overrides: a setting left at its default is absent from the URL. */
-function setOverride(url: URL, name: string, value: string, fallback: string) {
+function setOverride(params: URLSearchParams, name: string, value: string, fallback: string) {
   if (value === fallback) {
-    url.searchParams.delete(name)
+    params.delete(name)
   } else {
-    url.searchParams.set(name, value)
+    params.set(name, value)
   }
+}
+
+/** Keeps a shared link as short as its overrides: a setting left at its default is absent from the URL. */
+export function applySourceParams(params: URLSearchParams, settings: SourceSettings) {
+  setOverride(params, 'dataSource', settings.mode, DEFAULT_SETTINGS.mode)
+  setOverride(params, 'liveServiceUrl', settings.baseUrl, DEFAULT_SETTINGS.baseUrl)
 }
 
 export function DataSourceProvider({ children }: { children: React.ReactNode }) {
@@ -43,8 +48,7 @@ export function DataSourceProvider({ children }: { children: React.ReactNode }) 
     setSettings(next)
     setStored(next)
     const url = new URL(window.location.href)
-    setOverride(url, 'dataSource', next.mode, DEFAULT_SETTINGS.mode)
-    setOverride(url, 'liveServiceUrl', next.baseUrl, DEFAULT_SETTINGS.baseUrl)
+    applySourceParams(url.searchParams, next)
     window.history.replaceState(null, '', url)
   }
 

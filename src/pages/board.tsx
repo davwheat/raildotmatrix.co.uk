@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-import { DataSourceProvider, useDataSource } from '../live/source'
+import { applySourceParams, DataSourceProvider, useDataSource } from '../live/source'
 
 import Layout from '../components/Layout'
 import Seo from '../components/Seo'
@@ -37,6 +37,12 @@ function IndexPage() {
       type: BoardSettings.type,
       station: stn.value,
     })
+  }
+
+  function boardParams(station: string) {
+    const params = new URLSearchParams({ station })
+    applySourceParams(params, { mode, baseUrl })
+    return params
   }
 
   function ChooseDisplay(display: React.ChangeEvent<HTMLSelectElement>) {
@@ -87,11 +93,7 @@ function IndexPage() {
               value={BoardSettings.type}
             />
             <PageLink
-              to={
-                BoardSettings.station && BoardSettings.type
-                  ? `/board/${BoardSettings.type}?${new URLSearchParams({ station: BoardSettings.station, dataSource: mode, liveServiceUrl: baseUrl })}`
-                  : undefined
-              }
+              to={BoardSettings.station && BoardSettings.type ? `/board/${BoardSettings.type}?${boardParams(BoardSettings.station)}` : undefined}
               style={{ cursor: 'pointer' }}
             >
               Next
