@@ -15,7 +15,6 @@ permissions:
 
 env:
   NODE_VERSION: 24.x
-  CF_PAGES_PROJECT_NAME: raildotmatrix
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
 jobs:
@@ -93,11 +92,11 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # The project name is given here rather than in wrangler.toml, which this repo keeps to the runtime
-          # settings. Use the PR head branch if there is one, otherwise the current branch.
+          # The project name and output directory come from wrangler.toml. Use the PR head branch if there is
+          # one, otherwise the current branch.
           command:
-            pages deploy out --project-name=${{ env.CF_PAGES_PROJECT_NAME }} --branch=${{ github.event_name == 'pull_request' &&
-            github.event.pull_request.head.ref || github.ref_name }}
+            pages deploy --branch=${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref ||
+            github.ref_name }}
 
       - name: Find existing build status comment
         continue-on-error: true
