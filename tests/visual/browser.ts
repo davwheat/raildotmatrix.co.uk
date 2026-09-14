@@ -57,15 +57,39 @@ export class Browser {
         '--font-render-hinting=none',
         '--disable-gpu',
         '--disable-dev-shm-usage',
+        // CI images install Chrome for Testing, whose sandbox helper is not setuid root, so the sandbox cannot start.
+        '--no-sandbox',
         'about:blank',
       ],
-      { stdio: 'ignore' },
+      { stdio: ['ignore', 'ignore', 'pipe'] },
     )
 
-    const endpoint = await waitFor(async () => {
-      const response = await fetch(`http://127.0.0.1:${port}/json/version`)
-      return (await response.json()).webSocketDebuggerUrl as string
-    }, 'Chrome did not expose a debugging endpoint')
+    // Chrome explains its own launch failures on stderr, and without this the only symptom is a port that never opens.
+    let complaints = ''
+    child.stderr?.on('data', chunk => {
+      complaints = (complaints + chunk).slice(-2000)
+    })
+    let exit: string | null = null
+    child.on('exit', (code, signal) => {
+      exit = signal ? `killed by ${signal}` : `exited with code ${code}`
+    })
+
+    const endpoint = await waitFor(
+      async () => {
+        const response = await fetch(`http://127.0.0.1:${port}/json/version`)
+        return (await response.json()).webSocketDebuggerUrl as string
+      },
+      () =>
+        [
+          `Chrome did not expose a debugging endpoint`,
+          `  ran: ${executable}`,
+          exit && `  ${exit}`,
+          complaints && `  stderr: ${complaints.trim()}`,
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      () => exit !== null,
+    )
 
     const socket = new WebSocket(endpoint)
     await new Promise<void>((resolve, reject) => {
@@ -302,13 +326,14 @@ export class Browser {
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-async function waitFor<T>(attempt: () => Promise<T>, message: string): Promise<T> {
+async function waitFor<T>(attempt: () => Promise<T>, message: () => string, giveUp?: () => boolean): Promise<T> {
   for (let remaining = 60; remaining > 0; remaining--) {
     try {
       return await attempt()
     } catch {
+      if (giveUp?.()) break
       await delay(250)
     }
   }
-  throw new Error(message)
+  throw new Error(message())
 }
