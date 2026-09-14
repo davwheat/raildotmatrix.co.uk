@@ -15,8 +15,9 @@ A direct link can override saved settings:
 http://localhost:3000/board/infotec-landscape-dmi?station=ECR&dataSource=websocket&liveServiceUrl=ws%3A%2F%2Flocalhost%3A8080
 ```
 
-`dataSource=original` explicitly selects the original source. The announcement site passes these parameters to its embedded board; an embedded
-board hides the source controls so its parent owns the selection.
+`dataSource=original` explicitly selects the original source. Changing a control rewrites the address bar with only the settings that differ from
+the defaults, so a link copied from a default board carries neither parameter. The announcement site passes these parameters to its embedded
+board; an embedded board hides the source controls so its parent owns the selection.
 
 To point the development site at a remote service, change **Service URL**, or set `NEXT_PUBLIC_LIVE_SERVICE_URL` before building. The built
 site's default comes from `NEXT_PUBLIC_LIVE_SERVICE_URL` in `.env.production`, which is committed because the value reaches the browser anyway.

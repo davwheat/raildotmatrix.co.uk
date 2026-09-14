@@ -10,16 +10,24 @@ interface SourceSettings {
   baseUrl: string
 }
 
-const SourceContext = createContext<SourceSettings>({ mode: 'original', baseUrl: DEFAULT_LIVE_URL })
+const DEFAULT_SETTINGS: SourceSettings = { mode: 'original', baseUrl: DEFAULT_LIVE_URL }
+
+const SourceContext = createContext<SourceSettings>(DEFAULT_SETTINGS)
 export const useDataSource = () => useContext(SourceContext)
+
+/** Keeps a shared link as short as its overrides: a setting left at its default is absent from the URL. */
+function setOverride(url: URL, name: string, value: string, fallback: string) {
+  if (value === fallback) {
+    url.searchParams.delete(name)
+  } else {
+    url.searchParams.set(name, value)
+  }
+}
 
 export function DataSourceProvider({ children }: { children: React.ReactNode }) {
   const [stored, setStored] = useStateWithLocalStorage<SourceSettings>(
     'live-data-source',
-    {
-      mode: 'original',
-      baseUrl: DEFAULT_LIVE_URL,
-    },
+    DEFAULT_SETTINGS,
     value => value && ['original', 'websocket'].includes(value.mode) && typeof value.baseUrl === 'string',
   )
   const [settings, setSettings] = useState<SourceSettings>(() => {
@@ -35,8 +43,8 @@ export function DataSourceProvider({ children }: { children: React.ReactNode }) 
     setSettings(next)
     setStored(next)
     const url = new URL(window.location.href)
-    url.searchParams.set('dataSource', next.mode)
-    url.searchParams.set('liveServiceUrl', next.baseUrl)
+    setOverride(url, 'dataSource', next.mode, DEFAULT_SETTINGS.mode)
+    setOverride(url, 'liveServiceUrl', next.baseUrl, DEFAULT_SETTINGS.baseUrl)
     window.history.replaceState(null, '', url)
   }
 
