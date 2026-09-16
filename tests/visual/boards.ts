@@ -55,23 +55,34 @@ export const FREEZE_STYLES = `
 `
 
 /**
+ * An animation with no frame the board is heading towards: one that loops, or blinks a fixed number of times before
+ * the board moves on. Parking either on a frame of its own would let the text disappear from the baseline entirely,
+ * and a platform alteration blinks for six seconds and is then gone, which is far too short to wait out.
+ */
+export const BLINKING_ANIMATION = `(animation => {
+  const timing = animation.effect?.getComputedTiming?.()
+  return !timing || !Number.isFinite(Number(timing.endTime)) || Number(timing.iterations) > 1
+})`
+
+/**
  * Pins every animation once the board has settled. CSS alone cannot do this: animation-delay shifts an animation
  * relative to whenever it happened to start, so a looping one lands on an arbitrary frame. Removing animations
  * outright is no better, because several boards advance their own state on animationend.
  *
- * A finite animation is therefore held on its final frame, which is the state the board was heading for anyway. A
- * looping one is dropped so its element falls back to its own styles, which is both stable and the frame that shows
- * the most: parking a flashing cancellation mid-blink would let the text disappear from the baseline entirely.
+ * An animation that plays once is therefore held on its final frame, which is the state the board was heading for
+ * anyway. A blink is dropped instead, so its element falls back to its own styles: that is both stable and the frame
+ * that shows the most, and it leaves the board on the screen the blink belongs to, because cancelling an animation
+ * never fires the animationend the board would advance on.
  */
 export const PIN_ANIMATIONS = `
   (() => {
+    const blinks = ${BLINKING_ANIMATION}
     for (const animation of document.getAnimations()) {
-      const endTime = Number(animation.effect?.getComputedTiming?.().endTime)
-      if (Number.isFinite(endTime)) {
-        animation.currentTime = endTime
-        animation.pause()
-      } else {
+      if (blinks(animation)) {
         animation.cancel()
+      } else {
+        animation.currentTime = Number(animation.effect.getComputedTiming().endTime)
+        animation.pause()
       }
     }
   })()

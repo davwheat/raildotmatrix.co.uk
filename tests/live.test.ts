@@ -228,7 +228,7 @@ test('an unanswered resync is retried before the socket is replaced', context =>
   stop()
 })
 
-import { displayServices } from '../src/live/displayServices'
+import { displayServices, platformAlterations } from '../src/live/displayServices'
 
 test('display policy keeps TrainOrder, feed names, null data and available split portions', () => {
   const initial = snapshot()
@@ -264,6 +264,74 @@ test('display policy keeps TrainOrder, feed names, null data and available split
   assert.equal(result.services[0].passengerCallPoints[0].associations[0].service?.length, 4)
   first.portions[0].available = false
   assert.equal(displayServices(state, null, false, false).services[1].passengerCallPoints[0].associations.length, 0)
+})
+
+test('a portion that joins another service here is left to the train it becomes', () => {
+  const initial = snapshot()
+  const main = initial.movements[0]
+  const portion = {
+    rid: 'R2',
+    category: 'JJ' as const,
+    at: main.station,
+    available: true,
+    cancelled: false,
+    headcode: null,
+    mode: 'train' as const,
+    operator_code: null,
+    operator_name: null,
+    origin: null,
+    destination: main.destinations[0],
+    coach_count: 5,
+    position: null,
+    calls: main.calling_points,
+  }
+  // The joining half terminates here; the service it joins departs with both portions' origins on it.
+  const joining = {
+    ...main,
+    id: 'R2/call',
+    arrival: { ...main.departure, planned: '2026-09-13T10:00:00Z' },
+    departure: { planned: null, estimated: null, actual: null, unknown_delay: false },
+    portions: [portion],
+  }
+  main.portions = [{ ...portion, rid: 'R2' }]
+  const terminating = { ...joining, id: 'R3/call', portions: [] }
+  initial.movements.push(joining, terminating)
+  initial.ordering = [main.id, joining.id, terminating.id]
+  const services = displayServices(reduceCIS(null, initial)!, null, false, true).services
+  assert.deepEqual(
+    services.map(service => service.id),
+    [main.id, terminating.id],
+  )
+  // A terminating service with no join of its own still says so.
+  assert.equal(services[1].destinations[0].name, 'Terminates here')
+  joining.portions = [{ ...portion, available: false }]
+  assert.equal(displayServices(reduceCIS(null, initial)!, null, false, true).services.length, 3)
+})
+
+test('a train crossing the platforms a board watches is an alteration, either way', () => {
+  const initial = snapshot()
+  const here = reduceCIS(null, initial)!
+  const moved = { ...initial.movements[0], platform: { ...initial.movements[0].platform, number: '5' } }
+  const away = reduceCIS(here, update({ upserts: [moved] }))!
+
+  assert.deepEqual(platformAlterations(here, away, ['2']), [moved.id])
+  assert.deepEqual(platformAlterations(away, here, ['2']), [moved.id], 'a train moving onto the platform alters it too')
+  assert.deepEqual(platformAlterations(here, away, ['2', '5']), [], 'a move between watched platforms changes no row')
+  assert.deepEqual(platformAlterations(here, away, null), [], 'a board watching the whole station loses no train to another')
+  assert.deepEqual(platformAlterations(null, away, ['2']), [], 'a board that has just connected has nothing to compare')
+})
+
+test('a platform first published, withdrawn, or belonging to a train no board lists is not an alteration', () => {
+  const initial = snapshot()
+  const here = reduceCIS(null, initial)!
+  const unplatformed = { ...initial.movements[0], platform: { ...initial.movements[0].platform, number: null } }
+  const unknown = reduceCIS(null, { ...initial, movements: [unplatformed] })!
+
+  assert.deepEqual(platformAlterations(unknown, here, ['2']), [])
+  assert.deepEqual(platformAlterations(here, unknown, ['2']), [])
+
+  const suppressed = { ...initial.movements[0], platform: { ...initial.movements[0].platform, number: '5' }, suppressed: true }
+  assert.deepEqual(platformAlterations(here, reduceCIS(here, update({ upserts: [suppressed] }))!, ['2']), [])
 })
 
 test('warnings replace only their platform and expire using the client clock', () => {

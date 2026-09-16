@@ -42,11 +42,25 @@ departure displays select passenger departures from the full movement feed. Pass
 overrides, independently of passenger rows. An override replaces its platform's train details until explicitly removed or expired; other
 platforms retain their services. The server owns departure removal, including SMART/TD evidence and the Darwin actual-departure fallback.
 
+The Data Display board announces a platform alteration before it redraws. When a train moves between a platform the board watches and one it does
+not, the middle row flashes PLATFORM ALTERATION for six seconds, a second lit and a second dark, and the board then draws its new state with the
+next train scrolling up from the bottom, as it does on first load. No board shows a platform number against a service, so an alteration reaches a
+passenger as a train appearing or vanishing: a board watching the whole station has no platform to lose a train from, and a move between two
+watched platforms leaves every row as it was. A platform published for the first time, or withdrawn, is an announcement rather than a move. A
+stand clear warning outranks the announcement and replaces it, because the train that warning describes is passing the platform as someone reads
+it.
+
+The board recognises the move in the feed it already holds, so it announces one for as long as the service keeps sending the train. A service
+that narrows its payload to the watched platforms can drop an altered train instead of republishing it, and a dropped train reaches the board as
+a departure.
+
 Station/operator names, times, reasons, calling points and available split-service information come from the feed. Existing optional legacy
-operator names remain a static client preference. Unavailable associated services never trigger a lookup.
+operator names remain a static client preference. Unavailable associated services never trigger a lookup. A portion that ends its journey here
+only to join another service is left off the board: the train it becomes has its own row, carrying both portions' origins, so listing the portion
+as well shows one train twice — once as a service that terminates and strands its passengers.
 
-Run `yarn test:live` for reducer, digest, heartbeat, resync/reconnect, ordering, split and platform warning regressions. The runner uses Node's
-test runner and Wrangler's existing esbuild compiler. Build with `yarn build`.
+Run `yarn test:live` for reducer, digest, heartbeat, resync/reconnect, ordering, split, platform warning and platform alteration regressions. The
+runner uses Node's test runner and Wrangler's existing esbuild compiler. Build with `yarn build`.
 
-Run `yarn test:visual` to screenshot every board in every state, including both platform warnings, and compare the results against committed
-baselines. See [Board screenshot tests](./board-visual-tests.md).
+Run `yarn test:visual` to screenshot every board in every state, including both platform warnings and a platform alteration, and compare the
+results against committed baselines. See [Board screenshot tests](./board-visual-tests.md).

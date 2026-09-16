@@ -1,4 +1,4 @@
-import type { Call, Endpoint, Location, Movement, Platform, PlatformOverride, Portion, Snapshot, Times } from '../../src/live/types'
+import type { Call, Endpoint, Location, Movement, Platform, PlatformOverride, Portion, Snapshot, Times, Update } from '../../src/live/types'
 
 /**
  * Boards render relative to the browser clock, which the capture freezes to this instant. Fixture times are offsets
@@ -229,10 +229,48 @@ function dividingService(): Movement {
   })
 }
 
+function update(initial: Snapshot, upserts: Movement[]): Update {
+  return {
+    version: 1,
+    type: 'update',
+    epoch: initial.epoch,
+    previous_revision: initial.revision,
+    revision: initial.revision + 1,
+    window: initial.window,
+    upserts,
+    removals: [],
+    ordering: initial.ordering,
+    override_upserts: [],
+    override_removals: [],
+  }
+}
+
+/**
+ * Moving the next train to a platform this board does not watch. Only a change can produce an alteration, so the
+ * board has to be given one state and then another, and a second train stays put so there is something for the
+ * board to draw once it has finished announcing.
+ */
+function platformAlteration(): Fixture {
+  const moving = victoriaService()
+  const staying = { ...bedfordService(), platform: platform('2') }
+  const initial = snapshot([moving, staying])
+
+  return {
+    description: 'the next train moving off the platform this board watches',
+    snapshot: initial,
+    updates: [update(initial, [{ ...moving, platform: platform('7') }])],
+    platforms: ['2'],
+  }
+}
+
 export interface Fixture {
   description: string
   /** `null` holds the socket open without sending, which is the board's pre-data state. */
   snapshot: Snapshot | null
+  /** Sent one at a time after the snapshot, for a state a board can only reach by being told something changed. */
+  updates?: Update[]
+  /** The platforms the board watches, as a platform-mounted board is configured with. Empty watches the station. */
+  platforms?: string[]
 }
 
 export const FIXTURES: Record<string, Fixture> = {
@@ -329,4 +367,5 @@ export const FIXTURES: Record<string, Fixture> = {
     description: 'a not for public use warning replacing platform 2',
     snapshot: snapshot([victoriaService(), bedfordService()], [override('not_for_public_use', '2')]),
   },
+  'platform-alteration': platformAlteration(),
 }

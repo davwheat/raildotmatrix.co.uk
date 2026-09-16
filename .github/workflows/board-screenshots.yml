@@ -58,7 +58,11 @@ jobs:
 
       - name: Commit any changes
         run: |
-          if git diff --quiet -- tests/visual/baselines; then
+          # Staged first: a board whose baseline has never been recorded produces an untracked file, which an
+          # unstaged diff cannot see, so a new case would otherwise be reported as unchanged and never committed.
+          git add tests/visual/baselines
+
+          if git diff --cached --quiet -- tests/visual/baselines; then
             echo "Board screenshots are unchanged." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
@@ -66,12 +70,11 @@ jobs:
           {
             echo "Board screenshots updated:"
             echo
-            git diff --name-status -- tests/visual/baselines | sed 's/^/    /'
+            git diff --cached --name-status -- tests/visual/baselines | sed 's/^/    /'
           } >> "$GITHUB_STEP_SUMMARY"
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add tests/visual/baselines
           git commit -m 'chore: update board screenshots'
           git push
 

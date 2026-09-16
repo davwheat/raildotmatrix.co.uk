@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 import NoServicesMessage from './NoServicesMessage'
+import PlatformAlterationMessage from './PlatformAlterationMessage'
 import PlatformWarningMessage from './PlatformWarningMessage'
 import Clock from './Clock'
 import TrainServices from './TrainServices'
@@ -86,7 +87,15 @@ const base = css`
 `
 
 export default function FullBoard({ station, platforms, useLegacyTocNames, showUnconfirmedPlatforms, hasCasing, worldlinePowered }: IProps) {
-  const { services, overrides } = useServiceInformation(station, platforms ?? null, !!useLegacyTocNames, showUnconfirmedPlatforms)
+  const { services, overrides, alterations } = useServiceInformation(station, platforms ?? null, !!useLegacyTocNames, showUnconfirmedPlatforms)
+  const [announced, setAnnounced] = useState(alterations)
+  const warning = noticeKind(overrides)
+
+  // A stand clear warning is about a train passing this platform now, so it keeps the board. The alteration is
+  // dropped rather than queued behind it: by the time the warning clears, the train it describes has long gone.
+  useEffect(() => {
+    if (warning) setAnnounced(alterations)
+  }, [warning, alterations])
 
   const css = [
     base,
@@ -102,7 +111,16 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
     },
   ]
 
-  const warning = noticeKind(overrides)
+  // Leaving the board to announce an alteration unmounts the services, so they replay their entrance animation
+  // afterwards and the new screen scrolls up from the bottom exactly as it does on first load.
+  if (alterations !== announced && !warning) {
+    return (
+      <article css={css}>
+        <PlatformAlterationMessage onComplete={() => setAnnounced(alterations)} />
+        <Clock />
+      </article>
+    )
+  }
 
   if (!services || (services.length === 0 && !warning)) {
     return (

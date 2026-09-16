@@ -52,6 +52,9 @@ export function serveStatic(root: string): Promise<{ port: number; close: () => 
   return listen(server)
 }
 
+/** Long enough to reach the board as its own render, short enough that the capture is nowhere near settling. */
+const UPDATE_DELAY = 100
+
 /** The fixture name is the URL path prefix, which streamUrl() preserves when it appends /v1/cis/live. */
 export function serveFeed(): Promise<{ port: number; close: () => Promise<void> }> {
   const server = createServer((_request, response) => response.writeHead(426).end('WebSocket only'))
@@ -65,7 +68,15 @@ export function serveFeed(): Promise<{ port: number; close: () => Promise<void> 
       return
     }
 
-    const send = () => fixture.snapshot && socket.send(JSON.stringify(fixture.snapshot))
+    // A board announces a change rather than a state, so an update has to arrive as its own message: sending it in
+    // the same tick as the snapshot would let the client collapse the two into one render and see nothing change.
+    const send = () => {
+      if (!fixture.snapshot) return
+      socket.send(JSON.stringify(fixture.snapshot))
+      fixture.updates?.forEach((change, index) => {
+        setTimeout(() => socket.send(JSON.stringify(change)), (index + 1) * UPDATE_DELAY)
+      })
+    }
     send()
     socket.on('message', (data: Buffer) => {
       if (JSON.parse(String(data)).type === 'resync') send()

@@ -1,6 +1,6 @@
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { BOARDS, FREEZE_STYLES, PIN_ANIMATIONS, VIEWPORT, freezeScript } from './boards'
+import { BLINKING_ANIMATION, BOARDS, FREEZE_STYLES, PIN_ANIMATIONS, VIEWPORT, freezeScript } from './boards'
 import { Browser } from './browser'
 import { FIXTURES, FROZEN_CLOCK } from './fixtures'
 import { serveFeed, serveStatic } from './servers'
@@ -38,7 +38,7 @@ function parseOptions(argv: string[]): Options {
 async function main() {
   const options = parseOptions(process.argv.slice(2))
   const cases = BOARDS.flatMap(board =>
-    Object.entries(FIXTURES).map(([state, fixture]) => ({ board, state, description: fixture.description })),
+    Object.entries(FIXTURES).map(([state, fixture]) => ({ board, state, description: fixture.description, platforms: fixture.platforms })),
   ).filter(entry => !options.filter || `${entry.board.name} ${entry.state}`.includes(options.filter))
 
   if (cases.length === 0) throw new Error('No cases matched the filter')
@@ -67,7 +67,7 @@ async function main() {
   }
 
   try {
-    for (const { board, state, description } of cases) {
+    for (const { board, state, description, platforms } of cases) {
       const name = `${board.name}--${state}`
       // Only failures carry the description: it is the reminder of what the case was meant to prove.
       const explain = (line: string) => console.log(`${line}\n            ${description}`)
@@ -78,6 +78,7 @@ async function main() {
         hideSettings: '1',
         'from-railannouncements.co.uk': '1',
       })
+      for (const watched of platforms ?? []) query.append('platform', watched)
 
       const shots: string[] = []
       try {
@@ -90,6 +91,7 @@ async function main() {
               preloadScript: freezeScript(FROZEN_CLOCK),
               freezeStyles: FREEZE_STYLES,
               pinAnimations: PIN_ANIMATIONS,
+              blinkingAnimation: BLINKING_ANIMATION,
             }),
           )
         }

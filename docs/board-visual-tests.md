@@ -41,21 +41,24 @@ change.
 
 ## What is covered
 
-Each state in `tests/visual/fixtures.ts` is captured on each board in `tests/visual/boards.ts`, so adding either one extends the matrix.
+Each state in `tests/visual/fixtures.ts` is captured on each board in `tests/visual/boards.ts`, so adding either one extends the matrix. A state
+can also name the platforms the board watches and send updates after its snapshot, which is how a state that exists only as a change reaches a
+board at all.
 
-| State              | What it shows                                                                                              |
-| ------------------ | ---------------------------------------------------------------------------------------------------------- |
-| `connecting`       | The socket is open but no snapshot has arrived. A board never says so, so this must match `no-departures`. |
-| `no-departures`    | A healthy feed with nothing to show.                                                                       |
-| `terminating`      | A service ending its journey here, shown as "Terminates here".                                             |
-| `single-departure` | One straightforward service.                                                                               |
-| `busy-board`       | Five services competing for the board.                                                                     |
-| `delayed`          | A late running service, with its reason.                                                                   |
-| `unknown-delay`    | A service the feed cannot estimate.                                                                        |
-| `cancelled`        | A cancelled service, with its reason.                                                                      |
-| `dividing-service` | A service that splits, listing front and rear portions.                                                    |
-| `passing-train`    | A stand clear warning replacing a platform.                                                                |
-| `non-public-train` | A not for public use warning replacing a platform.                                                         |
+| State                 | What it shows                                                                                              |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `connecting`          | The socket is open but no snapshot has arrived. A board never says so, so this must match `no-departures`. |
+| `no-departures`       | A healthy feed with nothing to show.                                                                       |
+| `terminating`         | A service ending its journey here, shown as "Terminates here".                                             |
+| `single-departure`    | One straightforward service.                                                                               |
+| `busy-board`          | Five services competing for the board.                                                                     |
+| `delayed`             | A late running service, with its reason.                                                                   |
+| `unknown-delay`       | A service the feed cannot estimate.                                                                        |
+| `cancelled`           | A cancelled service, with its reason.                                                                      |
+| `dividing-service`    | A service that splits, listing front and rear portions.                                                    |
+| `passing-train`       | A stand clear warning replacing a platform.                                                                |
+| `non-public-train`    | A not for public use warning replacing a platform.                                                         |
+| `platform-alteration` | A train moving off the platform the board watches.                                                         |
 
 Fixtures are served over the same WebSocket protocol the boards use in production, so the tests exercise the real feed path. The fixture name is
 the URL path prefix of the service URL, which is how each case selects its data.
@@ -81,8 +84,10 @@ Boards animate continuously and render the current time, so a naive screenshot n
 - Waits for fonts, for the markup to stop changing, and for entrance animations to finish. Markup alone is not enough, because a board holds one
   layout for the length of a slide-in and only then renders the next.
 - Removes transitions, returns scrolling text to its resting position, and cancels zoom-to-fit so baselines sit at the board's own resolution.
-- Holds each finite animation on its final frame and cancels looping ones, so a flashing cancellation is captured at full opacity rather than
-  mid-blink.
+- Holds each animation that plays once on its final frame, and drops the ones that repeat, so a flashing cancellation or platform alteration is
+  captured at full opacity rather than mid-blink. Dropping a blink also holds the board on the screen the blink belongs to: boards advance on
+  `animationend`, and a cancelled animation never sends one. Without that, a platform alteration would have to be caught inside the six seconds
+  it lasts.
 
 If a case starts failing intermittently rather than consistently, that list is where to look. `--repeat` reproduces it, and the run prints which
 animations were still going when a board failed to settle.
