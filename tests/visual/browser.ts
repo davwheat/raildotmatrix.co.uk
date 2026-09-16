@@ -22,6 +22,7 @@ export interface CaptureRequest {
   preloadScript: string
   freezeStyles: string
   pinAnimations: string
+  blinkingAnimation: string
 }
 
 export class Browser {
@@ -173,7 +174,7 @@ export class Browser {
           return result.result.value
         })
 
-      await this.settle(evaluate, request.selector)
+      await this.settle(evaluate, request)
       await evaluate(`
         (() => {
           const style = document.createElement('style')
@@ -181,7 +182,7 @@ export class Browser {
           document.head.appendChild(style)
         })()
       `)
-      await this.settle(evaluate, request.selector)
+      await this.settle(evaluate, request)
       // Pinning runs last: a later style change would recompute the animations this pass has just settled.
       await evaluate(request.pinAnimations)
       await evaluate(`new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`)
@@ -208,7 +209,7 @@ export class Browser {
    * alone is not enough: a board holds one layout for the length of a slide-in and only then renders the next, so a
    * capture taken during that hold looks settled while a row is still missing.
    */
-  private async settle(evaluate: (expression: string) => Promise<any>, selector: string) {
+  private async settle(evaluate: (expression: string) => Promise<any>, request: CaptureRequest) {
     let previous: string | null = null
     let stableRuns = 0
     let pending: string[] = []
@@ -217,18 +218,17 @@ export class Browser {
       await delay(250)
       const state = await evaluate(`
         (async () => {
-          const element = document.querySelector(${JSON.stringify(selector)})
+          const element = document.querySelector(${JSON.stringify(request.selector)})
           if (!element) return null
           await document.fonts.ready
           await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
 
-          // Only keyframe animations gate the entrance. Looping ones never finish and nothing waits on them, and
+          // Only an entrance gates the capture. Blinks never arrive anywhere and nothing waits on them, and
           // transitions are restarted indefinitely by the scrolling text, which the freeze styles handle instead.
-          const running = document.getAnimations().filter(animation => {
-            if (!(animation instanceof CSSAnimation) || animation.playState !== 'running') return false
-            const timing = animation.effect?.getComputedTiming?.()
-            return !!timing && Number.isFinite(Number(timing.endTime))
-          })
+          const blinks = ${request.blinkingAnimation}
+          const running = document.getAnimations().filter(
+            animation => animation instanceof CSSAnimation && animation.playState === 'running' && !blinks(animation),
+          )
 
           return { running: running.map(animation => animation.animationName), markup: element.outerHTML }
         })()
@@ -241,7 +241,7 @@ export class Browser {
       if (stableRuns >= 2) return
     }
 
-    throw new Error(`${selector} never settled${pending.length ? ` — still animating: ${[...new Set(pending)].join(', ')}` : ''}`)
+    throw new Error(`${request.selector} never settled${pending.length ? ` — still animating: ${[...new Set(pending)].join(', ')}` : ''}`)
   }
 
   /**

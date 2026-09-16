@@ -102,6 +102,52 @@ function portionService(portion: Portion, movement: Movement, legacyNames: boole
   )
 }
 
+/**
+ * A service that ends here only because it joins another one is that train's
+ * other portion rather than a working of its own: the service it becomes has
+ * its own entry, with both portions' origins on it, so showing this as well
+ * puts one train on the board twice — once as a train that terminates and
+ * strands its passengers, which is the opposite of what it does.
+ */
+function joinsHere(movement: Movement): boolean {
+  return (
+    terminatesHere(movement) &&
+    movement.portions.some(
+      portion => portion.category === 'JJ' && portion.available && !portion.cancelled && portion.at.tpl === movement.station.tpl,
+    )
+  )
+}
+
+/** A movement a departure board can list at all, before any platform filtering or override is considered. */
+function isPassengerCall(movement: Movement): boolean {
+  if (movement.suppressed || !movement.passenger || movement.operational) return false
+  // A terminating service is shown like any other, timed by its arrival. A train that only passes through is not a
+  // call at all: it is announced, if at all, by a platform override.
+  if (!movement.departure.planned && (!movement.arrival.planned || movement.kind === 'passing')) return false
+  return !joinsHere(movement)
+}
+
+const selectedPlatforms = (platforms: string[] | null) => (platforms?.length ? new Set(platforms.map(platform => platform.toUpperCase())) : null)
+
+/**
+ * Trains that have moved between a platform this board watches and one it does not. No board shows a platform
+ * number against a service, so an alteration reaches a passenger as a train appearing or vanishing: a move within
+ * the watched platforms changes nothing they can see, and a board watching the whole station never loses a train
+ * to one. A platform being published for the first time, or withdrawn, is an announcement rather than a move.
+ */
+export function platformAlterations(previous: CISState | null, next: CISState, platforms: string[] | null): string[] {
+  const selected = selectedPlatforms(platforms)
+  if (!previous || !selected) return []
+  const watched = (platform: string) => selected.has(platform.toUpperCase())
+
+  return [...next.movements.values()].flatMap(movement => {
+    const was = previous.movements.get(movement.id)?.platform.number
+    const now = movement.platform.number
+    if (!was || !now || was === now || !isPassengerCall(movement)) return []
+    return watched(was) === watched(now) ? [] : [movement.id]
+  })
+}
+
 export interface DisplayView {
   services: IMyTrainService[]
   overrides: PlatformOverride[]
@@ -114,7 +160,7 @@ export function displayServices(
   showUnconfirmed: boolean,
   now = Date.now(),
 ): DisplayView {
-  const selected = platforms?.length ? new Set(platforms.map(platform => platform.toUpperCase())) : null
+  const selected = selectedPlatforms(platforms)
   const overrides = [...state.overrides.values()].filter(
     override =>
       (!selected || selected.has(override.platform.toUpperCase())) &&
@@ -126,10 +172,7 @@ export function displayServices(
   // Keep the server's ordering: TrainOrder takes priority within each platform.
   const services = state.ordering.flatMap(id => {
     const movement = state.movements.get(id)
-    if (!movement || movement.suppressed || !movement.passenger || movement.operational) return []
-    // A terminating service is shown like any other, timed by its arrival. A train that only passes through is not a
-    // call at all: it is announced, if at all, by a platform override.
-    if (!movement.departure.planned && (!movement.arrival.planned || movement.kind === 'passing')) return []
+    if (!movement || !isPassengerCall(movement)) return []
     const platform = movement.platform.number?.toUpperCase()
     if (platform && overridden.has(platform)) return []
     // Darwin confirmation is separate from permission to display a platform.

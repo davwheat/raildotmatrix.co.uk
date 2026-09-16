@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import GetNextTrainsAtStationStaff, { type StaffServicesResponse } from '../api/GetNextTrainsAtStationStaff'
 import { processServices } from '../api/ProcessServices'
 import { connectCIS } from '../live/cis'
 import { streamUrl } from '../live/connection'
-import { displayServices } from '../live/displayServices'
+import { displayServices, platformAlterations } from '../live/displayServices'
 import { useDataSource } from '../live/source'
 import type { CISState } from '../live/types'
 
@@ -97,9 +97,24 @@ export function useServiceInformation(station: string, platforms: string[] | nul
     return () => clearInterval(timer)
   }, [mode])
 
+  const [alterations, setAlterations] = useState(0)
+  // A board that has just connected holds no earlier platform for any train, so its first state announces nothing.
+  const compared = useRef<CISState | null>(null)
+
+  useEffect(() => {
+    const state = (data?.key === key && data.cis) || null
+    const previous = compared.current
+    compared.current = state
+    if (!state) return
+    const watched = platformKey ? platformKey.split(',') : null
+    if (platformAlterations(previous, state, watched).length > 0) setAlterations(count => count + 1)
+  }, [data, key, platformKey])
+
   const current = data?.key === key ? data : null
   const view = current?.cis ? displayServices(current.cis, platforms, legacyNames, showUnconfirmed, now) : null
   return {
+    /** Counts platform alterations rather than describing them: a board announces that one happened, not which train moved. */
+    alterations,
     services:
       view?.services ??
       (current?.legacy
