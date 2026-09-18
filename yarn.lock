@@ -1659,6 +1659,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bufbuild/protobuf@npm:^2.14.1":
+  version: 2.15.0
+  resolution: "@bufbuild/protobuf@npm:2.15.0"
+  checksum: 10c0/098f7d942a6b2c3010f4c169df02e3be528477f0774bcfa36aa91561eddc542cba01b72a508c81a335f53bd7bd77683e47b10dc51953ce6f6adf66983c2fc185
+  languageName: node
+  linkType: hard
+
 "@cloudflare/kv-asset-handler@npm:0.5.0":
   version: 0.5.0
   resolution: "@cloudflare/kv-asset-handler@npm:0.5.0"
@@ -5554,6 +5561,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "uk-dot-matrix@workspace:."
   dependencies:
+    "@bufbuild/protobuf": "npm:^2.14.1"
     "@cloudflare/workers-types": "npm:^5.20260911.1"
     "@emotion/react": "npm:^11.14.0"
     "@fontsource/poppins": "npm:^5.3.0"

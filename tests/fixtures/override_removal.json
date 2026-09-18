@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "type": "update",
+  "epoch": "fixture-epoch",
+  "previous_revision": 1,
+  "revision": 2,
+  "window": {
+    "from": "2026-09-13T10:04:00Z",
+    "to": "2026-09-13T12:04:00Z"
+  },
+  "upserts": [],
+  "removals": [
+    "202609130001/loc:TEST:wtp:10:03:00"
+  ],
+  "ordering": [],
+  "override_upserts": [],
+  "override_removals": [
+    {
+      "id": "override-1",
+      "reason": "Movement cleared the platform"
+    }
+  ]
+}

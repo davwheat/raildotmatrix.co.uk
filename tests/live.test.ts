@@ -3,12 +3,22 @@ import { test, type TestContext } from 'node:test'
 import { attests, reduceCIS, connectCIS } from '../src/live/cis'
 import { streamUrl } from '../src/live/connection'
 import { digestState, stateDigest } from '../src/live/digest'
+import { fromBinary } from '@bufbuild/protobuf'
+import { ClientMessageSchema } from '../src/live/gen/darwin/live/v2/live_pb'
+import { decodeServerMessage } from '../src/live/wire'
+import { encodeServerMessage } from './encode'
 import fixture from './snapshot.json'
-import type { CISState, Heartbeat, Snapshot, Update } from '../src/live/types'
+import serviceSnapshot from './fixtures/snapshot.json'
+import serviceSnapshotFrame from './fixtures/snapshot.pb'
+import serviceStoppingSnapshot from './fixtures/stopping_snapshot.json'
+import serviceStoppingSnapshotFrame from './fixtures/stopping_snapshot.pb'
+import serviceUpdate from './fixtures/override_removal.json'
+import serviceUpdateFrame from './fixtures/override_removal.pb'
+import type { CISState, Heartbeat, ServerMessage, Snapshot, Update } from '../src/live/types'
 
 const snapshot = () => structuredClone(fixture) as Snapshot
 const update = (values: Partial<Update> = {}): Update => ({
-  version: 1,
+  version: 2,
   type: 'update',
   epoch: fixture.epoch,
   previous_revision: 1,
@@ -80,18 +90,19 @@ class FakeSocket {
   static OPEN = 1
   static sockets: FakeSocket[] = []
   readyState = 1
-  sent: string[] = []
-  onmessage?: (event: { data: string }) => void
+  binaryType = 'blob'
+  sent: Uint8Array[] = []
+  onmessage?: (event: { data: unknown }) => void
   onclose?: () => void
   onerror?: () => void
   constructor(readonly url: URL) {
     FakeSocket.sockets.push(this)
   }
-  send(value: string) {
+  send(value: Uint8Array) {
     this.sent.push(value)
   }
-  receive(value: unknown) {
-    this.onmessage?.({ data: JSON.stringify(value) })
+  receive(value: ServerMessage) {
+    this.onmessage?.({ data: encodeServerMessage(value) })
   }
   close() {
     this.readyState = 3
@@ -110,7 +121,7 @@ function withFakeSockets(context: TestContext) {
 }
 
 const beat = (state: CISState, values: Partial<Heartbeat> = {}): Heartbeat => ({
-  version: 1,
+  version: 2,
   type: 'heartbeat',
   epoch: state.epoch,
   revision: state.revision,
@@ -151,7 +162,7 @@ test('a revision gap requests one resync; reconnect and cleanup discard previous
 
 test('the state digest matches the server implementation byte for byte', () => {
   // The same vector is pinned by darwin-browser's TestStateDigestGoldenVector.
-  assert.equal(stateDigest('epoch-1', 7, ['R2/b', 'R1/a'], ['R1/a', 'R2/b'], ['warn-2', 'warn-1']), '39a8facb6240b671')
+  assert.equal(stateDigest('epoch-1', 7, ['R2/b', 'R1/a'], ['R1/a', 'R2/b'], ['warn-2', 'warn-1']), '72e9ae2f95c1a7ae')
 })
 
 test('a heartbeat attests matching state and exposes a map that has drifted', () => {
@@ -186,7 +197,7 @@ test('heartbeats keep a quiet stream alive and resync once when the digest disag
   socket.receive(beat(state, { digest: 'ffffffffffffffff' }))
   socket.receive(beat(state, { digest: 'ffffffffffffffff' }))
   assert.equal(socket.sent.length, 1)
-  assert.deepEqual(JSON.parse(socket.sent[0]), { type: 'resync' })
+  assert.equal(fromBinary(ClientMessageSchema, socket.sent[0]).command.case, 'resync')
   assert.notEqual(views.at(-1), null, 'the board keeps its trains while the snapshot is in flight')
   stop()
 })
@@ -386,4 +397,50 @@ test('the initial snapshot displays five published platforms without waiting for
   const restricted = reduceCIS(null, initial)!
   assert.equal(displayServices(restricted, ['2'], false, false).services.length, 3)
   assert.equal(displayServices(restricted, ['2'], false, true).services.length, 5)
+})
+
+// The .pb files are frames darwin-browser's own encoder wrote, and the .json beside each is the
+// message it encoded. Copy both from its docs/live/fixtures when the schema changes.
+test('frames written by the service decode to the messages it encoded', () => {
+  for (const [frame, message] of [
+    [serviceSnapshotFrame, serviceSnapshot],
+    [serviceStoppingSnapshotFrame, serviceStoppingSnapshot],
+    [serviceUpdateFrame, serviceUpdate],
+  ] as const) {
+    assert.deepEqual(decodeServerMessage(frame), message)
+  }
+})
+
+test('null, empty and zero survive the wire as themselves', () => {
+  const movement = snapshot().movements[0]
+  const unknown = {
+    ...movement,
+    coaches: null,
+    coach_count: null,
+    reverse_formation: null,
+    platform: { ...movement.platform, suppressed: null },
+  }
+  const known = { ...movement, coaches: [], coach_count: 0, reverse_formation: false, platform: { ...movement.platform, suppressed: false } }
+  const sent = { ...snapshot(), request_id: 'check-1', movements: [unknown, known] }
+  assert.deepEqual(decodeServerMessage(new Uint8Array(encodeServerMessage(sent))), sent)
+})
+
+test('another protocol version is refused and an unknown message is ignored', context => {
+  assert.throws(
+    () => decodeServerMessage(new Uint8Array(encodeServerMessage({ ...snapshot(), version: 1 } as never))),
+    /Unsupported stream version/,
+  )
+  assert.equal(decodeServerMessage(new Uint8Array([0x08, 0x02])), null, 'a payload a newer service added is not an error')
+
+  withFakeSockets(context)
+  const stop = connectCIS(
+    new URL('ws://localhost/v1/cis/live?crs=TST'),
+    () => {},
+    () => {},
+  )
+  const socket = FakeSocket.sockets[0]
+  assert.equal(socket.binaryType, 'arraybuffer')
+  socket.onmessage?.({ data: JSON.stringify(snapshot()) })
+  assert.equal(socket.readyState, 3, 'a text frame is a version 1 service, which closes the connection')
+  stop()
 })

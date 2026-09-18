@@ -16,7 +16,8 @@ try {
     bundle: true,
     platform: 'node',
     format: 'esm',
-    packages: 'external',
+    // The bundle runs from a temporary directory, where no package resolves. The protobuf runtime is bundled
+    // in; `ws` is native-addon territory and is required from the checkout instead.
     // The runner reads its baselines relative to itself, so keep that path pointing at the checkout.
     define: { 'import.meta.dirname': JSON.stringify(join(process.cwd(), 'tests', 'visual')) },
   })

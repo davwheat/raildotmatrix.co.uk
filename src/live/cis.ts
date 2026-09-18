@@ -1,12 +1,13 @@
 import { connectStream, type ConnectionStatus } from './connection'
 import { digestState } from './digest'
 import type { CISState, Heartbeat, Snapshot, Update } from './types'
+import { encodeResync, PROTOCOL_VERSION } from './wire'
 
 const RESYNC_TIMEOUT = 20_000
 
 /** A gap invalidates the view until an authoritative snapshot replaces it. */
 export function reduceCIS(state: CISState | null, message: Snapshot | Update): CISState | null {
-  if (message.version !== 1) throw new Error('Unsupported CIS version')
+  if (message.version !== PROTOCOL_VERSION) throw new Error('Unsupported CIS version')
   if (message.type === 'snapshot') {
     return {
       station: message.station,
@@ -44,7 +45,7 @@ export function connectCIS(url: URL, render: (state: CISState | null) => void, o
   let responseTimeout: ReturnType<typeof setTimeout> | undefined
 
   function request() {
-    socket?.send(JSON.stringify({ type: 'resync' }))
+    socket?.send(encodeResync())
     responseTimeout = setTimeout(() => {
       // Replacing the socket blanks the board, so an unanswered request is worth
       // asking again before giving up on a connection that is otherwise healthy.
@@ -66,16 +67,16 @@ export function connectCIS(url: URL, render: (state: CISState | null) => void, o
 
   const disconnect = connectStream(
     url,
-    (message, current) => {
+    (incoming, current) => {
       socket = current
-      const incoming = message as Snapshot | Update | Heartbeat
       if (incoming.type === 'heartbeat') {
-        if (incoming.version !== 1) throw new Error('Unsupported CIS version')
+        if (incoming.version !== PROTOCOL_VERSION) throw new Error('Unsupported CIS version')
         // Divergence leaves the board on stale data rather than blank: keep
         // rendering what we have until the authoritative snapshot lands.
         if (state && !attests(incoming, state)) resync()
         return
       }
+      if (incoming.type !== 'snapshot' && incoming.type !== 'update') throw new Error('Unexpected CIS message')
       if (incoming.type === 'snapshot') {
         waiting = false
         clearTimeout(responseTimeout)
