@@ -10,7 +10,15 @@ const { build } = createRequire(require.resolve('wrangler'))('esbuild')
 const directory = await mkdtemp(join(tmpdir(), 'live-feed-tests-'))
 try {
   const output = join(directory, 'tests.cjs')
-  await build({ entryPoints: ['tests/live.test.ts'], outfile: output, bundle: true, platform: 'node', format: 'cjs' })
+  await build({
+    entryPoints: ['tests/live.test.ts'],
+    outfile: output,
+    bundle: true,
+    platform: 'node',
+    format: 'cjs',
+    loader: { '.pb': 'binary' },
+    target: 'node20',
+  })
   const result = spawnSync(process.execPath, ['--test', output], { stdio: 'inherit' })
   process.exitCode = result.status ?? 1
 } finally {

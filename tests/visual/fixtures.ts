@@ -107,6 +107,7 @@ function movement(options: MovementOptions): Movement {
     destinations: options.destinations,
     calling_points: options.calls,
     portions: options.portions ?? [],
+    arrived_at: null,
     passed_at: null,
   }
 }
@@ -127,7 +128,7 @@ function override(kind: PlatformOverride['kind'], platformNumber: string): Platf
 
 function snapshot(movements: Movement[], overrides: PlatformOverride[] = []): Snapshot {
   return {
-    version: 1,
+    version: 2,
     type: 'snapshot',
     station: STATION,
     window: { from: at(-3600), to: at(7200) },
@@ -231,7 +232,7 @@ function dividingService(): Movement {
 
 function update(initial: Snapshot, upserts: Movement[]): Update {
   return {
-    version: 1,
+    version: 2,
     type: 'update',
     epoch: initial.epoch,
     previous_revision: initial.revision,

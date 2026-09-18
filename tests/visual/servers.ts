@@ -3,6 +3,9 @@ import { stat } from 'node:fs/promises'
 import { createServer, type Server } from 'node:http'
 import { extname, join, normalize } from 'node:path'
 import { createRequire } from 'node:module'
+import { fromBinary } from '@bufbuild/protobuf'
+import { ClientMessageSchema } from '../../src/live/gen/darwin/live/v2/live_pb'
+import { encodeServerMessage } from '../encode'
 import { FIXTURES } from './fixtures'
 
 // The bundle runs from a temporary directory, so resolve ws from the checkout instead of from the bundle.
@@ -72,14 +75,14 @@ export function serveFeed(): Promise<{ port: number; close: () => Promise<void> 
     // the same tick as the snapshot would let the client collapse the two into one render and see nothing change.
     const send = () => {
       if (!fixture.snapshot) return
-      socket.send(JSON.stringify(fixture.snapshot))
+      socket.send(encodeServerMessage(fixture.snapshot))
       fixture.updates?.forEach((change, index) => {
-        setTimeout(() => socket.send(JSON.stringify(change)), (index + 1) * UPDATE_DELAY)
+        setTimeout(() => socket.send(encodeServerMessage(change)), (index + 1) * UPDATE_DELAY)
       })
     }
     send()
     socket.on('message', (data: Buffer) => {
-      if (JSON.parse(String(data)).type === 'resync') send()
+      if (fromBinary(ClientMessageSchema, data).command.case === 'resync') send()
     })
   })
 

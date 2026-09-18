@@ -1,4 +1,5 @@
-/** Version 1 wire types. Railway instants are ISO/RFC3339, never local clocks. */
+/** The stream messages as the app reads them. `wire.ts` decodes protocol version 2's protobuf frames
+ *  into these; null still means unknown. Railway instants are ISO/RFC3339, never local clocks. */
 export type Instant = string
 export interface Location {
   tpl: string
@@ -100,6 +101,8 @@ export interface Movement {
   destinations: Endpoint[]
   calling_points: Call[]
   portions: Portion[]
+  /** Signalling evidence that the train is at the platform. Never a Darwin actual. */
+  arrived_at: Instant | null
   passed_at: Instant | null
 }
 export interface TDMovement {
@@ -113,9 +116,10 @@ export interface TDMovement {
   tiplocs: string[]
   name: string
   platform: string
-  event: 'arrival' | 'departure'
+  /** `platform` is a platform-only SMART rule: it routes the train and says nothing of arrival. */
+  event: 'arrival' | 'departure' | 'platform'
   step: 'B' | 'F' | 'T' | 'C' | 'I' | 'D' | 'E'
-  direction: 'up' | 'down'
+  direction: 'up' | 'down' | ''
   from_line: string
   to_line: string
   observed_at: Instant
@@ -136,7 +140,7 @@ export interface PlatformOverride {
   source: string
 }
 export interface Snapshot {
-  version: 1
+  version: 2
   type: 'snapshot'
   request_id?: string
   station: Location
@@ -148,7 +152,7 @@ export interface Snapshot {
   overrides: PlatformOverride[]
 }
 export interface Update {
-  version: 1
+  version: 2
   type: 'update'
   epoch: string
   previous_revision: number
@@ -160,12 +164,13 @@ export interface Update {
   override_upserts: PlatformOverride[]
   override_removals: { id: string; reason: string }[]
 }
+/** The CIS stream attests its state. The announcement stream has none, so there only `sent_at` is set. */
 export interface Heartbeat {
-  version: 1
+  version: 2
   type: 'heartbeat'
-  epoch: string
-  revision: number
-  digest: string
+  epoch?: string
+  revision?: number
+  digest?: string
   sent_at: Instant
 }
 export interface CISState {
@@ -179,7 +184,7 @@ export interface CISState {
 }
 export type AnnouncementType = 'next' | 'approaching' | 'standing' | 'disrupted' | 'passing' | 'platform_alteration'
 export interface Announcement {
-  version: 1
+  version: 2
   type: 'announcement'
   event_id: string
   movement_id: string
@@ -191,11 +196,46 @@ export interface Announcement {
   affected_platforms: string[]
   previous_platform: string | null
   new_platform: string | null
+  /** The announcement already rendered by the service. Absent means generate it from `details`. */
+  audio?: AnnouncementAudio
+}
+/** A complete rendered announcement, chime included, ready to play as it is. */
+export interface AnnouncementAudio {
+  codec: 'mp3'
+  data: Uint8Array
+  /** Playing time in milliseconds, when the service measured it. */
+  duration_ms: number | null
 }
 export interface Ready {
-  version: 1
+  version: 2
   type: 'ready'
   station: Location
   created_at: Instant
   healthy: boolean
 }
+export interface Retraction {
+  version: 2
+  type: 'retraction'
+  event_id: string
+  movement_id: string
+  announcement_type: AnnouncementType
+  /** Advisory. New reasons can appear; the withdrawal is the message. */
+  reason: string
+  cause?: string
+  created_at: Instant
+  affected_platforms: string[]
+}
+export interface Revision {
+  version: 2
+  type: 'revision'
+  event_id: string
+  movement_id: string
+  announcement_type: AnnouncementType
+  created_at: Instant
+  expires_at: Instant
+  details: Movement
+  affected_platforms: string[]
+  /** Replaces the audio the announcement carried. Absent means drop that audio and generate from `details`. */
+  audio?: AnnouncementAudio
+}
+export type ServerMessage = Snapshot | Update | Heartbeat | Ready | Announcement | Retraction | Revision
