@@ -1,4 +1,5 @@
 import type { CISState } from './types'
+import { PROTOCOL_VERSION } from './wire'
 
 const FIELD = String.fromCharCode(0x1f)
 const RECORD = String.fromCharCode(0x1e)
@@ -20,7 +21,7 @@ const MASK = 0xffffffffffffffffn
 export function stateDigest(epoch: string, revision: number, movementIds: string[], ordering: string[], overrideIds: string[]): string {
   const records: string[] = []
   const write = (tag: string, value: string) => records.push(`${tag}${FIELD}${value}${RECORD}`)
-  write('v', '1')
+  write('v', String(PROTOCOL_VERSION))
   write('e', epoch)
   write('r', String(revision))
   // Identifiers are ASCII, so sorting UTF-16 code units matches the server's byte sort.

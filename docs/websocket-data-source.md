@@ -59,6 +59,20 @@ operator names remain a static client preference. Unavailable associated service
 only to join another service is left off the board: the train it becomes has its own row, carrying both portions' origins, so listing the portion
 as well shows one train twice — once as a service that terminates and strands its passengers.
 
+## Wire format
+
+The streams are Darwin Browser's protocol version 2: every frame is a protobuf message, defined in that repository's
+`proto/darwin/live/v2/live.proto` and described in its `docs/live/protocol.md`. `src/live/wire.ts` decodes each frame into the types in
+`src/live/types.ts`, which the rest of the page reads, so `null` still means unknown there. A text frame means a version 1 service, and the
+connection is closed and retried rather than read. A message this build doesn't know is ignored, and still counts as proof that the connection is
+alive.
+
+`src/live/gen` is generated and `src/live/wire.ts` is shared with the other website, so don't edit either here. To pick up a schema change, run
+`buf generate ../darwin-browser/proto` with Darwin Browser checked out beside this repository, then copy `docs/live/examples/wire.ts`, with its
+type import pointed at `./types`, and the fixtures in `docs/live/fixtures` that `tests/fixtures` holds. Keep the plugin version in `buf.gen.yaml`
+no newer than the `@bufbuild/protobuf` version in `package.json`. The `.pb` fixtures are frames written by the service's own encoder, and the
+tests check that this decoder reads each one as the JSON beside it.
+
 Run `yarn test:live` for reducer, digest, heartbeat, resync/reconnect, ordering, split, platform warning and platform alteration regressions. The
 runner uses Node's test runner and Wrangler's existing esbuild compiler. Build with `yarn build`.
 

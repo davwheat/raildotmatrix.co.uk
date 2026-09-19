@@ -91,7 +91,9 @@
           "name": "Destination from feed",
           "via": {
             "text": "via Junction",
-            "locs": ["JNC"]
+            "locs": [
+              "JNC"
+            ]
           },
           "assoc_rid": null,
           "assoc_cat": null
@@ -164,6 +166,8 @@
       "passed_at": null
     }
   ],
-  "ordering": ["R1/first"],
+  "ordering": [
+    "R1/first"
+  ],
   "overrides": []
 }

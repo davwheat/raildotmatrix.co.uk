@@ -1,3 +1,6 @@
+import { decodeServerMessage } from './wire'
+import type { ServerMessage } from './types'
+
 export type ConnectionStatus = 'connecting' | 'live' | 'reconnecting' | 'recovering'
 
 /** Requested cadence. The server sends a heartbeat only after this much silence. */
@@ -23,7 +26,7 @@ export function streamUrl(base: string, path: string, crs: string, heartbeatSeco
 /** Reconnect only to this feed. A disconnect never enables the legacy API. */
 export function connectStream(
   url: URL,
-  onMessage: (message: unknown, socket: WebSocket) => void,
+  onMessage: (message: ServerMessage, socket: WebSocket) => void,
   onReset: () => void,
   onStatus: (status: ConnectionStatus) => void,
 ): () => void {
@@ -37,6 +40,7 @@ export function connectStream(
     if (stopped) return
     onStatus(attempts === 0 ? 'connecting' : 'reconnecting')
     const current = new WebSocket(url)
+    current.binaryType = 'arraybuffer'
     socket = current
     // A half-open connection reports no error and delivers nothing, and browsers
     // never surface the pongs that would expose it. Server heartbeats give this
@@ -51,10 +55,12 @@ export function connectStream(
       if (stopped || socket !== current) return
       expectData(IDLE_TIMEOUT)
       try {
-        if (typeof event.data !== 'string' || event.data.length > 5_000_000) {
+        // Version 2 frames are protobuf. A text frame is a version 1 service, which this build cannot read.
+        if (!(event.data instanceof ArrayBuffer) || event.data.byteLength > 5_000_000) {
           throw new Error('Invalid stream message')
         }
-        onMessage(JSON.parse(event.data), current)
+        const message = decodeServerMessage(new Uint8Array(event.data))
+        if (message) onMessage(message, current)
         attempts = 0
       } catch (error) {
         console.error('Invalid live feed message', error)
