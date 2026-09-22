@@ -38,10 +38,11 @@ const (
 	swapSlide    = 250
 	// destinationPage is how long each destination page of a row is shown.
 	destinationPage = 3000
-	// The flash keyframes of a cancelled ETD: lit until 50%, dark until 75%, then lit again.
+	// A cancelled ETD's flash keyframes, which the web plays linearly: it fades out by 50%, back in by 75%, and
+	// stays lit for the rest of the cycle.
 	flashPeriod = 1500
-	flashOff    = 750
-	flashOn     = 1125
+	flashOut    = 750
+	flashIn     = 1125
 )
 
 type mode uint8
@@ -59,7 +60,8 @@ const (
 	phaseSteady
 )
 
-// fadeLevels is how many brightness steps the arrival fade takes: one per refresh at the board's default 60 Hz.
+// fadeLevels is how many brightness steps a fade takes: one per refresh of the half-second arrival fade at the board's
+// default 60 Hz.
 const fadeLevels = 30
 
 // geometry is the board's layout in dots. Columns follow the CSS grid in trainService.scss with 1ch equal to

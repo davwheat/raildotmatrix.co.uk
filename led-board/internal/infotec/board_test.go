@@ -377,22 +377,19 @@ func TestETDText(t *testing.T) {
 
 func TestCancelledFlashes(t *testing.T) {
 	b := newTestBoard(t)
-	lit := map[bool]int{}
-	var offAt time.Time
+	levels := map[time.Duration]int{}
 	run(t, b, "cancelled", 3*time.Second, func(now time.Time, _ bool, _ *frame.Frame) {
-		on := b.last.first.etd == "Cancelled"
-		lit[on]++
-		if !on && offAt.IsZero() {
-			offAt = now
+		if b.last.first.etd != "Cancelled" {
+			t.Fatalf("at %v: ETD %q", now.Sub(fixtures.Clock), b.last.first.etd)
 		}
+		levels[now.Sub(fixtures.Clock)%(flashPeriod*time.Millisecond)] = b.last.first.etdLevel
 	})
-	// Two 1.5 s cycles, each lit for 750 ms, dark for 375 ms and lit for 375 ms: at 20 ms ticks that is 38, 19
-	// and 18 ticks.
-	if lit[true] != 2*(38+18) || lit[false] != 2*19 {
-		t.Fatalf("lit for %d ticks and dark for %d", lit[true], lit[false])
-	}
-	if got := offAt.Sub(fixtures.Clock); got < flashOff*time.Millisecond || got >= flashOff*time.Millisecond+tick {
-		t.Fatalf("first dark tick at %v, want %v", got, flashOff*time.Millisecond)
+	// Linear keyframes: full brightness at the start of a cycle, half way out at 375 ms, dark at 750 ms, half way back
+	// at 937.5 ms, and lit again from 1125 ms.
+	for at, want := range map[time.Duration]int{0: fadeLevels, 380: 14, 760: 0, 940: 15, 1120: 29, 1140: fadeLevels, 1480: fadeLevels} {
+		if got := levels[at*time.Millisecond]; got != want {
+			t.Errorf("at %v into the cycle: level %d, want %d", at*time.Millisecond, got, want)
+		}
 	}
 }
 

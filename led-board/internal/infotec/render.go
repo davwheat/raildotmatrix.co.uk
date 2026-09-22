@@ -9,12 +9,13 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
-// rowScene is one train row as drawn this tick: dx shifts it right while it slides out and dy moves it
-// vertically while the lower rows swap.
+// rowScene is one train row as drawn this tick: dx shifts it right while it slides out, dy moves it vertically
+// while the lower rows swap, and etdLevel is the ETD's brightness out of fadeLevels while it flashes.
 type rowScene struct {
 	on                      bool
 	ordinal, std, dest, etd string
 	dx, dy                  int
+	etdLevel                int
 }
 
 // scene is a complete description of one frame. Two ticks that compose equal scenes draw the same picture,
@@ -87,19 +88,26 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 
 func (b *Board) rowScene(r *row, now time.Time) rowScene {
 	e := now.Sub(b.steadyStart).Milliseconds()
-	sc := rowScene{on: true, ordinal: r.ordinal, std: r.std, etd: r.etd}
+	sc := rowScene{on: true, ordinal: r.ordinal, std: r.std, etd: r.etd, etdLevel: fadeLevels}
 	if len(r.pages) > 0 {
 		sc.dest = r.pages[int(e/destinationPage)%len(r.pages)]
 	}
-	if r.cancelled && !flashLit(e) {
-		sc.etd = ""
+	if r.cancelled {
+		sc.etdLevel = flashLevel(e)
 	}
 	return sc
 }
 
-func flashLit(e int64) bool {
-	p := e % flashPeriod
-	return p < flashOff || p >= flashOn
+// flashLevel is a cancelled ETD's brightness e milliseconds into its flash, out of fadeLevels.
+func flashLevel(e int64) int {
+	switch p := e % flashPeriod; {
+	case p < flashOut:
+		return int((flashOut - p) * fadeLevels / flashOut)
+	case p < flashIn:
+		return int((p - flashOut) * fadeLevels / (flashIn - flashOut))
+	default:
+		return fadeLevels
+	}
 }
 
 func (b *Board) render(f *frame.Frame, s *scene) {
@@ -143,11 +151,12 @@ func (b *Board) drawRow(f *frame.Frame, r *rowScene, y int, c board.Clip, colour
 	b.drawTime(f, x+g.stdX, y, r.std, c, colour)
 	dest := c.Intersect(board.Clip{X0: x + g.destX, X1: x + g.destX + g.destW, Y1: g.h})
 	board.DrawText(f, text, x+g.destX, y, r.dest, colour, dest)
+	etd := board.Scale(colour, r.etdLevel, fadeLevels)
 	if isTime(r.etd) {
-		board.DrawText(f, text, x+g.w-g.timeW-g.exptW, y, "Expt ", colour, c)
-		b.drawTime(f, x+g.w-g.timeW, y, r.etd, c, colour)
+		board.DrawText(f, text, x+g.w-g.timeW-g.exptW, y, "Expt ", etd, c)
+		b.drawTime(f, x+g.w-g.timeW, y, r.etd, c, etd)
 	} else {
-		board.DrawText(f, text, x+g.w-text.Width(r.etd), y, r.etd, colour, c)
+		board.DrawText(f, text, x+g.w-text.Width(r.etd), y, r.etd, etd, c)
 	}
 }
 
