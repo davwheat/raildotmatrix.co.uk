@@ -69,6 +69,27 @@
       }
     }
 
+    .callingPoints {
+      // A list that fits has nothing to bring in from the right, so its page rises into place like .info.
+      &.shown:not(.scrolls) {
+        transform: translateY(110%);
+
+        animation: info-in 0.2s linear 0.5s forwards;
+      }
+
+      // Chrome won't transition the opacity of a page deselected while info-in still holds it, so a page that rose
+      // fades out by animation instead. Unfilled, so nothing holds its opacity when it is next selected.
+      &.static:not(.shown) {
+        animation: info-out 0.2s linear;
+      }
+
+      // Once the list has gone, the prefix has nothing left to label.
+      &.scrolledOff .callingAt {
+        opacity: 0;
+        transition: opacity 0.2s linear;
+      }
+    }
+
     .callingAt {
       min-width: calc(var(--ordinal-width) + var(--std-width) + var(--gap) * 2);
       padding-right: 16px;

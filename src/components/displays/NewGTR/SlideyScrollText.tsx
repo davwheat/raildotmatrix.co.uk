@@ -17,6 +17,10 @@ interface IProps {
    */
   onStart?: (willScroll: boolean) => void
   /**
+   * Called when scrolling text has fully left its area, at the start of the pause before `onComplete`.
+   */
+  onScrolledOff?: () => void
+  /**
    * The number of milliseconds to wait before calling `onComplete` if the text is not scrolling.
    */
   callCompleteIfNotScrolling?: number
@@ -30,6 +34,7 @@ function SlideyScrollText({
   scrollSpeed = 550,
   callCompleteIfNotScrolling = 5_000,
   onStart,
+  onScrolledOff,
   onComplete,
 }: IProps) {
   const outerRef = useRef<HTMLDivElement>(null)
@@ -87,6 +92,7 @@ function SlideyScrollText({
         }
       } else if (animationStep.current === 'scrolling-right') {
         animationStep.current = 'pause-right'
+        onScrolledOff?.()
 
         currentTimeout = setTimeout(() => {
           animationStep.current = 'pause-left'
@@ -135,7 +141,7 @@ function SlideyScrollText({
       clearTimeout(completeIfNotScrollTimeout)
       inner?.removeEventListener('transitionend', transitionEndHandler)
     }
-  }, [callCompleteIfNotScrolling, onStart, onComplete, previousElContent, pauseAtEnds, pauseWhenDone, scrollSpeed])
+  }, [callCompleteIfNotScrolling, onStart, onScrolledOff, onComplete, previousElContent, pauseAtEnds, pauseWhenDone, scrollSpeed])
 
   return (
     <div className={clsx('slidey-scroll-text', className)} ref={outerRef}>

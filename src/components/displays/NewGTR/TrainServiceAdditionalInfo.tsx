@@ -149,27 +149,71 @@ function _TrainServiceAdditionalInfo({ service }: IProps) {
       </div>
 
       {callingPointPages.map((page, i) => (
-        <div key={i} className={clsx('callingPoints', { shown: shownPage === i + 1 })}>
-          <div className="callingAt">{page.prefix}</div>
-          {shownPage === i + 1 && (
-            <CallingPoints
-              pointsText={page.callPoints}
-              onComplete={() => {
-                console.log('next from call p', i + 1)
-                nextPage()
-              }}
-            />
-          )}
-        </div>
+        <CallingPointsPage
+          key={i}
+          page={page}
+          shown={shownPage === i + 1}
+          onComplete={() => {
+            console.log('next from call p', i + 1)
+            nextPage()
+          }}
+        />
       ))}
     </div>
   )
 }
 
-function _CallingPoints({ pointsText, onComplete }: { pointsText: string[]; onComplete?: () => void }) {
+// The list's state lives here rather than in TrainServiceAdditionalInfo, whose re-renders hand CallingPoints a new
+// onComplete and so restart its scroll.
+function CallingPointsPage({ page, shown, onComplete }: { page: InfoPage; shown: boolean; onComplete: () => void }) {
+  // Stays null until the list is measured. The CSS lets an unmeasured page rise, so a static page is below its row from
+  // the frame it is selected, but plays the matching fade-out only for a page measured as static, never one not yet shown.
+  const [listScrolls, setListScrolls] = React.useState<boolean | null>(null)
+  // Only cleared when the page is next shown: clearing it on deselect would bring the prefix back for the page's fade-out.
+  const [scrolledOff, setScrolledOff] = React.useState(false)
+  // A static list fades out with its prefix, as the information page does, so it stays until the page's fade has ended.
+  const [fadedOut, setFadedOut] = React.useState(false)
+
+  const onStart = React.useCallback((willScroll: boolean) => {
+    setListScrolls(willScroll)
+    setScrolledOff(false)
+    setFadedOut(false)
+  }, [])
+  const onScrolledOff = React.useCallback(() => setScrolledOff(true), [])
+
+  // Held as last rendered while shown: new props during the fade-out would restart its SlideyScrollText.
+  const list = React.useRef<React.ReactElement | null>(null)
+  if (shown) {
+    list.current = <CallingPoints pointsText={page.callPoints} onStart={onStart} onScrolledOff={onScrolledOff} onComplete={onComplete} />
+  }
+
+  return (
+    <div
+      className={clsx('callingPoints', { shown, scrolls: listScrolls === true, static: listScrolls === false, scrolledOff })}
+      onAnimationEnd={() => !shown && setFadedOut(true)}
+    >
+      <div className="callingAt">{page.prefix}</div>
+      {(shown || (listScrolls === false && !fadedOut)) && list.current}
+    </div>
+  )
+}
+
+function _CallingPoints({
+  pointsText,
+  onStart,
+  onScrolledOff,
+  onComplete,
+}: {
+  pointsText: string[]
+  onStart?: (willScroll: boolean) => void
+  onScrolledOff?: () => void
+  onComplete?: () => void
+}) {
   console.log('calling points rendered')
   return (
     <SlideyScrollText
+      onStart={onStart}
+      onScrolledOff={onScrolledOff}
       onComplete={() => {
         onComplete?.()
 
