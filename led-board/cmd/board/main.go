@@ -7,6 +7,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -26,13 +27,21 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix/pngdisplay"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/setupdisplay"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/windowdisplay"
 )
 
 func main() {
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	configPath := addFlags(fs)
+	schema := fs.Bool("config-schema", false, "print the configuration schema as JSON and exit")
+	check := fs.Bool("check-config", false, "validate the configuration without opening the display")
+	setupStatus := fs.String("setup-status", "", "network status JSON for the unconfigured board's setup display")
 	fs.Parse(os.Args[1:])
+	if *schema {
+		json.NewEncoder(os.Stdout).Encode(describeConfig(fs))
+		return
+	}
 
 	v, err := configure(fs, *configPath)
 	if err != nil {
@@ -44,13 +53,18 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	if err := validateConfig(cfg); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+	setup := cfg.CRS == "" && cfg.Fixture == "" && *setupStatus != ""
 	var fixture []model.View
 	if cfg.Fixture != "" {
 		if fixture = fixtures.Steps(cfg.Fixture); fixture == nil {
 			fmt.Fprintf(os.Stderr, "unknown fixture %q; want one of %s\n", cfg.Fixture, strings.Join(fixtures.Names, ", "))
 			os.Exit(2)
 		}
-	} else if cfg.CRS == "" {
+	} else if cfg.CRS == "" && !setup && !*check {
 		fmt.Fprintln(os.Stderr, "crs is required unless fixture is set: set it in the config file, BOARD_CRS, or -crs")
 		fs.Usage()
 		os.Exit(2)
@@ -89,6 +103,9 @@ func main() {
 		fs.Usage()
 		os.Exit(2)
 	}
+	if *check {
+		return
+	}
 	opts := &cfg.LED.Options
 	b, err := formats.New(cfg.Board, formats.Config{
 		Width: opts.Cols * opts.Chain, Height: opts.Rows * opts.Parallel,
@@ -99,6 +116,9 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		fs.Usage()
 		os.Exit(2)
+	}
+	if setup {
+		b = &setupdisplay.Board{Path: *setupStatus, Colour: colour}
 	}
 	if !v.IsSet("led.limit_refresh") {
 		opts.LimitRefreshRateHz = b.RefreshHz()
@@ -113,6 +133,7 @@ func main() {
 
 	a := app{
 		board: b,
+		setup: setup,
 		live: live.Config{
 			BaseURL:         cfg.URL,
 			CRS:             cfg.CRS,
@@ -173,6 +194,7 @@ func openDisplay(kind string, opts *matrix.Options, pngDir string, scale int) (f
 
 type app struct {
 	board board.Board
+	setup bool
 	live  live.Config
 	// fixture, when set, is shown in place of the live feed.
 	fixture []model.View
@@ -202,7 +224,7 @@ func (a app) run(ctx context.Context, display frame.Display) {
 
 	if a.fixture != nil {
 		go playFixture(ctx, a.fixture, fixtureStep, fixtureRepeat, a.board.Update)
-	} else {
+	} else if !a.setup {
 		go live.Run(ctx, a.live, a.board.Update)
 	}
 

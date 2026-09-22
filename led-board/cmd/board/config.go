@@ -123,7 +123,7 @@ func bindFlags(v *viper.Viper, fs *flag.FlagSet) {
 	changed := map[string]bool{}
 	fs.Visit(func(f *flag.Flag) { changed[f.Name] = true })
 	fs.VisitAll(func(f *flag.Flag) {
-		if f.Name == "config" {
+		if controlFlag(f.Name) {
 			return
 		}
 		fv := flagValue{f, changed[f.Name]}
