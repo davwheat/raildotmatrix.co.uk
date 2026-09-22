@@ -75,8 +75,8 @@ That mainly affects `dividing-service`. The split is still covered, because the 
 both destinations and the "Join the front N coaches" text. On the other two boards the baseline proves the service renders, not that its portions
 read correctly.
 
-The two dot matrix boards are drawn by the Go program in [LED departure board](https://github.com/davwheat/led-departure-board), so these tests
-check that the site loads and draws that program's build. Its own tests cover how each board behaves over time.
+The two dot matrix boards are drawn by the Go program in [`led-board`](../../led-board), so these tests check that the site loads and draws that
+program's build. Its own tests cover how each board behaves over time.
 
 Joins have no state of their own. The feed only ever describes a divide, and every board filters associations down to divides before rendering,
 so a joining service reaches a board as an ordinary one.

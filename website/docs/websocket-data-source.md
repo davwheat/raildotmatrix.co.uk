@@ -7,9 +7,8 @@ The **Train data source** and **Service URL** controls are a development tool: t
 them out. To select the WebSocket source on a built site, use the query parameters below.
 
 The Infotec landscape DMI and Daktronics (Data Display) DMI boards always use the WebSocket feed. They come from the WebAssembly build of
-[LED departure board](https://github.com/davwheat/led-departure-board), which connects to the service itself: they read the service URL, but
-ignore the source selection, including `dataSource=original`, and the legacy iframe train-data messages. The Go port follows the display rules
-that this page describes; `make web` in that repository updates the build in `public/led-board`.
+[`led-board`](../../led-board), which connects to the service itself: they read the service URL, but ignore the source selection, including
+`dataSource=original`, and the legacy iframe train-data messages. The Go port follows the display rules that this page describes.
 
 In development, the default service is `ws://localhost:8080`. Run Darwin Browser locally with its movement backfill complete, then run this site
 with `yarn develop`. The URL is a base URL: the client adds `/v1/cis/live?crs=...`.

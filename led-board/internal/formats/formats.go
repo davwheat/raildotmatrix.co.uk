@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/davwheat/led-departure-board/internal/board"
-	"github.com/davwheat/led-departure-board/internal/daktronics"
-	"github.com/davwheat/led-departure-board/internal/frame"
-	"github.com/davwheat/led-departure-board/internal/infotec"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/daktronics"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/infotec"
 )
 
 // Names lists the board formats New accepts.

@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/davwheat/led-departure-board/internal/board"
-	"github.com/davwheat/led-departure-board/internal/font"
-	"github.com/davwheat/led-departure-board/internal/frame"
-	"github.com/davwheat/led-departure-board/internal/model"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 // Config sizes the board and sets what it shows.

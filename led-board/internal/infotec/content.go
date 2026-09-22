@@ -6,8 +6,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/davwheat/led-departure-board/internal/board"
-	"github.com/davwheat/led-departure-board/internal/model"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 // destinationMaxLength is the longest destination and via text TrainService.tsx shows on one page.

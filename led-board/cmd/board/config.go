@@ -12,8 +12,8 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 
-	"github.com/davwheat/led-departure-board/internal/matrix"
-	"github.com/davwheat/led-departure-board/internal/windowdisplay"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/windowdisplay"
 )
 
 // configName is the config file looked for, without its extension, in the

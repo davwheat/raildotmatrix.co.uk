@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/davwheat/led-departure-board/internal/frame"
-	"github.com/davwheat/led-departure-board/internal/matrix"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix"
 )
 
 func main() {

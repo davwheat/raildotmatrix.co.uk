@@ -3,9 +3,9 @@ package board
 import (
 	"strings"
 
-	"github.com/davwheat/led-departure-board/internal/font"
-	"github.com/davwheat/led-departure-board/internal/frame"
-	"github.com/davwheat/led-departure-board/internal/model"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 // Clip is a half-open rectangle [X0, X1) x [Y0, Y1) that drawing is confined to.

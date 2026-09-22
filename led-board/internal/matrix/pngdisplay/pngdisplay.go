@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 )
 
 // Options configures a PNG-writing display.

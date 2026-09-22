@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/davwheat/led-departure-board/internal/frame"
-	"github.com/davwheat/led-departure-board/internal/model"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 // Board is a departure board format: a state machine that turns the live view into frames. Update may be

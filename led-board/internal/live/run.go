@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/davwheat/led-departure-board/internal/model"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 // HeartbeatSeconds is the heartbeat cadence asked of the service. It sends one only after this much silence.

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/aperturerobotics/protobuf-go-lite/types/known/timestamppb"
-	"github.com/davwheat/led-departure-board/internal/live/pb"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/live/pb"
 )
 
 // ErrUnsupportedVersion is returned for a frame from a service speaking another protocol version.

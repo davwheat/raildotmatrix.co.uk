@@ -17,8 +17,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/davwheat/led-departure-board/internal/live"
-	"github.com/davwheat/led-departure-board/internal/model"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/live"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 // defaultURL is NEXT_PUBLIC_LIVE_SERVICE_URL in raildotmatrix.co.uk's .env.production.

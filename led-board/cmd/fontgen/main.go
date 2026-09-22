@@ -3,7 +3,7 @@
 //
 // Run it from anywhere inside the module:
 //
-//	go run github.com/davwheat/led-departure-board/cmd/fontgen [-preview out.png]
+//	go run github.com/davwheat/raildotmatrix.co.uk/led-board/cmd/fontgen [-preview out.png]
 package main
 
 import (

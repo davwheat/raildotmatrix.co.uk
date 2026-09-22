@@ -2,7 +2,7 @@
 // fonts' WOFF files; see generate.go.
 package font
 
-import "github.com/davwheat/led-departure-board/internal/frame"
+import "github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 
 // Glyph is one character's dots. Rows holds one row per line of the face, top first; bit 0 is the leftmost dot.
 type Glyph struct {

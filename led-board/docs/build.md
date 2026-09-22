@@ -16,7 +16,7 @@ build is tested on macOS, and uses nothing but Go, Zig, and Make.
 - The `rpi-rgb-led-matrix` submodule checked out:
 
   ```sh
-  git submodule update --init
+  git submodule update --init third_party/rpi-rgb-led-matrix
   ```
 
 - A 64-bit Raspberry Pi OS (or another arm64 Debian) on the Pi, which you can
@@ -48,7 +48,8 @@ PI_HOST = board@departure-board.local
 | `SSH_OPTS` | none | Extra `ssh` options, such as `-o ControlPath=$(HOME)/.ssh/cm-pi` to reuse a ControlMaster connection when your key needs a touch for each login. |
 | `BIN_DIR` | `/opt/departure-board` | Where the binaries are installed on the Pi. |
 | `PANEL_TEST_FLAGS` | none | Extra flags for `make run-panel-test`, such as `-led-rgb-sequence=BGR`. |
-| `WEB_DIR` | `build/web` | Where `make web` writes the WebAssembly bundle, such as a website's public directory. |
+| `WEB_DIR` | `../website/public/led-board` | Where `make web` writes the WebAssembly bundle. |
+| `ZOPFLI_ITERATIONS` | `15` | How hard `make web` compresses the bundle. `1` takes half the time and makes a bundle about 0.2% larger. |
 | `ZIG_TARGET` | `aarch64-linux-gnu.2.41` | The target triple and glibc version to build for. |
 
 You can also set any of them on the command line, such as
@@ -136,7 +137,7 @@ package, which writes each swapped frame as a PNG.
 `make web` builds `cmd/wasm` with the standard Go compiler (`GOOS=js GOARCH=wasm`) and runs `cmd/webbundle`,
 which writes three files into `WEB_DIR`:
 
-- `board.HASH.wasm.gz`: the module, gzip-compressed with Zopfli. Zopfli takes about 40 seconds and
+- `board.HASH.wasm.gz`: the module, gzip-compressed with Zopfli. Zopfli takes about 25 seconds and
   produces a file about 2.5% smaller than `gzip -9` does, which every visitor downloads.
 - `wasm_exec.HASH.js`: the JavaScript glue for the module, which must come from the same Go release.
 - `manifest.json`: the names of the other two, which change whenever their content does.
@@ -145,12 +146,8 @@ The page fetches `manifest.json` without caching, so the other two can be cached
 the module itself, so the host serves the file as it is, with no `Content-Encoding` header. The JavaScript API
 is described at the top of `cmd/wasm/main.go`.
 
-For raildotmatrix.co.uk, set `WEB_DIR` in `local.mk` to its `public/led-board` directory, then commit the
-bundle there:
-
-```make
-WEB_DIR = ../raildotmatrix.co.uk/public/led-board
-```
+`WEB_DIR` defaults to the website's `public/led-board` directory, which git ignores. The website's `yarn build`
+runs `make web`, and `yarn dev` runs it with `ZOPFLI_ITERATIONS=1`, so you don't need to run it yourself.
 
 ## Running on a desktop
 

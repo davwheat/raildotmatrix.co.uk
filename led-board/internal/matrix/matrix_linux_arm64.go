@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 )
 
 type display struct {

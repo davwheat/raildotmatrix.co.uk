@@ -5,7 +5,7 @@ package matrix
 import (
 	"errors"
 
-	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 )
 
 // ErrUnsupported is returned by Open on platforms without the LED driver.

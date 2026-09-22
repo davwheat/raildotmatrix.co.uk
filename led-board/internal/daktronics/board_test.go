@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/davwheat/led-departure-board/internal/fixtures"
-	"github.com/davwheat/led-departure-board/internal/frame"
-	"github.com/davwheat/led-departure-board/internal/model"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/fixtures"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 const (

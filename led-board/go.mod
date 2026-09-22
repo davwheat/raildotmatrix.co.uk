@@ -1,4 +1,4 @@
-module github.com/davwheat/led-departure-board
+module github.com/davwheat/raildotmatrix.co.uk/led-board
 
 go 1.27.1
 

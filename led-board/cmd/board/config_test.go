@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/davwheat/led-departure-board/internal/matrix"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix"
 )
 
 func parse(t *testing.T, args ...string) *flag.FlagSet {

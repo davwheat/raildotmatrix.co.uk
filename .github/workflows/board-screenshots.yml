@@ -17,6 +17,9 @@ env:
 jobs:
   screenshots:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
     name: Regenerate board screenshots
 
     # A pull request from a fork cannot be pushed to, so there is nothing to commit the result of.
@@ -34,12 +37,19 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
+          cache-dependency-path: website/yarn.lock
 
       - name: Install Chrome
         uses: browser-actions/setup-chrome@v2
         id: chrome
         with:
           chrome-version: stable
+
+      - name: Use Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: led-board/go.mod
+          cache-dependency-path: led-board/go.sum
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -83,5 +93,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: board-screenshot-failures
-          path: tests/visual/failures
+          path: website/tests/visual/failures
           if-no-files-found: ignore

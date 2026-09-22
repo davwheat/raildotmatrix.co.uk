@@ -17,14 +17,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/davwheat/led-departure-board/internal/board"
-	"github.com/davwheat/led-departure-board/internal/formats"
-	"github.com/davwheat/led-departure-board/internal/frame"
-	"github.com/davwheat/led-departure-board/internal/live"
-	"github.com/davwheat/led-departure-board/internal/matrix"
-	"github.com/davwheat/led-departure-board/internal/matrix/pngdisplay"
-	"github.com/davwheat/led-departure-board/internal/model"
-	"github.com/davwheat/led-departure-board/internal/windowdisplay"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/formats"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/live"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix/pngdisplay"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/windowdisplay"
 )
 
 func main() {

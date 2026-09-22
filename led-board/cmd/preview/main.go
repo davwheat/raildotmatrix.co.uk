@@ -12,10 +12,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/davwheat/led-departure-board/internal/fixtures"
-	"github.com/davwheat/led-departure-board/internal/font"
-	"github.com/davwheat/led-departure-board/internal/formats"
-	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/fixtures"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/formats"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 )
 
 func main() {

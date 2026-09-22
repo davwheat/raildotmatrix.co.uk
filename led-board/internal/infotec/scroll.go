@@ -3,7 +3,7 @@ package infotec
 import (
 	"time"
 
-	"github.com/davwheat/led-departure-board/internal/font"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
 )
 
 // DefaultScrollSpeed is the scroll speed in dots per second. The web scrolls at 550 px/s, which is 77 dots/s at

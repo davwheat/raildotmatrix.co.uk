@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/davwheat/led-departure-board/internal/live/pb"
-	"github.com/davwheat/led-departure-board/internal/model"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/live/pb"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 func ptr[T any](v T) *T { return &v }

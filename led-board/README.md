@@ -1,9 +1,8 @@
 # LED departure board
 
 UK railway departure boards for a 256x64 HUB75 LED matrix (two chained 128x64 panels) driven by a Raspberry
-Pi. It ports the Daktronics Data Display and Infotec boards from
-[raildotmatrix.co.uk](https://github.com/davwheat/raildotmatrix.co.uk), fed by the Darwin Browser live
-WebSocket stream.
+Pi, fed by the Darwin Browser live WebSocket stream. They're the Daktronics Data Display and Infotec boards of
+raildotmatrix.co.uk, whose website, in [`../website`](../website), runs this same code as WebAssembly.
 
 It was developed on a Pi Zero 2 W, which has little CPU to spare, so the renderer redraws only when a dot changes, allocates nothing in the steady state, and
 hands each frame to the panel in a single call.
@@ -32,8 +31,7 @@ hands each frame to the panel in a single call.
 The renderer never talks to hardware. Anything that implements `frame.Display` can show the board, so a
 different panel or an on-screen viewer is one small package.
 
-The same boards run on [raildotmatrix.co.uk](https://github.com/davwheat/raildotmatrix.co.uk) as WebAssembly,
-so the panel and the website share one implementation. `make web` builds the bundle; see
+The website's build runs `make web` to compile the boards for it; see
 [docs/build.md](docs/build.md#building-for-the-web).
 
 ## Build and deploy
@@ -42,7 +40,7 @@ See [docs/build.md](docs/build.md). In short:
 
 ```sh
 brew install go zig
-git submodule update --init
+git submodule update --init third_party/rpi-rgb-led-matrix
 make -j8 lib
 make deploy PI_HOST=pi@raspberrypi.local
 make install-service PI_HOST=pi@raspberrypi.local

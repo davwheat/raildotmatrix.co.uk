@@ -9,8 +9,8 @@ import (
 
 	"github.com/aperturerobotics/protobuf-go-lite/types/known/timestamppb"
 	"github.com/coder/websocket"
-	"github.com/davwheat/led-departure-board/internal/live/pb"
-	"github.com/davwheat/led-departure-board/internal/model"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/live/pb"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 const testEpoch = "test-epoch"

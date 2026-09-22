@@ -8,13 +8,13 @@ See it live at [raildotmatrix.davwheat.dev](https://raildotmatrix.davwheat.dev/)
 
 ## Dot matrix boards
 
-The Daktronics (Data Display) DMI and Infotec landscape DMI boards aren't React components. They're drawn by
-[LED departure board](https://github.com/davwheat/led-departure-board), the Go program that also drives a physical LED panel, compiled to
-WebAssembly. `public/led-board` holds that build, and `src/components/displays/LedBoard` loads it and draws its frames. These two boards always
-read the live WebSocket feed, whatever the train data source is set to.
+The Daktronics (Data Display) DMI and Infotec landscape DMI boards aren't React components. They're drawn by the Go program in
+[`../led-board`](../led-board), which also drives a physical LED panel, compiled to WebAssembly. `src/components/displays/LedBoard` loads that
+build and draws its frames. These two boards always read the live WebSocket feed, whatever the train data source is set to.
 
-To change how either board looks or behaves, change it in that repository, then run `make web` there with `WEB_DIR` set to this repository's
-`public/led-board` directory, and commit the files it writes. Don't edit the files in `public/led-board` by hand.
+`yarn build` and `yarn dev` build the WebAssembly bundle into `public/led-board` first, so they need Go 1.21 or later (Go fetches the version
+`led-board/go.mod` asks for). `yarn board` rebuilds just the bundle. To change how either board looks or behaves, change the Go code in
+`led-board`; git ignores `public/led-board`.
 
 ## Running locally
 
