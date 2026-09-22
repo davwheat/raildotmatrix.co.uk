@@ -1,0 +1,14 @@
+[Unit]
+Description=Initialize this departure board
+After=local-fs.target
+Before=NetworkManager.service departure-board-manager.service departure-board.service
+ConditionPathExists=!/var/lib/departure-board/initialised
+RequiresMountsFor=/boot/firmware
+
+[Service]
+Type=oneshot
+ExecStart=/opt/departure-board/firstboot.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

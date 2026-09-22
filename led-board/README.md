@@ -36,6 +36,12 @@ The website's build runs `just web` to compile the boards for it; see
 
 ## Build and deploy
 
+For a ready-to-flash SD card, download the artifact from the **DietPi image** GitHub Actions workflow.
+It starts the board and a **DepartureBoard** Wi-Fi hotspot (password **DotMatrix**). Join it and open
+**http://192.168.4.1** to set up Wi-Fi and edit every board setting. Once connected to your network, use
+**http://departureboard.local**. The config also remains at the root of the card as `departure-board.toml`.
+See [the DietPi image instructions](docs/build.md#dietpi-sd-card-image).
+
 See [docs/build.md](docs/build.md). In short:
 
 ```sh

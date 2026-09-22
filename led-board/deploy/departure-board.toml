@@ -1,5 +1,6 @@
-# Settings for the departure board. Install as /etc/departure-board.toml, readable by everyone: the board drops to
-# user daemon once the panel is running and rereads this file when it changes.
+# Settings for the departure board. Manual installs use /etc/departure-board.toml; the DietPi image uses
+# /boot/firmware/departure-board.toml. Keep it readable by everyone: the board drops to user daemon once the panel is
+# running and rereads this file when it changes.
 #
 # BOARD_* environment variables (BOARD_CRS, BOARD_LED_BRIGHTNESS, ...) override this file, and flags of the
 # same names (-crs, -led-brightness, ...) override both. Leave a setting out to use its default.

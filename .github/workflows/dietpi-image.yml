@@ -1,0 +1,104 @@
+name: DietPi image
+
+on:
+  push:
+    paths:
+      - 'led-board/**'
+      - '.gitmodules'
+      - '.github/workflows/dietpi-image.yml'
+  pull_request:
+    paths:
+      - 'led-board/**'
+      - '.gitmodules'
+      - '.github/workflows/dietpi-image.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    name: Raspberry Pi Zero 2 W / 2 / 3 / 4 (64-bit)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: led-board
+    env:
+      DIETPI_IMAGE: DietPi_RPi234-ARMv8-Trixie.img
+      OUTPUT_IMAGE: raildotmatrix-dietpi-rpi234-arm64.img
+
+    steps:
+      - name: Checkout code and LED matrix library
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Use Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: led-board/go.mod
+          cache-dependency-path: led-board/go.sum
+
+      - name: Use Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Use Just
+        uses: extractions/setup-just@v4
+
+      - name: Install image tools
+        run: sudo apt-get update && sudo apt-get install -y mtools xz-utils shellcheck qemu-user-static binfmt-support e2fsprogs util-linux
+
+      - name: Test board and image builder
+        run: |
+          go test ./...
+          shellcheck deploy/dietpi/*.sh
+          python3 -B -m unittest discover -s deploy/dietpi -p 'test_*.py' -v
+
+      - name: Cross-compile the board for Debian 13
+        run: |
+          just ZIG_TARGET=aarch64-linux-gnu.2.41 board
+          just manager
+
+      - name: Download and verify DietPi
+        run: |
+          mkdir -p build/dietpi/base build/dietpi/artifacts
+          cd build/dietpi/base
+          curl --fail --location --retry 3 --remote-name "https://dietpi.com/downloads/images/$DIETPI_IMAGE.xz"
+          curl --fail --location --retry 3 --remote-name "https://dietpi.com/downloads/images/$DIETPI_IMAGE.xz.sha256"
+          sha256sum --check "$DIETPI_IMAGE.xz.sha256"
+          xz --decompress "$DIETPI_IMAGE.xz"
+
+      - name: Create flashable image
+        run: |
+          python3 deploy/dietpi/build_image.py \
+            --base-image "build/dietpi/base/$DIETPI_IMAGE" \
+            --board build/board \
+            --manager build/manage \
+            --output "build/dietpi/$OUTPUT_IMAGE"
+          sudo update-binfmts --enable qemu-aarch64
+          sudo deploy/dietpi/prepare-image.sh "build/dietpi/$OUTPUT_IMAGE"
+          xz -T2 -6 "build/dietpi/$OUTPUT_IMAGE"
+          mv "build/dietpi/$OUTPUT_IMAGE.xz" build/dietpi/artifacts/
+          cp deploy/dietpi/README.txt build/dietpi/artifacts/README.txt
+          {
+            printf 'Source commit: %s\n' "$GITHUB_SHA"
+            printf 'DietPi base image SHA-256:\n'
+            cat "build/dietpi/base/$DIETPI_IMAGE.xz.sha256"
+            printf 'Board binary SHA-256:\n'
+            sha256sum build/board
+            sha256sum build/manage
+          } > build/dietpi/artifacts/build-info.txt
+          cd build/dietpi/artifacts
+          sha256sum "$OUTPUT_IMAGE.xz" > "$OUTPUT_IMAGE.xz.sha256"
+
+      - name: Upload image and flashing instructions
+        uses: actions/upload-artifact@v7
+        with:
+          name: raildotmatrix-dietpi-rpi234-arm64
+          path: led-board/build/dietpi/artifacts/
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14

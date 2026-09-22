@@ -31,6 +31,115 @@ glibc, for example `aarch64-linux-gnu.2.36` for Debian 12:
 just ZIG_TARGET=aarch64-linux-gnu.2.36 deploy
 ```
 
+## DietPi SD card image
+
+The [DietPi image workflow](https://github.com/davwheat/raildotmatrix.co.uk/actions/workflows/dietpi-image.yml)
+builds a flashable 64-bit image when LED board files change on a push or pull request. It can also be run
+manually with **Run workflow**. Download the `raildotmatrix-dietpi-rpi234-arm64` artifact from a successful
+run and extract the ZIP. It contains an `.img.xz`, its SHA-256 checksum, the source commit and base-image
+checksum in `build-info.txt`, and flashing instructions. Artifacts are retained for 14 days.
+
+The image uses DietPi's Debian 13 (Trixie) **RPi234 ARMv8** base, for the Pi Zero 2 W, Pi 2 v1.2, Pi 3,
+Pi 4 and Pi 400. The original Pi Zero/Zero W, Pi 2 v1.1 and Pi 5 need different images and are not supported
+by this artifact.
+
+1. Flash the `.img.xz` with Raspberry Pi Imager's **Use custom** option or balenaEtcher.
+   Skip Raspberry Pi Imager's OS customisation.
+2. On the card's FAT boot partition, change `AUTO_SETUP_GLOBAL_PASSWORD` in `dietpi.txt` for console/SSH
+   access. Set `AUTO_SETUP_NET_WIFI_COUNTRY_CODE` for your country (default GB). The GUI also lets you
+   choose the country when connecting to Wi-Fi.
+3. Connect the LED panels and power on. The image starts an access point named **DepartureBoard**,
+   with password **DotMatrix**. Wi-Fi setup works without internet access. The default panel layout is
+   two chained 128×64 panels; change it in the GUI or in `departure-board.toml` at the root of the card.
+4. Join the hotspot. Open **http://192.168.4.1** and sign in with board password **DotMatrix**.
+   Under **Wi-Fi & connection**, select or enter your network and connect. The hotspot disconnects
+   while the Pi joins that network. If connection fails, the hotspot returns automatically.
+5. Join the same network on your phone/computer and open **http://departureboard.local**. Ethernet
+   also uses DHCP. The board advertises its hostname and HTTP service with Avahi/mDNS; use the IP
+   address shown on the panel or in your router if your network does not support mDNS.
+6. In **Board settings**, enter a three-letter station code and save. All board and panel options,
+   including the advanced settings, are editable through the GUI. Saving validates the settings,
+   backs up the previous file and restarts the display. The **Device** tab changes the web password
+   and restarts the display. The hotspot password remains `DotMatrix`.
+
+Until a station is configured, the LED matrix shows these instructions:
+
+| State | Display |
+| --- | --- |
+| Hotspot, no devices connected and no Ethernet connection | `Connect to DepartureBoard` / `Password: DotMatrix` |
+| A device joins the hotspot | `Setup available` / `http://departureboard.local` / `http://192.168.4.1` |
+| The last hotspot device disconnects, with no Ethernet connection | Returns to the network name and password |
+| Connected to Wi-Fi or Ethernet | `Setup available` / `http://departureboard.local` / assigned IP address(es) |
+
+The manager checks the wireless driver's associated stations every three seconds. The display reads
+that status once per second, so joining/leaving normally updates the instructions within four seconds.
+Long lines scroll and smaller panel layouts page through the instructions. Setting a station code
+switches to live departures; clearing it restores the setup display.
+
+The config remains **`departure-board.toml` at the root of the boot partition**, mounted on the Pi at
+`/boot/firmware/departure-board.toml`. It can still be edited by hand. Brightness applies live; restart
+`departure-board` or reboot after other manual changes. GUI saves restart it automatically. Shut down
+before removing the card. Wi-Fi credentials and the hashed web password are stored in private files
+on the Linux partition. To reset the web password over SSH, remove
+`/var/lib/departure-board/password.json` and restart `departure-board-manager`.
+
+Useful commands on the Pi:
+
+```sh
+journalctl -u departure-board -u departure-board-manager -f
+systemctl restart departure-board
+```
+
+CI cross-compiles the board with Zig for glibc 2.41 and the Go web manager for ARM64. It verifies the
+DietPi download against its published checksum, adds the SD-card config, and installs NetworkManager,
+Avahi, DNS/DHCP support and the binaries inside the image. All setup dependencies are present before
+flashing. DietPi's interactive first-run networking is disabled for this appliance; its filesystem
+expansion and hardware initialization remain. Onboard audio is disabled because it conflicts with the
+panel's PWM hardware. Each device generates its own machine identity and SSH host keys on first boot.
+
+To build locally, use Linux with Python 3.11+, `mtools`, `xz`, `e2fsprogs` and `util-linux`, plus the
+build tools above. An x86 Linux host also needs `qemu-user-static` and enabled `qemu-aarch64` binfmt
+support. Download and checksum-verify `DietPi_RPi234-ARMv8-Trixie.img.xz`, extract it, then run:
+
+```sh
+just ZIG_TARGET=aarch64-linux-gnu.2.41 board
+just manager
+python3 -B -m unittest discover -s deploy/dietpi -p 'test_*.py' -v
+python3 deploy/dietpi/build_image.py \
+  --base-image /path/to/DietPi_RPi234-ARMv8-Trixie.img \
+  --board build/board \
+  --manager build/manage \
+  --output build/raildotmatrix-dietpi.img
+sudo deploy/dietpi/prepare-image.sh build/raildotmatrix-dietpi.img
+xz -T2 build/raildotmatrix-dietpi.img
+```
+
+The Python stage copies the base and refuses to overwrite an existing output. The preparation stage
+requires root and network access, grows the image's root partition by 1 GiB and installs packages in a
+chroot. It operates on an image file, not an SD card or physical disk. Python tests verify the FAT
+payload, configuration and preservation of the base; Go tests cover config saves, authentication,
+network failure recovery and hotspot-client display transitions. Physical boot, radio and GPIO
+operation still need testing on a Pi with panels attached.
+
+### Preview the management GUI locally
+
+From `led-board`:
+
+```sh
+go build -o build/board-native ./cmd/board
+go build -o build/manage-native ./cmd/manage
+mkdir -p build/management-demo
+cp deploy/departure-board.toml build/management-demo/board.toml
+build/manage-native -demo -listen 127.0.0.1:8098 \
+  -board "$PWD/build/board-native" \
+  -config "$PWD/build/management-demo/board.toml" \
+  -state-dir "$PWD/build/management-demo/state" \
+  -status "$PWD/build/management-demo/network.json"
+```
+
+Open http://127.0.0.1:8098 and sign in with `DotMatrix`. Demo mode simulates networks and service
+restarts, while config validation and persistence work against the separate demo file.
+
 ## Local settings
 
 The deploy recipes reach the Pi as `pi@raspberrypi.local` by default. To use a
