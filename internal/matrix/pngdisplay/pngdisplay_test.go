@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/davwheat/pi-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/frame"
 )
 
 func TestWriterScalesAndNumbers(t *testing.T) {

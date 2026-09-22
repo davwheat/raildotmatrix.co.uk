@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/board"
-	"github.com/davwheat/pi-departure-board/internal/font"
-	"github.com/davwheat/pi-departure-board/internal/frame"
-	"github.com/davwheat/pi-departure-board/internal/model"
+	"github.com/davwheat/led-departure-board/internal/board"
+	"github.com/davwheat/led-departure-board/internal/font"
+	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/model"
 )
 
 // Config sizes the board and sets what it shows.
@@ -92,9 +92,9 @@ func newGeometry(w, h int) geometry {
 	g.destX = g.stdX + stdW + gap
 	g.etdW = (41*ch + 2) / 5
 	g.destW = w - g.destX - gap - g.etdW
-	// The web puts cap tops at the row top and clips each row at 80% of its height; with our taller rows the
-	// text sits a little below the top, and a row's animations are clipped to a band that ends two dots short
-	// of the next row.
+	// The web puts cap tops at the row top and clips each row at 80% of its height; in the panel's taller rows
+	// the text sits a little below the top, and a row's animations are clipped to a band that ends two dots
+	// short of the next row.
 	g.pad = max((g.rowH-font.Text.Height)/2-1, 0)
 	g.bandH = g.rowH - 2
 	g.clockX = (w - 8*g.cell) / 2

@@ -186,9 +186,10 @@ func splitContours(segs sfnt.Segments, upem int) []contourBox {
 }
 
 // latticePitch fits the grid pitch to the dot-centre coordinates. Dot fonts place bricks on a regular grid and
-// every glyph has adjacent dots somewhere, so the smallest gap is close to the pitch; a least-squares pass over
-// the snapped indices then removes the integer rounding the font format applied to each coordinate. Gaps
-// narrower than half a dot come from a dot drawn slightly off its row, not from neighbouring lattice lines.
+// the glyphs between them fill neighbouring lattice lines, so the smallest gap is close to the pitch; a
+// least-squares pass over the snapped indices then removes the integer rounding the font format applied to each
+// coordinate. Gaps narrower than half a dot come from a dot drawn slightly off its row, not from neighbouring
+// lattice lines.
 func latticePitch(coords, sizes []float64) float64 {
 	sort.Float64s(sizes)
 	minGap := sizes[len(sizes)/2] / 2

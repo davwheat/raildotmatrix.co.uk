@@ -3,7 +3,7 @@ package daktronics
 import (
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/font"
+	"github.com/davwheat/led-departure-board/internal/font"
 )
 
 // DefaultScrollSpeed is the scroll speed in dots per second: the web's 550 px/s at 11.43 px per dot.

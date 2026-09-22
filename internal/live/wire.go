@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/live/pb"
+	"github.com/davwheat/led-departure-board/internal/live/pb"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -205,7 +205,7 @@ func optionalInstant(value *timestamppb.Timestamp) *time.Time {
 	return &t
 }
 
-// strings copies a repeated field so that an absent list is a known-empty one, never nil.
+// stringList copies a repeated field so that an absent list is a known-empty one, never nil.
 func stringList(values []string) []string {
 	return append([]string{}, values...)
 }

@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/davwheat/pi-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/frame"
 )
 
 type display struct {
@@ -68,7 +68,8 @@ func Open(o *Options) (frame.Display, error) {
 	rt.gpio_slowdown = C.int(o.GPIOSlowdown)
 	// The C shim only copies non-zero fields over the library defaults, and
 	// the default for drop_privileges is on, so "off" has to be spelled -1.
-	// daemon stays 0 (its default) so the refresh thread starts for us.
+	// daemon stays 0 (its default) so that the library starts the refresh
+	// thread itself.
 	if !o.DropPrivileges {
 		rt.drop_privileges = -1
 	}

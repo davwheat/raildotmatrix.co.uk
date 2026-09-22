@@ -17,15 +17,15 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/board"
-	"github.com/davwheat/pi-departure-board/internal/daktronics"
-	"github.com/davwheat/pi-departure-board/internal/frame"
-	"github.com/davwheat/pi-departure-board/internal/infotec"
-	"github.com/davwheat/pi-departure-board/internal/live"
-	"github.com/davwheat/pi-departure-board/internal/matrix"
-	"github.com/davwheat/pi-departure-board/internal/matrix/pngdisplay"
-	"github.com/davwheat/pi-departure-board/internal/model"
-	"github.com/davwheat/pi-departure-board/internal/windowdisplay"
+	"github.com/davwheat/led-departure-board/internal/board"
+	"github.com/davwheat/led-departure-board/internal/daktronics"
+	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/infotec"
+	"github.com/davwheat/led-departure-board/internal/live"
+	"github.com/davwheat/led-departure-board/internal/matrix"
+	"github.com/davwheat/led-departure-board/internal/matrix/pngdisplay"
+	"github.com/davwheat/led-departure-board/internal/model"
+	"github.com/davwheat/led-departure-board/internal/windowdisplay"
 )
 
 func main() {
@@ -148,7 +148,6 @@ type boardConfig struct {
 	scrollSpeed int
 }
 
-// newBoard builds the board format selected by -board.
 func newBoard(name string, cfg boardConfig) (board.Board, error) {
 	switch name {
 	case "daktronics":
@@ -162,7 +161,7 @@ func newBoard(name string, cfg boardConfig) (board.Board, error) {
 	}
 }
 
-// openDisplay returns the display selected by -display, other than the window.
+// openDisplay opens the display that the display setting names, other than the window.
 func openDisplay(kind string, opts *matrix.Options, pngDir string, scale int) (frame.Display, error) {
 	switch kind {
 	case "matrix":
@@ -179,7 +178,6 @@ func openDisplay(kind string, opts *matrix.Options, pngDir string, scale int) (f
 	}
 }
 
-// app holds the settings shared by every kind of display.
 type app struct {
 	board board.Board
 	live  live.Config

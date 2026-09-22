@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/board"
-	"github.com/davwheat/pi-departure-board/internal/font"
-	"github.com/davwheat/pi-departure-board/internal/frame"
-	"github.com/davwheat/pi-departure-board/internal/model"
+	"github.com/davwheat/led-departure-board/internal/board"
+	"github.com/davwheat/led-departure-board/internal/font"
+	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/model"
 )
 
 // Config sizes the board and sets what it shows.
@@ -63,7 +63,8 @@ const (
 type geometry struct {
 	w, h int
 	ch   int
-	// stdX is the scheduled-time column; timeW is a time drawn in digit cells with a narrower colon cell.
+	// stdX is the scheduled-time column, and timeW the width of a time drawn in digit cells with a
+	// colonCell-wide colon.
 	stdX, colonCell, timeW int
 	destX, destW           int
 	// exptW is the width of the "Expt " label and its spacing, drawn before an expected time.

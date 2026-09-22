@@ -1,4 +1,4 @@
-module github.com/davwheat/pi-departure-board
+module github.com/davwheat/led-departure-board
 
 go 1.27.1
 

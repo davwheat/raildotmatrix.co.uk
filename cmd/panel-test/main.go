@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/frame"
-	"github.com/davwheat/pi-departure-board/internal/matrix"
+	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/matrix"
 )
 
 func main() {

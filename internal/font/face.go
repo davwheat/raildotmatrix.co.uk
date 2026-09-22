@@ -2,7 +2,7 @@
 // raildotmatrix.co.uk by cmd/fontgen; see generate.go.
 package font
 
-import "github.com/davwheat/pi-departure-board/internal/frame"
+import "github.com/davwheat/led-departure-board/internal/frame"
 
 // Glyph is one character's dots. Rows holds one row per line of the face, top first; bit 0 is the leftmost dot.
 type Glyph struct {
@@ -14,7 +14,7 @@ type Glyph struct {
 type Face struct {
 	// Height is the number of dot rows every glyph spans, including descender rows.
 	Height int
-	// Baseline is the row index of the baseline within Height.
+	// Baseline is the number of rows above the baseline, which is also the index of the first descender row.
 	Baseline int
 	Spacing  int
 	Glyphs   map[rune]Glyph

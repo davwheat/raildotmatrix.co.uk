@@ -1,4 +1,4 @@
-# Settings for /root/board. Install as /etc/departure-board.toml, readable by everyone: the board drops to
+# Settings for the departure board. Install as /etc/departure-board.toml, readable by everyone: the board drops to
 # user daemon once the panel is running and rereads this file when it changes.
 #
 # BOARD_* environment variables (BOARD_CRS, BOARD_LED_BRIGHTNESS, ...) override this file, and flags of the
@@ -33,15 +33,17 @@ verbose = false
 # Brightness in percent. A change here applies straight away, without a restart.
 brightness = 60
 
-# The panel refresh rate and PWM bit depth follow the board unless set here. The refresh is a whole multiple
-# of the scroll speed so that every step lasts the same number of refreshes, and the depth is the most the
-# panel manages at that rate.
+# The panel refresh rate and PWM bit depth follow the board unless set here. The refresh is the lowest whole
+# multiple of the scroll speed that's at least 60 Hz, so that every step lasts the same number of refreshes,
+# and the depth is the most the panel manages at that rate. At the default scroll speeds, that's 96 Hz and
+# 8 bits for Daktronics, and 60 Hz and 11 bits for Infotec.
 # limit_refresh = 60
 # pwm_bits = 11
 
 rows = 64
 cols = 128
 chain = 2
-rgb_sequence = "BGR"
+# "BGR" if red and blue come out swapped.
+rgb_sequence = "RGB"
 gpio_mapping = "regular"
 slowdown_gpio = 2

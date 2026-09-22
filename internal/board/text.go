@@ -3,20 +3,18 @@ package board
 import (
 	"strings"
 
-	"github.com/davwheat/pi-departure-board/internal/font"
-	"github.com/davwheat/pi-departure-board/internal/frame"
-	"github.com/davwheat/pi-departure-board/internal/model"
+	"github.com/davwheat/led-departure-board/internal/font"
+	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/model"
 )
 
 // Clip is a half-open rectangle [X0, X1) x [Y0, Y1) that drawing is confined to.
 type Clip struct{ X0, Y0, X1, Y1 int }
 
-// Intersect returns the area inside both c and o.
 func (c Clip) Intersect(o Clip) Clip {
 	return Clip{max(c.X0, o.X0), max(c.Y0, o.Y0), min(c.X1, o.X1), min(c.Y1, o.Y1)}
 }
 
-// Empty reports whether no dot lies inside c.
 func (c Clip) Empty() bool { return c.X0 >= c.X1 || c.Y0 >= c.Y1 }
 
 // GlyphOf mirrors the face's own lookup so a board can draw with a clip on both axes, which Face lacks.

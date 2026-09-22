@@ -10,15 +10,15 @@ func TestTextWidth(t *testing.T) {
 	if got := Text.Width(""); got != 0 {
 		t.Errorf("Text.Width(\"\") = %d, want 0", got)
 	}
-	// The Infotec clock cells hold 8-dot digits, a 4-dot '1' and 2-dot colons.
+	// The Infotec clock face has 8-dot digits, except a 4-dot '1' and a 6-dot '4', and 2-dot colons.
 	if got, want := DotMatrixClock.Width("19:40:00"), 4+1+8+1+2+1+6+1+8+1+2+1+8+1+8; got != want {
 		t.Errorf("DotMatrixClock.Width(\"19:40:00\") = %d, want %d", got, want)
 	}
 }
 
 // None of the faces is fully tabular: '1' is narrower than the other digits in all of them, and the Infotec clock
-// also narrows '4'. The web boards hide this in the clocks by centring each digit in a fixed 1ch cell, and the
-// text faces show it as drawn.
+// also narrows '4'. The boards hide this in clocks and times by centring each digit in a fixed 1ch cell, as the
+// web boards do; elsewhere digits show as drawn.
 func TestDigitWidths(t *testing.T) {
 	cases := []struct {
 		name   string

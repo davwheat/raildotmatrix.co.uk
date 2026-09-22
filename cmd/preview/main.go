@@ -12,12 +12,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/board"
-	"github.com/davwheat/pi-departure-board/internal/daktronics"
-	"github.com/davwheat/pi-departure-board/internal/fixtures"
-	"github.com/davwheat/pi-departure-board/internal/font"
-	"github.com/davwheat/pi-departure-board/internal/frame"
-	"github.com/davwheat/pi-departure-board/internal/infotec"
+	"github.com/davwheat/led-departure-board/internal/board"
+	"github.com/davwheat/led-departure-board/internal/daktronics"
+	"github.com/davwheat/led-departure-board/internal/fixtures"
+	"github.com/davwheat/led-departure-board/internal/font"
+	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/infotec"
 )
 
 func main() {
@@ -94,7 +94,6 @@ func main() {
 	fmt.Printf("%s: %d ticks, %d redraws, %d frames, sheet %s\n", *fixture, ticks+1, changes, len(shots), name)
 }
 
-// newBoard builds the board format selected by -board.
 func newBoard(name string, w, h int, zone *time.Location, worldline bool, scrollSpeed int) (board.Board, error) {
 	switch name {
 	case "daktronics":
@@ -151,7 +150,6 @@ func fillDot(img *image.RGBA, x0, y0, scale int, c color.RGBA) {
 	}
 }
 
-// contactSheet tiles the shots in a grid with a timestamp above each, drawn in the board's own font.
 func contactSheet(shots []shot, columns, scale int) *image.RGBA {
 	if len(shots) == 0 {
 		return image.NewRGBA(image.Rect(0, 0, 1, 1))

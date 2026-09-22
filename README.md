@@ -1,11 +1,11 @@
-# Pi departure board
+# LED departure board
 
-A Daktronics Data Display style railway departure board for a 256x64 HUB75 LED matrix (two chained 128x64
-panels) driven by a Raspberry Pi Zero 2 W. It is a port of the Data Display board from
+UK railway departure boards for a 256x64 HUB75 LED matrix (two chained 128x64 panels) driven by a Raspberry
+Pi. It ports the Daktronics Data Display and Infotec boards from
 [raildotmatrix.co.uk](https://github.com/davwheat/raildotmatrix.co.uk), fed by the Darwin Browser live
 WebSocket stream.
 
-The Pi is slow, so the renderer redraws only when a dot changes, allocates nothing in the steady state, and
+It was developed on a Pi Zero 2 W, which has little CPU to spare, so the renderer redraws only when a dot changes, allocates nothing in the steady state, and
 hands each frame to the panel in a single call.
 
 ## Layout
@@ -15,7 +15,7 @@ hands each frame to the panel in a single call.
 | `cmd/board` | The app: connects to the feed and drives the panel. |
 | `cmd/preview` | Renders fixture boards to PNG contact sheets on a desktop. |
 | `cmd/livedump` | Prints the live feed for a station as a table. |
-| `cmd/fontgen` | Regenerates the dot fonts from the FontStruct WOFF files. |
+| `cmd/fontgen` | Regenerates the dot fonts in `internal/font` from their WOFF files. |
 | `cmd/panel-test` | Draws a moving test pattern to check the panel wiring. |
 | `internal/board` | What every board format shares: the `Board` interface, colours, and dot-level text drawing. |
 | `internal/daktronics` | The Daktronics Data Display DMI board: state machine and renderer. |
@@ -37,19 +37,24 @@ See [docs/build.md](docs/build.md). In short:
 brew install go zig
 git submodule update --init
 make -j8 lib
-make deploy
+make deploy PI_HOST=pi@raspberrypi.local
+make install-service PI_HOST=pi@raspberrypi.local
 ```
+
+To avoid repeating `PI_HOST`, put it in a `local.mk` file, which git ignores.
 
 ## Running on the Pi
 
 The board reads `/etc/departure-board.toml`, or `departure-board.toml` in the working directory, or the file
 named by `-config`. `deploy/departure-board.toml` is a commented example. `BOARD_*` environment variables
 override the file (`BOARD_CRS=VIC`, `BOARD_LED_BRIGHTNESS=40`), and flags of the same names override both,
-which is handy for a quick change of station:
+which is handy for trying a change. Stop the service first, because two copies driving the panel at once
+fight over the GPIO:
 
 ```sh
-/root/board -config /etc/departure-board.toml -crs ECR
-/root/board -crs BTN -board daktronics -worldline -colour white
+sudo systemctl stop departure-board
+sudo /opt/departure-board/board -config /etc/departure-board.toml -crs ECR
+sudo /opt/departure-board/board -crs BTN -board daktronics -worldline -colour white
 ```
 
 A config file isn't required; without one the board runs on its defaults and flags, but `crs` must be set
@@ -78,10 +83,11 @@ of refreshes, and the PWM bit depth is the most the panel manages at that rate: 
 8 bits at 96 Hz for Daktronics. The depth sets how many shades the panel can show, which is what fades and
 the half-brightness separator need.
 
-The panel defaults match this hardware (`--led-rows=64 --led-cols=128 --led-chain=2 --led-slowdown-gpio=2
---led-rgb-sequence=BGR --led-pwm-lsb-nanoseconds=100`); every `rpi-rgb-led-matrix` flag is available under
-its usual name, and as a key in the `[led]` table without the `led-` prefix. Run `/root/board -h` for the
-full list.
+The panel defaults suit two chained 128x64 panels on a bare adapter board (`--led-rows=64 --led-cols=128
+--led-chain=2 --led-slowdown-gpio=2 --led-pwm-lsb-nanoseconds=100`). If red and blue come out swapped, set
+`rgb_sequence = "BGR"` in the `[led]` table; for a HAT, set `gpio_mapping`. Every `rpi-rgb-led-matrix` flag
+is available under its usual name, and as a key in the `[led]` table without the `led-` prefix. Run
+`/opt/departure-board/board -h` for the full list.
 
 To start it at boot, run `make install-service` from the Mac. It installs `deploy/departure-board.service`
 and, if the Pi has no config file yet, `deploy/departure-board.toml` as `/etc/departure-board.toml`, then
@@ -103,4 +109,9 @@ go run ./cmd/preview -board infotec -fixture first-departs -seconds 6 -every 0.1
 go run ./cmd/livedump -crs BTN
 ```
 
-`go generate ./...` regenerates the fonts and the protobuf code. It needs `protoc` and `protoc-gen-go`.
+`go generate ./...` regenerates the fonts and the protobuf code. It needs `protoc` and `protoc-gen-go`, and
+the WOFF files in `assets/fonts`, which the repository doesn't include. Copy them from
+[raildotmatrix.co.uk](https://github.com/davwheat/raildotmatrix.co.uk): `DataDisplayDaktronicsDMIfont.woff` and
+`DataDisplayDaktronicsDMIClockfont.woff` from `src/components/displays/DaktronicsDataDisplayDmi/css/font`,
+`ModernNationalRailPISTall.woff` from `src/components/displays/NewGTR/css/font`, and
+`subset-Dot_Matrix_Bold_Tall.woff` from `public/fonts`.

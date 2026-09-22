@@ -23,7 +23,6 @@ var ErrUnsupported = errors.New("windowdisplay: not available on this platform")
 // ErrClosed is returned by Swap after the window has closed.
 var ErrClosed = errors.New("windowdisplay: window closed")
 
-// Options configures the window.
 type Options struct {
 	// Width and Height are the panel size in LEDs that Size reports and that
 	// swapped frames must match.

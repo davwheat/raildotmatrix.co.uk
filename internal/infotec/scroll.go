@@ -3,7 +3,7 @@ package infotec
 import (
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/font"
+	"github.com/davwheat/led-departure-board/internal/font"
 )
 
 // DefaultScrollSpeed is the scroll speed in dots per second. The web scrolls at 550 px/s, which is 77 dots/s at
@@ -22,7 +22,7 @@ const (
 	// infoSlideIn is the info-in animation that lifts the service-information page into its row.
 	infoSlideIn = 200
 	// pageFade is the linear opacity transition of a page going out, and fadeSteps how many brightness steps
-	// it takes: one per refresh at the 60 Hz the board runs at.
+	// it takes: one per refresh at the board's default 60 Hz.
 	pageFade  = 200
 	fadeSteps = 12
 	// prefixSpacing is the room between a calling-point prefix wider than the destination column and its list.

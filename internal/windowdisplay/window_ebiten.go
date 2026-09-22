@@ -12,7 +12,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 
-	"github.com/davwheat/pi-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/frame"
 )
 
 // swapWait bounds how long Swap waits for the window to take a frame, so a

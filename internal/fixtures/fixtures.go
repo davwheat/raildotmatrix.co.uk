@@ -5,7 +5,7 @@ package fixtures
 import (
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/model"
+	"github.com/davwheat/led-departure-board/internal/model"
 )
 
 // Clock is the instant the web baselines were captured at; fixture times are offsets from it.

@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/davwheat/pi-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/frame"
 )
 
 // Options configures a PNG-writing display.
@@ -53,7 +53,6 @@ func New(opts Options) (*Writer, error) {
 	}, nil
 }
 
-// Size returns the configured panel size.
 func (w *Writer) Size() (int, int) { return w.opts.Width, w.opts.Height }
 
 // Swap writes f as the next numbered PNG in the output directory.
@@ -130,7 +129,6 @@ func NewSink(w, h int) *Sink {
 	return &Sink{w: w, h: h}
 }
 
-// Size returns the configured panel size.
 func (s *Sink) Size() (int, int) { return s.w, s.h }
 
 // Swap copies f so later mutations by the caller don't affect Last.

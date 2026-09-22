@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/fixtures"
-	"github.com/davwheat/pi-departure-board/internal/font"
-	"github.com/davwheat/pi-departure-board/internal/frame"
-	"github.com/davwheat/pi-departure-board/internal/model"
+	"github.com/davwheat/led-departure-board/internal/fixtures"
+	"github.com/davwheat/led-departure-board/internal/font"
+	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/model"
 )
 
 const (
@@ -407,7 +407,7 @@ func BenchmarkTickScrolling(b *testing.B) {
 	board := New(Config{Width: testW, Height: testH})
 	f := frame.New(testW, testH)
 	board.Update(fixtures.Steps("busy-board")[0])
-	// Ten seconds in, the calling points are scrolling; at 77 dots/s every 20 ms tick moves them a dot or two.
+	// Ten seconds in, the calling points are scrolling; at 60 dots/s every 20 ms tick moves them a dot or two.
 	now := fixtures.Clock.Add(10 * time.Second)
 	board.Tick(now, f)
 	b.ReportAllocs()

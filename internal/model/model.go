@@ -61,7 +61,8 @@ type Service struct {
 	CallPoints []CallPoint
 }
 
-// Delayed reports whether the forecast is later than the schedule, or unknown. It ignores cancellation.
+// Delayed reports whether the forecast is a minute or more behind the schedule, or unknown. It ignores
+// cancellation.
 func (s *Service) Delayed() bool {
 	if s.Estimated == nil {
 		return true
@@ -118,11 +119,13 @@ const (
 
 // View is what the board shows at one moment.
 type View struct {
-	// Connected is false until a snapshot has arrived, and after the connection is lost.
+	// Connected is false until a snapshot arrives, and again from a lost connection or a revision gap until
+	// the next snapshot.
 	Connected bool
 	Services  []Service
 	Notice    Notice
 	// Alterations lists movement IDs that have moved between a watched and an unwatched platform since the
-	// previous view. The board announces a platform alteration when it is non-empty.
+	// previous view. The Daktronics board announces a platform alteration when it's non-empty; the Infotec
+	// board ignores it.
 	Alterations []string
 }

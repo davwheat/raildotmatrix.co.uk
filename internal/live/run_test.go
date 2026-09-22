@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/davwheat/pi-departure-board/internal/live/pb"
-	"github.com/davwheat/pi-departure-board/internal/model"
+	"github.com/davwheat/led-departure-board/internal/live/pb"
+	"github.com/davwheat/led-departure-board/internal/model"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

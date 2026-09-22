@@ -19,10 +19,10 @@ import (
 	"strconv"
 )
 
-// Options configures the panels and the refresh thread. Zero values select the
-// library's own defaults, so the struct maps directly onto
-// RGBLedMatrixOptions and RGBLedRuntimeOptions. The mapstructure tags name
-// the config file keys, which follow the library's flags.
+// Options configures the panels and the refresh thread. Zero values, other
+// than DropPrivileges, select the library's own defaults, so the struct maps
+// directly onto RGBLedMatrixOptions and RGBLedRuntimeOptions. The mapstructure
+// tags name the config file keys, which follow the library's flags.
 type Options struct {
 	Rows              int    `mapstructure:"rows"`
 	Cols              int    `mapstructure:"cols"`
@@ -40,7 +40,8 @@ type Options struct {
 	ShowRefreshRate   bool   `mapstructure:"show_refresh"`
 
 	// DisableHardwarePulse turns off the PWM hardware used for output-enable
-	// timing. Keep it on: without it the panel visibly flickers.
+	// timing. Leave it false: without the hardware pulse the panel visibly
+	// flickers.
 	DisableHardwarePulse bool `mapstructure:"no_hardware_pulse"`
 
 	// GPIOSlowdown slows the GPIO bit-bang so slower panels can keep up.
@@ -56,8 +57,8 @@ type Options struct {
 	LimitRefreshRateHz int `mapstructure:"limit_refresh"`
 }
 
-// Default returns the known-good configuration for this hardware: two chained
-// 128x64 panels on the "regular" wiring.
+// Default returns the configuration the boards are laid out for: two chained
+// 128x64 panels, 256x64 dots in all, on the "regular" wiring.
 func Default() *Options {
 	return &Options{
 		Rows:       64,
@@ -66,22 +67,25 @@ func Default() *Options {
 		Parallel:   1,
 		Brightness: 60,
 		// The boards scroll at a fixed number of dots per second and need the
-		// refresh to be a whole multiple of it. A 100 ns LSB (the library
-		// default is 130) buys refresh rate at every bit depth; cmd/board
-		// replaces the rate with the selected board's own and the depth with
-		// PWMBitsFor that rate, unless they're set explicitly.
+		// refresh to be a whole multiple of it, so cmd/board replaces this
+		// rate, which is the Daktronics board's, with the selected board's own
+		// and the depth with PWMBitsFor that rate, unless they're set
+		// explicitly. A 100 ns LSB (the library default is 130) buys refresh
+		// rate at every bit depth.
 		PWMBits:            8,
 		PWMLSBNanoseconds:  100,
 		LimitRefreshRateHz: 96,
-		RGBSequence:        "BGR",
+		RGBSequence:        "RGB",
 		HardwareMapping:    "regular",
 		GPIOSlowdown:       2,
 		DropPrivileges:     true,
 	}
 }
 
-// maxRefreshHz is the fastest these panels refresh at each PWM bit depth with
-// a 100 ns LSB and GPIO slowdown 2, measured with panel-test.
+// maxRefreshHz is the fastest the panels refresh at each PWM bit depth with a
+// 100 ns LSB and GPIO slowdown 2, measured with panel-test on a Pi Zero 2 W
+// driving two ICN2037BP panels. Other panels and Pis differ; set led.pwm_bits
+// if the refresh rate falls short.
 var maxRefreshHz = [...]int{3: 171, 4: 151, 5: 136, 6: 122, 7: 111, 8: 102, 9: 94, 10: 87, 11: 82}
 
 // PWMBitsFor returns the greatest PWM bit depth at which the panels still

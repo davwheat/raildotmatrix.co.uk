@@ -1,7 +1,6 @@
 // Package frame holds the RGB framebuffer the board draws into and the display it is presented on.
 package frame
 
-// RGB is one pixel's colour.
 type RGB struct{ R, G, B uint8 }
 
 // Black is the unlit panel.
@@ -38,7 +37,6 @@ func (f *Frame) At(x, y int) RGB {
 	return RGB{f.Pix[i], f.Pix[i+1], f.Pix[i+2]}
 }
 
-// Clear blanks the whole frame.
 func (f *Frame) Clear() {
 	clear(f.Pix)
 }
@@ -55,7 +53,6 @@ func (f *Frame) FillRect(x, y, w, h int, c RGB) {
 	}
 }
 
-// Equal reports whether two frames hold identical pixels.
 func (f *Frame) Equal(o *Frame) bool {
 	if f.W != o.W || f.H != o.H {
 		return false

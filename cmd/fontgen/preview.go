@@ -7,7 +7,6 @@ import (
 	"os"
 )
 
-// previewLine pairs a sample string with the face that renders it.
 type previewLine struct {
 	face *dotFace
 	text string

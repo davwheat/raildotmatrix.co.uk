@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/davwheat/pi-departure-board/internal/matrix"
+	"github.com/davwheat/led-departure-board/internal/matrix"
 )
 
 func parse(t *testing.T, args ...string) *flag.FlagSet {
@@ -96,7 +96,7 @@ func TestFile(t *testing.T) {
 	if led.DropPrivileges {
 		t.Error("no_drop_privs = true should clear DropPrivileges")
 	}
-	if led.Rows != 64 || led.RGBSequence != "BGR" {
+	if led.Rows != 64 || led.RGBSequence != "RGB" {
 		t.Errorf("defaults lost under the led table: %+v", led)
 	}
 	if !v.IsSet("led.limit_refresh") {

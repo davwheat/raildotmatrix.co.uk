@@ -3,10 +3,10 @@ package daktronics
 import (
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/board"
-	"github.com/davwheat/pi-departure-board/internal/font"
-	"github.com/davwheat/pi-departure-board/internal/frame"
-	"github.com/davwheat/pi-departure-board/internal/model"
+	"github.com/davwheat/led-departure-board/internal/board"
+	"github.com/davwheat/led-departure-board/internal/font"
+	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/model"
 )
 
 // rowScene is one train row as drawn this tick. dy shifts it vertically while it slides; clipX hides

@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/root/board -config /etc/departure-board.toml
+ExecStart=/opt/departure-board/board -config /etc/departure-board.toml
 Restart=always
 RestartSec=5
 # The board blanks the panel and exits within a frame of SIGTERM; one that doesn't is stuck, and is killed

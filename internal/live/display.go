@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/model"
+	"github.com/davwheat/led-departure-board/internal/model"
 )
 
 // Options is the board's display policy. The service can narrow its payload to the same platforms, but that

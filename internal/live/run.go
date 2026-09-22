@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/davwheat/pi-departure-board/internal/model"
+	"github.com/davwheat/led-departure-board/internal/model"
 )
 
 // HeartbeatSeconds is the heartbeat cadence asked of the service. It sends one only after this much silence.
@@ -56,9 +56,10 @@ var defaultTimings = timings{
 const maxFrameBytes = 5_000_000
 
 // Run connects to the station's CIS stream and keeps reconnecting until ctx is done. It calls emit, always from
-// this goroutine, on every change of the displayed view: a new snapshot or update, an override activating or
-// expiring as time passes, and the loss of the connection, which shows as Connected false with no services.
-// Alterations are set only on the view emitted for the update that caused them.
+// the goroutine that called Run, whenever the displayed view changes: on a snapshot or update, when an override
+// activates or expires or a reported arrival time passes, and when the connection is lost or a revision gap
+// opens, both of which show as Connected false with no services. Alterations are set only on the view emitted
+// for the update that caused them.
 func Run(ctx context.Context, cfg Config, emit func(model.View)) error {
 	return run(ctx, cfg, defaultTimings, emit)
 }
@@ -107,7 +108,6 @@ func run(ctx context.Context, cfg Config, t timings, emit func(model.View)) erro
 	}
 }
 
-// StreamURL builds the CIS stream URL for a configuration.
 func StreamURL(cfg Config) (*url.URL, error) {
 	target, err := url.Parse(cfg.BaseURL)
 	if err != nil {

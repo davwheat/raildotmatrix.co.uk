@@ -1,18 +1,27 @@
-# Cross-compiles the board for the Raspberry Pi Zero 2 W from macOS.
+# Cross-compiles the board for a 64-bit Raspberry Pi and deploys it over SSH.
 # See docs/build.md.
+
+# Settings for your own Pi go in local.mk, which git ignores, so that they
+# take precedence over the defaults below without being committed.
+-include local.mk
 
 ZIG_TARGET ?= aarch64-linux-gnu.2.41
 CC  := zig cc -target $(ZIG_TARGET)
 CXX := zig c++ -target $(ZIG_TARGET)
 AR  := zig ar
 
-PI_HOST ?= root@10.0.1.146
-SSH_OPTS := -o ControlPath=/Users/david/.ssh/cm-pi -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
+PI_HOST ?= pi@raspberrypi.local
+SSH_OPTS ?=
+# The deploy targets write to system directories. Leave SUDO empty when
+# PI_HOST logs in as root.
+SUDO ?= sudo
+BIN_DIR ?= /opt/departure-board
+PANEL_TEST_FLAGS ?=
 SSH := ssh $(SSH_OPTS)
-# The Pi's minimal image has neither scp nor sftp-server, so files are
-# streamed through a plain ssh session instead. Usage: $(call push,src,dest)
+# Minimal images can lack scp and sftp-server, so files are streamed through
+# a plain ssh session instead. Usage: $(call push,src,dest)
 define push
-$(SSH) $(PI_HOST) 'cat > $(2).tmp && chmod 755 $(2).tmp && mv -f $(2).tmp $(2)' < $(1)
+$(SSH) $(PI_HOST) '$(SUDO) sh -c "mkdir -p $(dir $(2)) && cat > $(2).tmp && chmod 755 $(2).tmp && mv -f $(2).tmp $(2)"' < $(1)
 endef
 
 LIB_SRC := third_party/rpi-rgb-led-matrix/lib
@@ -67,23 +76,24 @@ panel-test: $(LIB)
 	$(GO_BUILD) -o $(BUILD)/panel-test ./cmd/panel-test
 
 deploy: board
-	$(call push,$(BUILD)/board,/root/board)
-	$(SSH) $(PI_HOST) 'systemctl try-restart departure-board'
+	$(call push,$(BUILD)/board,$(BIN_DIR)/board)
+	$(SSH) $(PI_HOST) '$(SUDO) systemctl try-restart departure-board'
 
 # Installs and starts the systemd unit. The config file is installed only if
 # there isn't one, so the Pi's own settings survive.
 install-service:
-	$(SSH) $(PI_HOST) 'cat > /etc/systemd/system/departure-board.service' < deploy/departure-board.service
-	$(SSH) $(PI_HOST) 'test -e /etc/departure-board.toml || { cat > /etc/departure-board.toml && chmod 644 /etc/departure-board.toml; }' < deploy/departure-board.toml
-	$(SSH) $(PI_HOST) 'systemctl daemon-reload && systemctl enable --now departure-board'
+	sed 's|/opt/departure-board|$(BIN_DIR)|' deploy/departure-board.service | $(SSH) $(PI_HOST) '$(SUDO) sh -c "cat > /etc/systemd/system/departure-board.service"'
+	$(SSH) $(PI_HOST) '$(SUDO) sh -c "test -e /etc/departure-board.toml || { cat > /etc/departure-board.toml && chmod 644 /etc/departure-board.toml; }"' < deploy/departure-board.toml
+	$(SSH) $(PI_HOST) '$(SUDO) systemctl daemon-reload && $(SUDO) systemctl enable departure-board && $(SUDO) systemctl restart departure-board'
 
 deploy-panel-test: panel-test
-	$(call push,$(BUILD)/panel-test,/root/panel-test)
+	$(call push,$(BUILD)/panel-test,$(BIN_DIR)/panel-test)
 
 # Runs the deployed panel-test for five seconds and samples CPU use while it
-# draws.
+# draws. The board service is paused meanwhile, because two processes driving
+# the panel at once fight over the GPIO.
 run-panel-test:
-	$(SSH) $(PI_HOST) 'timeout 10 /root/panel-test -seconds 5 & sleep 2.5; top -bn1 | head -15; wait'
+	$(SSH) $(PI_HOST) 'was=$$(systemctl is-active departure-board 2>/dev/null); $(SUDO) systemctl stop departure-board 2>/dev/null; $(SUDO) timeout 10 $(BIN_DIR)/panel-test -seconds 5 $(PANEL_TEST_FLAGS) & sleep 2.5; top -bn1 | head -15; wait; [ "$$was" != active ] || $(SUDO) systemctl start departure-board'
 
 clean:
 	rm -rf $(BUILD)

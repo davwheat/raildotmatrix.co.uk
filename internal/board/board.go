@@ -1,13 +1,13 @@
 // Package board is what every departure board format shares: the interface the app drives a board through,
-// the text colours, and the dot-level drawing helpers. The formats themselves live in their own packages.
+// the text colours, and the dot-level drawing helpers. The formats live in packages daktronics and infotec.
 package board
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/frame"
-	"github.com/davwheat/pi-departure-board/internal/model"
+	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/model"
 )
 
 // Board is a departure board format: a state machine that turns the live view into frames. Update may be
@@ -19,12 +19,13 @@ type Board interface {
 	// changed; a caller can skip the panel swap otherwise.
 	Tick(now time.Time, f *frame.Frame) bool
 	// RefreshHz is the panel refresh rate the board's animations are designed for: an integer multiple of its
-	// scroll rate in dots per second, so that every scroll step lasts a whole number of refreshes.
+	// scroll rate in dots per second, so that every scroll step lasts a whole number of refreshes, and no
+	// slower than MinRefreshHz.
 	RefreshHz() int
 }
 
-// MinRefreshHz is the slowest panel refresh a board may ask for. The panel strobes at its refresh rate, and
-// 60 Hz was judged steady enough on this hardware.
+// MinRefreshHz is the slowest panel refresh a board may ask for. A HUB75 panel strobes at its refresh rate,
+// and 60 Hz looks steady on the panels the boards were developed on.
 const MinRefreshHz = 60
 
 // RefreshFor returns the lowest multiple of a scroll speed, in dots per second, that is at least MinRefreshHz,
@@ -50,7 +51,7 @@ func Scale(c frame.RGB, num, den int) frame.RGB {
 	}
 }
 
-// ParseColour returns the colour named on the command line: "amber" or "white".
+// ParseColour returns the colour that the colour setting names: "amber" or "white".
 func ParseColour(name string) (frame.RGB, error) {
 	switch name {
 	case "amber":

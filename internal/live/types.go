@@ -68,7 +68,6 @@ type Call struct {
 	CoachCount       *int32    `json:"coach_count"`
 }
 
-// TransportMode is a movement's mode of transport.
 type TransportMode string
 
 const (

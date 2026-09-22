@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/davwheat/pi-departure-board/internal/fixtures"
-	"github.com/davwheat/pi-departure-board/internal/frame"
-	"github.com/davwheat/pi-departure-board/internal/model"
+	"github.com/davwheat/led-departure-board/internal/fixtures"
+	"github.com/davwheat/led-departure-board/internal/frame"
+	"github.com/davwheat/led-departure-board/internal/model"
 )
 
 const (
