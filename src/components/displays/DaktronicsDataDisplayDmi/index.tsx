@@ -1,12 +1,14 @@
 import React from 'react'
 
 import BoardSettings from '../../common/BoardSettings'
-import FullBoard from './FullBoard'
+import LedBoard, { COLUMNS, ROWS } from '../LedBoard'
 import { ZoomDiv } from '../ZoomDiv'
 
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
+import { useDataSource } from '../../../live/source'
 
 import BoardAsset from './board-outline.inline.svg'
+import boardFill from './board-fill.svg'
 import ToggleSwitch from '../../common/form/ToggleSwitch'
 import { getDisabledPlatforms } from '../../../api/ProcessServices'
 
@@ -17,18 +19,30 @@ interface IProps {
 
 const BoardStyles = {
   Yellow: {
-    '--calling-points-text-transform': 'none',
     '--casing-color': '#db9426',
   },
   Blue: {
-    '--calling-points-text-transform': 'none',
     '--casing-color': '#11185a',
   },
   'Green/Blue': {
-    '--calling-points-text-transform': 'none',
     '--casing-color': '#1b4b47',
   },
 } as const
+
+/** The casing SVGs are drawn in dots, with the board's top-left dot at this offset. */
+const CASING_BORDER = 16
+const CASING_WIDTH = COLUMNS + 2 * CASING_BORDER
+const CASING_HEIGHT = ROWS + 2 * CASING_BORDER
+
+const percent = (dots: number, of: number) => `${(100 * dots) / of}%`
+
+/** The face behind each of the three rows of departures, which the real board's LED modules are mounted on. */
+const ROW_FACES = [0, 1, 2].map(row => [row * 16 + 1, row * 16 + 14])
+
+const faceBackground = `linear-gradient(to bottom, ${ROW_FACES.map(
+  ([top, bottom]) =>
+    `transparent ${percent(top, ROWS)}, var(--dmi-row-background) ${percent(top, ROWS)} ${percent(bottom, ROWS)}, transparent ${percent(bottom, ROWS)}`,
+).join(', ')}), var(--dmi-background)`
 
 interface IBoardSettings {
   boardStyle: keyof typeof BoardStyles
@@ -49,8 +63,10 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
     worldlinePowered: false,
     withBackground: false,
   })
+  const { baseUrl } = useDataSource()
 
   const platforms = searchParams?.getAll('platform')
+  const { showCasing } = customBoardSettings
 
   return (
     <>
@@ -94,31 +110,48 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
         <div
           css={[
             { position: 'relative' },
+            showCasing
+              ? { width: `min(100vw, ${(100 * CASING_WIDTH) / CASING_HEIGHT}vh)`, aspectRatio: `${CASING_WIDTH} / ${CASING_HEIGHT}` }
+              : { width: `min(100vw, ${(100 * COLUMNS) / ROWS}vh)` },
             BoardStyles[customBoardSettings.boardStyle],
-            customBoardSettings.worldlinePowered && {
-              '--calling-points-text-transform': 'none',
-              '--destination-text-transform': 'uppercase',
-            },
             customBoardSettings.withBackground && {
               '--dmi-row-background': '#35241a',
               '--dmi-background': '#0c0806',
+              '--led-board-background': faceBackground,
             },
           ]}
         >
-          {customBoardSettings.showCasing && (
-            <BoardAsset css={{ position: 'absolute', inset: 0, zIndex: 2, color: 'var(--casing-color)', pointerEvents: 'none' }} />
+          {showCasing && (
+            <div
+              css={{
+                position: 'absolute',
+                inset: 0,
+                background: 'var(--dmi-background, #000)',
+                maskImage: `url(${boardFill})`,
+                maskSize: '100% 100%',
+              }}
+            />
           )}
 
-          <FullBoard
-            // Force re-render as text-transform can affect scrolling calling points
-            key={`${customBoardSettings.boardStyle}.${customBoardSettings.worldlinePowered}`}
-            hasCasing={customBoardSettings.showCasing}
-            station={station}
+          <LedBoard
+            css={
+              showCasing && {
+                position: 'absolute',
+                left: percent(CASING_BORDER, CASING_WIDTH),
+                top: percent(CASING_BORDER, CASING_HEIGHT),
+                width: percent(COLUMNS, CASING_WIDTH),
+              }
+            }
+            board="daktronics"
+            crs={station}
+            url={baseUrl}
             platforms={platforms}
-            useLegacyTocNames={!!searchParams?.get('useLegacyTocNames')}
             showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
-            worldlinePowered={customBoardSettings.worldlinePowered}
+            legacyTocNames={!!searchParams?.get('useLegacyTocNames')}
+            worldline={customBoardSettings.worldlinePowered}
           />
+
+          {showCasing && <BoardAsset css={{ position: 'absolute', inset: 0, color: 'var(--casing-color)', pointerEvents: 'none' }} />}
         </div>
       </ZoomDiv>
     </>

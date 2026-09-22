@@ -65,12 +65,18 @@ the URL path prefix of the service URL, which is how each case selects its data.
 
 ## What the baselines cannot show
 
-Boards rotate through extra detail: the two dot matrix boards page between a service summary and its calling points, and a split service's front
-and rear portions are pages of that carousel. Freezing the board stops the rotation, so those baselines capture the first page only.
+Boards rotate through extra detail: the two dot matrix boards page between a service summary and its calling points, scroll text that doesn't
+fit, and show a split service's destinations as pages. Each dot matrix baseline is one moment of that: the frame the board draws a fixed time
+after its data arrives, which is 4.6 seconds for the Infotec board and 8.6 seconds for the Data Display board. By then the Infotec board shows
+its service summary, and the Data Display board has scrolled its summary onto the board. The Data Display board's `platform-alteration` case is
+captured at 4.6 seconds instead, because the announcement is over by 8.6. `runClock` in `tests/visual/boards.ts` sets these times.
 
 That mainly affects `dividing-service`. The split is still covered, because the Blackbox board renders it without rotating: its baseline shows
 both destinations and the "Join the front N coaches" text. On the other two boards the baseline proves the service renders, not that its portions
 read correctly.
+
+The two dot matrix boards are drawn by the Go program in [LED departure board](https://github.com/davwheat/led-departure-board), so these tests
+check that the site loads and draws that program's build. Its own tests cover how each board behaves over time.
 
 Joins have no state of their own. The feed only ever describes a divide, and every board filters associations down to divides before rendering,
 so a joining service reaches a board as an ordinary one.
@@ -81,8 +87,12 @@ Boards animate continuously and render the current time, so a naive screenshot n
 
 - Freezes the clock and the timezone before any page script runs, which fixes every rendered time.
 - Drops `setInterval`, which stops row carousels advancing mid-capture.
-- Waits for fonts, for the markup to stop changing, and for entrance animations to finish. Markup alone is not enough, because a board holds one
-  layout for the length of a slide-in and only then renders the next.
+- Waits for fonts, for the markup and any canvas to stop changing, and for entrance animations to finish. Markup alone is not enough, because a
+  board holds one layout for the length of a slide-in and only then renders the next. A board that marks itself `aria-busy`, as the dot matrix
+  boards do while their WebAssembly loads, hasn't settled.
+- For the dot matrix boards, which animate by the time the page gives them rather than with CSS, runs the frozen clock forward once the feed has
+  arrived. The clock moves in 50 ms steps, one per animation frame, because a board times some animations, such as the clock's flipping digits,
+  from the frame in which it notices a change.
 - Removes transitions, returns scrolling text to its resting position, and cancels zoom-to-fit so baselines sit at the board's own resolution.
 - Holds each animation that plays once on its final frame, and drops the ones that repeat, so a flashing cancellation or platform alteration is
   captured at full opacity rather than mid-blink. Dropping a blink also holds the board on the screen the blink belongs to: boards advance on

@@ -3,11 +3,22 @@ export interface Board {
   path: string
   /** The element the baseline is cropped to, so board chrome and the settings panel stay out of the image. */
   selector: string
+  /**
+   * How far the frozen clock runs before the capture, in milliseconds. The LED boards animate by the time the page
+   * gives them rather than with CSS, so a stopped clock holds them on the first frame of their entrance. A state can
+   * set its own time, to catch a screen that the board has left by the default.
+   */
+  runClock?: { ms: number; states?: Record<string, number> }
 }
 
 export const BOARDS: Board[] = [
-  { name: 'infotec-landscape-dmi', path: '/board/infotec-landscape-dmi', selector: 'article.dot-matrix' },
-  { name: 'daktronics-data-display-dmi', path: '/board/daktronics-data-display-dmi', selector: '.ZoomDivContainer > div' },
+  { name: 'infotec-landscape-dmi', path: '/board/infotec-landscape-dmi', selector: '.ZoomDivContainer > div', runClock: { ms: 4_600 } },
+  {
+    name: 'daktronics-data-display-dmi',
+    path: '/board/daktronics-data-display-dmi',
+    selector: '.ZoomDivContainer > div',
+    runClock: { ms: 8_600, states: { 'platform-alteration': 4_600 } },
+  },
   { name: 'blackbox-landscape-lcd', path: '/board/blackbox-landscape-lcd', selector: 'article.tfwm-board' },
 ]
 
@@ -17,16 +28,32 @@ export const VIEWPORT = { width: 2500, height: 1000 }
 /**
  * Runs before any page script. Boards read the clock directly and repaint on an interval, so both are pinned: the
  * frozen date fixes every rendered time, and dropping intervals stops row carousels advancing mid-capture.
+ *
+ * The clock moves only when the capture calls `__runClock`, which plays a board that animates by the clock up to a
+ * chosen frame. It moves one fixed step per animation frame rather than jumping: a board times some animations from
+ * the frame in which it notices a change, so it has to see the time pass to end up where it would in real life.
  */
 export function freezeScript(frozenClock: number): string {
   return `
     (() => {
       const RealDate = Date
+      const STEP = 50
+      let now = ${frozenClock}
+      window.__runClock = ms =>
+        new Promise(resolve => {
+          const end = now + ms
+          const step = () => {
+            if (now >= end) return resolve()
+            now = Math.min(end, now + STEP)
+            requestAnimationFrame(step)
+          }
+          requestAnimationFrame(step)
+        })
       function FrozenDate(...args) {
-        return args.length === 0 ? new RealDate(${frozenClock}) : new RealDate(...args)
+        return args.length === 0 ? new RealDate(now) : new RealDate(...args)
       }
       FrozenDate.prototype = RealDate.prototype
-      FrozenDate.now = () => ${frozenClock}
+      FrozenDate.now = () => now
       FrozenDate.parse = RealDate.parse
       FrozenDate.UTC = RealDate.UTC
       window.Date = FrozenDate

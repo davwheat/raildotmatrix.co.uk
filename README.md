@@ -6,6 +6,16 @@ Uses the National Rail API via [my own personal instance of Huxley2](https://git
 
 See it live at [raildotmatrix.davwheat.dev](https://raildotmatrix.davwheat.dev/)!
 
+## Dot matrix boards
+
+The Daktronics (Data Display) DMI and Infotec landscape DMI boards aren't React components. They're drawn by
+[LED departure board](https://github.com/davwheat/led-departure-board), the Go program that also drives a physical LED panel, compiled to
+WebAssembly. `public/led-board` holds that build, and `src/components/displays/LedBoard` loads it and draws its frames. These two boards always
+read the live WebSocket feed, whatever the train data source is set to.
+
+To change how either board looks or behaves, change it in that repository, then run `make web` there with `WEB_DIR` set to this repository's
+`public/led-board` directory, and commit the files it writes. Don't edit the files in `public/led-board` by hand.
+
 ## Running locally
 
 You'll need:

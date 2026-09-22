@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback } from 'react'
-import FullBoard from './FullBoard'
+import LedBoard, { COLUMNS, ROWS } from '../LedBoard'
 import ToggleSwitch from '../../common/form/ToggleSwitch'
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
 import { debounce } from 'throttle-debounce'
@@ -7,6 +7,7 @@ import { debounce } from 'throttle-debounce'
 import PageLink from '../../common/PageLink'
 import { ZoomDiv } from '../ZoomDiv'
 import { getDisabledPlatforms } from '../../../api/ProcessServices'
+import { useDataSource } from '../../../live/source'
 
 interface IProps {
   station: string
@@ -14,8 +15,8 @@ interface IProps {
 }
 
 const BoardColors = {
-  orange: 'hsl(39, 100%, 45%)',
-  white: '#efefef',
+  orange: 'amber',
+  white: 'white',
 } as const
 
 export default function NewGTR({ station, editBoardUrl }: IProps) {
@@ -26,26 +27,23 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
   }
 
   const hideSettings = searchParams?.get('hideSettings')
-  const animateClockDigits = searchParams?.get('animateClockDigits')
   const color: keyof typeof BoardColors = Object.keys(BoardColors).includes(searchParams?.get('color') || '')
     ? (searchParams!!.get('color')!! as keyof typeof BoardColors)
     : 'orange'
 
   const [settings, setSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
     hideSettings: !!hideSettings,
-    animateClockDigits: !!animateClockDigits,
     color,
   })
+  const { baseUrl } = useDataSource()
 
   const settingsRef = useRef<HTMLDivElement>(null)
   const hideRef = useRef<HTMLInputElement>(null)
-  const animateClockDigitsRef = useRef<HTMLInputElement>(null)
   const colorRef = useRef<HTMLSelectElement>(null)
 
   function updateState() {
     setSettings({
       hideSettings: !!hideRef.current?.checked,
-      animateClockDigits: !!animateClockDigitsRef.current?.checked,
       color: colorRef.current?.value as keyof typeof BoardColors,
     })
 
@@ -104,8 +102,6 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
         )}
         <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
         <br />
-        <ToggleSwitch checked={settings.animateClockDigits} ref={animateClockDigitsRef} label="Animate clock digits" onChange={updateState} />
-        <br />
         <label htmlFor="color-select">Color</label>
         <select
           id="color-select"
@@ -123,15 +119,16 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
         {(platforms?.length ?? 0) > 0 && <p>Hiding platform(s) {getDisabledPlatforms(platforms!).join(', ')}</p>}
       </div>
       <ZoomDiv>
-        <div style={{ '--color': BoardColors[settings.color] } as any}>
-          <FullBoard
-            station={station}
-            animateClockDigits={settings.animateClockDigits}
-            platforms={platforms}
-            useLegacyTocNames={!!searchParams?.get('useLegacyTocNames')}
-            showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
-          />
-        </div>
+        <LedBoard
+          css={{ width: `min(100vw, ${(100 * COLUMNS) / ROWS}vh)` }}
+          board="infotec"
+          crs={station}
+          url={baseUrl}
+          platforms={platforms}
+          showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
+          legacyTocNames={!!searchParams?.get('useLegacyTocNames')}
+          colour={BoardColors[settings.color]}
+        />
       </ZoomDiv>
     </>
   )

@@ -89,6 +89,7 @@ async function main() {
               selector: board.selector,
               viewport: VIEWPORT,
               preloadScript: freezeScript(FROZEN_CLOCK),
+              runClock: board.runClock ? (board.runClock.states?.[state] ?? board.runClock.ms) : 0,
               freezeStyles: FREEZE_STYLES,
               pinAnimations: PIN_ANIMATIONS,
               blinkingAnimation: BLINKING_ANIMATION,

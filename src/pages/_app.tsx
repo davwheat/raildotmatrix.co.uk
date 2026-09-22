@@ -35,20 +35,6 @@ import '../components/displays/Class700/css/stoppingDiagram.scss'
 import '../components/displays/Class700/css/slideyScrollText.scss'
 import '../components/displays/Class700/reusable/SmallClock.scss'
 
-// Infotec landscape DMI. board.scss pulls in its own @font-face rules.
-import '../components/displays/NewGTR/css/board.scss'
-import '../components/displays/NewGTR/css/clock.scss'
-import '../components/displays/NewGTR/css/separator.scss'
-import '../components/displays/NewGTR/css/trainService.scss'
-import '../components/displays/NewGTR/css/trainServiceAdditionalInfo.scss'
-import '../components/displays/NewGTR/css/platform-warning.scss'
-import '../components/displays/NewGTR/css/call-nre.scss'
-import '../components/displays/NewGTR/css/swapBetween.scss'
-import '../components/displays/NewGTR/css/slideyScrollText.scss'
-
-// Daktronics (Data Display) DMI
-import '../components/displays/DaktronicsDataDisplayDmi/css/font.scss'
-
 // Board chrome loads last: its .train-link rule has to beat the base one in layout.scss.
 import '../components/displays/NewGTR/css/index.scss'
 import '../components/displays/WestMidsLCD/css/index.scss'

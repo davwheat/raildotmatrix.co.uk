@@ -20,6 +20,8 @@ export interface CaptureRequest {
   selector: string
   viewport: { width: number; height: number }
   preloadScript: string
+  /** Milliseconds to advance the frozen clock by once the board has its data. */
+  runClock: number
   freezeStyles: string
   pinAnimations: string
   blinkingAnimation: string
@@ -175,6 +177,11 @@ export class Browser {
         })
 
       await this.settle(evaluate, request)
+      // Settling first lets every feed message reach the board at the frozen moment, so the frame is the same on every run.
+      if (request.runClock > 0) {
+        await evaluate(`window.__runClock(${request.runClock})`)
+        await this.settle(evaluate, request)
+      }
       await evaluate(`
         (() => {
           const style = document.createElement('style')
@@ -219,7 +226,8 @@ export class Browser {
       const state = await evaluate(`
         (async () => {
           const element = document.querySelector(${JSON.stringify(request.selector)})
-          if (!element) return null
+          // A board still loading its WebAssembly shows a blank canvas that would otherwise pass for a settled one.
+          if (!element || element.matches('[aria-busy="true"]') || element.querySelector('[aria-busy="true"]')) return null
           await document.fonts.ready
           await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
 
@@ -230,7 +238,9 @@ export class Browser {
             animation => animation instanceof CSSAnimation && animation.playState === 'running' && !blinks(animation),
           )
 
-          return { running: running.map(animation => animation.animationName), markup: element.outerHTML }
+          // A canvas board changes nothing in the markup when it draws.
+          const pixels = Array.from(element.querySelectorAll('canvas'), canvas => canvas.toDataURL()).join()
+          return { running: running.map(animation => animation.animationName), markup: element.outerHTML + pixels }
         })()
       `)
 
