@@ -22,6 +22,8 @@ type rowScene struct {
 type scene struct {
 	mode   mode
 	notice model.Notice
+	// level is the brightness of everything but the clock, out of fadeLevels.
+	level int
 
 	first rowScene
 	info  scrollScene
@@ -32,11 +34,20 @@ type scene struct {
 }
 
 func (b *Board) compose(now time.Time) scene {
-	s := scene{mode: b.mode, notice: b.view.Notice, clock: clockDigits(now, b.cfg.Zone)}
+	s := scene{mode: b.mode, notice: b.view.Notice, level: b.level(now), clock: clockDigits(now, b.cfg.Zone)}
 	if b.mode == modeTrains {
 		b.composeTrains(now, &s)
 	}
 	return s
+}
+
+func (b *Board) level(now time.Time) int {
+	// The slide-out itself is at full brightness; only what follows it fades in.
+	if b.fadeInStart.IsZero() || b.mode == modeTrains && b.phase == phaseSlideOut {
+		return fadeLevels
+	}
+	e := min(max(now.Sub(b.fadeInStart).Milliseconds(), 0), arriveFade)
+	return int(e * fadeLevels / arriveFade)
 }
 
 func (b *Board) composeTrains(now time.Time, s *scene) {
@@ -93,75 +104,77 @@ func flashLit(e int64) bool {
 
 func (b *Board) render(f *frame.Frame, s *scene) {
 	f.Clear()
+	colour := board.Scale(b.cfg.Colour, s.level, fadeLevels)
 	switch s.mode {
 	case modeNoServices:
-		b.drawLines(f, nreLines)
+		b.drawLines(f, nreLines, colour)
 	case modeWarning:
-		b.drawLines(f, warningLines(s.notice))
+		b.drawLines(f, warningLines(s.notice), colour)
 	case modeTrains:
-		b.renderTrains(f, s)
+		b.renderTrains(f, s, colour)
 	}
 	b.drawClock(f, s.clock)
 }
 
-func (b *Board) renderTrains(f *frame.Frame, s *scene) {
+func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 	g := &b.geo
 	if s.first.on {
-		b.drawRow(f, &s.first, g.firstY, g.full)
+		b.drawRow(f, &s.first, g.firstY, g.full, colour)
 	}
 	if s.info.on {
-		b.drawInfo(f, &s.info)
+		b.drawInfo(f, &s.info, colour)
 	}
+	// The separator stays lit through the slide-out, so fading it in with the new rows would blink it off.
 	for x := range g.w {
 		f.Set(x, g.sepY, b.dim)
 	}
 	for i := range s.lower {
 		if s.lower[i].on {
-			b.drawRow(f, &s.lower[i], g.secondY, g.secondBand())
+			b.drawRow(f, &s.lower[i], g.secondY, g.secondBand(), colour)
 		}
 	}
 }
 
-func (b *Board) drawRow(f *frame.Frame, r *rowScene, y int, c board.Clip) {
+func (b *Board) drawRow(f *frame.Frame, r *rowScene, y int, c board.Clip, colour frame.RGB) {
 	g := &b.geo
 	text := font.PISTall
 	x, y := r.dx, y+r.dy
-	board.DrawText(f, text, x, y, r.ordinal, b.cfg.Colour, c)
-	b.drawTime(f, x+g.stdX, y, r.std, c)
+	board.DrawText(f, text, x, y, r.ordinal, colour, c)
+	b.drawTime(f, x+g.stdX, y, r.std, c, colour)
 	dest := c.Intersect(board.Clip{X0: x + g.destX, X1: x + g.destX + g.destW, Y1: g.h})
-	board.DrawText(f, text, x+g.destX, y, r.dest, b.cfg.Colour, dest)
+	board.DrawText(f, text, x+g.destX, y, r.dest, colour, dest)
 	if isTime(r.etd) {
-		board.DrawText(f, text, x+g.w-g.timeW-g.exptW, y, "Expt ", b.cfg.Colour, c)
-		b.drawTime(f, x+g.w-g.timeW, y, r.etd, c)
+		board.DrawText(f, text, x+g.w-g.timeW-g.exptW, y, "Expt ", colour, c)
+		b.drawTime(f, x+g.w-g.timeW, y, r.etd, c, colour)
 	} else {
-		board.DrawText(f, text, x+g.w-text.Width(r.etd), y, r.etd, b.cfg.Colour, c)
+		board.DrawText(f, text, x+g.w-text.Width(r.etd), y, r.etd, colour, c)
 	}
 }
 
 // drawTime draws HHmm as the web's .time spans: each digit centred in a 1ch cell, the colon in a 0.5ch one.
-func (b *Board) drawTime(f *frame.Frame, x, y int, hhmm string, c board.Clip) {
+func (b *Board) drawTime(f *frame.Frame, x, y int, hhmm string, c board.Clip, colour frame.RGB) {
 	if len(hhmm) != 4 {
 		return
 	}
 	g := &b.geo
-	x = board.DrawCells(f, font.PISTall, x, y, hhmm[:2], g.ch, b.cfg.Colour, c)
-	x = board.DrawCells(f, font.PISTall, x, y, ":", g.colonCell, b.cfg.Colour, c)
-	board.DrawCells(f, font.PISTall, x, y, hhmm[2:], g.ch, b.cfg.Colour, c)
+	x = board.DrawCells(f, font.PISTall, x, y, hhmm[:2], g.ch, colour, c)
+	x = board.DrawCells(f, font.PISTall, x, y, ":", g.colonCell, colour, c)
+	board.DrawCells(f, font.PISTall, x, y, hhmm[2:], g.ch, colour, c)
 }
 
-func (b *Board) drawInfo(f *frame.Frame, sc *scrollScene) {
+func (b *Board) drawInfo(f *frame.Frame, sc *scrollScene, base frame.RGB) {
 	g := &b.geo
 	c := g.infoBand()
 	y := g.infoY + sc.dy
-	colour := board.Scale(b.cfg.Colour, fadeSteps-sc.faded, fadeSteps)
+	colour := board.Scale(base, fadeSteps-sc.faded, fadeSteps)
 	board.DrawText(f, font.PISTall, 0, y, sc.prefix, colour, c)
 	board.DrawText(f, font.PISTall, sc.x, y, sc.text, colour, c.Intersect(board.Clip{X0: sc.clipX, X1: g.w, Y1: g.h}))
 }
 
-func (b *Board) drawLines(f *frame.Frame, lines [3]string) {
+func (b *Board) drawLines(f *frame.Frame, lines [3]string, colour frame.RGB) {
 	g := &b.geo
 	for i, line := range lines {
-		board.DrawText(f, font.PISTall, (g.w-font.PISTall.Width(line))/2, g.lineY[i], line, b.cfg.Colour, g.full)
+		board.DrawText(f, font.PISTall, (g.w-font.PISTall.Width(line))/2, g.lineY[i], line, colour, g.full)
 	}
 }
 

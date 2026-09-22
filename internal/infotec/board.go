@@ -32,8 +32,10 @@ const (
 	// crossed the whole board.
 	slideOutTravel = 400
 	slideOutTotal  = slideOutDelay + 1400
-	swapInterval   = 12000
-	swapSlide      = 250
+	// arriveFade is the fade-in of the list, or the no-services message, that follows a slide-out.
+	arriveFade   = 500
+	swapInterval = 12000
+	swapSlide    = 250
 	// destinationPage is how long each destination page of a row is shown.
 	destinationPage = 3000
 	// The flash keyframes of a cancelled ETD: lit until 50%, dark until 75%, then lit again.
@@ -56,6 +58,9 @@ const (
 	phaseSlideOut trainsPhase = iota
 	phaseSteady
 )
+
+// fadeLevels is how many brightness steps the arrival fade takes: one per refresh at the board's default 60 Hz.
+const fadeLevels = 30
 
 // geometry is the board's layout in dots. Columns follow the CSS grid in trainService.scss with 1ch equal to
 // the advance of a digit; rows keep the dot positions measured from the web board, with the clock
@@ -146,6 +151,9 @@ type Board struct {
 	phaseStart time.Time
 	// outgoing is the first row sliding off to the right.
 	outgoing row
+	// fadeInStart is when the current list or message began fading in after a slide-out, or zero when it
+	// appeared at once.
+	fadeInStart time.Time
 	// steadyStart is when the rows appeared, which times the destination pages and the cancelled flash.
 	steadyStart time.Time
 	info        scroller
@@ -232,19 +240,19 @@ func (b *Board) target() mode {
 }
 
 func (b *Board) show(m mode, now time.Time, previous content) {
-	// The last train leaving slides out like any other change of first train; the no-services message waits
-	// until it has gone. Losing the connection blanks the board at once, as the web does.
+	// The last train leaving slides out like any other change of first train, and the no-services message fades
+	// in once it has gone. Losing the connection blanks the board at once, as the web does.
 	if m == modeNoServices && b.mode == modeTrains && b.view.Connected && len(previous.rows) > 0 {
 		b.slideOut(previous.rows[0], now)
 		return
 	}
 	if m != modeTrains {
-		b.mode = m
+		b.mode, b.fadeInStart = m, time.Time{}
 		return
 	}
 	// A train arriving on an empty board, or after a warning, appears without an entrance animation.
 	if b.mode != modeTrains {
-		b.mode = modeTrains
+		b.mode, b.fadeInStart = modeTrains, time.Time{}
 		b.settle(now)
 		return
 	}
@@ -313,6 +321,7 @@ func (b *Board) advance(now time.Time) {
 			return
 		}
 		end := b.phaseStart.Add(slideOutTotal * time.Millisecond)
+		b.fadeInStart = end
 		if len(b.content.rows) == 0 {
 			b.mode = modeNoServices
 			return

@@ -166,6 +166,36 @@ func TestLastTrainSlidesOutBeforeNoServices(t *testing.T) {
 	}
 }
 
+func TestNewContentFadesInAfterSlideOut(t *testing.T) {
+	for _, tc := range []struct {
+		fixture string
+		after   mode
+	}{{"first-departs", modeTrains}, {"last-departs", modeNoServices}} {
+		b := newTestBoard(t)
+		end := fixtures.Clock.Add(2*time.Second + slideOutTotal*time.Millisecond)
+		lastLevel := 0
+		run(t, b, tc.fixture, 4*time.Second, func(now time.Time, _ bool, _ *frame.Frame) {
+			e := now.Sub(end)
+			switch {
+			case e < 0:
+				if b.last.level != fadeLevels {
+					t.Fatalf("%s at %v: level %d before the fade-in", tc.fixture, now.Sub(fixtures.Clock), b.last.level)
+				}
+			case e >= arriveFade*time.Millisecond:
+				if b.last.level != fadeLevels || b.last.mode != tc.after {
+					t.Fatalf("%s at %v: level %d, mode %v after the fade-in", tc.fixture, now.Sub(fixtures.Clock), b.last.level, b.last.mode)
+				}
+			default:
+				want := int(e.Milliseconds() * fadeLevels / arriveFade)
+				if b.last.level != want || b.last.level < lastLevel {
+					t.Fatalf("%s at %v: level %d, want %d", tc.fixture, now.Sub(fixtures.Clock), b.last.level, want)
+				}
+				lastLevel = b.last.level
+			}
+		})
+	}
+}
+
 func TestTrainAppearsOnEmptyBoardWithoutAnimation(t *testing.T) {
 	b := newTestBoard(t)
 	f := frame.New(testW, testH)
@@ -173,7 +203,7 @@ func TestTrainAppearsOnEmptyBoardWithoutAnimation(t *testing.T) {
 	b.Tick(fixtures.Clock, f)
 	b.Update(fixtures.Steps("single-departure")[0])
 	b.Tick(fixtures.Clock.Add(tick), f)
-	if b.mode != modeTrains || b.phase != phaseSteady || !b.last.first.on || b.last.first.dx != 0 {
+	if b.mode != modeTrains || b.phase != phaseSteady || !b.last.first.on || b.last.first.dx != 0 || b.last.level != fadeLevels {
 		t.Fatalf("mode %v, phase %v, first row %+v", b.mode, b.phase, b.last.first)
 	}
 }
