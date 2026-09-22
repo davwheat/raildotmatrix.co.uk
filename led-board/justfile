@@ -36,6 +36,10 @@ go_build := 'CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC="' + cc + '" CXX="' + cxx 
 board: lib
     {{ go_build }} -o build/board ./cmd/board
 
+# Builds the self-contained web management server; it needs no C libraries.
+manager:
+    CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o build/manage ./cmd/manage
+
 # Cross-compiles the panel test pattern into build/panel-test.
 panel-test: lib
     {{ go_build }} -o build/panel-test ./cmd/panel-test
