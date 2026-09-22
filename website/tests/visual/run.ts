@@ -38,7 +38,9 @@ function parseOptions(argv: string[]): Options {
 async function main() {
   const options = parseOptions(process.argv.slice(2))
   const cases = BOARDS.flatMap(board =>
-    Object.entries(FIXTURES).map(([state, fixture]) => ({ board, state, description: fixture.description, platforms: fixture.platforms })),
+    Object.entries(FIXTURES)
+      .filter(([state]) => !board.states || board.states.includes(state))
+      .map(([state, fixture]) => ({ board, state, description: fixture.description, platforms: fixture.platforms })),
   ).filter(entry => !options.filter || `${entry.board.name} ${entry.state}`.includes(options.filter))
 
   if (cases.length === 0) throw new Error('No cases matched the filter')

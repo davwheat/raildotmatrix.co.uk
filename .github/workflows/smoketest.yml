@@ -88,6 +88,14 @@ jobs:
           go vet ./...
           go test ./...
 
+      - name: Upload LED board golden failures
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: led-board-golden-failures
+          path: led-board/build/golden-failures
+          if-no-files-found: ignore
+
       - name: Restore Next.js cache
         uses: actions/cache@v6
         with:

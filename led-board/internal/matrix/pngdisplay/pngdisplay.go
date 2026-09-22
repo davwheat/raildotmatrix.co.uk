@@ -114,6 +114,46 @@ func scaleInto(img *image.RGBA, f *frame.Frame, scale int) {
 	}
 }
 
+// Dots enlarges a frame, drawing each lit dot as a disc when the scale allows so the result resembles an LED
+// panel.
+func Dots(f *frame.Frame, scale int) *image.RGBA {
+	img := image.NewRGBA(image.Rect(0, 0, f.W*scale, f.H*scale))
+	for i := 3; i < len(img.Pix); i += 4 {
+		img.Pix[i] = 255
+	}
+	for y := range f.H {
+		for x := range f.W {
+			c := f.At(x, y)
+			if c == frame.Black {
+				continue
+			}
+			fillDot(img, x*scale, y*scale, scale, color.RGBA{c.R, c.G, c.B, 255})
+		}
+	}
+	return img
+}
+
+func fillDot(img *image.RGBA, x0, y0, scale int, c color.RGBA) {
+	if scale < 4 {
+		for y := y0; y < y0+scale; y++ {
+			for x := x0; x < x0+scale; x++ {
+				img.SetRGBA(x, y, c)
+			}
+		}
+		return
+	}
+	r := float64(scale)/2 - 0.5
+	cx, cy := float64(x0)+float64(scale)/2, float64(y0)+float64(scale)/2
+	for y := y0; y < y0+scale; y++ {
+		for x := x0; x < x0+scale; x++ {
+			dx, dy := float64(x)+0.5-cx, float64(y)+0.5-cy
+			if dx*dx+dy*dy <= r*r {
+				img.SetRGBA(x, y, c)
+			}
+		}
+	}
+}
+
 // Sink is a frame.Display that keeps a copy of the most recent frame. It is
 // safe for concurrent use.
 type Sink struct {

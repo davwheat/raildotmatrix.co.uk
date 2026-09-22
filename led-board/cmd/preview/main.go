@@ -17,6 +17,7 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/formats"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix/pngdisplay"
 )
 
 func main() {
@@ -87,13 +88,13 @@ func main() {
 		}
 		if i%saveEvery == 0 {
 			t := float64(i) / float64(*fps)
-			img := render(f, *scale)
+			img := pngdisplay.Dots(f, *scale)
 			name := filepath.Join(dir, fmt.Sprintf("t%06.2f.png", t))
 			if err := save(name, img); err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
-			shots = append(shots, shot{t: t, img: render(f, *sheetScale)})
+			shots = append(shots, shot{t: t, img: pngdisplay.Dots(f, *sheetScale)})
 		}
 	}
 	sheet := contactSheet(shots, *columns, *sheetScale)
@@ -108,46 +109,6 @@ func main() {
 type shot struct {
 	t   float64
 	img *image.RGBA
-}
-
-// render enlarges a frame, drawing each lit dot as a disc when the scale allows so the result resembles an LED
-// panel.
-func render(f *frame.Frame, scale int) *image.RGBA {
-	img := image.NewRGBA(image.Rect(0, 0, f.W*scale, f.H*scale))
-	for i := 3; i < len(img.Pix); i += 4 {
-		img.Pix[i] = 255
-	}
-	for y := range f.H {
-		for x := range f.W {
-			c := f.At(x, y)
-			if c == frame.Black {
-				continue
-			}
-			fillDot(img, x*scale, y*scale, scale, color.RGBA{c.R, c.G, c.B, 255})
-		}
-	}
-	return img
-}
-
-func fillDot(img *image.RGBA, x0, y0, scale int, c color.RGBA) {
-	if scale < 4 {
-		for y := y0; y < y0+scale; y++ {
-			for x := x0; x < x0+scale; x++ {
-				img.SetRGBA(x, y, c)
-			}
-		}
-		return
-	}
-	r := float64(scale)/2 - 0.5
-	cx, cy := float64(x0)+float64(scale)/2, float64(y0)+float64(scale)/2
-	for y := y0; y < y0+scale; y++ {
-		for x := x0; x < x0+scale; x++ {
-			dx, dy := float64(x)+0.5-cx, float64(y)+0.5-cy
-			if dx*dx+dy*dy <= r*r {
-				img.SetRGBA(x, y, c)
-			}
-		}
-	}
 }
 
 func contactSheet(shots []shot, columns, scale int) *image.RGBA {

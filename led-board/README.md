@@ -136,6 +136,17 @@ go run ./cmd/livedump -crs BTN
 
 ```sh
 go install github.com/aperturerobotics/protobuf-go-lite/cmd/protoc-gen-go-lite@v0.19.0
+`go test` compares every board format, drawn through every fixture at the panel and web sizes and with each display
+option, against the round-dot images in `internal/formats/testdata/golden`. They're ordinary PNGs, so a change to how
+a board looks shows up as a reviewable image in the diff. A frame that doesn't match is written to
+`build/golden-failures`. To rewrite the images after an intended change, run:
+
+```sh
+go test ./internal/formats -update
+```
+
+On GitHub, the board screenshots workflow rewrites them and commits any change to the branch under test.
+
 ```
 
 The dot fonts are generated into `internal/font/data_gen.go`, which is checked in, so you only need the source

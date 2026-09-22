@@ -69,13 +69,20 @@ jobs:
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
 
+      - name: Regenerate LED board goldens
+        # The Daktronics and Infotec boards are drawn by the Go program, which renders every fixture and option into
+        # images of its own without a browser.
+        working-directory: led-board
+        run: go test ./internal/formats -run TestGolden -update
+
       - name: Commit any changes
         run: |
           # Staged first: a board whose baseline has never been recorded produces an untracked file, which an
           # unstaged diff cannot see, so a new case would otherwise be reported as unchanged and never committed.
-          git add tests/visual/baselines
+          # Staging the directories also stages the deletion of an image whose case was removed.
+          git add tests/visual/baselines ../led-board/internal/formats/testdata/golden
 
-          if git diff --cached --quiet -- tests/visual/baselines; then
+          if git diff --cached --quiet -- tests/visual/baselines ../led-board/internal/formats/testdata/golden; then
             echo "Board screenshots are unchanged." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
@@ -83,7 +90,7 @@ jobs:
           {
             echo "Board screenshots updated:"
             echo
-            git diff --cached --name-status -- tests/visual/baselines | sed 's/^/    /'
+            git diff --cached --name-status -- tests/visual/baselines ../led-board/internal/formats/testdata/golden | sed 's/^/    /'
           } >> "$GITHUB_STEP_SUMMARY"
 
           git config user.name 'github-actions[bot]'

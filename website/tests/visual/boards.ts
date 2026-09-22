@@ -9,15 +9,28 @@ export interface Board {
    * set its own time, to catch a screen that the board has left by the default.
    */
   runClock?: { ms: number; states?: Record<string, number> }
+  /**
+   * The fixtures to capture, when not all of them. The LED boards are drawn by the Go program in led-board, whose own
+   * golden images cover every fixture and option at both sizes, so here they only prove that the WebAssembly build
+   * reaches the page.
+   */
+  states?: string[]
 }
 
 export const BOARDS: Board[] = [
-  { name: 'infotec-landscape-dmi', path: '/board/infotec-landscape-dmi', selector: '.ZoomDivContainer > div', runClock: { ms: 4_600 } },
+  {
+    name: 'infotec-landscape-dmi',
+    path: '/board/infotec-landscape-dmi',
+    selector: '.ZoomDivContainer > div',
+    runClock: { ms: 4_600 },
+    states: ['busy-board'],
+  },
   {
     name: 'daktronics-data-display-dmi',
     path: '/board/daktronics-data-display-dmi',
     selector: '.ZoomDivContainer > div',
-    runClock: { ms: 8_600, states: { 'platform-alteration': 4_600 } },
+    runClock: { ms: 8_600 },
+    states: ['busy-board'],
   },
   { name: 'blackbox-landscape-lcd', path: '/board/blackbox-landscape-lcd', selector: 'article.tfwm-board' },
 ]
