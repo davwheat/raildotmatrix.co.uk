@@ -4,6 +4,7 @@ import TrainService from './TrainService'
 
 import SwapBetween from './SwapBetween'
 import Separator from './Separator'
+import CallNreMessage from './CallNreMessage'
 
 import type { IMyTrainService } from '../../../api/ProcessServices'
 
@@ -55,6 +56,10 @@ export default function TrainServices({ services }: IProps) {
         <Separator />
       </>
     )
+  }
+
+  if (!firstService) {
+    return <CallNreMessage />
   }
 
   console.log('services rerendered!')

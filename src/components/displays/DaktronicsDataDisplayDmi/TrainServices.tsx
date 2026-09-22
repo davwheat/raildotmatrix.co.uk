@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import TrainService from './TrainService'
 import SwapBetween from './SwapBetween'
+import NoServicesMessage from './NoServicesMessage'
 
 import { keyframes } from '@emotion/react'
 
@@ -88,6 +89,8 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
     console.log('first service changed -- animating last service out')
 
     firstServiceLastRender.current && setAnimateServiceOut(firstServiceLastRender.current)
+    // A train arriving on an empty board slides up from the bottom, as it does after a clear-down.
+    if (!firstServiceLastRender.current && firstService) setAnimateServiceIn(true)
     firstServiceLastRender.current = firstService
   }
 
@@ -171,8 +174,8 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
         />
       </>
     )
-  } else if (animateServiceIn) {
-    console.log('rendering animating service out')
+  } else if (animateServiceIn && firstService) {
+    console.log('rendering animating service in')
 
     return (
       <>
@@ -207,6 +210,10 @@ export default function TrainServices({ services, worldlinePowered }: IProps) {
         <div className="trainServiceAdditional" css={{ height: 'var(--row-height)' }} />
       </>
     )
+  }
+
+  if (!firstService) {
+    return <NoServicesMessage />
   }
 
   console.log('services rerendered!')

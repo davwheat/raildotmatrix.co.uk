@@ -21,7 +21,7 @@ export default function FullBoard({ station, animateClockDigits, platforms, useL
 
   const warning = noticeKind(overrides)
 
-  if (!services || (services.length === 0 && !warning)) {
+  if (!services) {
     return (
       <article className="dot-matrix">
         <CallNreMessage />
@@ -30,6 +30,8 @@ export default function FullBoard({ station, animateClockDigits, platforms, useL
     )
   }
 
+  // An empty list still goes through TrainServices: the last train has to slide out before the message takes
+  // its place, so the component that owns that animation stays mounted.
   return (
     <article className="dot-matrix">
       {warning ? <PlatformWarningMessage kind={warning} /> : <TrainServices services={services} />}

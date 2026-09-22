@@ -122,7 +122,7 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
     )
   }
 
-  if (!services || (services.length === 0 && !warning)) {
+  if (!services) {
     return (
       <article css={css}>
         <NoServicesMessage />
@@ -131,13 +131,11 @@ export default function FullBoard({ station, platforms, useLegacyTocNames, showU
     )
   }
 
+  // An empty list still goes through TrainServices: the last train has to clear down before the no-services
+  // message takes its place, so the component that owns that animation stays mounted.
   return (
     <article css={css}>
-      {warning ? (
-        <PlatformWarningMessage kind={warning} />
-      ) : (
-        services.length > 0 && <TrainServices services={services} worldlinePowered={worldlinePowered} />
-      )}
+      {warning ? <PlatformWarningMessage kind={warning} /> : <TrainServices services={services} worldlinePowered={worldlinePowered} />}
       <Clock />
     </article>
   )
