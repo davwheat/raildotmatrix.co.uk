@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import clsx from 'clsx'
 
 import TrainService from './TrainService'
 
@@ -21,11 +22,13 @@ export default function TrainServices({ services }: IProps) {
   const firstServiceRef = useRef<HTMLDivElement>(null)
 
   const [animateServiceOut, setAnimateServiceOut] = useState<IMyTrainService | null>(null)
+  const [fadingIn, setFadingIn] = useState(false)
 
   if (firstService?.id !== firstServiceLastRender.current?.id) {
     console.log('first service changed -- animating last service out')
 
-    firstServiceLastRender.current && setAnimateServiceOut(firstServiceLastRender.current)
+    // A departure under way plays out in full, and whatever list is current when it ends is the one that fades in.
+    firstServiceLastRender.current && !animateServiceOut && !fadingIn && setAnimateServiceOut(firstServiceLastRender.current)
     firstServiceLastRender.current = firstService
   }
 
@@ -34,6 +37,7 @@ export default function TrainServices({ services }: IProps) {
       const animEnd = () => {
         console.log('slide out animation end')
         setAnimateServiceOut(null)
+        setFadingIn(true)
       }
 
       firstServiceRef.current?.addEventListener('animationend', animEnd)
@@ -44,40 +48,47 @@ export default function TrainServices({ services }: IProps) {
         firstServiceRef.current?.removeEventListener('animationend', animEnd)
       }
     }
-  }, [firstService, firstServiceLastRender, animateServiceOut, setAnimateServiceOut])
+  }, [firstService, firstServiceLastRender, animateServiceOut, setAnimateServiceOut, setFadingIn])
+
+  let rows: React.ReactNode
 
   if (animateServiceOut) {
     console.log('rendering animating service out')
 
-    return (
+    rows = (
       <>
         <TrainService ref={firstServiceRef} ordinal="1st" service={animateServiceOut} className="slide-out-to-right" />
         <div className="trainServiceAdditional" />
         <Separator />
       </>
     )
+  } else if (!firstService) {
+    rows = <CallNreMessage />
+  } else {
+    console.log('services rerendered!')
+
+    rows = (
+      <>
+        {firstService && <TrainService ordinal="1st" service={firstService} showAdditionalDetails />}
+
+        <Separator />
+
+        {services.length >= 3 ? (
+          <SwapBetween interval={12_000}>
+            {secondService && <TrainService ordinal="2nd" service={secondService} />}
+            {thirdService && <TrainService ordinal="3rd" service={thirdService} />}
+          </SwapBetween>
+        ) : (
+          <>{secondService && <TrainService ordinal="2nd" service={secondService} />}</>
+        )}
+      </>
+    )
   }
 
-  if (!firstService) {
-    return <CallNreMessage />
-  }
-
-  console.log('services rerendered!')
-
+  // Every row fades in together, so any one of them finishing ends the fade for all.
   return (
-    <>
-      {firstService && <TrainService ordinal="1st" service={firstService} showAdditionalDetails />}
-
-      <Separator />
-
-      {services.length >= 3 ? (
-        <SwapBetween interval={12_000}>
-          {secondService && <TrainService ordinal="2nd" service={secondService} />}
-          {thirdService && <TrainService ordinal="3rd" service={thirdService} />}
-        </SwapBetween>
-      ) : (
-        <>{secondService && <TrainService ordinal="2nd" service={secondService} />}</>
-      )}
-    </>
+    <div className={clsx('trainServices', { fadingIn })} onAnimationEnd={e => e.animationName === 'fade-in' && setFadingIn(false)}>
+      {rows}
+    </div>
   )
 }

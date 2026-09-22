@@ -60,6 +60,30 @@
   .slide-out-to-right {
     animation: slide-out-to-right 1400ms linear;
     animation-delay: 150ms;
+    // Without it the departed train is back in place for a frame before the next list replaces it.
+    animation-fill-mode: forwards;
+  }
+
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .trainServices {
+    --fade-in-duration: 500ms;
+
+    // Only groups the rows for the fade-in, so it mustn't take part in the board's layout.
+    display: contents;
+
+    // The separator stays lit through the slide-out, so fading it in would blink it off and back on.
+    &.fadingIn > :not(.separator) {
+      animation: fade-in var(--fade-in-duration) linear;
+    }
   }
 }
 
