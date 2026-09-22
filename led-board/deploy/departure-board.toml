@@ -7,6 +7,10 @@
 # Station to show.
 crs = "BTN"
 
+# A built-in example to show instead of the live feed, such as "busy-board" or "first-departs"; run the board with
+# -h for the full list.
+# fixture = "busy-board"
+
 # Board format: "daktronics" or "infotec".
 board = "daktronics"
 

@@ -65,6 +65,15 @@ sudo /opt/departure-board/board -crs BTN -board daktronics -worldline -colour wh
 A config file isn't required; without one the board runs on its defaults and flags, but `crs` must be set
 somewhere. Unknown keys in the file are an error, so a typo doesn't go unnoticed.
 
+To try a board without the live feed, set `fixture` to one of the built-in examples, such as `busy-board`,
+`cancelled`, `dividing-service`, `stand-clear` or `first-departs`; run the board with `-h` for the full list. The
+board then shows that example instead of connecting, and `crs` isn't needed. An example that changes, such as a
+first train departing, plays again every 20 seconds:
+
+```sh
+sudo /opt/departure-board/board -fixture first-departs -board infotec
+```
+
 The board watches its config file. A change to `led.brightness` takes effect straight away; any other change
 is logged and needs a restart. The board drops to user `daemon` once the panel is running, so the file must
 be readable by everyone.

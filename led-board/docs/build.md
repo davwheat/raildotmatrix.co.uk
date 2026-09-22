@@ -167,6 +167,12 @@ matches the real panel. To watch live departures for Brighton in a window:
 go run ./cmd/board -display window -crs BTN
 ```
 
+To watch a built-in example instead, without the live feed:
+
+```sh
+go run ./cmd/board -display window -fixture first-departs -board infotec
+```
+
 The window is provided by [Ebitengine](https://ebitengine.org), which is only
 compiled on non-Linux builds. The cross-compiled Pi binary uses a stub, so
 `-display window` fails there with an error.

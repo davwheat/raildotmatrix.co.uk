@@ -12,6 +12,7 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/fixtures"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/windowdisplay"
 )
@@ -23,6 +24,7 @@ const configName = "departure-board"
 // config is every setting the board takes, in the shape of the config file.
 type config struct {
 	CRS                      string
+	Fixture                  string
 	Board                    string
 	Colour                   string
 	Worldline                bool
@@ -50,7 +52,8 @@ type ledConfig struct {
 // flag, which isn't a setting itself.
 func addFlags(fs *flag.FlagSet) (configPath *string) {
 	configPath = fs.String("config", "", "config file (default: "+configName+".toml in the working directory or /etc)")
-	fs.String("crs", "", "station CRS code to show, such as BTN (required)")
+	fs.String("crs", "", "station CRS code to show, such as BTN (required unless -fixture is set)")
+	fs.String("fixture", "", "play a built-in example instead of the live feed: "+strings.Join(fixtures.Names, ", "))
 	fs.String("url", "wss://darwinbrowser.com", "Darwin Browser base URL; /v1/cis/live is appended")
 	fs.Var(&platformList{}, "platform", "platform to show; repeat for several (default: all)")
 	fs.Bool("show-unconfirmed-platforms", false, "show trains whose platform isn't published yet")

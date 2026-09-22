@@ -1,5 +1,5 @@
-// Command board shows live departures for one station on the LED matrix, or
-// on a desktop window or PNG files for debugging.
+// Command board shows live departures for one station, or a built-in example,
+// on the LED matrix, or on a desktop window or PNG files for debugging.
 //
 // Settings come from a TOML config file, BOARD_* environment variables and
 // flags, each overriding the last; see config.go.
@@ -14,10 +14,12 @@ import (
 	"os"
 	"os/signal"
 	"slices"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/fixtures"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/formats"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/live"
@@ -42,8 +44,14 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	if cfg.CRS == "" {
-		fmt.Fprintln(os.Stderr, "crs is required: set it in the config file, BOARD_CRS, or -crs")
+	var fixture []model.View
+	if cfg.Fixture != "" {
+		if fixture = fixtures.Steps(cfg.Fixture); fixture == nil {
+			fmt.Fprintf(os.Stderr, "unknown fixture %q; want one of %s\n", cfg.Fixture, strings.Join(fixtures.Names, ", "))
+			os.Exit(2)
+		}
+	} else if cfg.CRS == "" {
+		fmt.Fprintln(os.Stderr, "crs is required unless fixture is set: set it in the config file, BOARD_CRS, or -crs")
 		fs.Usage()
 		os.Exit(2)
 	}
@@ -106,6 +114,7 @@ func main() {
 			LegacyTOCNames:  cfg.LegacyTOCNames,
 			Logger:          logger,
 		},
+		fixture:    fixture,
 		fps:        cfg.FPS,
 		brightness: make(chan int, 1),
 		logger:     logger,
@@ -158,7 +167,9 @@ func openDisplay(kind string, opts *matrix.Options, pngDir string, scale int) (f
 type app struct {
 	board board.Board
 	live  live.Config
-	fps   int
+	// fixture, when set, is shown in place of the live feed.
+	fixture []model.View
+	fps     int
 	// brightness carries a changed led.brightness to the loop, which applies
 	// it between frames. Only the latest value matters, so a newer one
 	// replaces an unread one.
@@ -182,7 +193,11 @@ func (a app) run(ctx context.Context, display frame.Display) {
 
 	a.board.Update(model.View{})
 
-	go live.Run(ctx, a.live, a.board.Update)
+	if a.fixture != nil {
+		go playFixture(ctx, a.fixture, fixtureStep, fixtureRepeat, a.board.Update)
+	} else {
+		go live.Run(ctx, a.live, a.board.Update)
+	}
 
 	a.loop(ctx, display, a.board)
 
