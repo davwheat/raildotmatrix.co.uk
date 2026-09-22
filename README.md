@@ -17,7 +17,10 @@ hands each frame to the panel in a single call.
 | `cmd/livedump` | Prints the live feed for a station as a table. |
 | `cmd/fontgen` | Regenerates the dot fonts in `internal/font` from their WOFF files. |
 | `cmd/panel-test` | Draws a moving test pattern to check the panel wiring. |
+| `cmd/wasm` | The boards for a web page, as a WebAssembly module with a small JavaScript API. |
+| `cmd/webbundle` | Compresses the WebAssembly module with Zopfli and writes the bundle a website serves. |
 | `internal/board` | What every board format shares: the `Board` interface, colours, and dot-level text drawing. |
+| `internal/formats` | Builds a board format by name, for the panel, the preview tool and the web page alike. |
 | `internal/daktronics` | The Daktronics Data Display DMI board: state machine and renderer. |
 | `internal/infotec` | The Infotec landscape DMI board (the GTR-style board with a service information row): state machine and renderer. |
 | `internal/live` | WebSocket client, protobuf decoding, state reducer and departure selection. |
@@ -28,6 +31,10 @@ hands each frame to the panel in a single call.
 
 The renderer never talks to hardware. Anything that implements `frame.Display` can show the board, so a
 different panel or an on-screen viewer is one small package.
+
+The same boards run on [raildotmatrix.co.uk](https://github.com/davwheat/raildotmatrix.co.uk) as WebAssembly,
+so the panel and the website share one implementation. `make web` builds the bundle; see
+[docs/build.md](docs/build.md#building-for-the-web).
 
 ## Build and deploy
 
@@ -109,9 +116,13 @@ go run ./cmd/preview -board infotec -fixture first-departs -seconds 6 -every 0.1
 go run ./cmd/livedump -crs BTN
 ```
 
-`go generate ./...` regenerates the fonts and the protobuf code. It needs `protoc` and `protoc-gen-go`, and
-the WOFF files in `assets/fonts`, which the repository doesn't include. Copy them from
-[raildotmatrix.co.uk](https://github.com/davwheat/raildotmatrix.co.uk): `DataDisplayDaktronicsDMIfont.woff` and
-`DataDisplayDaktronicsDMIClockfont.woff` from `src/components/displays/DaktronicsDataDisplayDmi/css/font`,
-`ModernNationalRailPISTall.woff` from `src/components/displays/NewGTR/css/font`, and
-`subset-Dot_Matrix_Bold_Tall.woff` from `public/fonts`.
+`go generate ./internal/live` regenerates the protobuf code. It needs `protoc` and the protobuf-go-lite plugin:
+
+```sh
+go install github.com/aperturerobotics/protobuf-go-lite/cmd/protoc-gen-go-lite@v0.19.0
+```
+
+The dot fonts are generated into `internal/font/data_gen.go`, which is checked in, so you only need the source
+fonts to change them. To regenerate them with `go generate ./internal/font`, put
+`DataDisplayDaktronicsDMIfont.woff`, `DataDisplayDaktronicsDMIClockfont.woff`, `ModernNationalRailPISTall.woff`,
+and `subset-Dot_Matrix_Bold_Tall.woff` in `assets/fonts`. The repository doesn't include them.

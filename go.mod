@@ -3,16 +3,18 @@ module github.com/davwheat/led-departure-board
 go 1.27.1
 
 require (
+	github.com/aperturerobotics/protobuf-go-lite v0.19.0
 	github.com/coder/websocket v1.8.15
+	github.com/foobaz/go-zopfli v0.0.0-20260611111302-2b73a4c8c2e9
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/hajimehoshi/ebiten/v2 v2.10.2
 	github.com/spf13/viper v1.21.0
 	golang.org/x/image v0.46.0
-	google.golang.org/protobuf v1.36.12
 )
 
 require (
+	github.com/aperturerobotics/json-iterator-lite v1.1.0 // indirect
 	github.com/ebitengine/gomobile v0.0.0-20260820040257-d11f821a26a6 // indirect
 	github.com/ebitengine/hideconsole v1.0.0 // indirect
 	github.com/ebitengine/purego v0.11.0 // indirect

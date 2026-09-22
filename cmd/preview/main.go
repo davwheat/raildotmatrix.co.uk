@@ -12,12 +12,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/davwheat/led-departure-board/internal/board"
-	"github.com/davwheat/led-departure-board/internal/daktronics"
 	"github.com/davwheat/led-departure-board/internal/fixtures"
 	"github.com/davwheat/led-departure-board/internal/font"
+	"github.com/davwheat/led-departure-board/internal/formats"
 	"github.com/davwheat/led-departure-board/internal/frame"
-	"github.com/davwheat/led-departure-board/internal/infotec"
 )
 
 func main() {
@@ -52,7 +50,7 @@ func main() {
 	}
 
 	const w, h = 256, 64
-	b, err := newBoard(*boardName, w, h, zone, *worldline, *scrollSpeed)
+	b, err := formats.New(*boardName, formats.Config{Width: w, Height: h, Zone: zone, Worldline: *worldline, ScrollSpeed: *scrollSpeed})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
@@ -92,17 +90,6 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf("%s: %d ticks, %d redraws, %d frames, sheet %s\n", *fixture, ticks+1, changes, len(shots), name)
-}
-
-func newBoard(name string, w, h int, zone *time.Location, worldline bool, scrollSpeed int) (board.Board, error) {
-	switch name {
-	case "daktronics":
-		return daktronics.New(daktronics.Config{Width: w, Height: h, Zone: zone, WorldlinePowered: worldline, ScrollSpeed: scrollSpeed}), nil
-	case "infotec":
-		return infotec.New(infotec.Config{Width: w, Height: h, Zone: zone, ScrollSpeed: scrollSpeed}), nil
-	default:
-		return nil, fmt.Errorf("unknown -board %q; want daktronics or infotec", name)
-	}
 }
 
 type shot struct {

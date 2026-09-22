@@ -18,9 +18,8 @@ import (
 	"time"
 
 	"github.com/davwheat/led-departure-board/internal/board"
-	"github.com/davwheat/led-departure-board/internal/daktronics"
+	"github.com/davwheat/led-departure-board/internal/formats"
 	"github.com/davwheat/led-departure-board/internal/frame"
-	"github.com/davwheat/led-departure-board/internal/infotec"
 	"github.com/davwheat/led-departure-board/internal/live"
 	"github.com/davwheat/led-departure-board/internal/matrix"
 	"github.com/davwheat/led-departure-board/internal/matrix/pngdisplay"
@@ -77,9 +76,9 @@ func main() {
 		os.Exit(2)
 	}
 	opts := &cfg.LED.Options
-	b, err := newBoard(cfg.Board, boardConfig{
-		w: opts.Cols * opts.Chain, h: opts.Rows * opts.Parallel,
-		zone: zone, colour: colour, worldline: cfg.Worldline, scrollSpeed: cfg.ScrollSpeed,
+	b, err := formats.New(cfg.Board, formats.Config{
+		Width: opts.Cols * opts.Chain, Height: opts.Rows * opts.Parallel,
+		Zone: zone, Colour: colour, Worldline: cfg.Worldline, ScrollSpeed: cfg.ScrollSpeed,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -137,28 +136,6 @@ func main() {
 	}
 	defer display.Close()
 	a.run(ctx, display)
-}
-
-// boardConfig is what every board format is built from: the panel size in dots and the user's choices.
-type boardConfig struct {
-	w, h        int
-	zone        *time.Location
-	colour      frame.RGB
-	worldline   bool
-	scrollSpeed int
-}
-
-func newBoard(name string, cfg boardConfig) (board.Board, error) {
-	switch name {
-	case "daktronics":
-		return daktronics.New(daktronics.Config{
-			Width: cfg.w, Height: cfg.h, Zone: cfg.zone, Colour: cfg.colour, WorldlinePowered: cfg.worldline, ScrollSpeed: cfg.scrollSpeed,
-		}), nil
-	case "infotec":
-		return infotec.New(infotec.Config{Width: cfg.w, Height: cfg.h, Zone: cfg.zone, Colour: cfg.colour, ScrollSpeed: cfg.scrollSpeed}), nil
-	default:
-		return nil, fmt.Errorf("unknown board %q; want daktronics or infotec", name)
-	}
 }
 
 // openDisplay opens the display that the display setting names, other than the window.

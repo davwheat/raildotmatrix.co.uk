@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -200,7 +201,7 @@ func (b *board) connect(ctx context.Context, target string) (received bool, err 
 		return request()
 	}
 
-	defer conn.CloseNow()
+	defer closeConn(conn)
 	for {
 		select {
 		case <-ctx.Done():
@@ -249,6 +250,17 @@ func (b *board) connect(ctx context.Context, target string) (received bool, err 
 			}
 		}
 	}
+}
+
+// closeConn ends a connection without waiting on the peer. A browser only lets a page close a WebSocket with
+// code 1000 or 3000-4999, so CloseNow's 1001 fails there and leaves the socket open. The browser port also waits
+// for the closing handshake, so the normal closure it accepts is sent from its own goroutine.
+func closeConn(conn *websocket.Conn) {
+	if runtime.GOOS == "js" {
+		go conn.Close(websocket.StatusNormalClosure, "")
+		return
+	}
+	conn.CloseNow()
 }
 
 // read delivers decoded frames until the connection or the session ends. Each read is bounded by the idle

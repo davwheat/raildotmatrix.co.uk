@@ -7,11 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aperturerobotics/protobuf-go-lite/types/known/timestamppb"
 	"github.com/coder/websocket"
 	"github.com/davwheat/led-departure-board/internal/live/pb"
 	"github.com/davwheat/led-departure-board/internal/model"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const testEpoch = "test-epoch"
@@ -51,7 +50,7 @@ func newFakeService(t *testing.T) *fakeService {
 				return
 			}
 			var command pb.ClientMessage
-			if kind == websocket.MessageBinary && proto.Unmarshal(frame, &command) == nil {
+			if kind == websocket.MessageBinary && command.UnmarshalVT(frame) == nil {
 				s.commands <- &command
 			}
 		}
@@ -62,7 +61,7 @@ func newFakeService(t *testing.T) *fakeService {
 
 func (s *fakeService) send(t *testing.T, conn *websocket.Conn, message *pb.ServerMessage) {
 	t.Helper()
-	frame, err := proto.Marshal(message)
+	frame, err := message.MarshalVT()
 	if err != nil {
 		t.Fatal(err)
 	}

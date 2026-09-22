@@ -31,7 +31,7 @@ glibc, for example `aarch64-linux-gnu.2.36` for Debian 12:
 make deploy ZIG_TARGET=aarch64-linux-gnu.2.36
 ```
 
-## Settings for your Pi
+## Local settings
 
 The deploy targets reach the Pi as `pi@raspberrypi.local` by default. To use a
 different host or user, put the settings in a `local.mk` file next to the
@@ -48,6 +48,7 @@ PI_HOST = board@departure-board.local
 | `SSH_OPTS` | none | Extra `ssh` options, such as `-o ControlPath=$(HOME)/.ssh/cm-pi` to reuse a ControlMaster connection when your key needs a touch for each login. |
 | `BIN_DIR` | `/opt/departure-board` | Where the binaries are installed on the Pi. |
 | `PANEL_TEST_FLAGS` | none | Extra flags for `make run-panel-test`, such as `-led-rgb-sequence=BGR`. |
+| `WEB_DIR` | `build/web` | Where `make web` writes the WebAssembly bundle, such as a website's public directory. |
 | `ZIG_TARGET` | `aarch64-linux-gnu.2.41` | The target triple and glibc version to build for. |
 
 You can also set any of them on the command line, such as
@@ -64,6 +65,7 @@ You can also set any of them on the command line, such as
 | `make install-service` | Installs the systemd unit and starts or restarts the service, and installs the example config as `/etc/departure-board.toml` if the Pi doesn't have one. |
 | `make deploy-panel-test` | Builds `panel-test` and installs it as `BIN_DIR/panel-test` on the Pi. |
 | `make run-panel-test` | Pauses the board service, runs the deployed `panel-test` for five seconds with a CPU snapshot from `top`, and then resumes the service. |
+| `make web` | Builds the boards as WebAssembly and bundles them into `WEB_DIR`. |
 | `make clean` | Deletes the `build` directory. |
 
 A first install is:
@@ -128,6 +130,27 @@ go test ./...
 
 To render frames without panels, use the `internal/matrix/pngdisplay`
 package, which writes each swapped frame as a PNG.
+
+## Building for the web
+
+`make web` builds `cmd/wasm` with the standard Go compiler (`GOOS=js GOARCH=wasm`) and runs `cmd/webbundle`,
+which writes three files into `WEB_DIR`:
+
+- `board.HASH.wasm.gz`: the module, gzip-compressed with Zopfli. Zopfli takes about 40 seconds and
+  produces a file about 2.5% smaller than `gzip -9` does, which every visitor downloads.
+- `wasm_exec.HASH.js`: the JavaScript glue for the module, which must come from the same Go release.
+- `manifest.json`: the names of the other two, which change whenever their content does.
+
+The page fetches `manifest.json` without caching, so the other two can be cached indefinitely. It un-gzips
+the module itself, so the host serves the file as it is, with no `Content-Encoding` header. The JavaScript API
+is described at the top of `cmd/wasm/main.go`.
+
+For raildotmatrix.co.uk, set `WEB_DIR` in `local.mk` to its `public/led-board` directory, then commit the
+bundle there:
+
+```make
+WEB_DIR = ../raildotmatrix.co.uk/public/led-board
+```
 
 ## Running on a desktop
 

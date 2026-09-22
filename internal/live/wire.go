@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aperturerobotics/protobuf-go-lite/types/known/timestamppb"
 	"github.com/davwheat/led-departure-board/internal/live/pb"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // ErrUnsupportedVersion is returned for a frame from a service speaking another protocol version.
@@ -60,7 +59,7 @@ var (
 // rather than fatal: the frame still proves the connection is alive.
 func Decode(frame []byte) (Message, error) {
 	var wire pb.ServerMessage
-	if err := proto.Unmarshal(frame, &wire); err != nil {
+	if err := wire.UnmarshalVT(frame); err != nil {
 		return nil, fmt.Errorf("live: decoding frame: %w", err)
 	}
 	if wire.GetVersion() != ProtocolVersion {
@@ -182,7 +181,7 @@ func Decode(frame []byte) (Message, error) {
 
 // EncodeResync builds the frame that asks the service for an authoritative snapshot.
 func EncodeResync() []byte {
-	frame, err := proto.Marshal(&pb.ClientMessage{Command: &pb.ClientMessage_Resync{Resync: &pb.Resync{}}})
+	frame, err := (&pb.ClientMessage{Command: &pb.ClientMessage_Resync{Resync: &pb.Resync{}}}).MarshalVT()
 	if err != nil {
 		panic(fmt.Sprintf("live: encoding resync: %v", err))
 	}

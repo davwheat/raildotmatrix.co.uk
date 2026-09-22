@@ -1,5 +1,5 @@
-// Package font draws the Data Display and Infotec dot fonts. Glyph bitmaps are generated from the fonts in
-// raildotmatrix.co.uk by cmd/fontgen; see generate.go.
+// Package font draws the Data Display and Infotec dot fonts. cmd/fontgen generates the glyph bitmaps from the
+// fonts' WOFF files; see generate.go.
 package font
 
 import "github.com/davwheat/led-departure-board/internal/frame"

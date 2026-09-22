@@ -17,6 +17,7 @@ SSH_OPTS ?=
 SUDO ?= sudo
 BIN_DIR ?= /opt/departure-board
 PANEL_TEST_FLAGS ?=
+WEB_DIR ?= build/web
 SSH := ssh $(SSH_OPTS)
 # Minimal images can lack scp and sftp-server, so files are streamed through
 # a plain ssh session instead. Usage: $(call push,src,dest)
@@ -51,7 +52,7 @@ GO_ENV := CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC="$(CC)" CXX="$(CXX)"
 # binary keeps libc++ debug info and is nearly four times larger.
 GO_BUILD := $(GO_ENV) go build -trimpath -ldflags="-s -w -extldflags=-s"
 
-.PHONY: all lib board panel-test deploy install-service deploy-panel-test run-panel-test clean
+.PHONY: all lib board panel-test deploy install-service deploy-panel-test run-panel-test web clean
 
 all: board
 
@@ -94,6 +95,13 @@ deploy-panel-test: panel-test
 # the panel at once fight over the GPIO.
 run-panel-test:
 	$(SSH) $(PI_HOST) 'was=$$(systemctl is-active departure-board 2>/dev/null); $(SUDO) systemctl stop departure-board 2>/dev/null; $(SUDO) timeout 10 $(BIN_DIR)/panel-test -seconds 5 $(PANEL_TEST_FLAGS) & sleep 2.5; top -bn1 | head -15; wait; [ "$$was" != active ] || $(SUDO) systemctl start departure-board'
+
+# Builds the boards for a web page and bundles them into WEB_DIR, such as a
+# website's public directory.
+web:
+	@mkdir -p $(BUILD)/wasm
+	GOOS=js GOARCH=wasm go build -trimpath -ldflags="-s -w" -o $(BUILD)/wasm/board.wasm ./cmd/wasm
+	go run ./cmd/webbundle -wasm $(BUILD)/wasm/board.wasm -exec "$$(go env GOROOT)/lib/wasm/wasm_exec.js" -out $(WEB_DIR)
 
 clean:
 	rm -rf $(BUILD)

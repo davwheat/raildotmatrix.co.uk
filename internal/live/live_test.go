@@ -11,7 +11,6 @@ import (
 
 	"github.com/davwheat/led-departure-board/internal/live/pb"
 	"github.com/davwheat/led-departure-board/internal/model"
-	"google.golang.org/protobuf/proto"
 )
 
 func ptr[T any](v T) *T { return &v }
@@ -106,7 +105,7 @@ func TestFixturesDecodeAsEncoded(t *testing.T) {
 }
 
 func TestAnotherVersionIsRefusedAndUnknownPayloadIgnored(t *testing.T) {
-	frame, err := proto.Marshal(&pb.ServerMessage{Version: 1, Payload: &pb.ServerMessage_Snapshot{Snapshot: &pb.CisSnapshot{}}})
+	frame, err := (&pb.ServerMessage{Version: 1, Payload: &pb.ServerMessage_Snapshot{Snapshot: &pb.CisSnapshot{}}}).MarshalVT()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +117,7 @@ func TestAnotherVersionIsRefusedAndUnknownPayloadIgnored(t *testing.T) {
 		t.Errorf("a payload a newer service added is not an error: %v, %v", message, err)
 	}
 	var resync pb.ClientMessage
-	if err := proto.Unmarshal(EncodeResync(), &resync); err != nil || resync.GetResync() == nil {
+	if err := resync.UnmarshalVT(EncodeResync()); err != nil || resync.GetResync() == nil {
 		t.Errorf("resync frame does not decode as a resync command: %v", err)
 	}
 }
