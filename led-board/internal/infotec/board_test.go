@@ -89,7 +89,7 @@ func TestFixturesStayWithinRows(t *testing.T) {
 				g := b.geo
 				allowed := [][2]int{
 					{g.firstY, g.firstY + h}, {g.infoY, g.infoY + h}, {g.sepY, g.sepY + 1}, {g.secondY, g.secondY + h},
-					{g.clockY, g.clockY + font.DotMatrixClock.Height}, {g.formationY, g.formationY + g.formationH},
+					{g.clockY, g.clockY + font.InfotecLarge.Height}, {g.formationY, g.formationY + g.formationH},
 				}
 				if b.mode != modeTrains {
 					allowed = [][2]int{{g.lineY[0], g.lineY[0] + h}, {g.lineY[1], g.lineY[1] + h}, {g.lineY[2], g.lineY[2] + h}, allowed[4]}
@@ -139,7 +139,7 @@ func TestFirstTrainChangeSlidesOut(t *testing.T) {
 		}
 		g := b.geo
 		if x, y, lit := litOutside(f, [2]int{g.firstY, g.firstY + font.PISTall.Height}, [2]int{g.sepY, g.sepY + 1},
-			[2]int{g.clockY, g.clockY + font.DotMatrixClock.Height}); lit {
+			[2]int{g.clockY, g.clockY + font.InfotecLarge.Height}); lit {
 			t.Fatalf("at %v: dot lit at (%d,%d) during the slide-out", now.Sub(fixtures.Clock), x, y)
 		}
 	})
@@ -431,8 +431,8 @@ func TestGeometry(t *testing.T) {
 	g := newGeometry(testW, testH, 0)
 	want := geometry{
 		w: 256, h: 64, ch: 6, prefixW: 18, stdX: 23, colonCell: 3, timeW: 27, destX: 55, destW: 139, exptW: 28, infoDestX: 55,
-		firstY: 0, infoY: 17, sepY: 33, secondY: 38, infoSlide: 13, swapTravel: 13, lineY: [3]int{3, 20, 37},
-		clockX: 97, clockY: 55, clockCell: 9, colon: 4, full: g.full,
+		firstY: 0, infoY: 17, sepY: 33, secondY: 38, infoSlide: 13, swapTravel: 13, lineY: [3]int{2, 19, 36},
+		clockX: 91, clockY: 53, clockCell: 11, colon: 4, full: g.full,
 	}
 	if g != want {
 		t.Fatalf("geometry\n got %+v\nwant %+v", g, want)

@@ -12,28 +12,15 @@ func (b *Board) drawPlatformBox(f *frame.Frame, colour frame.RGB) {
 	f.FillRect(0, 0, 1, g.sepY+1, colour)
 	f.FillRect(g.boxW-1, 0, 1, g.sepY+1, colour)
 	f.FillRect(0, g.sepY, g.boxW, 1, colour)
-	board.DrawText(f, font.PISTall, 3, 8, "Plat", colour, g.full)
-
-	// The number uses the text face at twice its size, omitting the unused descender rows.
-	face := font.PISTall
-	w, h := 2*face.Width(b.cfg.PlatformBox), 2*face.Baseline
-	x := (g.boxW - w) / 2
-	top := 8 + face.Baseline + 2
-	y := top + (g.sepY-top-h)/2
-	for _, r := range b.cfg.PlatformBox {
-		glyph := board.GlyphOf(face, r)
-		for row, bits := range glyph.Rows[:face.Baseline] {
-			for col := range glyph.Width {
-				if bits&(1<<col) != 0 {
-					f.FillRect(x+2*col, y+2*row, 2, 2, colour)
-				}
-			}
-		}
-		x += 2 * (glyph.Width + face.Spacing)
-	}
+	// Centre the label and number as a group, two dots above the box's centre.
+	const gap = 3
+	height := font.PISTall.Baseline + gap + font.InfotecLarge.Height
+	y := max(1, (g.sepY-height)/2-2)
+	board.DrawText(f, font.PISTall, (g.boxW-font.PISTall.Width("Plat"))/2, y, "Plat", colour, g.full)
+	board.DrawText(f, font.InfotecLarge, (g.boxW-font.InfotecLarge.Width(b.cfg.PlatformBox))/2, y+font.PISTall.Baseline+gap, b.cfg.PlatformBox, colour, g.full)
 }
 
-// drawFormation draws one outlined carriage per coach, with a sloping cab at the left.
+// drawFormation draws outlined coaches with a filled, stepped cab and a rounded last coach.
 // Long trains use narrower carriages so the complete formation stays on the board.
 func drawFormation(f *frame.Frame, x, y, width, height, length int, colour frame.RGB) {
 	if length <= 0 || height < 5 || width < 4 || length > (width-1)/3 {
@@ -41,13 +28,23 @@ func drawFormation(f *frame.Frame, x, y, width, height, length int, colour frame
 	}
 	coachW := min(14, (width-1)/length)
 	w := coachW*length + 1
-	cab := min(3, coachW-2)
-	f.FillRect(x+cab, y, w-cab, 1, colour)
+	cab := min(6, coachW-2)
+	f.FillRect(x+min(4, cab), y, w-min(4, cab), 1, colour)
 	f.FillRect(x, y+height-1, w, 1, colour)
 	for row := range height {
-		f.Set(x+cab*(height-1-row)/(height-1), y+row, colour)
+		left := min(cab, max(0, 4-2*(row/2)))
+		if row == height-1 {
+			left = 1
+		}
+		f.FillRect(x+left, y+row, cab-left+1, 1, colour)
 	}
 	for coach := 1; coach <= length; coach++ {
 		f.FillRect(x+coach*coachW, y, 1, height, colour)
+	}
+	// Remove the corner dots of the last coach and round the cab's lower edge.
+	f.Set(x, y+height-1, frame.Black)
+	for _, edge := range []int{x + (length-1)*coachW, x + w - 1} {
+		f.Set(edge, y, frame.Black)
+		f.Set(edge, y+height-1, frame.Black)
 	}
 }

@@ -149,7 +149,7 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 		drawFormation(f, g.infoX, g.formationY, g.w-g.infoX, g.formationH, s.formation, colour)
 	}
 	// The separator stays lit through the slide-out, so fading it in with the new rows would blink it off.
-	for x := range g.w {
+	for x := g.infoX; x < g.w; x++ {
 		f.Set(x, g.sepY, b.dim)
 	}
 	for i := range s.lower {
@@ -203,10 +203,11 @@ func (b *Board) drawLines(f *frame.Frame, lines [3]string, colour frame.RGB) {
 	}
 }
 
-// drawClock draws HH:MM:SS as Clock.tsx lays it out: each character centred in a 1ch cell, colons in 0.4ch.
+// drawClock keeps HH:MM:SS still as its digits change, centring each numeral in a
+// fixed-width cell and the colon dots in narrower cells.
 func (b *Board) drawClock(f *frame.Frame, digits [8]byte) {
 	g := &b.geo
-	face := font.DotMatrixClock
+	face := font.InfotecLarge
 	x := g.clockX
 	for _, d := range digits {
 		cell := g.clockCell
@@ -214,7 +215,7 @@ func (b *Board) drawClock(f *frame.Frame, digits [8]byte) {
 			cell = g.colon
 		}
 		glyph := board.GlyphOf(face, rune(d))
-		board.DrawGlyph(f, glyph, x+(cell-glyph.Width-face.Spacing+1)/2, g.clockY, b.cfg.Colour, g.full)
+		board.DrawGlyph(f, glyph, x+(cell-glyph.Width)/2, g.clockY, b.cfg.Colour, g.full)
 		x += cell
 	}
 }

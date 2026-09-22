@@ -29,6 +29,7 @@ func TestDigitWidths(t *testing.T) {
 		{"Text", Text, 5, map[rune]int{'1': 3}},
 		{"Clock", Clock, 7, map[rune]int{'1': 6}},
 		{"PISTall", PISTall, 5, map[rune]int{'1': 3}},
+		{"InfotecLarge", InfotecLarge, 9, map[rune]int{'1': 4}},
 		{"DotMatrixClock", DotMatrixClock, 8, map[rune]int{'1': 4, '4': 6}},
 	}
 	for _, tc := range cases {
@@ -62,6 +63,7 @@ func TestFaceGeometry(t *testing.T) {
 		{"Clock", Clock, 7, 7, 1, 2, 3},
 		{"PISTall", PISTall, 12, 9, 1, 1, 4},
 		{"DotMatrixClock", DotMatrixClock, 9, 7, 1, 2, -1},
+		{"InfotecLarge", InfotecLarge, 11, 11, 2, 2, -1},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

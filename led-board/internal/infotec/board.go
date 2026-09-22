@@ -133,8 +133,8 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 	g.infoSlide = (text.Height*110 + 50) / 100
 	g.swapTravel = (text.Height*105 + 50) / 100
 
-	g.clockY = h - font.DotMatrixClock.Height
-	g.clockCell = font.DotMatrixClock.Advance('0')
+	g.clockY = h - font.InfotecLarge.Height
+	g.clockCell = font.InfotecLarge.Advance('0')
 	// A colon cell is 0.4ch.
 	g.colon = (2*g.clockCell + 2) / 5
 	g.clockX = (w - 6*g.clockCell - 2*g.colon) / 2
@@ -152,18 +152,18 @@ func (b *Board) geometry(details bool) geometry {
 	g := newGeometry(b.cfg.Width, b.cfg.Height, b.cfg.RowPrefix)
 	if b.cfg.PlatformBox != "" {
 		// Three dots of horizontal padding around the label and enlarged platform number.
-		g.boxW = max(font.PISTall.Width("Plat"), 2*font.PISTall.Width(b.cfg.PlatformBox)) + 6
-		g.infoX = g.boxW + 4
+		g.boxW = max(font.PISTall.Width("Plat"), font.InfotecLarge.Width(b.cfg.PlatformBox)) + 6
+		g.infoX = g.boxW + 2
 		g.infoDestX = g.infoX + g.timeW + 5
 		details = true
 	}
 	if details {
 		// Use the slack between the rows for a formation without taking space from the clock.
 		g.secondY = g.clockY - font.PISTall.Height - 1
-		g.sepY = g.secondY - 3
+		g.sepY = g.secondY - 2
 		g.infoY = min(g.infoY, g.sepY-font.PISTall.Height-13)
-		g.formationY = g.infoY + font.PISTall.Height + 2
-		g.formationH = min(11, g.sepY-g.formationY-2)
+		g.formationY = g.infoY + font.PISTall.Height + 1
+		g.formationH = min(11, g.sepY-g.formationY-1)
 	}
 	return g
 }
