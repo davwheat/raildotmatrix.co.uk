@@ -1,8 +1,12 @@
 package daktronics
 
-import "time"
+import (
+	"time"
 
-// Clock.tsx flips a changed digit in five 50 ms steps: the old digit squashes to its centre column over 250 ms,
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
+)
+
+// A changed digit flips in five 50 ms steps: the old digit closes towards its centre over 250 ms,
 // then the new one grows back out over the next 250 ms. The colons blink off for the first 250 ms of every second.
 const (
 	clockFlipStep  = 50
@@ -54,7 +58,6 @@ func (c *clock) update(now time.Time, digits [8]byte) {
 
 func (c *clock) scene(now time.Time, cell int) clockScene {
 	var s clockScene
-	half := int8(cell / 2)
 	colonOff := now.Sub(c.second).Milliseconds() < clockColonOff
 	for i, ch := range c.digits {
 		if ch == ':' {
@@ -65,18 +68,19 @@ func (c *clock) scene(now time.Time, cell int) clockScene {
 			continue
 		}
 		e := now.Sub(c.changed[i]).Milliseconds()
+		inset := 0
 		switch {
 		case e < clockFlipHalf:
-			step := int8(e/clockFlipStep) + 1
-			hw := half * (clockFlipSteps - 1 - step) / (clockFlipSteps - 1)
-			s[i] = digitScene{ch: previousDigit(ch, i), left: half - max(hw, 0), right: half + max(hw, 0)}
+			ch = previousDigit(ch, i)
+			inset = int(e / clockFlipStep)
 		case e < 2*clockFlipHalf:
-			step := int8((e-clockFlipHalf)/clockFlipStep) + 1
-			hw := half * (step - 1) / (clockFlipSteps - 1)
-			s[i] = digitScene{ch: ch, left: half - hw, right: half + hw}
-		default:
-			s[i] = digitScene{ch: ch, left: 0, right: int8(cell)}
+			inset = clockFlipSteps - 1 - int((e-clockFlipHalf)/clockFlipStep)
 		}
+		// Match drawClock's glyph placement, excluding the cell's spacing. Removing one
+		// column from each side keeps odd-width digits centred on their middle column.
+		width := font.Clock.Glyphs[rune(ch)].Width
+		left := (cell - width) / 2
+		s[i] = digitScene{ch: ch, left: int8(left + inset), right: int8(left + width - inset)}
 	}
 	return s
 }
