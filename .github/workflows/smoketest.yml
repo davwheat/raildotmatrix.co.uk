@@ -13,6 +13,11 @@ permissions:
   deployments: write
   pull-requests: write
 
+# A slower build must not replace a newer deployment of the same branch.
+concurrency:
+  group: pages-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
 env:
   NODE_VERSION: 24.x
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -123,9 +128,7 @@ jobs:
           workingDirectory: website
           # The project name and output directory come from wrangler.toml. Use the PR head branch if there is
           # one, otherwise the current branch.
-          command:
-            pages deploy --branch=${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref ||
-            github.ref_name }}
+          command: pages deploy --branch=${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
 
       - name: Find existing build status comment
         continue-on-error: true
