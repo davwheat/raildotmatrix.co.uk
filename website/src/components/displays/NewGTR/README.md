@@ -6,6 +6,7 @@
 - "Calling at:" is fixed in place when displayed, and is the same width as the ordinal + scheduled departure
 
 The settings panel can replace the first ordinal with a platform box when exactly one `platform` is requested. The normal-font "Plat" label and
-larger platform number are centred as a group, slightly above the box centre. The platform number and clock use the same eleven-row Infotec
-numeral font, with rounded bowls and two-dot vertical strokes. A two-dot gap separates the box from the service information. Known websocket
-coach counts produce a train formation with a filled, stepped cab and rounded corners on the last coach.
+larger platform number are centred as a group, slightly above the box centre, with six blank dot rows between them. The platform number and clock
+use the same eleven-row Infotec numeral font, with rounded bowls and two-dot vertical strokes. A two-dot gap separates the box from the service
+information. Known websocket coach counts produce a train formation with a filled cab stepping sideways once every two rows and rounded corners
+on the last coach. The cab extends ahead of the first coach, leaving every hollow coach body the same width.

@@ -49,13 +49,46 @@ func TestFormationCabAndLastCoach(t *testing.T) {
 			t.Fatalf("cab intrudes into the first coach at row %d", y)
 		}
 	}
-	for _, x := range []int{14, 28} {
+	for _, x := range []int{18, 32} {
 		if f.At(x, 0) != frame.Black || f.At(x, 10) != frame.Black {
 			t.Error("last coach corners must be unlit")
 		}
 		for y := 1; y < 10; y++ {
 			if f.At(x, y) != board.White {
 				t.Errorf("last coach edge missing at (%d,%d)", x, y)
+			}
+		}
+	}
+}
+
+func TestFormationHollowCoachWidths(t *testing.T) {
+	for _, width := range []int{49, 160, 224, 256, 272} {
+		for _, length := range []int{1, 4, 8, 16} {
+			f := frame.New(width, 11)
+			drawFormation(f, 0, 0, width, f.H, length, board.White)
+			// At mid-height, count dark dots between the filled cab and each
+			// successive divider. Exterior space is not a coach interior.
+			started, dark, coaches, interior := false, 0, 0, 0
+			for x := range width {
+				if f.At(x, 5) == frame.Black {
+					if started {
+						dark++
+					}
+					continue
+				}
+				started = true
+				if dark > 0 {
+					if coaches == 0 {
+						interior = dark
+					} else if dark != interior {
+						t.Fatalf("width %d, length %d: coach %d interior is %d, first coach is %d", width, length, coaches+1, dark, interior)
+					}
+					coaches++
+					dark = 0
+				}
+			}
+			if coaches != length {
+				t.Fatalf("width %d: drew %d hollow coaches, want %d", width, coaches, length)
 			}
 		}
 	}
@@ -100,9 +133,9 @@ func TestPlatformBoxLabelAndNumber(t *testing.T) {
 			f := frame.New(size[0], size[1])
 			b.drawPlatformBox(f, board.White)
 			label := frame.New(size[0], size[1])
-			labelY := 5
+			labelY := 4
 			if size[1] == 70 {
-				labelY = 8
+				labelY = 7
 			}
 			font.PISTall.Draw(label, (g.boxW-font.PISTall.Width("Plat"))/2, labelY, "Plat", board.White)
 			for y := labelY; y < labelY+font.PISTall.Baseline; y++ {
@@ -113,7 +146,14 @@ func TestPlatformBoxLabelAndNumber(t *testing.T) {
 				}
 			}
 			left, right, top, bottom := g.boxW, 0, g.sepY, 0
-			for y := labelY + font.PISTall.Baseline + 3; y < g.sepY; y++ {
+			for y := labelY + font.PISTall.Baseline; y < labelY+font.PISTall.Baseline+6; y++ {
+				for x := 1; x < g.boxW-1; x++ {
+					if f.At(x, y) != frame.Black {
+						t.Fatalf("%q: gap below Plat must have six blank rows", platform)
+					}
+				}
+			}
+			for y := labelY + font.PISTall.Baseline + 6; y < g.sepY; y++ {
 				for x := 1; x < g.boxW-1; x++ {
 					if f.At(x, y) != frame.Black {
 						left, right, top, bottom = min(left, x), max(right, x), min(top, y), max(bottom, y)

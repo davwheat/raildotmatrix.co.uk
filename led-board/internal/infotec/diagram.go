@@ -13,7 +13,7 @@ func (b *Board) drawPlatformBox(f *frame.Frame, colour frame.RGB) {
 	f.FillRect(g.boxW-1, 0, 1, g.sepY+1, colour)
 	f.FillRect(0, g.sepY, g.boxW, 1, colour)
 	// Centre the label and number as a group, two dots above the box's centre.
-	const gap = 3
+	const gap = 6
 	height := font.PISTall.Baseline + gap + font.InfotecLarge.Height
 	y := max(1, (g.sepY-height)/2-2)
 	board.DrawText(f, font.PISTall, (g.boxW-font.PISTall.Width("Plat"))/2, y, "Plat", colour, g.full)
@@ -26,11 +26,11 @@ func drawFormation(f *frame.Frame, x, y, width, height, length int, colour frame
 	if length <= 0 || height < 5 || width < 4 || length > (width-1)/3 {
 		return
 	}
-	coachW := min(14, (width-1)/length)
-	w := coachW*length + 1
 	// The nose slopes by one dot every two rows, almost down to the floor.
-	// Its width follows its height so it does not become a broad, flat front.
-	cab := min((height-2)/2, coachW-2)
+	// Reserve it ahead of the coaches so every hollow body has the same width.
+	cab := min((height-2)/2, width-1-3*length)
+	coachW := min(14, (width-cab-1)/length)
+	w := cab + coachW*length + 1
 	f.FillRect(x+cab, y, w-cab, 1, colour)
 	f.FillRect(x, y+height-1, w, 1, colour)
 	for row := range height {
@@ -41,11 +41,15 @@ func drawFormation(f *frame.Frame, x, y, width, height, length int, colour frame
 		f.FillRect(x+left, y+row, cab-left+1, 1, colour)
 	}
 	for coach := 1; coach <= length; coach++ {
-		f.FillRect(x+coach*coachW, y, 1, height, colour)
+		f.FillRect(x+cab+coach*coachW, y, 1, height, colour)
 	}
 	// Remove the corner dots of the last coach and round the cab's lower edge.
 	f.Set(x, y+height-1, frame.Black)
-	for _, edge := range []int{x + (length-1)*coachW, x + w - 1} {
+	edges := []int{x + w - 1}
+	if length > 1 {
+		edges = append(edges, x+cab+(length-1)*coachW)
+	}
+	for _, edge := range edges {
 		f.Set(edge, y, frame.Black)
 		f.Set(edge, y+height-1, frame.Black)
 	}
