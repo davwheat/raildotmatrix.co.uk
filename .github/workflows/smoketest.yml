@@ -71,6 +71,9 @@ jobs:
           go-version-file: led-board/go.mod
           cache-dependency-path: led-board/go.sum
 
+      - name: Use Just
+        uses: extractions/setup-just@v4
+
       - name: Install dependencies
         run: |
           yarn install --immutable

@@ -3,14 +3,14 @@
 The board runs on a 64-bit Raspberry Pi; it was developed on a Pi Zero 2 W. You
 build it on another machine: Go cross-compiles the Go code, and Zig acts as the
 C and C++ cross compiler for the `rpi-rgb-led-matrix` library and for cgo. The
-build is tested on macOS, and uses nothing but Go, Zig, and Make.
+build is tested on macOS, and uses nothing but Go, Zig, and Just.
 
 ## Requirements
 
-- Go 1.27 or later and Zig 0.16 or later. On macOS:
+- Go 1.27 or later, Zig 0.16 or later, and [Just](https://just.systems). On macOS:
 
   ```sh
-  brew install go zig
+  brew install go zig just
   ```
 
 - The `rpi-rgb-led-matrix` submodule checked out:
@@ -28,53 +28,55 @@ Raspberry Pi OS is based on. For an older image, set `ZIG_TARGET` to match its
 glibc, for example `aarch64-linux-gnu.2.36` for Debian 12:
 
 ```sh
-make deploy ZIG_TARGET=aarch64-linux-gnu.2.36
+just ZIG_TARGET=aarch64-linux-gnu.2.36 deploy
 ```
 
 ## Local settings
 
-The deploy targets reach the Pi as `pi@raspberrypi.local` by default. To use a
-different host or user, put the settings in a `local.mk` file next to the
-`Makefile`. Git ignores it, and it takes precedence over the defaults:
+The deploy recipes reach the Pi as `pi@raspberrypi.local` by default. To use a
+different host or user, put the settings in a `local.env` file next to the
+`justfile`. Git ignores it, and it takes precedence over the defaults:
 
-```make
-PI_HOST = board@departure-board.local
+```sh
+PI_HOST=board@departure-board.local
 ```
 
 | Variable | Default | What it sets |
 |---|---|---|
 | `PI_HOST` | `pi@raspberrypi.local` | The SSH destination. |
 | `SUDO` | `sudo` | The command that runs the install steps as root. Set it empty when `PI_HOST` logs in as root. |
-| `SSH_OPTS` | none | Extra `ssh` options, such as `-o ControlPath=$(HOME)/.ssh/cm-pi` to reuse a ControlMaster connection when your key needs a touch for each login. |
+| `SSH_OPTS` | none | Extra `ssh` options, such as `-o ControlPath=~/.ssh/cm-pi` to reuse a ControlMaster connection when your key needs a touch for each login. |
 | `BIN_DIR` | `/opt/departure-board` | Where the binaries are installed on the Pi. |
-| `PANEL_TEST_FLAGS` | none | Extra flags for `make run-panel-test`, such as `-led-rgb-sequence=BGR`. |
-| `WEB_DIR` | `../website/public/led-board` | Where `make web` writes the WebAssembly bundle. |
-| `ZOPFLI_ITERATIONS` | `15` | How hard `make web` compresses the bundle. `1` takes half the time and makes a bundle about 0.2% larger. |
+| `PANEL_TEST_FLAGS` | none | Extra flags for `just run-panel-test`, such as `-led-rgb-sequence=BGR`. |
+| `WEB_DIR` | `../website/public/led-board` | Where `just web` writes the WebAssembly bundle. |
+| `ZOPFLI_ITERATIONS` | `15` | How hard `just web` compresses the bundle. `1` takes half the time and makes a bundle about 0.2% larger. |
 | `ZIG_TARGET` | `aarch64-linux-gnu.2.41` | The target triple and glibc version to build for. |
 
-You can also set any of them on the command line, such as
-`make deploy PI_HOST=root@other-pi SUDO=`.
+Environment variables of the same names override the file, and so does setting
+them on the command line before the recipe, such as
+`just PI_HOST=root@other-pi SUDO= deploy`.
 
-## Make targets
+## Recipes
 
-| Target | What it does |
+Run `just --list` for a summary. `just` on its own builds the board.
+
+| Recipe | What it does |
 |---|---|
-| `make lib` | Compiles the LED matrix library into `build/lib/librgbmatrix.a`. Runs in parallel with `make -j`. |
-| `make board` | Cross-compiles `cmd/board` into `build/board`. Builds the library first if needed. |
-| `make panel-test` | Cross-compiles `cmd/panel-test` into `build/panel-test`. |
-| `make deploy` | Builds the board, installs it as `BIN_DIR/board` on the Pi, and restarts the service if it's running. |
-| `make install-service` | Installs the systemd unit and starts or restarts the service, and installs the example config as `/etc/departure-board.toml` if the Pi doesn't have one. |
-| `make deploy-panel-test` | Builds `panel-test` and installs it as `BIN_DIR/panel-test` on the Pi. |
-| `make run-panel-test` | Pauses the board service, runs the deployed `panel-test` for five seconds with a CPU snapshot from `top`, and then resumes the service. |
-| `make web` | Builds the boards as WebAssembly and bundles them into `WEB_DIR`. |
-| `make clean` | Deletes the `build` directory. |
+| `just lib` | Compiles the LED matrix library into `build/lib/librgbmatrix.a`, in parallel, recompiling only the sources that changed. |
+| `just board` | Cross-compiles `cmd/board` into `build/board`. Builds the library first if needed. |
+| `just panel-test` | Cross-compiles `cmd/panel-test` into `build/panel-test`. |
+| `just deploy` | Builds the board, installs it as `BIN_DIR/board` on the Pi, and restarts the service if it's running. |
+| `just install-service` | Installs the systemd unit and starts or restarts the service, and installs the example config as `/etc/departure-board.toml` if the Pi doesn't have one. |
+| `just deploy-panel-test` | Builds `panel-test` and installs it as `BIN_DIR/panel-test` on the Pi. |
+| `just run-panel-test` | Pauses the board service, runs the deployed `panel-test` for five seconds with a CPU snapshot from `top`, and then resumes the service. |
+| `just web` | Builds the boards as WebAssembly and bundles them into `WEB_DIR`. |
+| `just clean` | Deletes the `build` directory. |
 
 A first install is:
 
 ```sh
-make -j8 lib
-make deploy
-make install-service
+just deploy
+just install-service
 ```
 
 Then set `crs` and your panel settings in `/etc/departure-board.toml` on the Pi,
@@ -86,7 +88,7 @@ libc++ for the target and caches it. Later links are quiet.
 
 ## How the library is compiled
 
-The `Makefile` mirrors the object list and compiler flags from
+The `lib` recipe mirrors the object list and compiler flags from
 `third_party/rpi-rgb-led-matrix/lib/Makefile`, with these differences:
 
 - `-fPIC`, `-g`, and link-time optimization are omitted. The archive is
@@ -98,7 +100,7 @@ The `Makefile` mirrors the object list and compiler flags from
 
 ## Deploying
 
-Minimal images can lack `scp` and `sftp-server`, so `make deploy` streams the
+Minimal images can lack `scp` and `sftp-server`, so `just deploy` streams the
 binary through a plain `ssh` session and then renames it into place. The
 rename is atomic, so the running board keeps its old binary until the service
 restarts.
@@ -110,8 +112,8 @@ sustains. To run it on the Pi for five seconds, pausing the board service
 meanwhile:
 
 ```sh
-make deploy-panel-test
-make run-panel-test
+just deploy-panel-test
+just run-panel-test
 ```
 
 It accepts the same `-led-*` flags as the library's own examples, such as
@@ -134,7 +136,7 @@ package, which writes each swapped frame as a PNG.
 
 ## Building for the web
 
-`make web` builds `cmd/wasm` with the standard Go compiler (`GOOS=js GOARCH=wasm`) and runs `cmd/webbundle`,
+`just web` builds `cmd/wasm` with the standard Go compiler (`GOOS=js GOARCH=wasm`) and runs `cmd/webbundle`,
 which writes three files into `WEB_DIR`:
 
 - `board.HASH.wasm.gz`: the module, gzip-compressed with Zopfli. Zopfli takes about 25 seconds and
@@ -147,7 +149,7 @@ the module itself, so the host serves the file as it is, with no `Content-Encodi
 is described at the top of `cmd/wasm/main.go`.
 
 `WEB_DIR` defaults to the website's `public/led-board` directory, which git ignores. The website's `yarn build`
-runs `make web`, and `yarn dev` runs it with `ZOPFLI_ITERATIONS=1`, so you don't need to run it yourself.
+runs `just web`, and `yarn dev` runs it with `ZOPFLI_ITERATIONS=1`, so you don't need to run it yourself.
 
 ## Running on a desktop
 

@@ -13,8 +13,8 @@ The Daktronics (Data Display) DMI and Infotec landscape DMI boards aren't React 
 build and draws its frames. These two boards always read the live WebSocket feed, whatever the train data source is set to.
 
 `yarn build` and `yarn dev` build the WebAssembly bundle into `public/led-board` first, so they need Go 1.21 or later (Go fetches the version
-`led-board/go.mod` asks for). `yarn board` rebuilds just the bundle. To change how either board looks or behaves, change the Go code in
-`led-board`; git ignores `public/led-board`.
+`led-board/go.mod` asks for) and [Just](https://just.systems). `yarn board` rebuilds just the bundle. To change how either board looks or
+behaves, change the Go code in `led-board`; git ignores `public/led-board`.
 
 ## Running locally
 
@@ -22,6 +22,7 @@ You'll need:
 
 - [Node.js](https://nodejs.org/en/download) 22 or later (not tested on earlier versions)
 - [Yarn package manager](https://yarnpkg.com/getting-started/install)
+- [Go](https://go.dev/dl/) 1.21 or later and [Just](https://just.systems), which build the dot matrix boards
 - [Git](https://git-scm.com/downloads)
 
 When you have cloned the repository with Git, you should install all required dependencies with Yarn:

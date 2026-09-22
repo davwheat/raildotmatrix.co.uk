@@ -31,7 +31,7 @@ hands each frame to the panel in a single call.
 The renderer never talks to hardware. Anything that implements `frame.Display` can show the board, so a
 different panel or an on-screen viewer is one small package.
 
-The website's build runs `make web` to compile the boards for it; see
+The website's build runs `just web` to compile the boards for it; see
 [docs/build.md](docs/build.md#building-for-the-web).
 
 ## Build and deploy
@@ -39,14 +39,13 @@ The website's build runs `make web` to compile the boards for it; see
 See [docs/build.md](docs/build.md). In short:
 
 ```sh
-brew install go zig
+brew install go zig just
 git submodule update --init third_party/rpi-rgb-led-matrix
-make -j8 lib
-make deploy PI_HOST=pi@raspberrypi.local
-make install-service PI_HOST=pi@raspberrypi.local
+just PI_HOST=pi@raspberrypi.local deploy
+just PI_HOST=pi@raspberrypi.local install-service
 ```
 
-To avoid repeating `PI_HOST`, put it in a `local.mk` file, which git ignores.
+To avoid repeating `PI_HOST`, put `PI_HOST=pi@raspberrypi.local` in a `local.env` file, which git ignores.
 
 ## Running on the Pi
 
@@ -103,9 +102,9 @@ The panel defaults suit two chained 128x64 panels on a bare adapter board (`--le
 is available under its usual name, and as a key in the `[led]` table without the `led-` prefix. Run
 `/opt/departure-board/board -h` for the full list.
 
-To start it at boot, run `make install-service` from the Mac. It installs `deploy/departure-board.service`
+To start it at boot, run `just install-service` from the Mac. It installs `deploy/departure-board.service`
 and, if the Pi has no config file yet, `deploy/departure-board.toml` as `/etc/departure-board.toml`, then
-enables and starts the service. Set `crs` in the config afterwards. From then on, `make deploy` restarts the
+enables and starts the service. Set `crs` in the config afterwards. From then on, `just deploy` restarts the
 service with the new binary, and the board's log is in the journal:
 
 ```sh

@@ -1,4 +1,4 @@
 build/
-local.mk
+local.env
 # The WOFF sources for cmd/fontgen, which aren't redistributed.
 /assets/fonts/

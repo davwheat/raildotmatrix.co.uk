@@ -9,8 +9,8 @@ Dot matrix departure boards for UK railway stations, on the web and on a real LE
 
 ## Getting started
 
-To work on the website, you need Node 24, Yarn, and Go 1.21 or later, because the website's build compiles the
-LED boards:
+To work on the website, you need Node 24, Yarn, Go 1.21 or later, and [Just](https://just.systems), because the
+website's build compiles the LED boards:
 
 ```sh
 cd website

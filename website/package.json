@@ -45,8 +45,8 @@
   },
   "license": "MIT",
   "scripts": {
-    "board": "make -C ../led-board web",
-    "board:quick": "make -C ../led-board web ZOPFLI_ITERATIONS=1",
+    "board": "just --justfile ../led-board/justfile web",
+    "board:quick": "just --justfile ../led-board/justfile ZOPFLI_ITERATIONS=1 web",
     "build": "yarn board && cross-env STATIC_EXPORT=true next build --webpack",
     "build:ci": "yarn board && cross-env STATIC_EXPORT=true next build --webpack",
     "develop": "yarn board:quick && next dev --webpack",
