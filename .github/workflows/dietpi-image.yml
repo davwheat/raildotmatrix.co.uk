@@ -11,6 +11,8 @@ on:
       - 'led-board/**'
       - '.gitmodules'
       - '.github/workflows/dietpi-image.yml'
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -102,3 +104,27 @@ jobs:
           compression-level: 0
           if-no-files-found: error
           retention-days: 14
+
+  release:
+    name: Upload release assets
+    needs: image
+    if: github.event_name == 'release'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Only the upload job needs permission to modify releases.
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download the image built from the release tag
+        uses: actions/download-artifact@v8
+        with:
+          name: raildotmatrix-dietpi-rpi234-arm64
+          path: artifacts
+
+      - name: Upload image, checksum and instructions to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        # Re-running a failed upload replaces any matching assets already uploaded.
+        run: gh release upload --repo "$GITHUB_REPOSITORY" --clobber -- "$RELEASE_TAG" artifacts/*

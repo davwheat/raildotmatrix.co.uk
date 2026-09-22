@@ -39,6 +39,11 @@ manually with **Run workflow**. Download the `raildotmatrix-dietpi-rpi234-arm64`
 run and extract the ZIP. It contains an `.img.xz`, its SHA-256 checksum, the source commit and base-image
 checksum in `build-info.txt`, and flashing instructions. Artifacts are retained for 14 days.
 
+Publishing a GitHub Release (including a pre-release) also runs the workflow against that release's tag.
+Once the image build succeeds, it attaches the `.img.xz`, SHA-256 checksum, `build-info.txt` and `README.txt`
+to the release as downloadable assets. Draft releases start the build when published. The workflow must
+be present in the tagged commit. If an upload fails, rerun the failed job; matching assets are replaced.
+
 The image uses DietPi's Debian 13 (Trixie) **RPi234 ARMv8** base, for the Pi Zero 2 W, Pi 2 v1.2, Pi 3,
 Pi 4 and Pi 400. The original Pi Zero/Zero W, Pi 2 v1.1 and Pi 5 need different images and are not supported
 by this artifact.
