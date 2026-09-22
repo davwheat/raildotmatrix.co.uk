@@ -39,11 +39,14 @@ func TestFormationCoachCount(t *testing.T) {
 func TestFormationCabAndLastCoach(t *testing.T) {
 	f := frame.New(40, 11)
 	drawFormation(f, 0, 0, f.W, f.H, 2, board.White)
-	for y, left := range []int{4, 4, 2, 2, 0, 0, 0, 0, 0, 0, 1} {
-		for x := 0; x <= 6; x++ {
+	for y, left := range []int{4, 4, 3, 3, 2, 2, 1, 1, 0, 0, 1} {
+		for x := 0; x <= 4; x++ {
 			if lit := f.At(x, y) != frame.Black; lit != (x >= left) {
 				t.Fatalf("cab pixel (%d,%d): must be filled from x=%d", x, y, left)
 			}
+		}
+		if y > 0 && y < 10 && f.At(5, y) != frame.Black {
+			t.Fatalf("cab intrudes into the first coach at row %d", y)
 		}
 	}
 	for _, x := range []int{14, 28} {

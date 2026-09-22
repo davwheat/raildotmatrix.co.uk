@@ -28,11 +28,13 @@ func drawFormation(f *frame.Frame, x, y, width, height, length int, colour frame
 	}
 	coachW := min(14, (width-1)/length)
 	w := coachW*length + 1
-	cab := min(6, coachW-2)
-	f.FillRect(x+min(4, cab), y, w-min(4, cab), 1, colour)
+	// The nose slopes by one dot every two rows, almost down to the floor.
+	// Its width follows its height so it does not become a broad, flat front.
+	cab := min((height-2)/2, coachW-2)
+	f.FillRect(x+cab, y, w-cab, 1, colour)
 	f.FillRect(x, y+height-1, w, 1, colour)
 	for row := range height {
-		left := min(cab, max(0, 4-2*(row/2)))
+		left := min(cab, max(0, (height-2)/2-row/2))
 		if row == height-1 {
 			left = 1
 		}
