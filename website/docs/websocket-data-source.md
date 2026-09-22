@@ -72,10 +72,10 @@ connection is closed and retried rather than read. A message this build doesn't 
 alive.
 
 `src/live/gen` is generated and `src/live/wire.ts` is shared with the other website, so don't edit either here. To pick up a schema change, run
-`buf generate ../darwin-browser/proto` with Darwin Browser checked out beside this repository, then copy `docs/live/examples/wire.ts`, with its
-type import pointed at `./types`, and the fixtures in `docs/live/fixtures` that `tests/fixtures` holds. Keep the plugin version in `buf.gen.yaml`
-no newer than the `@bufbuild/protobuf` version in `package.json`. The `.pb` fixtures are frames written by the service's own encoder, and the
-tests check that this decoder reads each one as the JSON beside it.
+`buf generate ../../darwin-browser/proto` from `website/`, with Darwin Browser checked out beside this repository, then copy
+`docs/live/examples/wire.ts`, with its type import pointed at `./types`, and the fixtures in `docs/live/fixtures` that `tests/fixtures` holds.
+Keep the plugin version in `buf.gen.yaml` no newer than the `@bufbuild/protobuf` version in `package.json`. The `.pb` fixtures are frames written
+by the service's own encoder, and the tests check that this decoder reads each one as the JSON beside it.
 
 Run `yarn test:live` for reducer, digest, heartbeat, resync/reconnect, ordering, split, platform warning and platform alteration regressions. The
 runner uses Node's test runner and Wrangler's existing esbuild compiler. Build with `yarn build`.
