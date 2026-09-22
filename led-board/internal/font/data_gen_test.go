@@ -63,7 +63,7 @@ func TestFaceGeometry(t *testing.T) {
 		{"Clock", Clock, 7, 7, 1, 2, 3},
 		{"PISTall", PISTall, 12, 9, 1, 1, 4},
 		{"DotMatrixClock", DotMatrixClock, 9, 7, 1, 2, -1},
-		{"InfotecLarge", InfotecLarge, 11, 11, 2, 2, -1},
+		{"InfotecLarge", InfotecLarge, 13, 13, 2, 2, -1},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

@@ -155,14 +155,20 @@ func (b *Board) geometry(details bool) geometry {
 		g.boxW = max(font.PISTall.Width("Plat"), font.InfotecLarge.Width(b.cfg.PlatformBox)) + 6
 		g.infoX = g.boxW + 2
 		g.infoDestX = g.infoX + g.timeW + 5
+		g.prefixW = g.boxW
+		g.stdX = g.infoX
+		g.destW += g.destX - g.infoDestX
+		g.destX = g.infoDestX
 		details = true
 	}
 	if details {
 		// Use the slack between the rows for a formation without taking space from the clock.
 		g.secondY = g.clockY - font.PISTall.Height - 1
 		g.sepY = g.secondY - 2
-		g.infoY = min(g.infoY, g.sepY-font.PISTall.Height-13)
-		g.formationY = g.infoY + font.PISTall.Height + 1
+		// On the 64-row panel, remove the extra gaps above and below the info
+		// row rather than shortening the cab for the thirteen-row clock.
+		g.infoY = max(font.PISTall.Height, min(g.infoY, g.sepY-font.PISTall.Height-12))
+		g.formationY = min(g.infoY+font.PISTall.Height+1, g.sepY-12)
 		g.formationH = min(11, g.sepY-g.formationY-1)
 	}
 	return g

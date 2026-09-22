@@ -130,14 +130,11 @@ func (b *Board) render(f *frame.Frame, s *scene) {
 func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 	g := &b.geo
 	if s.first.on {
-		first, firstGeo := s.first, *g
+		first := s.first
 		if g.boxW > 0 {
 			first.prefix = ""
-			firstGeo.stdX = g.infoX
-			firstGeo.destX = g.infoDestX
-			firstGeo.destW = g.destW + g.destX - firstGeo.destX
 		}
-		b.drawRow(f, &first, &firstGeo, g.firstY, g.full, colour)
+		b.drawRow(f, &first, g, g.firstY, g.full, colour)
 	}
 	if g.boxW > 0 {
 		b.drawPlatformBox(f, colour)
@@ -163,7 +160,11 @@ func (b *Board) drawRow(f *frame.Frame, r *rowScene, g *geometry, y int, c board
 	text := font.PISTall
 	x, y := r.dx, y+r.dy
 	prefix := c.Intersect(board.Clip{X0: x, X1: x + g.prefixW, Y1: g.h})
-	board.DrawText(f, text, x, y, r.prefix, colour, prefix)
+	prefixX := x
+	if g.boxW > 0 {
+		prefixX += (g.boxW - text.Width(r.prefix)) / 2
+	}
+	board.DrawText(f, text, prefixX, y, r.prefix, colour, prefix)
 	b.drawTime(f, x+g.stdX, y, r.std, c, colour)
 	dest := c.Intersect(board.Clip{X0: x + g.destX, X1: x + g.destX + g.destW, Y1: g.h})
 	board.DrawText(f, text, x+g.destX, y, r.dest, colour, dest)

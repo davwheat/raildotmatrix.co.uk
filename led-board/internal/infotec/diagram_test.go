@@ -137,9 +137,9 @@ func TestPlatformBoxLabelAndNumber(t *testing.T) {
 			f := frame.New(size[0], size[1])
 			b.drawPlatformBox(f, board.White)
 			label := frame.New(size[0], size[1])
-			labelY := 4
+			labelY := 2
 			if size[1] == 70 {
-				labelY = 7
+				labelY = 5
 			}
 			font.PISTall.Draw(label, (g.boxW-font.PISTall.Width("Plat"))/2, labelY, "Plat", board.White)
 			for y := labelY; y < labelY+font.PISTall.Baseline; y++ {
@@ -166,6 +166,38 @@ func TestPlatformBoxLabelAndNumber(t *testing.T) {
 			}
 			if delta := left - (g.boxW - 1 - right); delta < -1 || delta > 1 || bottom-top+1 != font.InfotecLarge.Height {
 				t.Errorf("%q: enlarged number is not centred: bounds (%d,%d)-(%d,%d), box width %d", platform, left, top, right, bottom, g.boxW)
+			}
+		}
+	}
+}
+
+func TestPlatformBoxServiceColumnsAlign(t *testing.T) {
+	for _, size := range sizes {
+		for _, platform := range []string{"2", "10A"} {
+			for _, ordinal := range []string{"2nd", "3rd"} {
+				b := New(Config{Width: size[0], Height: size[1], PlatformBox: platform})
+				g := b.geo
+				f := frame.New(size[0], size[1])
+				r := rowScene{on: true, std: "1234", dest: "London Victoria", etd: "On time", etdLevel: fadeLevels}
+				s := scene{first: r, lower: [2]rowScene{r}}
+				s.lower[0].prefix = ordinal
+				b.renderTrains(f, &s, board.White)
+				for y := range font.PISTall.Height {
+					for x := g.infoX; x < g.w; x++ {
+						if f.At(x, g.firstY+y) != f.At(x, g.secondY+y) {
+							t.Fatalf("platform %s: %s service columns differ at (%d,%d)", platform, ordinal, x, y)
+						}
+					}
+				}
+				want := frame.New(g.boxW, font.PISTall.Height)
+				font.PISTall.Draw(want, (g.boxW-font.PISTall.Width(ordinal))/2, 0, ordinal, board.White)
+				for y := range want.H {
+					for x := range want.W {
+						if f.At(x, g.secondY+y) != want.At(x, y) {
+							t.Fatalf("platform %s: %s is not centred below the box", platform, ordinal)
+						}
+					}
+				}
 			}
 		}
 	}

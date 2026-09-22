@@ -431,8 +431,8 @@ func TestGeometry(t *testing.T) {
 	g := newGeometry(testW, testH, 0)
 	want := geometry{
 		w: 256, h: 64, ch: 6, prefixW: 18, stdX: 23, colonCell: 3, timeW: 27, destX: 55, destW: 139, exptW: 28, infoDestX: 55,
-		firstY: 0, infoY: 17, sepY: 33, secondY: 38, infoSlide: 13, swapTravel: 13, lineY: [3]int{2, 19, 36},
-		clockX: 91, clockY: 53, clockCell: 11, colon: 4, full: g.full,
+		firstY: 0, infoY: 17, sepY: 33, secondY: 38, infoSlide: 13, swapTravel: 13, lineY: [3]int{2, 18, 34},
+		clockX: 91, clockY: 51, clockCell: 11, colon: 4, full: g.full,
 	}
 	if g != want {
 		t.Fatalf("geometry\n got %+v\nwant %+v", g, want)
