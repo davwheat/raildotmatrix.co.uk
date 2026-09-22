@@ -84,17 +84,15 @@ func TestFixturesStayWithinRows(t *testing.T) {
 	for _, size := range sizes {
 		for _, name := range fixtures.Names {
 			b := newSizedBoard(t, size[0], size[1])
-			g := b.geo
 			h := font.PISTall.Height
-			bands := [][2]int{
-				{g.firstY, g.firstY + h}, {g.infoY, g.infoY + h}, {g.sepY, g.sepY + 1}, {g.secondY, g.secondY + h},
-				{g.clockY, g.clockY + font.DotMatrixClock.Height},
-			}
-			messageBands := [][2]int{{g.lineY[0], g.lineY[0] + h}, {g.lineY[1], g.lineY[1] + h}, {g.lineY[2], g.lineY[2] + h}, bands[4]}
 			run(t, b, name, 40*time.Second, func(now time.Time, _ bool, f *frame.Frame) {
-				allowed := bands
+				g := b.geo
+				allowed := [][2]int{
+					{g.firstY, g.firstY + h}, {g.infoY, g.infoY + h}, {g.sepY, g.sepY + 1}, {g.secondY, g.secondY + h},
+					{g.clockY, g.clockY + font.DotMatrixClock.Height}, {g.formationY, g.formationY + g.formationH},
+				}
 				if b.mode != modeTrains {
-					allowed = messageBands
+					allowed = [][2]int{{g.lineY[0], g.lineY[0] + h}, {g.lineY[1], g.lineY[1] + h}, {g.lineY[2], g.lineY[2] + h}, allowed[4]}
 				}
 				if x, y, lit := litOutside(f, allowed...); lit {
 					t.Fatalf("%dx%d %s at %v: dot lit at (%d,%d), outside every row", size[0], size[1], name, now.Sub(fixtures.Clock), x, y)
@@ -348,7 +346,7 @@ func TestCallingPointsScroll(t *testing.T) {
 		}
 		lastX = b.last.info.x
 		for x := range g.destX {
-			for y := g.infoY; y < g.infoY+font.PISTall.Height; y++ {
+			for y := b.geo.infoY; y < b.geo.infoY+font.PISTall.Height; y++ {
 				if x > font.PISTall.Width("Calling at:") && f.At(x, y) != frame.Black {
 					t.Fatalf("at %v: list dot lit at (%d,%d), left of its area", now.Sub(fixtures.Clock), x, y)
 				}
@@ -432,7 +430,7 @@ func TestLowerRowsSwap(t *testing.T) {
 func TestGeometry(t *testing.T) {
 	g := newGeometry(testW, testH, 0)
 	want := geometry{
-		w: 256, h: 64, ch: 6, prefixW: 18, stdX: 23, colonCell: 3, timeW: 27, destX: 55, destW: 139, exptW: 28,
+		w: 256, h: 64, ch: 6, prefixW: 18, stdX: 23, colonCell: 3, timeW: 27, destX: 55, destW: 139, exptW: 28, infoDestX: 55,
 		firstY: 0, infoY: 17, sepY: 33, secondY: 38, infoSlide: 13, swapTravel: 13, lineY: [3]int{3, 20, 37},
 		clockX: 97, clockY: 55, clockCell: 9, colon: 4, full: g.full,
 	}

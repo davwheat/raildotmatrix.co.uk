@@ -30,6 +30,9 @@ row_prefix = "ordinals"
 # "to call at this station". A warning for trains at several platforms at once keeps the general wording.
 warning_platform = false
 
+# Infotec only: replace the first row prefix with a platform box when exactly one platform is requested.
+platform_box = false
+
 # Historic operator names, such as "London Midland".
 legacy_toc_names = false
 

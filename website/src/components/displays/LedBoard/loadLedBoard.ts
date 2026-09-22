@@ -15,6 +15,8 @@ export interface LedBoardOptions {
   rowPrefix?: RowPrefix
   /** Names the platform in a warning, in place of "this station", when the warning is for one platform. */
   warningPlatform?: boolean
+  /** Infotec only: show a platform box beside the first train when exactly one platform is requested. */
+  platformBox?: boolean
   colour?: 'amber' | 'white'
   scrollSpeed?: number
   width?: number

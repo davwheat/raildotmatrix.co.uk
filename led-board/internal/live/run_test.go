@@ -189,6 +189,31 @@ func startClient(t *testing.T, service *fakeService, platforms []string) <-chan 
 	return views
 }
 
+func TestCoachCountUpdatesReachTheBoard(t *testing.T) {
+	s := newFakeService(t)
+	views := startClient(t, s, nil)
+	conn := s.accept(t)
+	movement := movementFrame("formation", "2", time.Now().Add(10*time.Minute))
+	movement.CoachCount = ptr(int32(8))
+	s.send(t, conn, snapshotFrame(1, []*pb.Movement{movement}, nil))
+	if got := expectView(t, views, true, 1).Services[0].Length; got != 8 {
+		t.Fatalf("snapshot coach count = %d, want 8", got)
+	}
+	for i, count := range []*int32{ptr(int32(4)), nil, ptr(int32(12)), ptr(int32(0))} {
+		movement.CoachCount = count
+		update := updateFrame(uint64(i+1), uint64(i+2), []string{movement.Id})
+		update.GetUpdate().Upserts = []*pb.Movement{movement}
+		s.send(t, conn, update)
+		want := 0
+		if count != nil {
+			want = int(*count)
+		}
+		if got := expectView(t, views, true, 1).Services[0].Length; got != want {
+			t.Errorf("updated coach count = %d, want %d", got, want)
+		}
+	}
+}
+
 func TestClientResyncsOnGapAndDigestThenReplacesAnUnansweredConnection(t *testing.T) {
 	service := newFakeService(t)
 	views := startClient(t, service, nil)

@@ -27,6 +27,7 @@ export default function LedBoard({
   worldline,
   rowPrefix,
   warningPlatform,
+  platformBox,
   colour,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -46,6 +47,7 @@ export default function LedBoard({
     worldline,
     rowPrefix,
     warningPlatform,
+    platformBox,
     colour,
   })
 

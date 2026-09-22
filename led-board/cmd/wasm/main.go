@@ -13,6 +13,7 @@
 //	  worldline: false,                 // Daktronics only
 //	  rowPrefix: 'ordinals',            // or 'platforms' ("Pl 1")
 //	  warningPlatform: false,           // name the platform in warnings, in place of "this station"
+//	  platformBox: false,               // Infotec only; requires exactly one requested platform
 //	  colour: 'amber',                  // or 'white'
 //	  scrollSpeed: 0,                   // dots per second; 0 for the board's default
 //	  width: 256, height: 64,           // in dots
@@ -94,9 +95,14 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 		return js.Value{}, err
 	}
 	w, h := o.int("width", 256), o.int("height", 64)
+	platforms := o.strings("platforms")
+	for i := range platforms {
+		platforms[i] = strings.ToUpper(platforms[i])
+	}
 	b, err := formats.New(o.string("board", "daktronics"), formats.Config{
 		Width: w, Height: h, Zone: zone, Colour: colour, Worldline: o.bool("worldline"), ScrollSpeed: o.int("scrollSpeed", 0),
 		RowPrefix: rowPrefix, WarningPlatform: o.bool("warningPlatform"),
+		PlatformBox: o.bool("platformBox"), Platforms: platforms,
 	})
 	if err != nil {
 		return js.Value{}, err
@@ -105,10 +111,6 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 	level := slog.LevelWarn
 	if o.bool("verbose") {
 		level = slog.LevelDebug
-	}
-	platforms := o.strings("platforms")
-	for i := range platforms {
-		platforms[i] = strings.ToUpper(platforms[i])
 	}
 	cfg := live.Config{
 		BaseURL:         o.string("url", "wss://darwinbrowser.com"),

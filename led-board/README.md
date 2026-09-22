@@ -103,6 +103,13 @@ in place of "to call at this station" on the Daktronics board, and "MAY NOT STOP
 "MAY NOT STOP HERE" on the Infotec board. A warning that covers trains at several platforms at once keeps the
 general wording.
 
+`platform_box` replaces the first Infotec train's row prefix with a box showing "Plat" and a larger platform
+number. It takes effect only when `platforms` contains exactly one platform. The website offers the same
+option in the Infotec display settings. The lower train row uses the selected `row_prefix`.
+
+Infotec boards also draw a train formation below the service information whenever the websocket supplies a
+positive coach count. Each outlined carriage represents one coach; an unknown count leaves the diagram out.
+
 `scroll_speed` sets how fast text scrolls, in dots per second. The defaults are 48 for Daktronics (the web
 board's 550 px/s) and 60 for Infotec (the web's 77 dots/s reads too fast on the panel).
 

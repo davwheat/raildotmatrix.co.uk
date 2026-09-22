@@ -24,6 +24,8 @@ type Config struct {
 	ScrollSpeed int
 	// RowPrefix selects ordinals or platform numbers before each train's time.
 	RowPrefix board.RowPrefix
+	// PlatformBox is the single requested platform to show in a box beside the first train, or empty.
+	PlatformBox string
 	// WarningPlatform names the platform in a warning, in place of "this station", when the warning is for one
 	// platform.
 	WarningPlatform bool
@@ -77,6 +79,9 @@ type geometry struct {
 	ch   int
 	// prefixW reserves one column for either ordinals or platform numbers.
 	prefixW int
+	// boxW reserves the first train's platform box; infoX is the information row's left edge.
+	boxW, infoX, infoDestX int
+	formationY, formationH int
 	// stdX is the scheduled-time column, and timeW the width of a time drawn in digit cells with a
 	// colonCell-wide colon.
 	stdX, colonCell, timeW int
@@ -115,6 +120,7 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 	g.colonCell = ch / 2
 	g.timeW = 4*ch + g.colonCell
 	g.destX = x
+	g.infoDestX = g.destX
 	g.destW = w - g.destX - gap - 19*ch/2
 	g.exptW = text.Width("Expt ") + text.Spacing
 
@@ -142,9 +148,29 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 	return g
 }
 
+func (b *Board) geometry(details bool) geometry {
+	g := newGeometry(b.cfg.Width, b.cfg.Height, b.cfg.RowPrefix)
+	if b.cfg.PlatformBox != "" {
+		// Three dots of horizontal padding around the label and enlarged platform number.
+		g.boxW = max(font.PISTall.Width("Plat"), 2*font.PISTall.Width(b.cfg.PlatformBox)) + 6
+		g.infoX = g.boxW + 4
+		g.infoDestX = g.infoX + g.timeW + 5
+		details = true
+	}
+	if details {
+		// Use the slack between the rows for a formation without taking space from the clock.
+		g.secondY = g.clockY - font.PISTall.Height - 1
+		g.sepY = g.secondY - 3
+		g.infoY = min(g.infoY, g.sepY-font.PISTall.Height-13)
+		g.formationY = g.infoY + font.PISTall.Height + 2
+		g.formationH = min(11, g.sepY-g.formationY-2)
+	}
+	return g
+}
+
 // infoBand is the area the information row is clipped to (clip-path: inset(0) in the web).
 func (g *geometry) infoBand() board.Clip {
-	return board.Clip{X0: 0, Y0: g.infoY, X1: g.w, Y1: g.infoY + font.PISTall.Height}
+	return board.Clip{X0: g.infoX, Y0: g.infoY, X1: g.w, Y1: g.infoY + font.PISTall.Height}
 }
 
 // secondBand is the SwapBetween's 1em overflow box that the 2nd and 3rd rows slide through.
@@ -201,7 +227,8 @@ func New(cfg Config) *Board {
 		cfg.ScrollSpeed = DefaultScrollSpeed
 	}
 	c := cfg.Colour
-	b := &Board{cfg: cfg, geo: newGeometry(cfg.Width, cfg.Height, cfg.RowPrefix), dim: board.Scale(c, 1, 2)}
+	b := &Board{cfg: cfg, dim: board.Scale(c, 1, 2)}
+	b.geo = b.geometry(false)
 	b.info.speed = cfg.ScrollSpeed
 	return b
 }
@@ -227,6 +254,13 @@ func (b *Board) Tick(now time.Time, f *frame.Frame) bool {
 		b.apply(*pending, now)
 	}
 	b.advance(now)
+	length := 0
+	if b.phase == phaseSlideOut {
+		length = b.outgoing.length
+	} else if len(b.content.rows) > 0 {
+		length = b.content.rows[0].length
+	}
+	b.geo = b.geometry(length > 0)
 
 	s := b.compose(now)
 	if b.drawn && s == b.last {

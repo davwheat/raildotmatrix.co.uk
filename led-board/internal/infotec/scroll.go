@@ -67,11 +67,11 @@ func (s *scroller) reset(p page, g *geometry, now time.Time) {
 	text := font.PISTall
 	s.prefix, s.text = p.prefix, p.text
 	s.textW = text.Width(p.text)
-	s.x0 = 0
+	s.x0 = g.infoX
 	if p.prefix != "" {
 		// The list lines up with the destination column unless the prefix is too wide for that (min-width and
 		// padding-right in the SCSS).
-		s.x0 = max(g.destX, text.Width(p.prefix)+prefixSpacing)
+		s.x0 = max(g.infoDestX, g.infoX+text.Width(p.prefix)+prefixSpacing)
 	}
 	s.outerW = g.w - s.x0
 	s.static = s.textW <= s.outerW

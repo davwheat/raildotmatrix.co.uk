@@ -24,6 +24,7 @@ type row struct {
 	// etd is "On time", "Cancelled", "Arrived", "Delayed", or an expected time as HHmm.
 	etd       string
 	cancelled bool
+	length    int
 }
 
 // page is one screen of the information row: a prefix fixed at the left edge and the text that scrolls
@@ -53,6 +54,7 @@ func (b *Board) derive(v model.View) content {
 			pages:     destinationPages(s),
 			etd:       b.etd(s),
 			cancelled: s.Cancelled,
+			length:    max(0, s.Length),
 		})
 		if i == 0 {
 			c.pages = b.infoPages(s)

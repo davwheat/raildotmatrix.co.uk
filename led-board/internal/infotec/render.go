@@ -15,6 +15,7 @@ type rowScene struct {
 	prefix, std, dest, etd string
 	dx, dy                 int
 	etdLevel               int
+	length                 int
 }
 
 // scene is a complete description of one frame. Two ticks that compose equal scenes draw the same picture,
@@ -25,8 +26,9 @@ type scene struct {
 	// level is the brightness of everything but the clock, out of fadeLevels.
 	level int
 
-	first rowScene
-	info  scrollScene
+	first     rowScene
+	info      scrollScene
+	formation int
 	// lower holds the 2nd and 3rd rows, which share one band and slide past each other when they swap.
 	lower [2]rowScene
 
@@ -62,6 +64,7 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 		return
 	}
 	s.first = b.rowScene(&b.content.rows[0], now)
+	s.formation = s.first.length
 	if len(b.content.pages) > 0 {
 		s.info = b.info.scene(now)
 	}
@@ -88,6 +91,7 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 func (b *Board) rowScene(r *row, now time.Time) rowScene {
 	e := now.Sub(b.steadyStart).Milliseconds()
 	sc := rowScene{on: true, prefix: r.prefix, std: r.std, etd: r.etd, etdLevel: fadeLevels}
+	sc.length = r.length
 	if len(r.pages) > 0 {
 		sc.dest = r.pages[int(e/destinationPage)%len(r.pages)]
 	}
@@ -126,10 +130,23 @@ func (b *Board) render(f *frame.Frame, s *scene) {
 func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 	g := &b.geo
 	if s.first.on {
-		b.drawRow(f, &s.first, g.firstY, g.full, colour)
+		first, firstGeo := s.first, *g
+		if g.boxW > 0 {
+			first.prefix = ""
+			firstGeo.stdX = g.infoX
+			firstGeo.destX = g.infoDestX
+			firstGeo.destW = g.destW + g.destX - firstGeo.destX
+		}
+		b.drawRow(f, &first, &firstGeo, g.firstY, g.full, colour)
+	}
+	if g.boxW > 0 {
+		b.drawPlatformBox(f, colour)
 	}
 	if s.info.on {
 		b.drawInfo(f, &s.info, colour)
+	}
+	if s.formation > 0 {
+		drawFormation(f, g.infoX, g.formationY, g.w-g.infoX, g.formationH, s.formation, colour)
 	}
 	// The separator stays lit through the slide-out, so fading it in with the new rows would blink it off.
 	for x := range g.w {
@@ -137,13 +154,12 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 	}
 	for i := range s.lower {
 		if s.lower[i].on {
-			b.drawRow(f, &s.lower[i], g.secondY, g.secondBand(), colour)
+			b.drawRow(f, &s.lower[i], g, g.secondY, g.secondBand(), colour)
 		}
 	}
 }
 
-func (b *Board) drawRow(f *frame.Frame, r *rowScene, y int, c board.Clip, colour frame.RGB) {
-	g := &b.geo
+func (b *Board) drawRow(f *frame.Frame, r *rowScene, g *geometry, y int, c board.Clip, colour frame.RGB) {
 	text := font.PISTall
 	x, y := r.dx, y+r.dy
 	prefix := c.Intersect(board.Clip{X0: x, X1: x + g.prefixW, Y1: g.h})
@@ -176,7 +192,7 @@ func (b *Board) drawInfo(f *frame.Frame, sc *scrollScene, base frame.RGB) {
 	c := g.infoBand()
 	y := g.infoY + sc.dy
 	colour := board.Scale(base, fadeSteps-sc.faded, fadeSteps)
-	board.DrawText(f, font.PISTall, 0, y, sc.prefix, colour, c)
+	board.DrawText(f, font.PISTall, g.infoX, y, sc.prefix, colour, c)
 	board.DrawText(f, font.PISTall, sc.x, y, sc.text, colour, c.Intersect(board.Clip{X0: sc.clipX, X1: g.w, Y1: g.h}))
 }
 

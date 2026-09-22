@@ -72,6 +72,7 @@ const labels = {
   row_prefix: "Row prefix",
   show_unconfirmed_platforms: "Show unconfirmed platforms",
   warning_platform: "Name platforms in warnings",
+  platform_box: "Infotec platform box (single platform only)",
   worldline: "Worldline display style",
   legacy_toc_names: "Use historic operator names",
   scroll_speed: "Scroll speed (dots / second)",
@@ -121,7 +122,7 @@ const groups = [
   [
     "Display options",
     "",
-    "show_unconfirmed_platforms warning_platform worldline legacy_toc_names",
+    "show_unconfirmed_platforms warning_platform platform_box worldline legacy_toc_names",
   ],
   [
     "LED panels",

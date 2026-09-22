@@ -68,6 +68,7 @@ crs = "gtw"
 board = "infotec"
 platforms = ["1", "2"]
 row_prefix = "platforms"
+platform_box = true
 scroll_speed = 40
 
 [led]
@@ -92,6 +93,9 @@ func TestFile(t *testing.T) {
 	}
 	if !slices.Equal(cfg.Platforms, []string{"1", "2"}) {
 		t.Errorf("platforms = %v", cfg.Platforms)
+	}
+	if !cfg.PlatformBox {
+		t.Error("platform_box option was not loaded")
 	}
 	if cfg.RowPrefix != "platforms" {
 		t.Errorf("row prefix = %q; want platforms from the file", cfg.RowPrefix)
@@ -204,7 +208,7 @@ func TestKeys(t *testing.T) {
 	want := strings.Fields(`board colour crs display fixture fps legacy_toc_names led.brightness led.chain led.cols
 		led.gpio_mapping led.limit_refresh led.multiplexing led.no_drop_privs led.no_hardware_pulse led.parallel
 		led.pwm_bits led.pwm_dither_bits led.pwm_lsb_nanoseconds led.rgb_sequence led.row_addr_type led.rows
-		led.scan_mode led.show_refresh led.slowdown_gpio row_prefix platforms png_dir scale scroll_speed
+		led.scan_mode led.show_refresh led.slowdown_gpio platform_box row_prefix platforms png_dir scale scroll_speed
 		show_unconfirmed_platforms url verbose warning_platform worldline`)
 	slices.Sort(keys)
 	slices.Sort(want)
@@ -222,8 +226,8 @@ func TestSettingsCoverEveryKey(t *testing.T) {
 	if _, ok := settings(v)["led.limit_refresh"]; !ok {
 		t.Error("a key without a default must still be watched")
 	}
-	if got := len(v.AllKeys()); got != 35 {
-		t.Errorf("%d keys, want 35", got)
+	if got := len(v.AllKeys()); got != 36 {
+		t.Errorf("%d keys, want 36", got)
 	}
 }
 
