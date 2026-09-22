@@ -33,7 +33,7 @@ func main() {
 	boardName := flag.String("board", "daktronics", "board format: daktronics or infotec")
 	worldline := flag.Bool("worldline", false, "render the Worldline-powered Daktronics variant")
 	scrollSpeed := flag.Int("scroll-speed", 0, "scroll speed in dots per second; 0 uses the board's default")
-	platformPosition := flag.String("platform-position", "none", "where each train row shows its platform number: none, before, or after")
+	rowPrefixName := flag.String("row-prefix", "ordinals", "prefix before each train time: ordinals or platforms")
 	warningPlatform := flag.Bool("warning-platform", false, "name the platform in warnings")
 	width := flag.Int("width", 256, "board width in dots")
 	height := flag.Int("height", 64, "board height in dots")
@@ -55,14 +55,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	platform, err := board.ParsePlatformPosition(*platformPosition)
+	rowPrefix, err := board.ParseRowPrefix(*rowPrefixName)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
 	w, h := *width, *height
 	b, err := formats.New(*boardName, formats.Config{
-		Width: w, Height: h, Zone: zone, Worldline: *worldline, ScrollSpeed: *scrollSpeed, Platform: platform,
+		Width: w, Height: h, Zone: zone, Worldline: *worldline, ScrollSpeed: *scrollSpeed, RowPrefix: rowPrefix,
 		WarningPlatform: *warningPlatform,
 	})
 	if err != nil {

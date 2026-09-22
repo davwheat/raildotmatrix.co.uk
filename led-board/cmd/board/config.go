@@ -28,7 +28,7 @@ type config struct {
 	Board                    string
 	Colour                   string
 	Worldline                bool
-	PlatformPosition         string `mapstructure:"platform_position"`
+	RowPrefix                string `mapstructure:"row_prefix"`
 	WarningPlatform          bool   `mapstructure:"warning_platform"`
 	ScrollSpeed              int    `mapstructure:"scroll_speed"`
 	URL                      string
@@ -62,7 +62,7 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.Bool("legacy-toc-names", false, "use historic operator names")
 	fs.String("board", "daktronics", "board format: daktronics or infotec")
 	fs.String("colour", "amber", "text colour: amber or white")
-	fs.String("platform-position", "none", "where each train row shows its platform number: none, before (\"Pl 1 1st\") or after (\"1st Pl 1\") the ordinal")
+	fs.String("row-prefix", "ordinals", "prefix before each train time: ordinals (\"1st\") or platforms (\"Pl 1\")")
 	fs.Bool("warning-platform", false, "name the platform in a stand clear or not-for-public-use warning, in place of \"this station\"")
 	fs.Bool("worldline", false, "Worldline-driven Daktronics board: single scrolling info line, capitalised locations")
 	fs.Int("scroll-speed", 0, "scroll speed in dots per second; 0 uses the board's default (48 daktronics, 60 infotec). The panel refresh and PWM depth follow it")

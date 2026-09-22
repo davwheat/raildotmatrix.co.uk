@@ -11,9 +11,9 @@ import (
 // rowScene is one train row as drawn this tick. dy shifts it vertically while it slides; clipX hides
 // everything left of it during the clear-down wipe.
 type rowScene struct {
-	on                                bool
-	ordinal, platform, std, dest, etd string
-	dy, clipX                         int
+	on                     bool
+	prefix, std, dest, etd string
+	dy, clipX              int
 }
 
 // scene is a complete description of one frame. Two ticks that compose equal scenes draw the same picture,
@@ -90,7 +90,7 @@ func (b *Board) composeSteady(now time.Time, s *scene) {
 		return
 	}
 	r := &b.content.rows[1+b.swapIndex]
-	s.third = rowScene{on: true, ordinal: r.ordinal, platform: r.platform, std: r.std, etd: r.etd}
+	s.third = rowScene{on: true, prefix: r.prefix, std: r.std, etd: r.etd}
 	if len(r.pages) > 0 {
 		s.third.dest = r.pages[int(now.Sub(b.steadyStart).Milliseconds()/destinationPage)%len(r.pages)]
 	}
@@ -100,7 +100,7 @@ func (b *Board) composeSteady(now time.Time, s *scene) {
 }
 
 func firstRowScene(r *row) rowScene {
-	return rowScene{on: true, ordinal: r.ordinal, platform: r.platform, std: r.std, dest: r.line1, etd: r.etd}
+	return rowScene{on: true, prefix: r.prefix, std: r.std, dest: r.line1, etd: r.etd}
 }
 
 func (b *Board) render(f *frame.Frame, s *scene) {
@@ -151,8 +151,7 @@ func (b *Board) drawRow(f *frame.Frame, r *rowScene, rowIndex int, c board.Clip)
 	g := &b.geo
 	c.X0 = max(c.X0, r.clipX)
 	y := g.textY(rowIndex) + r.dy
-	board.DrawText(f, font.Text, g.ordinalX, y, r.ordinal, b.cfg.Colour, c)
-	board.DrawText(f, font.Text, g.platX, y, r.platform, b.cfg.Colour, c.Intersect(board.Clip{X0: g.platX, X1: g.platX + g.platW, Y1: g.h}))
+	board.DrawText(f, font.Text, 0, y, r.prefix, b.cfg.Colour, c.Intersect(board.Clip{X1: g.prefixW, Y1: g.h}))
 	board.DrawCells(f, font.Text, g.stdX, y, r.std, g.ch, b.cfg.Colour, c)
 	board.DrawText(f, font.Text, g.destX, y, r.dest, b.cfg.Colour, c.Intersect(board.Clip{X0: g.destX, X1: g.destX + g.destW, Y1: g.h}))
 	if isTime(r.etd) {

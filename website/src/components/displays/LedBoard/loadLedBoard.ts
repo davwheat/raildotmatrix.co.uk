@@ -1,6 +1,6 @@
 const BUNDLE_DIRECTORY = '/led-board/'
 
-export type PlatformPosition = 'none' | 'before' | 'after'
+export type RowPrefix = 'ordinals' | 'platforms'
 
 /** The options of `ledDepartureBoard.create`, documented in the Go repository's `cmd/wasm/main.go`. */
 export interface LedBoardOptions {
@@ -11,8 +11,8 @@ export interface LedBoardOptions {
   showUnconfirmedPlatforms?: boolean
   legacyTocNames?: boolean
   worldline?: boolean
-  /** Where each train row shows its platform number: ahead of the "1st" ordinal, after it, or not at all. */
-  platformPosition?: PlatformPosition
+  /** The single prefix before each train's time: an ordinal or its platform number. */
+  rowPrefix?: RowPrefix
   /** Names the platform in a warning, in place of "this station", when the warning is for one platform. */
   warningPlatform?: boolean
   colour?: 'amber' | 'white'

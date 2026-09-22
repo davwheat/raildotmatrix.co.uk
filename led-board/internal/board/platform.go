@@ -6,27 +6,31 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
 )
 
-// PlatformPosition is where a train row shows its platform number, relative to the "1st" ordinal.
-type PlatformPosition uint8
+// RowPrefix selects the single prefix shown before a train's scheduled time.
+type RowPrefix uint8
 
 const (
-	PlatformHidden PlatformPosition = iota
-	PlatformBefore
-	PlatformAfter
+	PrefixOrdinals RowPrefix = iota
+	PrefixPlatforms
 )
 
-// ParsePlatformPosition returns the position that the platform_position setting names: "none", "before" or
-// "after".
-func ParsePlatformPosition(name string) (PlatformPosition, error) {
+// ParseRowPrefix returns the prefix that the row_prefix setting names: "ordinals" or "platforms".
+func ParseRowPrefix(name string) (RowPrefix, error) {
 	switch name {
-	case "none", "":
-		return PlatformHidden, nil
-	case "before":
-		return PlatformBefore, nil
-	case "after":
-		return PlatformAfter, nil
+	case "ordinals", "":
+		return PrefixOrdinals, nil
+	case "platforms":
+		return PrefixPlatforms, nil
 	}
-	return 0, fmt.Errorf("unknown platform position %q; want none, before, or after", name)
+	return 0, fmt.Errorf("unknown row prefix %q; want ordinals or platforms", name)
+}
+
+// Text returns the prefix for one of the board's three train rows, indexed from zero.
+func (p RowPrefix) Text(index int, platform string) string {
+	if p == PrefixPlatforms {
+		return PlatformText(platform)
+	}
+	return [...]string{"1st", "2nd", "3rd"}[index]
 }
 
 // PlatformText is what a row shows in its platform column. A row whose platform isn't published shows nothing

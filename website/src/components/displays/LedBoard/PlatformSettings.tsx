@@ -1,19 +1,26 @@
 import React from 'react'
 
 import ToggleSwitch from '../../common/form/ToggleSwitch'
-import type { PlatformPosition } from './loadLedBoard'
+import type { RowPrefix } from './loadLedBoard'
 
 export interface IPlatformSettings {
-  platformPosition: PlatformPosition
+  rowPrefix: RowPrefix
   warningPlatform: boolean
 }
 
-export const defaultPlatformSettings: IPlatformSettings = { platformPosition: 'none', warningPlatform: false }
+export const defaultPlatformSettings: IPlatformSettings = { rowPrefix: 'ordinals', warningPlatform: false }
 
-const PlatformPositions: Record<PlatformPosition, string> = {
-  none: "Don't show",
-  before: 'Before the order ("Pl 1 1st")',
-  after: 'After the order ("1st Pl 1")',
+const RowPrefixes: Record<RowPrefix, string> = {
+  ordinals: 'Ordinals',
+  platforms: 'Platform numbers',
+}
+
+/** Preserve the platform choice in settings saved before the row prefix option. */
+export function getRowPrefix(settings: Partial<IPlatformSettings> & { platformPosition?: string }): RowPrefix {
+  return (
+    settings.rowPrefix ??
+    (settings.platformPosition === 'before' || settings.platformPosition === 'after' ? 'platforms' : defaultPlatformSettings.rowPrefix)
+  )
 }
 
 interface IProps {
@@ -31,14 +38,14 @@ export default function PlatformSettings({ settings, onChange }: IProps) {
         onChange={e => onChange({ warningPlatform: e.currentTarget.checked })}
       />
       <div>
-        <label htmlFor="platform-position">Platform numbers</label>
+        <label htmlFor="row-prefix">Row prefix</label>
         <select
-          id="platform-position"
-          value={settings.platformPosition ?? defaultPlatformSettings.platformPosition}
-          onChange={e => onChange({ platformPosition: e.currentTarget.value as PlatformPosition })}
+          id="row-prefix"
+          value={getRowPrefix(settings)}
+          onChange={e => onChange({ rowPrefix: e.currentTarget.value as RowPrefix })}
           css={{ marginLeft: 4 }}
         >
-          {Object.entries(PlatformPositions).map(([value, label]) => (
+          {Object.entries(RowPrefixes).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>

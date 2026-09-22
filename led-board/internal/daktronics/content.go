@@ -12,11 +12,9 @@ import (
 
 // row is one train's line as the board shows it, derived once per view so that ticks only copy strings.
 type row struct {
-	id      string
-	ordinal string
-	std     string
-	// platform is the text of the platform column, which stays empty when the board doesn't show platforms.
-	platform string
+	id     string
+	prefix string
+	std    string
 	// pages are the destination texts a later train cycles through every three seconds: each destination with
 	// its ", " or " & " suffix, as TrainService.tsx builds them.
 	pages []string
@@ -48,10 +46,9 @@ func (b *Board) derive(v model.View) content {
 		s := &v.Services[i]
 		r := row{
 			id:       s.ID,
-			ordinal:  [...]string{"1st", "2nd", "3rd"}[i],
+			prefix:   b.cfg.RowPrefix.Text(i, s.Platform),
 			std:      s.STD(b.cfg.Zone),
 			etd:      s.ETD(b.cfg.Zone),
-			platform: b.platform(s),
 			dividing: len(s.Destinations) > 1,
 			pages:    destinationPages(s, b.cfg.WorldlinePowered),
 		}
@@ -62,13 +59,6 @@ func (b *Board) derive(v model.View) content {
 		c.rows = append(c.rows, r)
 	}
 	return c
-}
-
-func (b *Board) platform(s *model.Service) string {
-	if b.cfg.Platform == board.PlatformHidden {
-		return ""
-	}
-	return board.PlatformText(s.Platform)
 }
 
 func destinationPages(s *model.Service, upper bool) []string {

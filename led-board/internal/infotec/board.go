@@ -22,8 +22,8 @@ type Config struct {
 	Colour frame.RGB
 	// ScrollSpeed is how fast text scrolls, in dots per second; 0 means DefaultScrollSpeed.
 	ScrollSpeed int
-	// Platform is where each train row shows its platform number, if at all.
-	Platform board.PlatformPosition
+	// RowPrefix selects ordinals or platform numbers before each train's time.
+	RowPrefix board.RowPrefix
 	// WarningPlatform names the platform in a warning, in place of "this station", when the warning is for one
 	// platform.
 	WarningPlatform bool
@@ -75,8 +75,8 @@ const fadeLevels = 30
 type geometry struct {
 	w, h int
 	ch   int
-	// platX and platW are the platform column, which is empty unless the board shows platforms.
-	ordinalX, platX, platW int
+	// prefixW reserves one column for either ordinals or platform numbers.
+	prefixW int
 	// stdX is the scheduled-time column, and timeW the width of a time drawn in digit cells with a
 	// colonCell-wide colon.
 	stdX, colonCell, timeW int
@@ -94,7 +94,7 @@ type geometry struct {
 	full                             board.Clip
 }
 
-func newGeometry(w, h int, platform board.PlatformPosition) geometry {
+func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 	text := font.PISTall
 	ch := text.Advance('0')
 	// The grid gap is 36 px at 7.17 px per dot.
@@ -106,15 +106,11 @@ func newGeometry(w, h int, platform board.PlatformPosition) geometry {
 		x += width + gap
 		return at
 	}
-	if platform == board.PlatformBefore {
-		g.platW = board.PlatformWidth(text)
-		g.platX = column(g.platW)
+	g.prefixW = 3 * ch
+	if prefix == board.PrefixPlatforms {
+		g.prefixW = board.PlatformWidth(text)
 	}
-	g.ordinalX = column(3 * ch)
-	if platform == board.PlatformAfter {
-		g.platW = board.PlatformWidth(text)
-		g.platX = column(g.platW)
-	}
+	column(g.prefixW)
 	g.stdX = column(9 * ch / 2)
 	g.colonCell = ch / 2
 	g.timeW = 4*ch + g.colonCell
@@ -205,7 +201,7 @@ func New(cfg Config) *Board {
 		cfg.ScrollSpeed = DefaultScrollSpeed
 	}
 	c := cfg.Colour
-	b := &Board{cfg: cfg, geo: newGeometry(cfg.Width, cfg.Height, cfg.Platform), dim: board.Scale(c, 1, 2)}
+	b := &Board{cfg: cfg, geo: newGeometry(cfg.Width, cfg.Height, cfg.RowPrefix), dim: board.Scale(c, 1, 2)}
 	b.info.speed = cfg.ScrollSpeed
 	return b
 }

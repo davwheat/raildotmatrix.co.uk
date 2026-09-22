@@ -11,10 +11,10 @@ import (
 // rowScene is one train row as drawn this tick: dx shifts it right while it slides out, dy moves it vertically
 // while the lower rows swap, and etdLevel is the ETD's brightness out of fadeLevels while it flashes.
 type rowScene struct {
-	on                                bool
-	ordinal, platform, std, dest, etd string
-	dx, dy                            int
-	etdLevel                          int
+	on                     bool
+	prefix, std, dest, etd string
+	dx, dy                 int
+	etdLevel               int
 }
 
 // scene is a complete description of one frame. Two ticks that compose equal scenes draw the same picture,
@@ -87,7 +87,7 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 
 func (b *Board) rowScene(r *row, now time.Time) rowScene {
 	e := now.Sub(b.steadyStart).Milliseconds()
-	sc := rowScene{on: true, ordinal: r.ordinal, platform: r.platform, std: r.std, etd: r.etd, etdLevel: fadeLevels}
+	sc := rowScene{on: true, prefix: r.prefix, std: r.std, etd: r.etd, etdLevel: fadeLevels}
 	if len(r.pages) > 0 {
 		sc.dest = r.pages[int(e/destinationPage)%len(r.pages)]
 	}
@@ -146,9 +146,8 @@ func (b *Board) drawRow(f *frame.Frame, r *rowScene, y int, c board.Clip, colour
 	g := &b.geo
 	text := font.PISTall
 	x, y := r.dx, y+r.dy
-	board.DrawText(f, text, x+g.ordinalX, y, r.ordinal, colour, c)
-	platform := c.Intersect(board.Clip{X0: x + g.platX, X1: x + g.platX + g.platW, Y1: g.h})
-	board.DrawText(f, text, x+g.platX, y, r.platform, colour, platform)
+	prefix := c.Intersect(board.Clip{X0: x, X1: x + g.prefixW, Y1: g.h})
+	board.DrawText(f, text, x, y, r.prefix, colour, prefix)
 	b.drawTime(f, x+g.stdX, y, r.std, c, colour)
 	dest := c.Intersect(board.Clip{X0: x + g.destX, X1: x + g.destX + g.destW, Y1: g.h})
 	board.DrawText(f, text, x+g.destX, y, r.dest, colour, dest)

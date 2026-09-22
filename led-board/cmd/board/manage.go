@@ -15,10 +15,10 @@ import (
 func describeConfig(fs *flag.FlagSet) []configschema.Field {
 	choices := map[string][]string{
 		"board": formats.Names, "colour": {"amber", "white"},
-		"platform_position": {"none", "before", "after"},
-		"display":           {"matrix", "window", "png"},
-		"fixture":           append([]string{""}, fixtures.Names...),
-		"led.rgb_sequence":  {"RGB", "RBG", "GRB", "GBR", "BRG", "BGR"},
+		"row_prefix":       {"ordinals", "platforms"},
+		"display":          {"matrix", "window", "png"},
+		"fixture":          append([]string{""}, fixtures.Names...),
+		"led.rgb_sequence": {"RGB", "RBG", "GRB", "GBR", "BRG", "BGR"},
 	}
 	var fields []configschema.Field
 	fs.VisitAll(func(f *flag.Flag) {

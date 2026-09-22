@@ -11,50 +11,63 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
-func TestPlatformColumn(t *testing.T) {
+func TestRowPrefixColumn(t *testing.T) {
 	const gap = 1
-	hidden := newGeometry(testW, testH, board.PlatformHidden)
-	for _, position := range []board.PlatformPosition{board.PlatformBefore, board.PlatformAfter} {
-		g := newGeometry(testW, testH, position)
-		ordinalW := (13*g.ch + 2) / 4
-		first, second := g.platX, g.ordinalX
-		firstW := g.platW
-		if position == board.PlatformAfter {
-			first, second, firstW = g.ordinalX, g.platX, ordinalW
-		}
-		if first != 0 || second != firstW+gap || g.stdX != g.platW+ordinalW+2*gap {
-			t.Errorf("position %d: platform at %d, ordinal at %d, std at %d", position, g.platX, g.ordinalX, g.stdX)
-		}
-		if g.platW < font.Text.Width("Pl 10A") || g.destW != hidden.destW-g.platW-gap {
-			t.Errorf("position %d: platform width %d, destination width %d", position, g.platW, g.destW)
-		}
+	ordinals := newGeometry(testW, testH, board.PrefixOrdinals)
+	platforms := newGeometry(testW, testH, board.PrefixPlatforms)
+	if ordinals.prefixW != (13*ordinals.ch+2)/4 || ordinals.stdX != ordinals.prefixW+gap {
+		t.Errorf("ordinal prefix width %d, time at %d", ordinals.prefixW, ordinals.stdX)
+	}
+	if platforms.prefixW < font.Text.Width("Pl 10A") || platforms.stdX != platforms.prefixW+gap {
+		t.Errorf("platform prefix width %d, time at %d", platforms.prefixW, platforms.stdX)
+	}
+	if platforms.destW != ordinals.destW+ordinals.prefixW-platforms.prefixW {
+		t.Errorf("destination width %d; row must reserve only one prefix column", platforms.destW)
 	}
 }
 
-func TestPlatformDrawn(t *testing.T) {
+func TestRowPrefixDrawn(t *testing.T) {
 	zone, err := time.LoadLocation("Europe/London")
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, position := range []board.PlatformPosition{board.PlatformHidden, board.PlatformBefore, board.PlatformAfter} {
-		b := New(Config{Width: testW, Height: testH, Zone: zone, Platform: position})
-		b.Update(fixtures.Steps("busy-board")[0])
-		f := frame.New(testW, testH)
-		// The first train slides in before it settles.
-		b.Tick(fixtures.Clock, f)
-		b.Tick(fixtures.Clock.Add(5*time.Second), f)
-		if got, want := b.content.rows[1].platform != "", position != board.PlatformHidden; got != want {
-			t.Errorf("position %d: platform %q", position, b.content.rows[1].platform)
-		}
-		lit := false
-		for y := range font.Text.Height {
-			for x := b.geo.platX; x < b.geo.platX+b.geo.platW; x++ {
-				lit = lit || f.At(x, y) != frame.Black
+	for _, tc := range []struct {
+		name     string
+		prefix   board.RowPrefix
+		platform string
+		want     [3]string
+	}{
+		{"ordinals", board.PrefixOrdinals, "10A", [3]string{"1st", "2nd", "3rd"}},
+		{"platforms", board.PrefixPlatforms, "10A", [3]string{"Pl 10A", "Pl 10A", "Pl 10A"}},
+		{"unpublished", board.PrefixPlatforms, "", [3]string{"", "", ""}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			b := New(Config{Width: testW, Height: testH, Zone: zone, RowPrefix: tc.prefix})
+			v := fixtures.Steps("busy-board")[0]
+			for i := range v.Services {
+				v.Services[i].Platform = tc.platform
 			}
-		}
-		if lit != (position != board.PlatformHidden) {
-			t.Errorf("position %d: platform column lit = %v", position, lit)
-		}
+			b.Update(v)
+			f := frame.New(testW, testH)
+			// Let the first train finish its entrance before checking the pixels.
+			b.Tick(fixtures.Clock, f)
+			b.Tick(fixtures.Clock.Add(5*time.Second), f)
+			for i, want := range tc.want {
+				if got := b.content.rows[i].prefix; got != want {
+					t.Errorf("row %d prefix = %q, want %q", i, got, want)
+				}
+			}
+			expected := frame.New(testW, testH)
+			y := b.geo.textY(0)
+			board.DrawText(expected, font.Text, 0, y, tc.want[0], b.cfg.Colour, board.Clip{X1: testW, Y1: testH})
+			for py := y; py < y+font.Text.Height; py++ {
+				for x := 0; x < b.geo.stdX; x++ {
+					if f.At(x, py) != expected.At(x, py) {
+						t.Fatalf("prefix pixel (%d, %d) differs: must draw only %q before the time", x, py, tc.want[0])
+					}
+				}
+			}
+		})
 	}
 }
 

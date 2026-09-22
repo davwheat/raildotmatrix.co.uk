@@ -2,7 +2,7 @@ import React from 'react'
 
 import BoardSettings from '../../common/BoardSettings'
 import LedBoard from '../LedBoard'
-import PlatformSettings, { defaultPlatformSettings, type IPlatformSettings } from '../LedBoard/PlatformSettings'
+import PlatformSettings, { defaultPlatformSettings, getRowPrefix, type IPlatformSettings } from '../LedBoard/PlatformSettings'
 import { ZoomDiv } from '../ZoomDiv'
 
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
@@ -165,7 +165,7 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
             showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
             legacyTocNames={!!searchParams?.get('useLegacyTocNames')}
             worldline={customBoardSettings.worldlinePowered}
-            platformPosition={customBoardSettings.platformPosition ?? defaultPlatformSettings.platformPosition}
+            rowPrefix={getRowPrefix(customBoardSettings)}
             warningPlatform={!!customBoardSettings.warningPlatform}
           />
 

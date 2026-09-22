@@ -25,7 +25,7 @@ export default function LedBoard({
   showUnconfirmedPlatforms,
   legacyTocNames,
   worldline,
-  platformPosition,
+  rowPrefix,
   warningPlatform,
   colour,
 }: Props) {
@@ -44,7 +44,7 @@ export default function LedBoard({
     showUnconfirmedPlatforms,
     legacyTocNames,
     worldline,
-    platformPosition,
+    rowPrefix,
     warningPlatform,
     colour,
   })

@@ -93,10 +93,10 @@ be readable by everyone.
 
 `worldline` applies to the Daktronics board only.
 
-`platform_position` adds each train's platform number to its row: `before` shows it ahead of the ordinal
-(`Pl 1 1st`), and `after` shows it between the ordinal and the time (`1st Pl 1`). The column is wide enough
-for a three-character platform such as `10A`, so the destination column narrows to make room. A platform that
-isn't published, or that Darwin suppresses, leaves the column blank. The default, `none`, leaves it out.
+`row_prefix` selects the single prefix before each train's scheduled time: `ordinals` (the default) shows
+`1st`, `2nd` or `3rd`, and `platforms` shows the platform number, such as `Pl 1`. The platform column is wide
+enough for a three-character platform such as `10A`. A platform that isn't published, or that Darwin
+suppresses, leaves the prefix blank. Platform numbers and ordinals are never shown together in a row.
 
 `warning_platform` names the platform in a stand clear or not-for-public-use warning: "to call at platform 2"
 in place of "to call at this station" on the Daktronics board, and "MAY NOT STOP AT PLATFORM 2" in place of

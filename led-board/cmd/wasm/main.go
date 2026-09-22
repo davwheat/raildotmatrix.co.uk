@@ -11,7 +11,7 @@
 //	  showUnconfirmedPlatforms: false,
 //	  legacyTocNames: false,
 //	  worldline: false,                 // Daktronics only
-//	  platformPosition: 'none',         // or 'before' ("Pl 1 1st") or 'after' ("1st Pl 1")
+//	  rowPrefix: 'ordinals',            // or 'platforms' ("Pl 1")
 //	  warningPlatform: false,           // name the platform in warnings, in place of "this station"
 //	  colour: 'amber',                  // or 'white'
 //	  scrollSpeed: 0,                   // dots per second; 0 for the board's default
@@ -89,14 +89,14 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 	if err != nil {
 		return js.Value{}, err
 	}
-	platform, err := board.ParsePlatformPosition(o.string("platformPosition", "none"))
+	rowPrefix, err := board.ParseRowPrefix(o.string("rowPrefix", "ordinals"))
 	if err != nil {
 		return js.Value{}, err
 	}
 	w, h := o.int("width", 256), o.int("height", 64)
 	b, err := formats.New(o.string("board", "daktronics"), formats.Config{
 		Width: w, Height: h, Zone: zone, Colour: colour, Worldline: o.bool("worldline"), ScrollSpeed: o.int("scrollSpeed", 0),
-		Platform: platform, WarningPlatform: o.bool("warningPlatform"),
+		RowPrefix: rowPrefix, WarningPlatform: o.bool("warningPlatform"),
 	})
 	if err != nil {
 		return js.Value{}, err

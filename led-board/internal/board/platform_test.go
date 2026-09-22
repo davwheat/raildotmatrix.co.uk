@@ -6,14 +6,16 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
 )
 
-func TestParsePlatformPosition(t *testing.T) {
-	for name, want := range map[string]PlatformPosition{"": PlatformHidden, "none": PlatformHidden, "before": PlatformBefore, "after": PlatformAfter} {
-		if got, err := ParsePlatformPosition(name); err != nil || got != want {
-			t.Errorf("ParsePlatformPosition(%q) = %d, %v; want %d", name, got, err, want)
+func TestParseRowPrefix(t *testing.T) {
+	for name, want := range map[string]RowPrefix{"": PrefixOrdinals, "ordinals": PrefixOrdinals, "platforms": PrefixPlatforms} {
+		if got, err := ParseRowPrefix(name); err != nil || got != want {
+			t.Errorf("ParseRowPrefix(%q) = %d, %v; want %d", name, got, err, want)
 		}
 	}
-	if _, err := ParsePlatformPosition("start"); err == nil {
-		t.Error("an unknown position must be an error")
+	for _, name := range []string{"none", "before", "after", "both", "unknown"} {
+		if _, err := ParseRowPrefix(name); err == nil {
+			t.Errorf("unsupported prefix %q must be an error", name)
+		}
 	}
 }
 

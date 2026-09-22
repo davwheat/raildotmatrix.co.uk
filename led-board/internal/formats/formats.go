@@ -24,8 +24,8 @@ type Config struct {
 	Worldline bool
 	// ScrollSpeed is in dots per second.
 	ScrollSpeed int
-	// Platform is where each train row shows its platform number, if at all.
-	Platform board.PlatformPosition
+	// RowPrefix selects ordinals or platform numbers before each train's time.
+	RowPrefix board.RowPrefix
 	// WarningPlatform names the platform in a warning when the warning is for one platform.
 	WarningPlatform bool
 }
@@ -36,12 +36,12 @@ func New(name string, c Config) (board.Board, error) {
 	case "daktronics":
 		return daktronics.New(daktronics.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, WorldlinePowered: c.Worldline,
-			ScrollSpeed: c.ScrollSpeed, Platform: c.Platform, WarningPlatform: c.WarningPlatform,
+			ScrollSpeed: c.ScrollSpeed, RowPrefix: c.RowPrefix, WarningPlatform: c.WarningPlatform,
 		}), nil
 	case "infotec":
 		return infotec.New(infotec.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, ScrollSpeed: c.ScrollSpeed,
-			Platform: c.Platform, WarningPlatform: c.WarningPlatform,
+			RowPrefix: c.RowPrefix, WarningPlatform: c.WarningPlatform,
 		}), nil
 	default:
 		return nil, fmt.Errorf("unknown board %q; want daktronics or infotec", name)

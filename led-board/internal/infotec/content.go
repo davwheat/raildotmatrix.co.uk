@@ -15,12 +15,10 @@ const destinationMaxLength = 21
 
 // row is one train's line as the board shows it, derived once per view so that ticks only copy strings.
 type row struct {
-	id      string
-	ordinal string
+	id     string
+	prefix string
 	// std is the scheduled time as HHmm, drawn in digit cells.
 	std string
-	// platform is the text of the platform column, which stays empty when the board doesn't show platforms.
-	platform string
 	// pages are the destination texts the row cycles through every three seconds.
 	pages []string
 	// etd is "On time", "Cancelled", "Arrived", "Delayed", or an expected time as HHmm.
@@ -50,9 +48,8 @@ func (b *Board) derive(v model.View) content {
 		s := &v.Services[i]
 		c.rows = append(c.rows, row{
 			id:        s.ID,
-			ordinal:   [...]string{"1st", "2nd", "3rd"}[i],
+			prefix:    b.cfg.RowPrefix.Text(i, s.Platform),
 			std:       s.STD(b.cfg.Zone),
-			platform:  b.platform(s),
 			pages:     destinationPages(s),
 			etd:       b.etd(s),
 			cancelled: s.Cancelled,
@@ -62,13 +59,6 @@ func (b *Board) derive(v model.View) content {
 		}
 	}
 	return c
-}
-
-func (b *Board) platform(s *model.Service) string {
-	if b.cfg.Platform == board.PlatformHidden {
-		return ""
-	}
-	return board.PlatformText(s.Platform)
 }
 
 // etd mirrors displayedDepartureTime with the default onTimeText: a forecast equal to the timetable reads

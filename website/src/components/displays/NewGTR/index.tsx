@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback } from 'react'
 import LedBoard from '../LedBoard'
-import PlatformSettings, { defaultPlatformSettings } from '../LedBoard/PlatformSettings'
+import PlatformSettings, { defaultPlatformSettings, getRowPrefix } from '../LedBoard/PlatformSettings'
 import ToggleSwitch from '../../common/form/ToggleSwitch'
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
 import { debounce } from 'throttle-debounce'
@@ -151,7 +151,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
             showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
             legacyTocNames={!!searchParams?.get('useLegacyTocNames')}
             colour={BoardColors[settings.color]}
-            platformPosition={settings.platformPosition ?? defaultPlatformSettings.platformPosition}
+            rowPrefix={getRowPrefix(settings)}
             warningPlatform={!!settings.warningPlatform}
           />
         </div>

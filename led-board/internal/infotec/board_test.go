@@ -401,7 +401,7 @@ func TestLowerRowsSwap(t *testing.T) {
 		e := now.Sub(fixtures.Clock)
 		switch {
 		case e < swapInterval*time.Millisecond:
-			if !b.last.lower[0].on || b.last.lower[1].on || b.last.lower[0].ordinal != "2nd" {
+			if !b.last.lower[0].on || b.last.lower[1].on || b.last.lower[0].prefix != "2nd" {
 				t.Fatalf("at %v: lower rows %+v", e, b.last.lower)
 			}
 		case swapAt.IsZero():
@@ -421,7 +421,7 @@ func TestLowerRowsSwap(t *testing.T) {
 		t.Fatalf("3rd row settled %v after the swap began, want %v", got, swapSlide*time.Millisecond)
 	}
 	// The second swap, at 24 s, brings the 2nd train back down from above.
-	if !b.last.lower[0].on || b.last.lower[1].on || b.last.lower[0].ordinal != "2nd" {
+	if !b.last.lower[0].on || b.last.lower[1].on || b.last.lower[0].prefix != "2nd" {
 		t.Fatalf("after two swaps: %+v", b.last.lower)
 	}
 	if !b.swapStart.Equal(fixtures.Clock.Add(2*swapInterval*time.Millisecond)) || g.swapTravel != 13 {
@@ -432,7 +432,7 @@ func TestLowerRowsSwap(t *testing.T) {
 func TestGeometry(t *testing.T) {
 	g := newGeometry(testW, testH, 0)
 	want := geometry{
-		w: 256, h: 64, ch: 6, stdX: 23, colonCell: 3, timeW: 27, destX: 55, destW: 139, exptW: 28,
+		w: 256, h: 64, ch: 6, prefixW: 18, stdX: 23, colonCell: 3, timeW: 27, destX: 55, destW: 139, exptW: 28,
 		firstY: 0, infoY: 17, sepY: 33, secondY: 38, infoSlide: 13, swapTravel: 13, lineY: [3]int{3, 20, 37},
 		clockX: 97, clockY: 55, clockCell: 9, colon: 4, full: g.full,
 	}

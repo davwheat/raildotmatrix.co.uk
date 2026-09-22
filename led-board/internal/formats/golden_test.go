@@ -79,8 +79,7 @@ func goldenCases() []goldenCase {
 				}
 				add(format, fixture, "", size, Config{}, fixtureAt)
 			}
-			add(format, "busy-board", "platform-before", size, Config{Platform: board.PlatformBefore}, at)
-			add(format, "busy-board", "platform-after", size, Config{Platform: board.PlatformAfter}, at)
+			add(format, "busy-board", "platform-prefix", size, Config{RowPrefix: board.PrefixPlatforms}, at)
 			add(format, "stand-clear", "warning-platform", size, Config{WarningPlatform: true}, at)
 			add(format, "non-public-train", "warning-platform", size, Config{WarningPlatform: true}, at)
 		}
