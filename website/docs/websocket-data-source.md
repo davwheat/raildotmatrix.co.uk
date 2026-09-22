@@ -8,7 +8,7 @@ them out. To select the WebSocket source on a built site, use the query paramete
 
 The Infotec landscape DMI and Daktronics (Data Display) DMI boards always use the WebSocket feed. They come from the WebAssembly build of
 [`led-board`](../../led-board), which connects to the service itself: they read the service URL, but ignore the source selection, including
-`dataSource=original`, and the legacy iframe train-data messages. The Go port follows the display rules that this page describes.
+`dataSource=original`. The Go port follows the display rules that this page describes.
 
 In development, the default service is `ws://localhost:8080`. Run Darwin Browser locally with its movement backfill complete, then run this site
 with `yarn develop`. The URL is a base URL: the client adds `/v1/cis/live?crs=...`.
@@ -28,8 +28,8 @@ site's default comes from `NEXT_PUBLIC_LIVE_SERVICE_URL` in `.env.production`, w
 HTTP(S) bases are converted to WS(S), and an optional URL path prefix is preserved. Use a WSS service when hosting the site over HTTPS. Local
 development uses HTTP and WS.
 
-In WebSocket mode the board makes no train-data HTTP requests and ignores legacy iframe train-data messages. It reconnects only to the selected
-WebSocket service. A lost connection clears the board until a fresh snapshot arrives.
+In WebSocket mode the board makes no train-data HTTP requests. It reconnects only to the selected WebSocket service. A lost connection clears the
+board until a fresh snapshot arrives.
 
 The board asks the service for a heartbeat every 30 seconds, and resyncs only when it has a reason to: after a revision gap, or when a heartbeat
 reports a state digest that doesn't match what the board holds. It never resyncs on a timer, because a snapshot is the largest message the stream

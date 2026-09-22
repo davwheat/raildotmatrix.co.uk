@@ -7,8 +7,6 @@ import { displayServices, platformAlterations } from '../live/displayServices'
 import { useDataSource } from '../live/source'
 import type { CISState } from '../live/types'
 
-const PARENT_ORIGINS = ['https://railannouncements.co.uk', 'http://localhost:3000', 'http://localhost:8000']
-
 export function useServiceInformation(station: string, platforms: string[] | null, legacyNames: boolean, showUnconfirmed = false) {
   const { mode, baseUrl } = useDataSource()
   // Sorted and joined so a caller passing a fresh array of the same platforms
@@ -59,34 +57,23 @@ export function useServiceInformation(station: string, platforms: string[] | nul
       }
     }
 
-    let parentSuppliesData = false
     let request: AbortController | undefined
     async function load() {
-      if (parentSuppliesData || request) return
+      if (request) return
       request = new AbortController()
       const result = await GetNextTrainsAtStationStaff(station, { minOffset: 0 }, request)
-      if (active && !parentSuppliesData && result && !('error' in result)) {
+      if (active && result && !('error' in result)) {
         setData({ key, legacy: result })
       }
       request = undefined
     }
 
-    function receive(event: MessageEvent) {
-      if (event.source !== window.parent || !PARENT_ORIGINS.concat(window.location.origin).includes(event.origin)) return
-      if (!event.data || !Array.isArray(event.data.trainServices) || event.data.crs?.toUpperCase() !== station.toUpperCase()) return
-      parentSuppliesData = true
-      request?.abort()
-      setData({ key, legacy: event.data })
-    }
-
-    window.addEventListener('message', receive)
     void load()
     const timer = setInterval(load, 20_000)
     return () => {
       active = false
       request?.abort()
       clearInterval(timer)
-      window.removeEventListener('message', receive)
     }
   }, [key, mode, baseUrl, station, platformKey, showUnconfirmed])
 
