@@ -1,7 +1,7 @@
 import React from 'react'
 
 import BoardSettings from '../../common/BoardSettings'
-import LedBoard, { COLUMNS, ROWS } from '../LedBoard'
+import LedBoard from '../LedBoard'
 import { ZoomDiv } from '../ZoomDiv'
 
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
@@ -29,15 +29,21 @@ const BoardStyles = {
   },
 } as const
 
-/** The casing SVGs are drawn in dots, with the board's top-left dot at this offset. */
-const CASING_BORDER = 16
-const CASING_WIDTH = COLUMNS + 2 * CASING_BORDER
-const CASING_HEIGHT = ROWS + 2 * CASING_BORDER
+// The web board's layout from before it drew with the Go boards, in px, which the casing SVGs are drawn around: a
+// 2250 × 450 board with its text 32 px from the top, drawn in the 40 / 3.5 px dots of its 40 px font.
+const DOT = 40 / 3.5
+const COLUMNS = 193
+const ROWS = 36
+const BOARD = { width: 2250, height: 450, top: 32 }
+const CASING = { sides: 78, top: 74, bottom: 94 }
 
-const percent = (dots: number, of: number) => `${(100 * dots) / of}%`
+const percent = (length: number, of: number) => `${(100 * length) / of}%`
 
-/** The face behind each of the three rows of departures, which the real board's LED modules are mounted on. */
-const ROW_FACES = [0, 1, 2].map(row => [row * 16 + 1, row * 16 + 14])
+/**
+ * The face behind each of the three rows of departures, which the real board's LED modules are mounted on. Rows are 9
+ * dots tall, and a face stops 2 dots short of the next row, as the old board's did by 20 px.
+ */
+const ROW_FACES = [0, 1, 2].map(row => [row * 9, row * 9 + 7])
 
 const faceBackground = `linear-gradient(to bottom, ${ROW_FACES.map(
   ([top, bottom]) =>
@@ -67,6 +73,11 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
 
   const platforms = searchParams?.getAll('platform')
   const { showCasing } = customBoardSettings
+
+  const frame = showCasing
+    ? { width: BOARD.width + 2 * CASING.sides, height: BOARD.height + CASING.top + CASING.bottom, left: CASING.sides, top: CASING.top }
+    : { width: BOARD.width, height: BOARD.height, left: 0, top: 0 }
+  const canvasWidth = COLUMNS * DOT
 
   return (
     <>
@@ -109,10 +120,12 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
       <ZoomDiv>
         <div
           css={[
-            { position: 'relative' },
-            showCasing
-              ? { width: `min(100vw, ${(100 * CASING_WIDTH) / CASING_HEIGHT}vh)`, aspectRatio: `${CASING_WIDTH} / ${CASING_HEIGHT}` }
-              : { width: `min(100vw, ${(100 * COLUMNS) / ROWS}vh)` },
+            {
+              position: 'relative',
+              width: `min(100vw, ${(100 * frame.width) / frame.height}vh)`,
+              aspectRatio: `${frame.width} / ${frame.height}`,
+            },
+            !showCasing && { background: 'var(--dmi-background, #000)' },
             BoardStyles[customBoardSettings.boardStyle],
             customBoardSettings.withBackground && {
               '--dmi-row-background': '#35241a',
@@ -134,14 +147,14 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
           )}
 
           <LedBoard
-            css={
-              showCasing && {
-                position: 'absolute',
-                left: percent(CASING_BORDER, CASING_WIDTH),
-                top: percent(CASING_BORDER, CASING_HEIGHT),
-                width: percent(COLUMNS, CASING_WIDTH),
-              }
-            }
+            css={{
+              position: 'absolute',
+              left: percent(frame.left + (BOARD.width - canvasWidth) / 2, frame.width),
+              top: percent(frame.top + BOARD.top, frame.height),
+              width: percent(canvasWidth, frame.width),
+            }}
+            columns={COLUMNS}
+            rows={ROWS}
             board="daktronics"
             crs={station}
             url={baseUrl}
@@ -151,7 +164,12 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
             worldline={customBoardSettings.worldlinePowered}
           />
 
-          {showCasing && <BoardAsset css={{ position: 'absolute', inset: 0, color: 'var(--casing-color)', pointerEvents: 'none' }} />}
+          {showCasing && (
+            <BoardAsset
+              preserveAspectRatio="none"
+              css={{ position: 'absolute', inset: 0, color: 'var(--casing-color)', pointerEvents: 'none' }}
+            />
+          )}
         </div>
       </ZoomDiv>
     </>

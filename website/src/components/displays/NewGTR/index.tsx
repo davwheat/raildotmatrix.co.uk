@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback } from 'react'
-import LedBoard, { COLUMNS, ROWS } from '../LedBoard'
+import LedBoard from '../LedBoard'
 import ToggleSwitch from '../../common/form/ToggleSwitch'
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
 import { debounce } from 'throttle-debounce'
@@ -8,6 +8,15 @@ import PageLink from '../../common/PageLink'
 import { ZoomDiv } from '../ZoomDiv'
 import { getDisabledPlatforms } from '../../../api/ProcessServices'
 import { useDataSource } from '../../../live/source'
+
+// The web board's 2000 × 550 px layout, in the 7.17 px dots of its 86 px font: its text area and the padding around it.
+const COLUMNS = 272
+const ROWS = 70
+const PADDING = 24 / (86 / 12)
+const WIDTH = COLUMNS + 2 * PADDING
+const HEIGHT = ROWS + 2 * PADDING
+
+const percent = (dots: number, of: number) => `${(100 * dots) / of}%`
 
 interface IProps {
   station: string
@@ -119,16 +128,27 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
         {(platforms?.length ?? 0) > 0 && <p>Hiding platform(s) {getDisabledPlatforms(platforms!).join(', ')}</p>}
       </div>
       <ZoomDiv>
-        <LedBoard
-          css={{ width: `min(100vw, ${(100 * COLUMNS) / ROWS}vh)` }}
-          board="infotec"
-          crs={station}
-          url={baseUrl}
-          platforms={platforms}
-          showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
-          legacyTocNames={!!searchParams?.get('useLegacyTocNames')}
-          colour={BoardColors[settings.color]}
-        />
+        <div
+          css={{
+            position: 'relative',
+            width: `min(100vw, ${(100 * WIDTH) / HEIGHT}vh)`,
+            aspectRatio: `${WIDTH} / ${HEIGHT}`,
+            background: '#000',
+          }}
+        >
+          <LedBoard
+            css={{ position: 'absolute', left: percent(PADDING, WIDTH), top: percent(PADDING, HEIGHT), width: percent(COLUMNS, WIDTH) }}
+            columns={COLUMNS}
+            rows={ROWS}
+            board="infotec"
+            crs={station}
+            url={baseUrl}
+            platforms={platforms}
+            showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
+            legacyTocNames={!!searchParams?.get('useLegacyTocNames')}
+            colour={BoardColors[settings.color]}
+          />
+        </div>
       </ZoomDiv>
     </>
   )

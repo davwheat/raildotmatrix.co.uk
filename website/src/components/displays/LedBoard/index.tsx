@@ -3,26 +3,40 @@ import React, { useEffect, useRef, useState } from 'react'
 import { DotPainter } from './DotPainter'
 import { loadLedBoard, type LedBoardHandle, type LedBoardOptions } from './loadLedBoard'
 
-export const COLUMNS = 256
-export const ROWS = 64
-
-type Props = Omit<LedBoardOptions, 'width' | 'height'> & { className?: string }
+type Props = Omit<LedBoardOptions, 'width' | 'height'> & {
+  className?: string
+  /** The board's size in dots, which sets how big its text is against the board. */
+  columns: number
+  rows: number
+}
 
 /**
- * A departure board drawn by the WebAssembly build of github.com/davwheat/led-departure-board, the Go program that also
- * drives the physical LED panel. It fills the width its parent gives it, at the panel's aspect ratio.
+ * A departure board drawn by the WebAssembly build of the Go program in led-board, which also drives the physical LED
+ * panel. It fills the width its parent gives it, at the aspect ratio of its dots.
  */
-export default function LedBoard({ className, board, crs, url, platforms, showUnconfirmedPlatforms, legacyTocNames, worldline, colour }: Props) {
+export default function LedBoard({
+  className,
+  columns,
+  rows,
+  board,
+  crs,
+  url,
+  platforms,
+  showUnconfirmedPlatforms,
+  legacyTocNames,
+  worldline,
+  colour,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [status, setStatus] = useState<'loading' | 'running' | 'failed'>('loading')
 
   // A key rather than the options themselves, so that a parent passing an equal array every render doesn't restart
   // the board and its live stream.
-  const key = JSON.stringify({ board, crs, url, platforms, showUnconfirmedPlatforms, legacyTocNames, worldline, colour })
+  const key = JSON.stringify({ columns, rows, board, crs, url, platforms, showUnconfirmedPlatforms, legacyTocNames, worldline, colour })
 
   useEffect(() => {
     const canvas = canvasRef.current!
-    const painter = new DotPainter(canvas, COLUMNS, ROWS)
+    const painter = new DotPainter(canvas, columns, rows)
     const observer = observeDevicePixelSize(canvas, (width, height) => painter.resize(width, height))
     let handle: LedBoardHandle | undefined
     let frame = 0
@@ -47,7 +61,7 @@ export default function LedBoard({ className, board, crs, url, platforms, showUn
     loadLedBoard()
       .then(api => {
         if (stopped) return
-        const created = api.create({ ...JSON.parse(key), width: COLUMNS, height: ROWS })
+        const created = api.create({ ...JSON.parse(key), width: columns, height: rows })
         if (created instanceof Error) throw created
         handle = created
         setStatus('running')
@@ -67,7 +81,7 @@ export default function LedBoard({ className, board, crs, url, platforms, showUn
     <div className={className} css={{ position: 'relative' }} aria-busy={status === 'loading'}>
       <canvas
         ref={canvasRef}
-        css={{ display: 'block', width: '100%', aspectRatio: `${COLUMNS} / ${ROWS}`, background: 'var(--led-board-background, #000)' }}
+        css={{ display: 'block', width: '100%', aspectRatio: `${columns} / ${rows}`, background: 'var(--led-board-background, #000)' }}
       />
       {status === 'failed' && (
         <p

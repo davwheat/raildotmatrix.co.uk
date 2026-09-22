@@ -14,13 +14,22 @@ const (
 	tick         = 20 * time.Millisecond
 )
 
+// sizes are the sizes the board is drawn at: the LED panel, and raildotmatrix.co.uk, which draws it in the dots of
+// its old web layout.
+var sizes = [][2]int{{testW, testH}, {193, 36}}
+
 func newTestBoard(t *testing.T, worldline bool) *Board {
+	t.Helper()
+	return newSizedBoard(t, testW, testH, worldline)
+}
+
+func newSizedBoard(t *testing.T, w, h int, worldline bool) *Board {
 	t.Helper()
 	zone, err := time.LoadLocation("Europe/London")
 	if err != nil {
 		t.Fatal(err)
 	}
-	return New(Config{Width: testW, Height: testH, Zone: zone, WorldlinePowered: worldline})
+	return New(Config{Width: w, Height: h, Zone: zone, WorldlinePowered: worldline})
 }
 
 // run drives the board through a fixture at 50 Hz for the given duration, sending any second view after two
@@ -31,7 +40,7 @@ func run(t *testing.T, b *Board, name string, d time.Duration, check func(now ti
 	if steps == nil {
 		t.Fatalf("unknown fixture %q", name)
 	}
-	f := frame.New(testW, testH)
+	f := frame.New(b.cfg.Width, b.cfg.Height)
 	b.Update(steps[0])
 	redraws := 0
 	for now := fixtures.Clock; now.Before(fixtures.Clock.Add(d)); now = now.Add(tick) {
@@ -50,23 +59,25 @@ func run(t *testing.T, b *Board, name string, d time.Duration, check func(now ti
 }
 
 func TestFixturesStayWithinRows(t *testing.T) {
-	for _, worldline := range []bool{false, true} {
-		for _, name := range fixtures.Names {
-			b := newTestBoard(t, worldline)
-			g := b.geo
-			run(t, b, name, 40*time.Second, func(now time.Time, _ bool, f *frame.Frame) {
-				for y := range f.H {
-					if y%g.rowH < g.rowH-2 {
-						continue
-					}
-					for x := range f.W {
-						if f.At(x, y) != frame.Black {
-							t.Fatalf("%s (worldline=%v) at %v: dot lit at (%d,%d), in the gap below row %d",
-								name, worldline, now.Sub(fixtures.Clock), x, y, y/g.rowH)
+	for _, size := range sizes {
+		for _, worldline := range []bool{false, true} {
+			for _, name := range fixtures.Names {
+				b := newSizedBoard(t, size[0], size[1], worldline)
+				g := b.geo
+				run(t, b, name, 40*time.Second, func(now time.Time, _ bool, f *frame.Frame) {
+					for y := range f.H {
+						if y%g.rowH < g.rowH-2 {
+							continue
+						}
+						for x := range f.W {
+							if f.At(x, y) != frame.Black {
+								t.Fatalf("%dx%d %s (worldline=%v) at %v: dot lit at (%d,%d), in the gap below row %d",
+									size[0], size[1], name, worldline, now.Sub(fixtures.Clock), x, y, y/g.rowH)
+							}
 						}
 					}
-				}
-			})
+				})
+			}
 		}
 	}
 }

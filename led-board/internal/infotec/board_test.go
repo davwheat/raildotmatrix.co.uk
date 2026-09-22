@@ -15,13 +15,22 @@ const (
 	tick         = 20 * time.Millisecond
 )
 
+// sizes are the sizes the board is drawn at: the LED panel, and raildotmatrix.co.uk, which draws it in the dots of
+// its old web layout.
+var sizes = [][2]int{{testW, testH}, {272, 70}}
+
 func newTestBoard(t *testing.T) *Board {
+	t.Helper()
+	return newSizedBoard(t, testW, testH)
+}
+
+func newSizedBoard(t *testing.T, w, h int) *Board {
 	t.Helper()
 	zone, err := time.LoadLocation("Europe/London")
 	if err != nil {
 		t.Fatal(err)
 	}
-	return New(Config{Width: testW, Height: testH, Zone: zone})
+	return New(Config{Width: w, Height: h, Zone: zone})
 }
 
 // run drives the board through a fixture at 50 Hz for the given duration, sending any second view after two
@@ -32,7 +41,7 @@ func run(t *testing.T, b *Board, name string, d time.Duration, check func(now ti
 	if steps == nil {
 		t.Fatalf("unknown fixture %q", name)
 	}
-	f := frame.New(testW, testH)
+	f := frame.New(b.cfg.Width, b.cfg.Height)
 	b.Update(steps[0])
 	redraws := 0
 	for now := fixtures.Clock; now.Before(fixtures.Clock.Add(d)); now = now.Add(tick) {
@@ -72,24 +81,26 @@ func litOutside(f *frame.Frame, bands ...[2]int) (int, int, bool) {
 }
 
 func TestFixturesStayWithinRows(t *testing.T) {
-	for _, name := range fixtures.Names {
-		b := newTestBoard(t)
-		g := b.geo
-		h := font.PISTall.Height
-		bands := [][2]int{
-			{g.firstY, g.firstY + h}, {g.infoY, g.infoY + h}, {g.sepY, g.sepY + 1}, {g.secondY, g.secondY + h},
-			{g.clockY, g.clockY + font.DotMatrixClock.Height},
+	for _, size := range sizes {
+		for _, name := range fixtures.Names {
+			b := newSizedBoard(t, size[0], size[1])
+			g := b.geo
+			h := font.PISTall.Height
+			bands := [][2]int{
+				{g.firstY, g.firstY + h}, {g.infoY, g.infoY + h}, {g.sepY, g.sepY + 1}, {g.secondY, g.secondY + h},
+				{g.clockY, g.clockY + font.DotMatrixClock.Height},
+			}
+			messageBands := [][2]int{{g.lineY[0], g.lineY[0] + h}, {g.lineY[1], g.lineY[1] + h}, {g.lineY[2], g.lineY[2] + h}, bands[4]}
+			run(t, b, name, 40*time.Second, func(now time.Time, _ bool, f *frame.Frame) {
+				allowed := bands
+				if b.mode != modeTrains {
+					allowed = messageBands
+				}
+				if x, y, lit := litOutside(f, allowed...); lit {
+					t.Fatalf("%dx%d %s at %v: dot lit at (%d,%d), outside every row", size[0], size[1], name, now.Sub(fixtures.Clock), x, y)
+				}
+			})
 		}
-		messageBands := [][2]int{{g.lineY[0], g.lineY[0] + h}, {g.lineY[1], g.lineY[1] + h}, {g.lineY[2], g.lineY[2] + h}, bands[4]}
-		run(t, b, name, 40*time.Second, func(now time.Time, _ bool, f *frame.Frame) {
-			allowed := bands
-			if b.mode != modeTrains {
-				allowed = messageBands
-			}
-			if x, y, lit := litOutside(f, allowed...); lit {
-				t.Fatalf("%s at %v: dot lit at (%d,%d), outside every row", name, now.Sub(fixtures.Clock), x, y)
-			}
-		})
 	}
 }
 
