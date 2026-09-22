@@ -1,0 +1,382 @@
+// The station CIS and announcement streams, protocol version 2.
+//
+// Every WebSocket frame is binary: the server writes one ServerMessage per
+// frame and reads one ClientMessage per frame. docs/live/protocol.md describes
+// the behaviour; this file is only the encoding.
+//
+// Presence carries meaning throughout. An `optional` scalar that is unset means
+// "not known" (JSON null in version 1), which is different from a known zero:
+// an unset `platform.suppressed` is not the same as `false`. Repeated fields
+// are known-empty when empty; the one list that can itself be unknown
+// (`Movement.coaches`) is wrapped in a message so that it has presence too.
+//
+// Field numbers are never reused. Add fields; do not renumber or repurpose.
+syntax = "proto3";
+
+package darwin.live.v2;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "darwin-browser/internal/live/livepb;livepb";
+
+message ServerMessage {
+  // 2. A client must close the connection on any other value.
+  uint32 version = 1;
+  oneof payload {
+    CisSnapshot snapshot = 2;
+    CisUpdate update = 3;
+    Heartbeat heartbeat = 4;
+    Ready ready = 5;
+    Announcement announcement = 6;
+    Retraction retraction = 7;
+    Revision revision = 8;
+  }
+}
+
+message ClientMessage {
+  oneof command {
+    // Valid on the CIS stream only. Any command closes an announcement stream.
+    Resync resync = 1;
+  }
+}
+
+message Resync {
+  // Echoed on the snapshot that answers this request. At most 128 bytes.
+  optional string request_id = 1;
+}
+
+// ---------------------------------------------------------------- CIS
+
+message Window {
+  google.protobuf.Timestamp from = 1;
+  google.protobuf.Timestamp to = 2;
+}
+
+message CisSnapshot {
+  optional string request_id = 1;
+  Location station = 2;
+  Window window = 3;
+  string epoch = 4;
+  uint64 revision = 5;
+  repeated Movement movements = 6;
+  repeated string ordering = 7;
+  repeated PlatformOverride overrides = 8;
+}
+
+message CisUpdate {
+  string epoch = 1;
+  uint64 previous_revision = 2;
+  uint64 revision = 3;
+  Window window = 4;
+  repeated Movement upserts = 5;
+  repeated string removals = 6;
+  repeated string ordering = 7;
+  repeated PlatformOverride override_upserts = 8;
+  repeated OverrideRemoval override_removals = 9;
+}
+
+// On the announcement stream only sent_at is set: that stream attests no state.
+message Heartbeat {
+  optional string epoch = 1;
+  optional uint64 revision = 2;
+  optional string digest = 3;
+  google.protobuf.Timestamp sent_at = 4;
+}
+
+enum OverrideKind {
+  OVERRIDE_KIND_UNSPECIFIED = 0;
+  OVERRIDE_KIND_STAND_CLEAR = 1;
+  OVERRIDE_KIND_NOT_FOR_PUBLIC_USE = 2;
+}
+
+message PlatformOverride {
+  string id = 1;
+  OverrideKind kind = 2;
+  Location station = 3;
+  string platform = 4;
+  optional string movement_id = 5;
+  google.protobuf.Timestamp activates_at = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  string reason = 8;
+  string source = 9;
+}
+
+message OverrideRemoval {
+  string id = 1;
+  string reason = 2;
+}
+
+// ---------------------------------------------------------------- Announcements
+
+message Ready {
+  Location station = 1;
+  google.protobuf.Timestamp created_at = 2;
+  bool healthy = 3;
+}
+
+enum AnnouncementType {
+  ANNOUNCEMENT_TYPE_UNSPECIFIED = 0;
+  ANNOUNCEMENT_TYPE_NEXT = 1;
+  ANNOUNCEMENT_TYPE_APPROACHING = 2;
+  ANNOUNCEMENT_TYPE_STANDING = 3;
+  ANNOUNCEMENT_TYPE_DISRUPTED = 4;
+  ANNOUNCEMENT_TYPE_PASSING = 5;
+  ANNOUNCEMENT_TYPE_PLATFORM_ALTERATION = 6;
+}
+
+message Announcement {
+  string event_id = 1;
+  AnnouncementType announcement_type = 2;
+  string movement_id = 3;
+  Location station = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp expires_at = 6;
+  Movement details = 7;
+  repeated string affected_platforms = 8;
+  optional string previous_platform = 9;
+  optional string new_platform = 10;
+  // Set only on a connection that asked for audio, and only when the server
+  // rendered some. A client plays it in place of generating its own; without
+  // it the client generates the announcement from `details` as before.
+  AnnouncementAudio audio = 11;
+}
+
+message Retraction {
+  string event_id = 1;
+  string movement_id = 2;
+  AnnouncementType announcement_type = 3;
+  // Advisory and open-ended: accept values this file does not list.
+  string reason = 4;
+  optional string cause = 5;
+  google.protobuf.Timestamp created_at = 6;
+  repeated string affected_platforms = 7;
+}
+
+message Revision {
+  string event_id = 1;
+  string movement_id = 2;
+  AnnouncementType announcement_type = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp expires_at = 5;
+  Movement details = 6;
+  repeated string affected_platforms = 7;
+  // A revision of an announcement that carried audio carries its replacement,
+  // because the audio it revises now says the wrong thing. If it is unset, the
+  // client discards the audio it holds and generates from `details`.
+  AnnouncementAudio audio = 8;
+}
+
+enum AudioCodec {
+  AUDIO_CODEC_UNSPECIFIED = 0;
+  AUDIO_CODEC_MP3 = 1;
+}
+
+// A complete rendered announcement, chime included, ready to play as it is.
+message AnnouncementAudio {
+  AudioCodec codec = 1;
+  bytes data = 2;
+  // Playing time, so a client can plan its queue before decoding. Unset when
+  // the renderer did not measure it.
+  google.protobuf.Duration duration = 3;
+}
+
+// ---------------------------------------------------------------- Movements
+
+message Location {
+  string tpl = 1;
+  optional string crs = 2;
+  optional string name = 3;
+}
+
+message Times {
+  google.protobuf.Timestamp planned = 1;
+  google.protobuf.Timestamp estimated = 2;
+  google.protobuf.Timestamp actual = 3;
+  bool unknown_delay = 4;
+}
+
+message Platform {
+  optional string number = 1;
+  optional bool confirmed = 2;
+  optional bool suppressed = 3;
+  optional string source = 4;
+}
+
+message Reason {
+  optional string code = 1;
+  optional string text = 2;
+}
+
+message Via {
+  string text = 1;
+  repeated string locs = 2;
+}
+
+message Endpoint {
+  Location location = 1;
+  Via via = 2;
+  optional string assoc_rid = 3;
+  optional string assoc_cat = 4;
+}
+
+message Coach {
+  string number = 1;
+  optional string class = 2;
+  optional string toilet_type = 3;
+  optional string toilet_status = 4;
+  optional int32 loading_percent = 5;
+}
+
+// Wrapped so that "formation unknown" (unset) differs from "no coaches".
+message CoachList {
+  repeated Coach coaches = 1;
+}
+
+message Call {
+  string id = 1;
+  Location location = 2;
+  Times arrival = 3;
+  Times departure = 4;
+  Platform platform = 5;
+  bool cancelled = 6;
+  optional string activities = 7;
+  bool operational = 8;
+  optional bool detach_front = 9;
+  Location false_destination = 10;
+  optional int32 coach_count = 11;
+}
+
+enum TransportMode {
+  TRANSPORT_MODE_UNSPECIFIED = 0;
+  TRANSPORT_MODE_TRAIN = 1;
+  TRANSPORT_MODE_BUS = 2;
+  TRANSPORT_MODE_FERRY = 3;
+}
+
+message Portion {
+  optional string headcode = 1;
+  // Unspecified when the associated service is unavailable.
+  TransportMode mode = 2;
+  optional string operator_code = 3;
+  optional string operator_name = 4;
+  Location origin = 5;
+  Location destination = 6;
+  string rid = 7;
+  string category = 8;
+  Location at = 9;
+  bool cancelled = 10;
+  bool available = 11;
+  optional int32 coach_count = 12;
+  optional string position = 13;
+  repeated Call calls = 14;
+}
+
+enum MovementKind {
+  MOVEMENT_KIND_UNSPECIFIED = 0;
+  MOVEMENT_KIND_STOP = 1;
+  MOVEMENT_KIND_ARRIVAL = 2;
+  MOVEMENT_KIND_DEPARTURE = 3;
+  MOVEMENT_KIND_PASSING = 4;
+  // Known only from signalling: no Darwin service was matched.
+  MOVEMENT_KIND_UNKNOWN = 5;
+}
+
+message TrainOrder {
+  int32 position = 1;
+  string platform = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
+
+message Movement {
+  string id = 1;
+  string rid = 2;
+  string location_id = 3;
+  Location station = 4;
+  MovementKind kind = 5;
+  TransportMode mode = 6;
+  optional string uid = 7;
+  optional string headcode = 8;
+  optional string operator_code = 9;
+  optional string operator_name = 10;
+  bool passenger = 11;
+  bool operational = 12;
+  Times arrival = 13;
+  Times departure = 14;
+  Times passing = 15;
+  Platform platform = 16;
+  bool suppressed = 17;
+  bool cancelled = 18;
+  Reason cancel_reason = 19;
+  Reason delay_reason = 20;
+  optional int32 coach_count = 21;
+  optional int32 loading_percent = 22;
+  optional string loading_category = 23;
+  CoachList coaches = 24;
+  optional string formation = 25;
+  optional string coach_loading = 26;
+  optional bool reverse_formation = 27;
+  optional bool detach_front = 28;
+  optional string activities = 29;
+  Location false_destination = 30;
+  repeated Endpoint origins = 31;
+  repeated Endpoint destinations = 32;
+  repeated Call calling_points = 33;
+  repeated Portion portions = 34;
+  google.protobuf.Timestamp arrived_at = 35;
+  google.protobuf.Timestamp passed_at = 36;
+  TrainOrder train_order = 37;
+  TdEvidence td = 38;
+}
+
+// ---------------------------------------------------------------- TD evidence
+
+enum TdEvent {
+  TD_EVENT_UNSPECIFIED = 0;
+  TD_EVENT_ARRIVAL = 1;
+  TD_EVENT_DEPARTURE = 2;
+  // A platform-only SMART rule. It has no direction.
+  TD_EVENT_PLATFORM = 3;
+}
+
+enum TdMatch {
+  TD_MATCH_UNSPECIFIED = 0;
+  TD_MATCH_MATCHED = 1;
+  TD_MATCH_UNMATCHED = 2;
+  TD_MATCH_AMBIGUOUS = 3;
+}
+
+enum TdClassification {
+  TD_CLASSIFICATION_UNSPECIFIED = 0;
+  TD_CLASSIFICATION_STOPPING = 1;
+  TD_CLASSIFICATION_PASSING = 2;
+  TD_CLASSIFICATION_NON_PASSENGER = 3;
+  TD_CLASSIFICATION_NON_PUBLIC = 4;
+  TD_CLASSIFICATION_UNKNOWN = 5;
+  TD_CLASSIFICATION_AMBIGUOUS = 6;
+}
+
+message TdEvidence {
+  string id = 1;
+  string area = 2;
+  string description = 3;
+  string from = 4;
+  string to = 5;
+  string stanox = 6;
+  string crs = 7;
+  repeated string tiplocs = 8;
+  string name = 9;
+  string platform = 10;
+  TdEvent event = 11;
+  // The SMART step type letter.
+  string step = 12;
+  // "up", "down", or empty when the rule has none.
+  string direction = 13;
+  string from_line = 14;
+  string to_line = 15;
+  google.protobuf.Timestamp observed_at = 16;
+  google.protobuf.Timestamp reported_at = 17;
+  google.protobuf.Timestamp expires_at = 18;
+  TdMatch match = 19;
+  TdClassification classification = 20;
+}

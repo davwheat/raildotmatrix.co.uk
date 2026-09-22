@@ -1,0 +1,49 @@
+# Settings for the departure board. Install as /etc/departure-board.toml, readable by everyone: the board drops to
+# user daemon once the panel is running and rereads this file when it changes.
+#
+# BOARD_* environment variables (BOARD_CRS, BOARD_LED_BRIGHTNESS, ...) override this file, and flags of the
+# same names (-crs, -led-brightness, ...) override both. Leave a setting out to use its default.
+
+# Station to show.
+crs = "BTN"
+
+# Board format: "daktronics" or "infotec".
+board = "daktronics"
+
+# Text colour: "amber" or "white".
+colour = "amber"
+
+# Platforms to show; empty shows the whole station.
+platforms = []
+show_unconfirmed_platforms = false
+
+# Historic operator names, such as "London Midland".
+legacy_toc_names = false
+
+# Daktronics only: the Worldline-driven variant with one scrolling information line.
+worldline = false
+
+# Scroll speed in dots per second; 0 uses the board's default (48 Daktronics, 60 Infotec).
+scroll_speed = 0
+
+url = "wss://darwinbrowser.com"
+verbose = false
+
+[led]
+# Brightness in percent. A change here applies straight away, without a restart.
+brightness = 60
+
+# The panel refresh rate and PWM bit depth follow the board unless set here. The refresh is the lowest whole
+# multiple of the scroll speed that's at least 60 Hz, so that every step lasts the same number of refreshes,
+# and the depth is the most the panel manages at that rate. At the default scroll speeds, that's 96 Hz and
+# 8 bits for Daktronics, and 60 Hz and 11 bits for Infotec.
+# limit_refresh = 60
+# pwm_bits = 11
+
+rows = 64
+cols = 128
+chain = 2
+# "BGR" if red and blue come out swapped.
+rgb_sequence = "RGB"
+gpio_mapping = "regular"
+slowdown_gpio = 2
