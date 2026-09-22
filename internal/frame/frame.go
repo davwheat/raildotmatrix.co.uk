@@ -69,3 +69,15 @@ type Display interface {
 	Swap(f *Frame) error
 	Close() error
 }
+
+// VSyncer is implemented by displays with a fixed refresh rate. WaitVSync blocks until the next refresh without
+// uploading a frame, so an animation loop can stay locked to the display even when nothing changed.
+type VSyncer interface {
+	WaitVSync() error
+}
+
+// Dimmer is implemented by displays whose brightness can change while they run. SetBrightness takes a percentage
+// from 1 to 100; the caller redraws afterwards, since a display may only apply it to pixels written from then on.
+type Dimmer interface {
+	SetBrightness(percent int) error
+}

@@ -1,6 +1,6 @@
 // Package model is the contract between the live feed and the board: what a departure board needs to know about
 // each train, already reduced from the Darwin Browser movement feed. It mirrors IMyTrainService in
-// raildotmatrix.co.uk's src/api/ProcessServices.ts, keeping only what the Data Display board reads.
+// raildotmatrix.co.uk's src/api/ProcessServices.ts, keeping only what the boards read.
 package model
 
 import "time"
@@ -26,6 +26,9 @@ type CallPoint struct {
 	Cancelled bool
 	// Length is the coach count on departure from this call, or 0 when unknown.
 	Length int
+	// Arrival is the time the Infotec board prints next to the call: the actual, else estimated, else planned
+	// arrival. Nil when none is known or the call is cancelled.
+	Arrival *time.Time
 	// Divides lists the portions that split off here.
 	Divides []Portion
 }

@@ -1,0 +1,15 @@
+{
+  "id": "override-1",
+  "kind": "stand_clear",
+  "station": {
+    "tpl": "TEST",
+    "crs": "TST",
+    "name": "Example station"
+  },
+  "platform": "2",
+  "movement_id": "202609130001/loc:TEST:wtp:10:03:00",
+  "activates_at": "2026-09-13T10:00:00Z",
+  "expires_at": "2026-09-13T10:04:00Z",
+  "reason": "Passing movement approaching",
+  "source": "future-trusted-producer"
+}

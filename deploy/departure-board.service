@@ -1,0 +1,17 @@
+[Unit]
+Description=Railway departure board on the LED matrix
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/root/board -config /etc/departure-board.toml
+Restart=always
+RestartSec=5
+# The board blanks the panel and exits within a frame of SIGTERM; one that doesn't is stuck, and is killed
+# rather than left holding the GPIO for the default 90 s.
+TimeoutStopSec=10
+Nice=-10
+
+[Install]
+WantedBy=multi-user.target

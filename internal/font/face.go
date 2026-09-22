@@ -1,4 +1,4 @@
-// Package font draws the Data Display dot fonts. Glyph bitmaps are generated from the FontStruct fonts in
+// Package font draws the Data Display and Infotec dot fonts. Glyph bitmaps are generated from the fonts in
 // raildotmatrix.co.uk by cmd/fontgen; see generate.go.
 package font
 
