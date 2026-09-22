@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/fixtures"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/formats"
@@ -31,6 +32,8 @@ func main() {
 	boardName := flag.String("board", "daktronics", "board format: daktronics or infotec")
 	worldline := flag.Bool("worldline", false, "render the Worldline-powered Daktronics variant")
 	scrollSpeed := flag.Int("scroll-speed", 0, "scroll speed in dots per second; 0 uses the board's default")
+	platformPosition := flag.String("platform-position", "none", "where each train row shows its platform number: none, before, or after")
+	warningPlatform := flag.Bool("warning-platform", false, "name the platform in warnings")
 	width := flag.Int("width", 256, "board width in dots")
 	height := flag.Int("height", 64, "board height in dots")
 	flag.Parse()
@@ -51,8 +54,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	platform, err := board.ParsePlatformPosition(*platformPosition)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
 	w, h := *width, *height
-	b, err := formats.New(*boardName, formats.Config{Width: w, Height: h, Zone: zone, Worldline: *worldline, ScrollSpeed: *scrollSpeed})
+	b, err := formats.New(*boardName, formats.Config{
+		Width: w, Height: h, Zone: zone, Worldline: *worldline, ScrollSpeed: *scrollSpeed, Platform: platform,
+		WarningPlatform: *warningPlatform,
+	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)

@@ -53,11 +53,11 @@ func Steps(name string) []model.View {
 		return snapshot(dividing(), bedford())
 	case "stand-clear":
 		v := snapshot(victoria(), bedford())
-		v[0].Notice = model.StandClear
+		v[0].Notice, v[0].NoticePlatform = model.StandClear, "2"
 		return v
 	case "non-public-train":
 		v := snapshot(victoria(), bedford())
-		v[0].Notice = model.NotForPublicUse
+		v[0].Notice, v[0].NoticePlatform = model.NotForPublicUse, "10A"
 		return v
 	case "platform-alteration":
 		before := snapshot(victoria(), bedford())
@@ -101,9 +101,10 @@ var (
 	littlehamptonLoc = model.Location{Name: "Littlehampton", CRS: "LIT"}
 )
 
-func service(id, toc string, departure int, length int, dest model.Location, calls ...model.CallPoint) model.Service {
+func service(id, toc, platform string, departure int, length int, dest model.Location, calls ...model.CallPoint) model.Service {
 	return model.Service{
 		ID:           id,
+		Platform:     platform,
 		Destinations: []model.Location{dest},
 		Origins:      []model.Location{brightonLoc},
 		Scheduled:    *at(departure),
@@ -119,29 +120,29 @@ func call(l model.Location, arrivalSeconds int, length int) model.CallPoint {
 }
 
 func victoria() model.Service {
-	return service("victoria", "Southern", 180, 8, victoriaLoc, call(claphamLoc, 480, 8), call(victoriaLoc, 840, 8))
+	return service("victoria", "Southern", "4", 180, 8, victoriaLoc, call(claphamLoc, 480, 8), call(victoriaLoc, 840, 8))
 }
 
 func bedford() model.Service {
-	return service("bedford", "Thameslink", 420, 12, bedfordLoc, call(londonBridgeLoc, 900, 8), call(stPancrasLoc, 1440, 8), call(bedfordLoc, 3600, 8))
+	return service("bedford", "Thameslink", "10A", 420, 12, bedfordLoc, call(londonBridgeLoc, 900, 8), call(stPancrasLoc, 1440, 8), call(bedfordLoc, 3600, 8))
 }
 
 func gatwick() model.Service {
-	return service("gatwick", "Gatwick Express", 660, 8, gatwickLoc, call(gatwickLoc, 1020, 8))
+	return service("gatwick", "Gatwick Express", "2", 660, 8, gatwickLoc, call(gatwickLoc, 1020, 8))
 }
 
 func londonBridge() model.Service {
 	dest := londonBridgeLoc
 	dest.Via = "via Sydenham"
-	return service("london-bridge", "Southern", 900, 8, dest, call(norwoodLoc, 1140, 8), call(londonBridgeLoc, 1500, 8))
+	return service("london-bridge", "Southern", "5", 900, 8, dest, call(norwoodLoc, 1140, 8), call(londonBridgeLoc, 1500, 8))
 }
 
 func brighton() model.Service {
-	return service("brighton", "Southern", 1200, 8, brightonLoc, call(gatwickLoc, 1560, 8), call(brightonLoc, 2400, 8))
+	return service("brighton", "Southern", "1", 1200, 8, brightonLoc, call(gatwickLoc, 1560, 8), call(brightonLoc, 2400, 8))
 }
 
 func terminating() model.Service {
-	s := service("terminating", "Southern", 240, 8, model.Location{Name: "Terminates here", CRS: "ECR"})
+	s := service("terminating", "Southern", "3", 240, 8, model.Location{Name: "Terminates here", CRS: "ECR"})
 	s.TerminatesHere = true
 	return s
 }
@@ -149,7 +150,7 @@ func terminating() model.Service {
 func dividing() model.Service {
 	divide := call(horshamLoc, 1500, 4)
 	divide.Divides = []model.Portion{{Length: 4, CallPoints: []model.CallPoint{call(horshamLoc, 1500, 4), call(littlehamptonLoc, 2400, 4)}}}
-	s := service("dividing", "Southern", 300, 8, horshamLoc, call(gatwickLoc, 960, 8), divide)
+	s := service("dividing", "Southern", "6", 300, 8, horshamLoc, call(gatwickLoc, 960, 8), divide)
 	s.Destinations = append(s.Destinations, littlehamptonLoc)
 	return s
 }

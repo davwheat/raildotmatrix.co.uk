@@ -21,6 +21,15 @@ colour = "amber"
 platforms = []
 show_unconfirmed_platforms = false
 
+# Where each train row shows its platform number: "none", "before" the ordinal ("Pl 1 1st"), or "after" it
+# ("1st Pl 1"). The column has room for a three-character platform such as "10A", and stays blank when the
+# platform isn't published.
+platform_position = "none"
+
+# Name the platform in a stand clear or not-for-public-use warning, such as "to call at platform 2" in place of
+# "to call at this station". A warning for trains at several platforms at once keeps the general wording.
+warning_platform = false
+
 # Historic operator names, such as "London Midland".
 legacy_toc_names = false
 

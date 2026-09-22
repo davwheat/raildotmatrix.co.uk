@@ -25,6 +25,11 @@ type Config struct {
 	Colour frame.RGB
 	// ScrollSpeed is how fast text scrolls, in dots per second; 0 means DefaultScrollSpeed.
 	ScrollSpeed int
+	// Platform is where each train row shows its platform number, if at all.
+	Platform board.PlatformPosition
+	// WarningPlatform names the platform in a warning, in place of "this station", when the warning is for one
+	// platform.
+	WarningPlatform bool
 }
 
 // Durations of the animations in TrainServices.tsx, PlatformAlterationMessage.tsx and SwapBetween.tsx, in
@@ -68,28 +73,46 @@ const (
 // geometry is the board's layout in dots. Columns follow the CSS grid in TrainService.tsx with 1ch equal to
 // the advance of a digit; rows are a quarter of the height each.
 type geometry struct {
-	w, h   int
-	rowH   int
-	pad    int
-	bandH  int
-	stdX   int
-	destX  int
-	destW  int
-	etdW   int
-	ch     int
-	clockX int
-	cell   int
+	w, h     int
+	rowH     int
+	pad      int
+	bandH    int
+	ordinalX int
+	// platX and platW are the platform column, which is empty unless the board shows platforms.
+	platX, platW int
+	stdX         int
+	destX        int
+	destW        int
+	etdW         int
+	ch           int
+	clockX       int
+	cell         int
 }
 
-func newGeometry(w, h int) geometry {
+func newGeometry(w, h int, platform board.PlatformPosition) geometry {
 	ch := font.Text.Advance('0')
 	// The grid gap is 1em/7*2.5 = 1.25 dots; the column widths are 3.25ch, 4.5ch and 8.2ch.
 	gap := 1
 	ordinalW := (13*ch + 2) / 4
 	stdW := 9 * ch / 2
 	g := geometry{w: w, h: h, rowH: h / 4, ch: ch, cell: font.Clock.Advance('0')}
-	g.stdX = ordinalW + gap
-	g.destX = g.stdX + stdW + gap
+	x := 0
+	column := func(width int) int {
+		at := x
+		x += width + gap
+		return at
+	}
+	if platform == board.PlatformBefore {
+		g.platW = board.PlatformWidth(font.Text)
+		g.platX = column(g.platW)
+	}
+	g.ordinalX = column(ordinalW)
+	if platform == board.PlatformAfter {
+		g.platW = board.PlatformWidth(font.Text)
+		g.platX = column(g.platW)
+	}
+	g.stdX = column(stdW)
+	g.destX = x
 	g.etdW = (41*ch + 2) / 5
 	g.destW = w - g.destX - gap - g.etdW
 	// The web puts cap tops at the row top and clips each row at 80% of its height; in the panel's taller rows
@@ -157,7 +180,7 @@ func New(cfg Config) *Board {
 	if cfg.ScrollSpeed <= 0 {
 		cfg.ScrollSpeed = DefaultScrollSpeed
 	}
-	b := &Board{cfg: cfg, geo: newGeometry(cfg.Width, cfg.Height)}
+	b := &Board{cfg: cfg, geo: newGeometry(cfg.Width, cfg.Height, cfg.Platform)}
 	b.info.speed = cfg.ScrollSpeed
 	return b
 }

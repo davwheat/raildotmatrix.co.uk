@@ -6,23 +6,22 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
-	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 // rowScene is one train row as drawn this tick: dx shifts it right while it slides out, dy moves it vertically
 // while the lower rows swap, and etdLevel is the ETD's brightness out of fadeLevels while it flashes.
 type rowScene struct {
-	on                      bool
-	ordinal, std, dest, etd string
-	dx, dy                  int
-	etdLevel                int
+	on                                bool
+	ordinal, platform, std, dest, etd string
+	dx, dy                            int
+	etdLevel                          int
 }
 
 // scene is a complete description of one frame. Two ticks that compose equal scenes draw the same picture,
 // which is how Tick avoids redrawing a still board; it must stay comparable and free of slices.
 type scene struct {
-	mode   mode
-	notice model.Notice
+	mode    mode
+	warning [3]string
 	// level is the brightness of everything but the clock, out of fadeLevels.
 	level int
 
@@ -35,7 +34,7 @@ type scene struct {
 }
 
 func (b *Board) compose(now time.Time) scene {
-	s := scene{mode: b.mode, notice: b.view.Notice, level: b.level(now), clock: clockDigits(now, b.cfg.Zone)}
+	s := scene{mode: b.mode, warning: b.content.warning, level: b.level(now), clock: clockDigits(now, b.cfg.Zone)}
 	if b.mode == modeTrains {
 		b.composeTrains(now, &s)
 	}
@@ -88,7 +87,7 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 
 func (b *Board) rowScene(r *row, now time.Time) rowScene {
 	e := now.Sub(b.steadyStart).Milliseconds()
-	sc := rowScene{on: true, ordinal: r.ordinal, std: r.std, etd: r.etd, etdLevel: fadeLevels}
+	sc := rowScene{on: true, ordinal: r.ordinal, platform: r.platform, std: r.std, etd: r.etd, etdLevel: fadeLevels}
 	if len(r.pages) > 0 {
 		sc.dest = r.pages[int(e/destinationPage)%len(r.pages)]
 	}
@@ -117,7 +116,7 @@ func (b *Board) render(f *frame.Frame, s *scene) {
 	case modeNoServices:
 		b.drawLines(f, nreLines, colour)
 	case modeWarning:
-		b.drawLines(f, warningLines(s.notice), colour)
+		b.drawLines(f, s.warning, colour)
 	case modeTrains:
 		b.renderTrains(f, s, colour)
 	}
@@ -147,7 +146,9 @@ func (b *Board) drawRow(f *frame.Frame, r *rowScene, y int, c board.Clip, colour
 	g := &b.geo
 	text := font.PISTall
 	x, y := r.dx, y+r.dy
-	board.DrawText(f, text, x, y, r.ordinal, colour, c)
+	board.DrawText(f, text, x+g.ordinalX, y, r.ordinal, colour, c)
+	platform := c.Intersect(board.Clip{X0: x + g.platX, X1: x + g.platX + g.platW, Y1: g.h})
+	board.DrawText(f, text, x+g.platX, y, r.platform, colour, platform)
 	b.drawTime(f, x+g.stdX, y, r.std, c, colour)
 	dest := c.Intersect(board.Clip{X0: x + g.destX, X1: x + g.destX + g.destW, Y1: g.h})
 	board.DrawText(f, text, x+g.destX, y, r.dest, colour, dest)

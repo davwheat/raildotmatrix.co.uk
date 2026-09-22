@@ -57,7 +57,9 @@ type Service struct {
 	// Length is the coach count, or 0 when unknown.
 	Length int
 	// TOC is the operator's name, or empty.
-	TOC        string
+	TOC string
+	// Platform is the platform number, or empty when it's unknown or Darwin suppresses it from public display.
+	Platform   string
 	CallPoints []CallPoint
 }
 
@@ -124,6 +126,8 @@ type View struct {
 	Connected bool
 	Services  []Service
 	Notice    Notice
+	// NoticePlatform is the platform the notice warns of, or empty when it covers several.
+	NoticePlatform string
 	// Alterations lists movement IDs that have moved between a watched and an unwatched platform since the
 	// previous view. The Daktronics board announces a platform alteration when it's non-empty; the Infotec
 	// board ignores it.

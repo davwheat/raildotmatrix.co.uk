@@ -49,9 +49,14 @@ func Display(state *State, opts Options, now time.Time) model.View {
 		if selected != nil && (platform == "" || !selected[platform]) && !(unconfirmed && opts.ShowUnconfirmed) {
 			continue
 		}
-		services = append(services, service(movement, opts.LegacyTOCNames, now))
+		s := service(movement, opts.LegacyTOCNames, now)
+		if movement.Platform.Suppressed == nil || !*movement.Platform.Suppressed {
+			s.Platform = platform
+		}
+		services = append(services, s)
 	}
-	return model.View{Connected: true, Services: services, Notice: notice(overrides)}
+	n, platform := notice(overrides)
+	return model.View{Connected: true, Services: services, Notice: n, NoticePlatform: platform}
 }
 
 // PlatformAlterations lists the trains that have moved between a platform this board watches and one it doesn't.
@@ -107,17 +112,30 @@ func NextBoundary(state *State, opts Options, now time.Time) time.Time {
 	return next
 }
 
-// notice picks the one warning that fits a board. A passing train is the more urgent of the two.
-func notice(overrides []*PlatformOverride) model.Notice {
+// notice picks the one warning that fits a board, and the platform it's for when every override of that kind
+// is on the same one. A passing train is the more urgent of the two.
+func notice(overrides []*PlatformOverride) (model.Notice, string) {
 	if len(overrides) == 0 {
-		return model.NoNotice
+		return model.NoNotice, ""
 	}
+	n, kind := model.NotForPublicUse, NotForPublicUse
 	for _, override := range overrides {
 		if override.Kind == StandClear {
-			return model.StandClear
+			n, kind = model.StandClear, StandClear
 		}
 	}
-	return model.NotForPublicUse
+	platform := ""
+	for _, override := range overrides {
+		if override.Kind != kind {
+			continue
+		}
+		p := strings.ToUpper(override.Platform)
+		if platform != "" && p != platform {
+			return n, ""
+		}
+		platform = p
+	}
+	return n, platform
 }
 
 func activeOverrides(state *State, selected map[string]bool, now time.Time) []*PlatformOverride {

@@ -445,6 +445,9 @@ func TestWarningsReplaceOnlyTheirPlatformAndExpire(t *testing.T) {
 	if !reflect.DeepEqual(ids(active.Services), []string{"other"}) || active.Notice != model.StandClear {
 		t.Errorf("active warning: services %v, notice %v", ids(active.Services), active.Notice)
 	}
+	if active.NoticePlatform != "2" {
+		t.Errorf("notice platform = %q, want 2", active.NoticePlatform)
+	}
 	if next := NextBoundary(state, Options{}, initial.Window.From); !next.Equal(at(t, "2026-09-13T10:01:00Z")) {
 		t.Errorf("next boundary = %s, want the expiry", next)
 	}
@@ -468,6 +471,15 @@ func TestWarningsReplaceOnlyTheirPlatformAndExpire(t *testing.T) {
 	}
 	if next := NextBoundary(state, Options{}, initial.Window.From); !next.Equal(at(t, "2026-09-13T10:00:30Z")) {
 		t.Errorf("next boundary = %s, want the pending activation", next)
+	}
+
+	pending := at(t, "2026-09-13T10:00:30Z")
+	if got := Display(state, Options{}, pending); got.Notice != model.StandClear || got.NoticePlatform != "3" {
+		t.Errorf("a passing train outranks a non-public one: notice %v at %q", got.Notice, got.NoticePlatform)
+	}
+	state.Overrides["warning"].Kind = StandClear
+	if got := Display(state, Options{}, pending); got.Notice != model.StandClear || got.NoticePlatform != "" {
+		t.Errorf("warnings at two platforms name neither: notice %v at %q", got.Notice, got.NoticePlatform)
 	}
 }
 
@@ -497,7 +509,11 @@ func TestDisplayShowsPublishedPlatformsBeforeConfirmation(t *testing.T) {
 	if got := Display(restricted, Options{Platforms: []string{"2"}}, initial.Window.From); len(got.Services) != 3 {
 		t.Errorf("unconfirmed hidden: %v", ids(got.Services))
 	}
-	if got := Display(restricted, Options{Platforms: []string{"2"}, ShowUnconfirmed: true}, initial.Window.From); len(got.Services) != 5 {
-		t.Errorf("unconfirmed shown: %v", ids(got.Services))
+	got := Display(restricted, Options{Platforms: []string{"2"}, ShowUnconfirmed: true}, initial.Window.From)
+	if len(got.Services) != 5 {
+		t.Fatalf("unconfirmed shown: %v", ids(got.Services))
+	}
+	if platforms := []string{got.Services[0].Platform, got.Services[1].Platform, got.Services[2].Platform}; !reflect.DeepEqual(platforms, []string{"", "", "2"}) {
+		t.Errorf("platforms = %q, want a suppressed or unknown platform left blank", platforms)
 	}
 }

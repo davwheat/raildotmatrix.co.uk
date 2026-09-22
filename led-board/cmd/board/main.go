@@ -78,6 +78,12 @@ func main() {
 		fs.Usage()
 		os.Exit(2)
 	}
+	platform, err := board.ParsePlatformPosition(cfg.PlatformPosition)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		fs.Usage()
+		os.Exit(2)
+	}
 	if !slices.Contains([]string{"matrix", "window", "png"}, cfg.Display) {
 		fmt.Fprintf(os.Stderr, "unknown display %q; want matrix, window, or png\n", cfg.Display)
 		fs.Usage()
@@ -86,7 +92,8 @@ func main() {
 	opts := &cfg.LED.Options
 	b, err := formats.New(cfg.Board, formats.Config{
 		Width: opts.Cols * opts.Chain, Height: opts.Rows * opts.Parallel,
-		Zone: zone, Colour: colour, Worldline: cfg.Worldline, ScrollSpeed: cfg.ScrollSpeed,
+		Zone: zone, Colour: colour, Worldline: cfg.Worldline, ScrollSpeed: cfg.ScrollSpeed, Platform: platform,
+		WarningPlatform: cfg.WarningPlatform,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

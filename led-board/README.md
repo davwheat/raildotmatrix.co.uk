@@ -87,6 +87,16 @@ be readable by everyone.
 
 `worldline` applies to the Daktronics board only.
 
+`platform_position` adds each train's platform number to its row: `before` shows it ahead of the ordinal
+(`Pl 1 1st`), and `after` shows it between the ordinal and the time (`1st Pl 1`). The column is wide enough
+for a three-character platform such as `10A`, so the destination column narrows to make room. A platform that
+isn't published, or that Darwin suppresses, leaves the column blank. The default, `none`, leaves it out.
+
+`warning_platform` names the platform in a stand clear or not-for-public-use warning: "to call at platform 2"
+in place of "to call at this station" on the Daktronics board, and "MAY NOT STOP AT PLATFORM 2" in place of
+"MAY NOT STOP HERE" on the Infotec board. A warning that covers trains at several platforms at once keeps the
+general wording.
+
 `scroll_speed` sets how fast text scrolls, in dots per second. The defaults are 48 for Daktronics (the web
 board's 550 px/s) and 60 for Infotec (the web's 77 dots/s reads too fast on the panel).
 

@@ -6,23 +6,22 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
-	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 // rowScene is one train row as drawn this tick. dy shifts it vertically while it slides; clipX hides
 // everything left of it during the clear-down wipe.
 type rowScene struct {
-	on                      bool
-	ordinal, std, dest, etd string
-	dy, clipX               int
+	on                                bool
+	ordinal, platform, std, dest, etd string
+	dy, clipX                         int
 }
 
 // scene is a complete description of one frame. Two ticks that compose equal scenes draw the same picture,
 // which is how Tick avoids redrawing a still board; it must stay comparable and free of slices.
 type scene struct {
-	mode   mode
-	notice model.Notice
-	lit    bool
+	mode    mode
+	warning [3]string
+	lit     bool
 
 	first rowScene
 	// entering is set while the first row slides up through the three train rows.
@@ -40,7 +39,7 @@ type scene struct {
 
 func (b *Board) compose(now time.Time) scene {
 	g := &b.geo
-	s := scene{mode: b.mode, notice: b.view.Notice, clock: b.clock.scene(now, g.cell)}
+	s := scene{mode: b.mode, warning: b.content.warning, clock: b.clock.scene(now, g.cell)}
 	switch b.mode {
 	case modeAlteration:
 		s.lit = now.Sub(b.modeStart).Milliseconds()/alterationFlash%2 == 0
@@ -91,7 +90,7 @@ func (b *Board) composeSteady(now time.Time, s *scene) {
 		return
 	}
 	r := &b.content.rows[1+b.swapIndex]
-	s.third = rowScene{on: true, ordinal: r.ordinal, std: r.std, etd: r.etd}
+	s.third = rowScene{on: true, ordinal: r.ordinal, platform: r.platform, std: r.std, etd: r.etd}
 	if len(r.pages) > 0 {
 		s.third.dest = r.pages[int(now.Sub(b.steadyStart).Milliseconds()/destinationPage)%len(r.pages)]
 	}
@@ -101,7 +100,7 @@ func (b *Board) composeSteady(now time.Time, s *scene) {
 }
 
 func firstRowScene(r *row) rowScene {
-	return rowScene{on: true, ordinal: r.ordinal, std: r.std, dest: r.line1, etd: r.etd}
+	return rowScene{on: true, ordinal: r.ordinal, platform: r.platform, std: r.std, dest: r.line1, etd: r.etd}
 }
 
 func (b *Board) render(f *frame.Frame, s *scene) {
@@ -110,7 +109,7 @@ func (b *Board) render(f *frame.Frame, s *scene) {
 	case modeNoServices:
 		b.drawCentred(f, 1, "CUSTOMER INFORMATION SYSTEM")
 	case modeWarning:
-		for i, line := range warningLines(s.notice) {
+		for i, line := range s.warning {
 			b.drawCentred(f, i, line)
 		}
 	case modeAlteration:
@@ -152,7 +151,8 @@ func (b *Board) drawRow(f *frame.Frame, r *rowScene, rowIndex int, c board.Clip)
 	g := &b.geo
 	c.X0 = max(c.X0, r.clipX)
 	y := g.textY(rowIndex) + r.dy
-	board.DrawText(f, font.Text, 0, y, r.ordinal, b.cfg.Colour, c)
+	board.DrawText(f, font.Text, g.ordinalX, y, r.ordinal, b.cfg.Colour, c)
+	board.DrawText(f, font.Text, g.platX, y, r.platform, b.cfg.Colour, c.Intersect(board.Clip{X0: g.platX, X1: g.platX + g.platW, Y1: g.h}))
 	board.DrawCells(f, font.Text, g.stdX, y, r.std, g.ch, b.cfg.Colour, c)
 	board.DrawText(f, font.Text, g.destX, y, r.dest, b.cfg.Colour, c.Intersect(board.Clip{X0: g.destX, X1: g.destX + g.destW, Y1: g.h}))
 	if isTime(r.etd) {

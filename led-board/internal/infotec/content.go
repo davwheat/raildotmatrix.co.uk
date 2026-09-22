@@ -19,6 +19,8 @@ type row struct {
 	ordinal string
 	// std is the scheduled time as HHmm, drawn in digit cells.
 	std string
+	// platform is the text of the platform column, which stays empty when the board doesn't show platforms.
+	platform string
 	// pages are the destination texts the row cycles through every three seconds.
 	pages []string
 	// etd is "On time", "Cancelled", "Arrived", "Delayed", or an expected time as HHmm.
@@ -36,18 +38,21 @@ type page struct {
 
 // content is everything derived from a view that the renderer reads.
 type content struct {
-	rows  []row
-	pages []page
+	rows    []row
+	pages   []page
+	warning [3]string
 }
 
 func (b *Board) derive(v model.View) content {
 	var c content
+	c.warning = warningLines(v.Notice, b.warningPlatform(v))
 	for i := range min(len(v.Services), 3) {
 		s := &v.Services[i]
 		c.rows = append(c.rows, row{
 			id:        s.ID,
 			ordinal:   [...]string{"1st", "2nd", "3rd"}[i],
 			std:       s.STD(b.cfg.Zone),
+			platform:  b.platform(s),
 			pages:     destinationPages(s),
 			etd:       b.etd(s),
 			cancelled: s.Cancelled,
@@ -57,6 +62,13 @@ func (b *Board) derive(v model.View) content {
 		}
 	}
 	return c
+}
+
+func (b *Board) platform(s *model.Service) string {
+	if b.cfg.Platform == board.PlatformHidden {
+		return ""
+	}
+	return board.PlatformText(s.Platform)
 }
 
 // etd mirrors displayedDepartureTime with the default onTimeText: a forecast equal to the timetable reads
@@ -223,10 +235,24 @@ func joinCalls(points []string) string {
 
 var nreLines = [3]string{"Please listen for announcements", "or call National Rail Enquiries", "on 03457 48 49 50"}
 
-func warningLines(n model.Notice) [3]string {
+func (b *Board) warningPlatform(v model.View) string {
+	if !b.cfg.WarningPlatform {
+		return ""
+	}
+	return v.NoticePlatform
+}
+
+// warningLines names platform in place of "here" when it's set. A platform doesn't fit on the one line that
+// says a train isn't for public use, so that warning gives up the platform edge line to make room.
+func warningLines(n model.Notice, platform string) [3]string {
 	lines := [3]string{"* PLEASE STAND CLEAR *", "OF THE PLATFORM EDGE", "THE NEXT TRAIN MAY NOT STOP HERE"}
-	if n == model.NotForPublicUse {
+	switch {
+	case n == model.NotForPublicUse && platform != "":
+		lines[1], lines[2] = "THE NEXT TRAIN AT PLATFORM "+platform, "IS NOT FOR PUBLIC USE"
+	case n == model.NotForPublicUse:
 		lines[2] = "THE NEXT TRAIN IS NOT FOR PUBLIC USE"
+	case platform != "":
+		lines[2] = "THE NEXT TRAIN MAY NOT STOP AT PLATFORM " + platform
 	}
 	return lines
 }

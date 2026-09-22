@@ -15,6 +15,8 @@ type row struct {
 	id      string
 	ordinal string
 	std     string
+	// platform is the text of the platform column, which stays empty when the board doesn't show platforms.
+	platform string
 	// pages are the destination texts a later train cycles through every three seconds: each destination with
 	// its ", " or " & " suffix, as TrainService.tsx builds them.
 	pages []string
@@ -31,12 +33,14 @@ type page struct{ prefix, text string }
 
 // content is everything derived from a view that the renderer reads.
 type content struct {
-	rows  []row
-	pages []page
+	rows    []row
+	pages   []page
+	warning [3]string
 }
 
 func (b *Board) derive(v model.View) content {
 	var c content
+	c.warning = warningLines(v.Notice, b.warningPlatform(v))
 	for i := range v.Services {
 		if i == 3 {
 			break
@@ -47,6 +51,7 @@ func (b *Board) derive(v model.View) content {
 			ordinal:  [...]string{"1st", "2nd", "3rd"}[i],
 			std:      s.STD(b.cfg.Zone),
 			etd:      s.ETD(b.cfg.Zone),
+			platform: b.platform(s),
 			dividing: len(s.Destinations) > 1,
 			pages:    destinationPages(s, b.cfg.WorldlinePowered),
 		}
@@ -57,6 +62,13 @@ func (b *Board) derive(v model.View) content {
 		c.rows = append(c.rows, r)
 	}
 	return c
+}
+
+func (b *Board) platform(s *model.Service) string {
+	if b.cfg.Platform == board.PlatformHidden {
+		return ""
+	}
+	return board.PlatformText(s.Platform)
 }
 
 func destinationPages(s *model.Service, upper bool) []string {
@@ -235,9 +247,22 @@ func joinCalls(points []string, worldline bool) string {
 	return sb.String()
 }
 
-func warningLines(n model.Notice) [3]string {
-	if n == model.NotForPublicUse {
+func (b *Board) warningPlatform(v model.View) string {
+	if !b.cfg.WarningPlatform {
+		return ""
+	}
+	return v.NoticePlatform
+}
+
+// warningLines names platform in place of "this station" when it's set.
+func warningLines(n model.Notice, platform string) [3]string {
+	switch {
+	case n == model.NotForPublicUse && platform != "":
+		return [3]string{"PLEASE STAND CLEAR", "The next train at platform " + platform, "is not for public use"}
+	case n == model.NotForPublicUse:
 		return [3]string{"PLEASE STAND CLEAR", "The next train is not", "for public use"}
+	case platform != "":
+		return [3]string{"PLEASE STAND CLEAR", "The next train is not scheduled", "to call at platform " + platform}
 	}
 	return [3]string{"PLEASE STAND CLEAR", "The next train is not scheduled", "to call at this station"}
 }

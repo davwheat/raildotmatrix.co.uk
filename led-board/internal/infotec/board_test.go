@@ -430,7 +430,7 @@ func TestLowerRowsSwap(t *testing.T) {
 }
 
 func TestGeometry(t *testing.T) {
-	g := newGeometry(testW, testH)
+	g := newGeometry(testW, testH, 0)
 	want := geometry{
 		w: 256, h: 64, ch: 6, stdX: 23, colonCell: 3, timeW: 27, destX: 55, destW: 139, exptW: 28,
 		firstY: 0, infoY: 17, sepY: 33, secondY: 38, infoSlide: 13, swapTravel: 13, lineY: [3]int{3, 20, 37},
