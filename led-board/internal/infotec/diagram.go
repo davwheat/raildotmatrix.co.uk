@@ -43,14 +43,9 @@ func drawFormation(f *frame.Frame, x, y, width, height, length int, colour frame
 	for coach := 1; coach <= length; coach++ {
 		f.FillRect(x+cab+coach*coachW, y, 1, height, colour)
 	}
-	// Remove the corner dots of the last coach and round the cab's lower edge.
+	// Round only the rear end and the cab's lower edge; shared coach dividers
+	// meet the roof and floor without gaps.
 	f.Set(x, y+height-1, frame.Black)
-	edges := []int{x + w - 1}
-	if length > 1 {
-		edges = append(edges, x+cab+(length-1)*coachW)
-	}
-	for _, edge := range edges {
-		f.Set(edge, y, frame.Black)
-		f.Set(edge, y+height-1, frame.Black)
-	}
+	f.Set(x+w-1, y, frame.Black)
+	f.Set(x+w-1, y+height-1, frame.Black)
 }

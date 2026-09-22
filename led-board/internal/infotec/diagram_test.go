@@ -50,8 +50,12 @@ func TestFormationCabAndLastCoach(t *testing.T) {
 		}
 	}
 	for _, x := range []int{18, 32} {
-		if f.At(x, 0) != frame.Black || f.At(x, 10) != frame.Black {
-			t.Error("last coach corners must be unlit")
+		want := board.White
+		if x == 32 {
+			want = frame.Black
+		}
+		if f.At(x, 0) != want || f.At(x, 10) != want {
+			t.Error("last coach must have square left corners and rounded right corners")
 		}
 		for y := 1; y < 10; y++ {
 			if f.At(x, y) != board.White {
