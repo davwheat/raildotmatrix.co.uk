@@ -1,12 +1,12 @@
 import React, { useRef, useEffect, useCallback } from 'react'
 import LedBoard from '../LedBoard'
+import PlatformSettings, { defaultPlatformSettings } from '../LedBoard/PlatformSettings'
 import ToggleSwitch from '../../common/form/ToggleSwitch'
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
 import { debounce } from 'throttle-debounce'
 
 import PageLink from '../../common/PageLink'
 import { ZoomDiv } from '../ZoomDiv'
-import { getDisabledPlatforms } from '../../../api/ProcessServices'
 import { useDataSource } from '../../../live/source'
 
 // The web board's 2000 × 550 px layout, in the 7.17 px dots of its 86 px font: its text area and the padding around it.
@@ -43,6 +43,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
   const [settings, setSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
     hideSettings: !!hideSettings,
     color,
+    ...defaultPlatformSettings,
   })
   const { baseUrl } = useDataSource()
 
@@ -52,6 +53,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
 
   function updateState() {
     setSettings({
+      ...settings,
       hideSettings: !!hideRef.current?.checked,
       color: colorRef.current?.value as keyof typeof BoardColors,
     })
@@ -125,7 +127,9 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
             </option>
           ))}
         </select>
-        {(platforms?.length ?? 0) > 0 && <p>Hiding platform(s) {getDisabledPlatforms(platforms!).join(', ')}</p>}
+        <br />
+        <PlatformSettings settings={settings} onChange={change => setSettings(s => ({ ...s, ...change }))} />
+        {(platforms?.length ?? 0) > 0 && <p>Showing only platform(s) {platforms!.join(', ')}</p>}
       </div>
       <ZoomDiv>
         <div
@@ -147,6 +151,8 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
             showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
             legacyTocNames={!!searchParams?.get('useLegacyTocNames')}
             colour={BoardColors[settings.color]}
+            platformPosition={settings.platformPosition ?? defaultPlatformSettings.platformPosition}
+            warningPlatform={!!settings.warningPlatform}
           />
         </div>
       </ZoomDiv>

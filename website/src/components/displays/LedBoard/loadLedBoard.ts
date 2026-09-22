@@ -1,5 +1,7 @@
 const BUNDLE_DIRECTORY = '/led-board/'
 
+export type PlatformPosition = 'none' | 'before' | 'after'
+
 /** The options of `ledDepartureBoard.create`, documented in the Go repository's `cmd/wasm/main.go`. */
 export interface LedBoardOptions {
   board: 'infotec' | 'daktronics'
@@ -9,6 +11,10 @@ export interface LedBoardOptions {
   showUnconfirmedPlatforms?: boolean
   legacyTocNames?: boolean
   worldline?: boolean
+  /** Where each train row shows its platform number: ahead of the "1st" ordinal, after it, or not at all. */
+  platformPosition?: PlatformPosition
+  /** Names the platform in a warning, in place of "this station", when the warning is for one platform. */
+  warningPlatform?: boolean
   colour?: 'amber' | 'white'
   scrollSpeed?: number
   width?: number

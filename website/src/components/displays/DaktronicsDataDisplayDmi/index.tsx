@@ -2,6 +2,7 @@ import React from 'react'
 
 import BoardSettings from '../../common/BoardSettings'
 import LedBoard from '../LedBoard'
+import PlatformSettings, { defaultPlatformSettings, type IPlatformSettings } from '../LedBoard/PlatformSettings'
 import { ZoomDiv } from '../ZoomDiv'
 
 import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
@@ -10,7 +11,6 @@ import { useDataSource } from '../../../live/source'
 import BoardAsset from './board-outline.inline.svg'
 import boardFill from './board-fill.svg'
 import ToggleSwitch from '../../common/form/ToggleSwitch'
-import { getDisabledPlatforms } from '../../../api/ProcessServices'
 
 interface IProps {
   station: string
@@ -50,7 +50,7 @@ const faceBackground = `linear-gradient(to bottom, ${ROW_FACES.map(
     `transparent ${percent(top, ROWS)}, var(--dmi-row-background) ${percent(top, ROWS)} ${percent(bottom, ROWS)}, transparent ${percent(bottom, ROWS)}`,
 ).join(', ')}), var(--dmi-background)`
 
-interface IBoardSettings {
+interface IBoardSettings extends IPlatformSettings {
   boardStyle: keyof typeof BoardStyles
   showCasing: boolean
   worldlinePowered: boolean
@@ -68,6 +68,7 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
     showCasing: true,
     worldlinePowered: false,
     withBackground: false,
+    ...defaultPlatformSettings,
   })
   const { baseUrl } = useDataSource()
 
@@ -114,7 +115,9 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
           ))}
         </select>
 
-        {!!platforms?.length && <p>Hiding platform(s) {getDisabledPlatforms(platforms).join(', ')}</p>}
+        <PlatformSettings settings={customBoardSettings} onChange={change => setCustomBoardSettings(s => ({ ...s, ...change }))} />
+
+        {!!platforms?.length && <p>Showing only platform(s) {platforms.join(', ')}</p>}
       </BoardSettings>
 
       <ZoomDiv>
@@ -162,6 +165,8 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
             showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
             legacyTocNames={!!searchParams?.get('useLegacyTocNames')}
             worldline={customBoardSettings.worldlinePowered}
+            platformPosition={customBoardSettings.platformPosition ?? defaultPlatformSettings.platformPosition}
+            warningPlatform={!!customBoardSettings.warningPlatform}
           />
 
           {showCasing && (

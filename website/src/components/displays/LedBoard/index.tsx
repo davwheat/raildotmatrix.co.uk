@@ -25,6 +25,8 @@ export default function LedBoard({
   showUnconfirmedPlatforms,
   legacyTocNames,
   worldline,
+  platformPosition,
+  warningPlatform,
   colour,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -32,7 +34,20 @@ export default function LedBoard({
 
   // A key rather than the options themselves, so that a parent passing an equal array every render doesn't restart
   // the board and its live stream.
-  const key = JSON.stringify({ columns, rows, board, crs, url, platforms, showUnconfirmedPlatforms, legacyTocNames, worldline, colour })
+  const key = JSON.stringify({
+    columns,
+    rows,
+    board,
+    crs,
+    url,
+    platforms,
+    showUnconfirmedPlatforms,
+    legacyTocNames,
+    worldline,
+    platformPosition,
+    warningPlatform,
+    colour,
+  })
 
   useEffect(() => {
     const canvas = canvasRef.current!

@@ -1,0 +1,44 @@
+.platform-picker {
+  margin: 16px 0 0;
+  padding: 0;
+  border: none;
+
+  legend {
+    padding: 0;
+    margin-bottom: 8px;
+  }
+
+  &--options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &--option {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 56px;
+    padding: 6px 10px;
+    border: hsl(0, 0%, 80%) 1px solid;
+    border-radius: 4px;
+    background-color: #212121;
+    cursor: pointer;
+
+    &:has(input:checked) {
+      border-color: orange;
+      box-shadow: 0 0 0 1px orange;
+    }
+
+    input {
+      accent-color: orange;
+      margin: 0;
+    }
+  }
+
+  &--help-text {
+    margin: 8px 0 0;
+    font-size: 0.9em;
+    opacity: 0.8;
+  }
+}

@@ -17,6 +17,7 @@ import '../components/common/css/board-page.scss'
 // Form controls
 import '../components/common/form/css/Select.scss'
 import '../components/common/form/css/ToggleSwitch.scss'
+import '../components/common/form/css/PlatformPicker.scss'
 
 // Blackbox landscape LCD
 import '../components/displays/WestMidsLCD/css/board/index.scss'

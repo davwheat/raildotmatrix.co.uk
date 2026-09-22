@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 
 import { applySourceParams, DataSourceProvider, useDataSource } from '../live/source'
+import { useStationPlatforms } from '../live/stationPlatforms'
 
 import Layout from '../components/Layout'
 import Seo from '../components/Seo'
@@ -9,6 +10,7 @@ import PageLink from '../components/common/PageLink'
 import Attribution from '../components/common/Attribution'
 
 import Form, { AutocompleteSelect, Select } from '../components/common/form'
+import PlatformPicker from '../components/common/form/PlatformPicker'
 import type { Option } from '../components/common/form'
 
 // Deliberately not a CRS code, so an unloaded list never reads as a selected station.
@@ -40,27 +42,34 @@ function IndexPage() {
     return {
       station: searchParams.get('station') || '',
       type: DisplayTypes.some(t => t.value === type) ? type! : DisplayTypes[0].value,
+      platforms: searchParams.getAll('platform'),
     }
   })
+  const stationPlatforms = useStationPlatforms(baseUrl, boardSettings.station)
 
-  // Options this page doesn't expose (platform filters, legacy TOC names, etc.) are carried through
+  // Options this page doesn't expose (legacy TOC names, etc.) are carried through
   // unchanged, so editing a board doesn't silently discard them.
   const [passthroughParams] = useState(() => {
     const params = new URLSearchParams(window.location.search)
     params.delete('station')
     params.delete('type')
+    params.delete('platform')
     return params.toString()
   })
 
   function boardParams(station: string) {
     const params = new URLSearchParams(passthroughParams)
     params.set('station', station)
+    boardSettings.platforms.forEach(platform => params.append('platform', platform))
     applySourceParams(params, { mode, baseUrl })
     return params
   }
 
   function ChooseStation(station: Option | null) {
-    setBoardSettings(settings => ({ ...settings, station: station?.value || '' }))
+    // Platform numbers mean nothing at another station.
+    setBoardSettings(settings =>
+      station?.value === settings.station ? settings : { ...settings, station: station?.value || '', platforms: [] },
+    )
   }
 
   function ChooseDisplay(display: React.ChangeEvent<HTMLSelectElement>) {
@@ -103,6 +112,13 @@ function IndexPage() {
               onChange={ChooseDisplay}
               value={boardSettings.type}
             />
+            {boardSettings.station && (
+              <PlatformPicker
+                station={stationPlatforms}
+                selected={boardSettings.platforms}
+                onChange={platforms => setBoardSettings(settings => ({ ...settings, platforms }))}
+              />
+            )}
             <PageLink
               to={boardSettings.station ? `/board/${boardSettings.type}?${boardParams(boardSettings.station)}` : undefined}
               style={{ cursor: 'pointer' }}
