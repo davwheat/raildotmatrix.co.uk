@@ -270,7 +270,7 @@ func TestDisplayKeepsOrderingNamesAndSplitPortions(t *testing.T) {
 	if service.Destinations[0].Name != "Destination from feed" || service.Destinations[0].Via != "via Junction" {
 		t.Errorf("destination = %+v", service.Destinations[0])
 	}
-	if service.TOC != "Great Western Railway" || service.Length != 8 || service.StartsHere {
+	if service.TOC != "Great Western Railway" || service.TOCCode != "GW" || service.Length != 8 || service.StartsHere {
 		t.Errorf("service = %+v", service)
 	}
 	if first := view.Services[1]; first.STD(time.UTC) != "1005" || first.ETD(time.UTC) != "1010" {
@@ -280,8 +280,8 @@ func TestDisplayKeepsOrderingNamesAndSplitPortions(t *testing.T) {
 	if len(divides) != 1 || divides[0].Length != 4 || len(divides[0].CallPoints) != 2 {
 		t.Fatalf("divides = %+v", divides)
 	}
-	if got := Display(state, Options{LegacyTOCNames: true}, initial.Window.From).Services[0].TOC; got != "First Great Western" {
-		t.Errorf("legacy TOC = %s", got)
+	if got := Display(state, Options{LegacyTOCNames: true}, initial.Window.From).Services[0]; got.TOC != "First Great Western" || got.TOCCode != "GW" {
+		t.Errorf("legacy TOC = %s (%s)", got.TOC, got.TOCCode)
 	}
 
 	first.Portions[0].Available = false

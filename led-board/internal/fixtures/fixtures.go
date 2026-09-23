@@ -32,6 +32,7 @@ func Steps(name string) []model.View {
 		return snapshot(victoria())
 	case "detailed-formation":
 		s := victoria()
+		s.TOCCode = "SN"
 		s.Length = 8
 		s.Coaches = []model.Coach{
 			{Label: "A", Loading: 15, FirstClass: true, Accessible: true, Toilet: true},

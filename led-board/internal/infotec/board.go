@@ -15,6 +15,8 @@ import (
 
 // Config sizes the board and sets what it shows.
 type Config struct {
+	// CoachLetterTOCs lists operators whose coach letters are shown. Nil uses the defaults; empty hides all letters.
+	CoachLetterTOCs []string
 	// FormationCount selects none, number, coaches or carriages beside the graphic.
 	// The coaches-no-brackets and carriages-no-brackets variants omit brackets around wording.
 	FormationCount    string
@@ -280,6 +282,9 @@ func New(cfg Config) *Board {
 	cfg.ServiceCount = min(6, max(1, cfg.ServiceCount))
 	if cfg.LoadingBrightness == 0 {
 		cfg.LoadingBrightness = 50
+	}
+	if cfg.CoachLetterTOCs == nil {
+		cfg.CoachLetterTOCs = DefaultCoachLetterTOCs()
 	}
 	c := cfg.Colour
 	b := &Board{cfg: cfg, dim: board.Scale(c, 1, 2)}

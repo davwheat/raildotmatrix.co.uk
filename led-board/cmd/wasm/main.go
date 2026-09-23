@@ -17,6 +17,7 @@
 //	  ordinalFormat: "suffix",          // suffix (1st) or dot (1.)
 //	  serviceCount: 3,                   // Infotec only; 1 to 6
 //	  formationCount: 'none',           // Infotec only; none, number, coaches, coaches-no-brackets, carriages or carriages-no-brackets
+//	  coachLetterTocs: ['VT', 'GR', 'GW', 'LD', 'LF', 'GC', 'HT', 'SR', 'AW', 'EM'], // Infotec only; [] hides all letters
 //	  compactLowerRow: true,           // smaller lower service row beside the clock
 //	  platformBox: false,               // Infotec only; shows the first service platform when watching multiple platforms
 //	  colour: 'amber',                  // or 'white'
@@ -124,6 +125,7 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 		Width: w, Height: h, Zone: zone, Colour: colour, Worldline: o.bool("worldline"), ScrollSpeed: o.int("scrollSpeed", 0),
 		RowPrefix: rowPrefix, OrdinalFormat: ordinalFormat, LoadingBrightness: o.int("loadingBrightness", 50), ClockStyle: o.string("clockStyle", ""), ServiceCount: serviceCount, WarningPlatform: o.bool("warningPlatform"),
 		FormationCount:  o.string("formationCount", "none"),
+		CoachLetterTOCs: o.strings("coachLetterTocs"),
 		CompactLowerRow: &compactLowerRow, PlatformBox: o.bool("platformBox"), Platforms: platforms, AlignPlatformRows: &alignPlatformRows,
 	})
 	if err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/fixtures"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/infotec"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/windowdisplay"
 )
@@ -23,11 +24,12 @@ const configName = "departure-board"
 
 // config is every setting the board takes, in the shape of the config file.
 type config struct {
-	FormationCount           string `mapstructure:"formation_count"`
-	LoadingBrightness        int    `mapstructure:"loading_brightness"`
-	ClockStyle               string `mapstructure:"clock_style"`
-	OrdinalFormat            string `mapstructure:"ordinal_format"`
-	ServiceCount             int    `mapstructure:"service_count"`
+	CoachLetterTOCs          []string `mapstructure:"coach_letter_tocs"`
+	FormationCount           string   `mapstructure:"formation_count"`
+	LoadingBrightness        int      `mapstructure:"loading_brightness"`
+	ClockStyle               string   `mapstructure:"clock_style"`
+	OrdinalFormat            string   `mapstructure:"ordinal_format"`
+	ServiceCount             int      `mapstructure:"service_count"`
 	CRS                      string
 	Fixture                  string
 	Board                    string
@@ -76,6 +78,8 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.String("ordinal-format", "suffix", "ordinal style: suffix (1st/2nd/3rd) or dot (1./2./3.)")
 	fs.Int("loading-brightness", 50, "coach loading fill brightness: 50 or 100 percent (Infotec only)")
 	fs.String("formation-count", "none", "count beside the formation: none, number, coaches, coaches-no-brackets, carriages or carriages-no-brackets (Infotec only; wording falls back to a bracketed number if space is limited)")
+	coachLetterTOCs := tocList(infotec.DefaultCoachLetterTOCs())
+	fs.Var(&coachLetterTOCs, "coach-letter-tocs", "comma-separated TOC codes whose coach letters are shown; empty hides all letters (Infotec only)")
 	fs.String("clock-style", "normal", "Infotec clock: normal, small-seconds or small")
 	fs.Int("service-count", 3, "number of services to show, from 1 to 6 (Infotec only)")
 	fs.Bool("compact-lower-row", true, "show smaller lower service text beside the clock (Infotec only)")
@@ -199,6 +203,19 @@ func (p *platformList) String() string     { return strings.Join(*p, ",") }
 func (p *platformList) Set(v string) error { *p = append(*p, v); return nil }
 func (p *platformList) Get() any           { return []string(*p) }
 
+// tocList replaces the operator allowlist with a comma-separated flag value.
+type tocList []string
+
+func (t *tocList) String() string { return strings.Join(*t, ",") }
+func (t *tocList) Get() any       { return []string(*t) }
+func (t *tocList) Set(v string) error {
+	*t = tocList{}
+	if v != "" {
+		*t = strings.Split(v, ",")
+	}
+	return nil
+}
+
 // load decodes the settings in v. Unknown keys are an error so that a typo in
 // the config file is noticed rather than silently ignored.
 func load(v *viper.Viper) (config, error) {
@@ -210,6 +227,9 @@ func load(v *viper.Viper) (config, error) {
 	cfg.CRS = strings.ToUpper(cfg.CRS)
 	for i, p := range cfg.Platforms {
 		cfg.Platforms[i] = strings.ToUpper(p)
+	}
+	for i, toc := range cfg.CoachLetterTOCs {
+		cfg.CoachLetterTOCs[i] = strings.ToUpper(strings.TrimSpace(toc))
 	}
 	cfg.LED.DropPrivileges = !cfg.LED.NoDropPrivs
 	return cfg, nil

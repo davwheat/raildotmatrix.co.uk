@@ -222,7 +222,7 @@ func TestKeys(t *testing.T) {
 			keys = append(keys, key(f.Name))
 		}
 	})
-	want := strings.Fields(`board colour crs display fixture fps legacy_toc_names led.brightness led.chain led.cols
+	want := strings.Fields(`board colour coach_letter_tocs crs display fixture fps legacy_toc_names led.brightness led.chain led.cols
 		led.gpio_mapping led.limit_refresh led.multiplexing led.no_drop_privs led.no_hardware_pulse led.parallel
 		led.pwm_bits led.pwm_dither_bits led.pwm_lsb_nanoseconds led.rgb_sequence led.row_addr_type led.rows
 		led.scan_mode led.show_refresh led.slowdown_gpio align_platform_rows compact_lower_row loading_brightness formation_count clock_style ordinal_format service_count platform_box row_prefix platforms png_dir scale scroll_speed
@@ -243,9 +243,48 @@ func TestSettingsCoverEveryKey(t *testing.T) {
 	if _, ok := settings(v)["led.limit_refresh"]; !ok {
 		t.Error("a key without a default must still be watched")
 	}
-	if got := len(v.AllKeys()); got != 43 {
-		t.Errorf("%d keys, want 43", got)
+	if got := len(v.AllKeys()); got != 44 {
+		t.Errorf("%d keys, want 44", got)
 	}
+}
+
+func TestCoachLetterTOCsConfig(t *testing.T) {
+	for _, tc := range []struct {
+		name, file, env string
+		flags           []string
+		want            []string
+	}{
+		{name: "defaults", want: []string{"VT", "GR", "GW", "LD", "LF", "GC", "HT", "SR", "AW", "EM"}},
+		{name: "file replaces defaults", file: `coach_letter_tocs = ["sn", " se "]`, want: []string{"SN", "SE"}},
+		{name: "empty file list", file: `coach_letter_tocs = []`, want: []string{}},
+		{name: "env replaces file", file: `coach_letter_tocs = ["SN"]`, env: " gw,gr ", want: []string{"GW", "GR"}},
+		{name: "flag replaces env", file: `coach_letter_tocs = ["SN"]`, env: "GW,GR", flags: []string{"-coach-letter-tocs", " vt,em "}, want: []string{"VT", "EM"}},
+		{name: "empty flag", file: `coach_letter_tocs = ["SN"]`, env: "GW,GR", flags: []string{"-coach-letter-tocs="}, want: []string{}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("BOARD_COACH_LETTER_TOCS", tc.env)
+			v, err := configure(parse(t, tc.flags...), writeConfig(t, tc.file))
+			if err != nil {
+				t.Fatal(err)
+			}
+			cfg, err := load(v)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if cfg.CoachLetterTOCs == nil || !slices.Equal(cfg.CoachLetterTOCs, tc.want) {
+				t.Fatalf("coach letter TOCs = %#v, want %#v", cfg.CoachLetterTOCs, tc.want)
+			}
+		})
+	}
+	for _, field := range describeConfig(parse(t)) {
+		if field.Key == "coach_letter_tocs" {
+			if field.Type != "stringSlice" || !slices.Equal(field.Default.([]string), []string{"VT", "GR", "GW", "LD", "LF", "GC", "HT", "SR", "AW", "EM"}) {
+				t.Fatalf("coach letter TOCs schema = %+v", field)
+			}
+			return
+		}
+	}
+	t.Fatal("coach letter TOCs missing from management schema")
 }
 
 func TestFormationCountConfig(t *testing.T) {

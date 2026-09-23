@@ -35,6 +35,8 @@ loading_brightness = 50
 # Count beside the formation: none, number, coaches, coaches-no-brackets, carriages or carriages-no-brackets.
 # Wording falls back to a bracketed number if needed.
 formation_count = "none"
+# Show coach letters only for these TOC codes; [] hides letters for every operator.
+coach_letter_tocs = ["VT", "GR", "GW", "LD", "LF", "GC", "HT", "SR", "AW", "EM"]
 
 # Name the platform in a stand clear or not-for-public-use warning, such as "to call at platform 2" in place of
 # "to call at this station". A warning for trains at several platforms at once keeps the general wording.

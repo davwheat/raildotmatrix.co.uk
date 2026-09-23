@@ -139,6 +139,11 @@ The label sits four dots after the last coach, with its bottom aligned
 to the graphic. Wording falls back to `(n)` when it cannot fit. Long formations narrow their coaches
 to leave room for the number. The website and Pi management UI offer the same Formation count setting.
 When details are available, all coaches share five-second pages: identifiers, loading, then facilities.
+`coach_letter_tocs` limits the identifier page to the listed TOC codes, defaulting to
+`["VT", "GR", "GW", "LD", "LF", "GC", "HT", "SR", "AW", "EM"]`. Other operators (including unknown ones)
+skip that page, while loading and facilities remain visible. Set `coach_letter_tocs = []` to hide all coach letters.
+The Pi management UI exposes this list; `-coach-letter-tocs VT,GR` and `BOARD_COACH_LETTER_TOCS=VT,GR`
+override it. The browser uses the same defaults and accepts a `coachLetterTocs` array.
 Loading fills the interior from the floor upwards in proportion to the percentage at `loading_brightness` (50 or 100 percent, default 50). The website offers the same Loading fill brightness setting.
 Unknown loads remain hollow. Facility pages use the "Small formation contents" font: `§` for accessibility,
 `#` for cycles, `±` for toilets, `€` for food and `1st` for first class (including mixed-class coaches). Standard class is implicit.

@@ -1,12 +1,32 @@
 package infotec
 
 import (
+	"strings"
+	"time"
+
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
-	"time"
 )
+
+// DefaultCoachLetterTOCs returns the operators whose formations show coach letters by default.
+func DefaultCoachLetterTOCs() []string {
+	return []string{"VT", "GR", "GW", "LD", "LF", "GC", "HT", "SR", "AW", "EM"}
+}
+
+func (b *Board) showCoachLetters(toc string) bool {
+	toc = strings.TrimSpace(toc)
+	if toc == "" {
+		return false
+	}
+	for _, allowed := range b.cfg.CoachLetterTOCs {
+		if strings.EqualFold(toc, strings.TrimSpace(allowed)) {
+			return true
+		}
+	}
+	return false
+}
 
 type coachContent struct {
 	text    string

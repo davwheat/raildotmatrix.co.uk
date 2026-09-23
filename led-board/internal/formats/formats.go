@@ -18,6 +18,8 @@ var Names = []string{"daktronics", "infotec"}
 
 // Config is what every format is built from. Zero values mean each format's defaults.
 type Config struct {
+	// CoachLetterTOCs limits Infotec coach letters to these operator codes; nil uses the defaults.
+	CoachLetterTOCs   []string
 	FormationCount    string
 	LoadingBrightness int
 	ClockStyle        string
@@ -72,6 +74,7 @@ func New(name string, c Config) (board.Board, error) {
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, ScrollSpeed: c.ScrollSpeed,
 			RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform,
 			FormationCount:    c.FormationCount,
+			CoachLetterTOCs:   c.CoachLetterTOCs,
 			LoadingBrightness: c.LoadingBrightness, ClockStyle: c.ClockStyle, ServiceCount: c.ServiceCount, CompactLowerRow: c.CompactLowerRow, PlatformBox: platformBox, ServicePlatformBox: c.PlatformBox && platformBox == "", AlignPlatformRows: c.AlignPlatformRows,
 		}), nil
 	default:

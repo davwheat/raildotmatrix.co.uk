@@ -19,6 +19,8 @@ export interface LedBoardOptions {
   /** Infotec service limit, 1–6; defaults to 3. */
   serviceCount?: number
   loadingBrightness?: 50 | 100
+  /** TOC codes whose Infotec coach letters are shown; an empty list hides all letters. */
+  coachLetterTocs?: string[]
   /** Infotec formation count; wording falls back to a number when space is limited. */
   formationCount?: 'none' | 'number' | 'coaches' | 'coaches-no-brackets' | 'carriages' | 'carriages-no-brackets'
   clockStyle?: 'normal' | 'small-seconds' | 'small'

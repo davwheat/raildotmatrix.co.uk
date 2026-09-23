@@ -230,6 +230,7 @@ func service(movement *Movement, legacyNames bool, now time.Time) model.Service 
 		Length:         int(derefInt(movement.CoachCount)),
 		Coaches:        formationCoaches(movement.Coaches),
 		TOC:            operatorName(movement, legacyNames),
+		TOCCode:        deref(movement.OperatorCode),
 		CallPoints:     callPoints(movement.CallingPoints, movement),
 	}
 	if len(s.Coaches) > 0 {

@@ -49,6 +49,12 @@ func (b *Board) derive(v model.View) content {
 	c.warning = warningLines(v.Notice, b.warningPlatform(v))
 	for i := range min(len(v.Services), b.cfg.ServiceCount) {
 		s := &v.Services[i]
+		formation := append([]model.Coach(nil), s.Coaches...)
+		if !b.showCoachLetters(s.TOCCode) {
+			for j := range formation {
+				formation[j].Label = ""
+			}
+		}
 		c.rows = append(c.rows, row{
 			id:        s.ID,
 			platform:  strings.ToUpper(strings.TrimSpace(s.Platform)),
@@ -58,7 +64,7 @@ func (b *Board) derive(v model.View) content {
 			etd:       b.etd(s),
 			cancelled: s.Cancelled,
 			length:    max(0, s.Length, len(s.Coaches)),
-			coaches:   append([]model.Coach(nil), s.Coaches...),
+			coaches:   formation,
 		})
 		if i == 0 {
 			c.pages = b.infoPages(s)

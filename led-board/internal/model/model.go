@@ -70,6 +70,8 @@ type Service struct {
 	Coaches []Coach
 	// TOC is the operator's name, or empty.
 	TOC string
+	// TOCCode is the operator's two-letter code, or empty when unknown.
+	TOCCode string
 	// Platform is the platform number, or empty when it's unknown or Darwin suppresses it from public display.
 	Platform   string
 	CallPoints []CallPoint

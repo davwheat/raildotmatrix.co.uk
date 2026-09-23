@@ -1,13 +1,87 @@
 package infotec
 
 import (
+	"slices"
+	"testing"
+	"time"
+
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/fixtures"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
-	"testing"
-	"time"
 )
+
+func TestCoachLetterTOCs(t *testing.T) {
+	defaults := []string{"VT", "GR", "GW", "LD", "LF", "GC", "HT", "SR", "AW", "EM"}
+	for _, toc := range append(defaults, "SN", "SE", "", "ZZ") {
+		for _, tc := range []struct {
+			name    string
+			allowed []string
+			show    bool
+		}{
+			{"defaults", nil, slices.Contains(defaults, toc)},
+			{"custom", []string{"SN"}, toc == "SN"},
+			{"empty", []string{}, false},
+			{"case and whitespace", []string{" sn ", " gw "}, toc == "SN" || toc == "GW"},
+		} {
+			t.Run(toc+"/"+tc.name, func(t *testing.T) {
+				coach := model.Coach{Label: "A", Loading: 50, Accessible: true, Cycles: true, Toilet: true, Food: true, FirstClass: true}
+				v := model.View{Services: []model.Service{{TOCCode: toc, Coaches: []model.Coach{coach}}}}
+				b := New(Config{CoachLetterTOCs: tc.allowed})
+				row := b.derive(v).rows[0]
+				want := coach
+				if !tc.show {
+					want.Label = ""
+				}
+				if row.coaches[0] != want || row.length != 1 {
+					t.Fatalf("formation = %+v, length %d; want %+v, length 1", row.coaches, row.length, want)
+				}
+				if v.Services[0].Coaches[0] != coach {
+					t.Fatal("display filtering mutated the feed's coach data")
+				}
+				// Suppressed letters must not leave an empty slot before loading and facilities.
+				elapsed := time.Duration(0)
+				if tc.show {
+					if got := formationContents(row.coaches, elapsed)[0]; got.text != "A" {
+						t.Fatalf("letter page = %+v", got)
+					}
+					elapsed += 5 * time.Second
+				}
+				if got := formationContents(row.coaches, elapsed)[0]; got.loading != 50 || got.text != "" {
+					t.Fatalf("loading page = %+v", got)
+				}
+				for _, icon := range []string{"§", "#", "±", "€", "1st"} {
+					elapsed += 5 * time.Second
+					if got := formationContents(row.coaches, elapsed)[0]; got.text != icon {
+						t.Fatalf("facility page = %+v, want %s", got, icon)
+					}
+				}
+			})
+		}
+	}
+}
+
+func TestCoachLettersFollowOperatorUpdates(t *testing.T) {
+	b := New(Config{Width: 256, Height: 64, PlatformBox: "2"})
+	v := fixtures.Steps("single-departure")[0]
+	v.Services[0].Coaches = []model.Coach{{Label: "A", Loading: 50}}
+	f := frame.New(256, 64)
+	now := fixtures.Clock.Add(time.Second)
+	for _, toc := range []string{"GW", "SN", "GW", "", "GW"} {
+		v.Services[0].TOCCode = toc
+		b.Update(v)
+		if !b.Tick(now, f) {
+			t.Fatalf("operator change to %q did not redraw", toc)
+		}
+		want := coachContent{loading: 50}
+		if toc == "GW" {
+			want = coachContent{text: "A", loading: -1}
+		}
+		if got := b.last.coachContents[0]; got != want {
+			t.Fatalf("operator %q: coach contents = %+v, want %+v", toc, got, want)
+		}
+	}
+}
 
 func TestFormationRotationSynchronised(t *testing.T) {
 	coaches := []model.Coach{

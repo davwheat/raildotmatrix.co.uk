@@ -66,6 +66,10 @@ func goldenCases() []goldenCase {
 			name += "--" + variant
 		}
 		c.Width, c.Height = size.w, size.h
+		if fixture == "detailed-formation" && c.CoachLetterTOCs == nil {
+			// Include this Southern fixture to keep coverage of the coach letter page.
+			c.CoachLetterTOCs = []string{"SN"}
+		}
 		cases = append(cases, goldenCase{name: name, board: format, fixture: fixture, size: size, config: c, at: at})
 	}
 	for _, format := range Names {
