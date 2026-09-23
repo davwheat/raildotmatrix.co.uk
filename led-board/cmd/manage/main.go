@@ -20,7 +20,7 @@ func main() {
 	flag.StringVar(&o.StateDir, "state-dir", "/var/lib/departure-board", "private settings directory")
 	flag.StringVar(&o.StatusPath, "status", "/run/departure-board/network.json", "matrix setup status")
 	flag.StringVar(&o.Interface, "interface", "wlan0", "Wi-Fi adapter")
-	flag.BoolVar(&o.Demo, "demo", false, "simulate networking and service control for local development")
+	flag.BoolVar(&o.Demo, "demo", false, "simulate networking and service control, and store SSH keys locally")
 	listen := flag.String("listen", ":80", "HTTP listen address")
 	flag.Parse()
 	s, err := management.New(o)

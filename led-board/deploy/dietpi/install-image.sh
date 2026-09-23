@@ -6,7 +6,10 @@ payload=/boot/firmware/raildotmatrix
 chmod 755 /
 chmod 1777 /tmp /var/tmp
 apt-get update
-apt-get install -y --no-install-recommends network-manager dnsmasq-base avahi-daemon iw rfkill ca-certificates tzdata
+apt-get install -y --no-install-recommends network-manager dnsmasq-base avahi-daemon iw rfkill ca-certificates tzdata dropbear
+
+# The manager binds this directory into its sandbox to manage root public keys.
+install -d -m 700 /root/.ssh
 
 install -D -m 755 "$payload/board" /opt/departure-board/board
 install -D -m 755 "$payload/manage" /opt/departure-board/manage
@@ -30,7 +33,7 @@ printf 'auto lo\niface lo inet loopback\n' > /etc/network/interfaces
 systemctl disable networking.service dietpi-firstboot.service dietpi-postboot.service
 systemctl mask networking.service
 systemctl unmask dbus.service
-systemctl enable NetworkManager.service avahi-daemon.service departure-board-init.service departure-board-manager.service departure-board.service
+systemctl enable NetworkManager.service avahi-daemon.service departure-board-init.service departure-board-manager.service departure-board.service dropbear.service
 systemctl disable NetworkManager-wait-online.service
 printf '2\n' > /boot/dietpi/.install_stage
 printf 'departureboard\n' > /etc/hostname

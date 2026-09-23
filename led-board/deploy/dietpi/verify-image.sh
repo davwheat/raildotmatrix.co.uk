@@ -5,7 +5,7 @@ set -euo pipefail
 /opt/departure-board/manage -help >/dev/null 2>&1
 nmcli --offline connection modify connection.id departure-board-hotspot < /etc/NetworkManager/system-connections/departure-board-hotspot.nmconnection >/dev/null
 systemd-analyze verify departure-board-init.service departure-board-manager.service departure-board.service
-for service in NetworkManager avahi-daemon departure-board-init departure-board-manager departure-board; do
+for service in NetworkManager avahi-daemon departure-board-init departure-board-manager departure-board dropbear; do
     systemctl is-enabled --quiet "$service.service"
 done
 for service in dietpi-firstboot dietpi-postboot NetworkManager-wait-online; do
@@ -16,6 +16,7 @@ for service in dietpi-firstboot dietpi-postboot NetworkManager-wait-online; do
 done
 test "$(cat /etc/hostname)" = departureboard
 test "$(stat -c %a /etc/NetworkManager/system-connections/departure-board-hotspot.nmconnection)" = 600
+test "$(stat -c %a /root/.ssh)" = 700
 # The GPIO renderer drops to daemon, which must be able to read the SD config.
 setpriv --reuid=daemon --regid=daemon --clear-groups cat /boot/firmware/departure-board.toml >/dev/null
 printf 'ARM executables, configuration, hotspot profile and systemd units verified.\n'

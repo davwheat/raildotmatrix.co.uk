@@ -1,6 +1,9 @@
 "use strict";
 const $ = (id) => document.getElementById(id);
 let snapshot,
+  sshSnapshot,
+  sshDirty = false,
+  sshBusy = false,
   dirty = false,
   switching = false,
   countryLoaded = false,
@@ -26,6 +29,11 @@ function notice(message, type = "") {
 }
 function signedOut() {
   clearInterval(poll);
+  sshSnapshot = undefined;
+  sshDirty = false;
+  $("ssh-form").reset();
+  $("ssh-keys").disabled = true;
+  $("ssh-save").disabled = true;
   $("login").hidden = false;
   $("app").hidden = true;
 }
@@ -38,6 +46,7 @@ async function signedIn() {
     await status();
     clearInterval(poll);
     poll = setInterval(status, 5000);
+    if (!$("developer-page").hidden) await loadSSHKeys();
   } catch (error) {
     notice(error.message, "error");
   }
@@ -341,7 +350,7 @@ $("reload").onclick = async () => {
   }
 };
 window.addEventListener("beforeunload", (event) => {
-  if (dirty) {
+  if (dirty || sshDirty) {
     event.preventDefault();
     event.returnValue = "";
   }
@@ -356,7 +365,63 @@ for (const button of document.querySelectorAll("[data-tab]"))
       $(item.dataset.tab + "-page").hidden = !active;
     }
     if (button.dataset.tab === "network") scan();
+    if (button.dataset.tab === "developer" && !sshSnapshot) loadSSHKeys();
   };
+function sshControls(busy) {
+  sshBusy = busy;
+  $("ssh-keys").disabled = !sshSnapshot;
+  $("ssh-keys").readOnly = busy;
+  $("ssh-save").disabled = busy || !sshSnapshot || !sshDirty;
+  $("ssh-reload").disabled = busy;
+}
+async function loadSSHKeys() {
+  if (sshBusy) return;
+  sshControls(true);
+  $("ssh-save-status").textContent = "Loading SSH keys…";
+  try {
+    sshSnapshot = await api("ssh-keys");
+    $("ssh-keys").value = sshSnapshot.keys;
+    sshDirty = false;
+    $("ssh-save-status").textContent = "No unsaved changes.";
+  } catch (error) {
+    $("ssh-save-status").textContent = "Could not reload SSH keys. Try again.";
+    notice(error.message, "error");
+  } finally {
+    sshControls(false);
+  }
+}
+$("ssh-reload").onclick = () => {
+  if (sshDirty && !confirm("Discard your unsaved SSH key changes and reload?"))
+    return;
+  loadSSHKeys();
+};
+$("ssh-keys").addEventListener("input", () => {
+  sshDirty = $("ssh-keys").value !== sshSnapshot?.keys;
+  $("ssh-save-status").textContent = sshDirty
+    ? "Unsaved SSH key changes"
+    : "No unsaved changes.";
+  sshControls(false);
+});
+$("ssh-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (sshBusy || !sshSnapshot || !sshDirty) return;
+  sshControls(true);
+  try {
+    const result = await api("ssh-keys", "PUT", {
+      keys: $("ssh-keys").value,
+      revision: sshSnapshot.revision,
+    });
+    sshSnapshot = result;
+    $("ssh-keys").value = result.keys;
+    sshDirty = false;
+    $("ssh-save-status").textContent = "Saved.";
+    notice(result.message, "success");
+  } catch (error) {
+    notice(error.message, "error");
+  } finally {
+    sshControls(false);
+  }
+});
 async function status() {
   try {
     const data = await api("status"),

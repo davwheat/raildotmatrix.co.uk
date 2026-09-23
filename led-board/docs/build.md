@@ -88,6 +88,18 @@ before removing the card. Wi-Fi credentials and the hashed web password are stor
 on the Linux partition. To reset the web password over SSH, remove
 `/var/lib/departure-board/password.json` and restart `departure-board-manager`.
 
+In **Developer → Root SSH access**, paste one or more SSH public keys (the contents of `.pub` files),
+one complete key per line, then choose **Save SSH keys**. Connect using
+`ssh root@departureboard.local`, or substitute the Pi's IP address. Each key grants full root access;
+keep its private key on your computer. The editor loads existing keys and preserves comments and key
+options. Remove a line and save to revoke that key for new connections, or clear the field to remove
+all keys. Existing SSH sessions and console/SSH password settings are unaffected.
+
+Keys are stored in `/root/.ssh/authorized_keys` with mode `0600`, inside a `0700` directory. New images
+include an enabled Dropbear SSH server. When upgrading an existing image manually, also install the
+updated `departure-board-manager.service`, create `/root/.ssh` with mode `0700`, and run
+`systemctl daemon-reload` before restarting the manager so its sandbox permits saving keys.
+
 Useful commands on the Pi:
 
 ```sh
@@ -143,7 +155,8 @@ build/manage-native -demo -listen 127.0.0.1:8098 \
 ```
 
 Open http://127.0.0.1:8098 and sign in with `DotMatrix`. Demo mode simulates networks and service
-restarts, while config validation and persistence work against the separate demo file.
+restarts, while config validation and persistence work against the separate demo file. Developer SSH
+keys are saved to `state/ssh/authorized_keys` in the demo directory; they do not enable host SSH access.
 
 ## Local settings
 

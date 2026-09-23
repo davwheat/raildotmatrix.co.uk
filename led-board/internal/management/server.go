@@ -52,6 +52,7 @@ type Server struct {
 	opts        Options
 	fields      []configschema.Field
 	wifi        *WiFi
+	sshPath     string
 	mu          sync.Mutex
 	sessions    map[string]time.Time
 	password    passwordRecord
@@ -67,6 +68,10 @@ func New(o Options) (*Server, error) {
 		return nil, err
 	}
 	s := &Server{opts: o, sessions: map[string]time.Time{}}
+	s.sshPath = "/root/.ssh/authorized_keys"
+	if o.Demo {
+		s.sshPath = filepath.Join(o.StateDir, "ssh", "authorized_keys")
+	}
 	data, err := o.Run(context.Background(), o.BoardBinary, "-config-schema")
 	if err != nil {
 		return nil, fmt.Errorf("read board configuration schema: %w: %s", err, data)
@@ -94,6 +99,8 @@ func (s *Server) Handler() http.Handler {
 	api.HandleFunc("POST /api/password", s.changePassword)
 	api.HandleFunc("GET /api/config", s.getConfig)
 	api.HandleFunc("PUT /api/config", s.putConfig)
+	api.HandleFunc("GET /api/ssh-keys", s.getSSHKeys)
+	api.HandleFunc("PUT /api/ssh-keys", s.putSSHKeys)
 	api.HandleFunc("GET /api/status", func(w http.ResponseWriter, r *http.Request) {
 		status := "unavailable"
 		if s.opts.Demo {

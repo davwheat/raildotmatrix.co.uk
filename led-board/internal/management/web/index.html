@@ -58,7 +58,8 @@
           <button data-tab="board" class="selected" aria-current="page">
             Board settings</button
           ><button data-tab="network">Wi-Fi & connection</button
-          ><button data-tab="device">Device</button>
+          ><button data-tab="device">Device</button
+          ><button data-tab="developer">Developer</button>
         </nav>
         <section id="board-page" class="tab-page">
           <div class="section-heading">
@@ -212,6 +213,51 @@
               </p>
             </section>
           </div>
+        </section>
+        <section id="developer-page" class="tab-page" hidden>
+          <div class="section-heading">
+            <div><h2>Developer</h2></div>
+            <button id="ssh-reload" class="quiet">Reload SSH keys</button>
+          </div>
+          <section class="card">
+            <h3>Root SSH access</h3>
+            <p>
+              Add public keys to connect to your Pi as root. Each key grants
+              full control of the Pi to whoever holds its matching private key.
+            </p>
+            <p>
+              Connect from a terminal:
+              <code>ssh root@departureboard.local</code>
+            </p>
+            <form id="ssh-form">
+              <label for="ssh-keys">SSH public keys</label>
+              <textarea
+                id="ssh-keys"
+                rows="9"
+                maxlength="32768"
+                spellcheck="false"
+                autocapitalize="off"
+                autocomplete="off"
+                aria-describedby="ssh-help"
+                placeholder="ssh-ed25519 AAAA… your-name@computer"
+                disabled
+              ></textarea>
+              <small id="ssh-help">
+                Paste the contents of your .pub files, one complete key per
+                line. Keep private keys on your computer. To revoke a key,
+                remove its line and save. Clearing this field removes all saved
+                keys. Changes apply to new connections immediately.
+              </small>
+              <div class="save-bar">
+                <span id="ssh-save-status" role="status"
+                  >Loading SSH keys…</span
+                >
+                <button type="submit" id="ssh-save" disabled>
+                  Save SSH keys
+                </button>
+              </div>
+            </form>
+          </section>
         </section>
       </div>
     </main>
