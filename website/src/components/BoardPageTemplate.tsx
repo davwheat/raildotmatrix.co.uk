@@ -28,7 +28,8 @@ function Board({ component: Component, requireStation }: { component: React.Comp
   const editBoardUrl = getEditBoardUrl(window.location.pathname, window.location.search)
   const requestedType = window.location.pathname.split('/')[2] as DisplayType
   const type = requestedType in storageKeys ? requestedType : 'infotec-landscape-dmi'
-  const station = new URLSearchParams(window.location.search).get('station') || ''
+  const query = new URLSearchParams(window.location.search)
+  const station = query.get('station') || ''
 
   if (requireStation && station === '') {
     return (
@@ -41,7 +42,7 @@ function Board({ component: Component, requireStation }: { component: React.Comp
 
   return (
     <DataSourceProvider>
-      <BoardOptionsProvider key={type} type={type}>
+      <BoardOptionsProvider key={type} type={type} platforms={query.getAll('platform')}>
         <BoardControls editBoardUrl={editBoardUrl} />
         <Component station={station} editBoardUrl={editBoardUrl} />
       </BoardOptionsProvider>

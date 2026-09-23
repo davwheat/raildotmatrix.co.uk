@@ -78,10 +78,10 @@ const choices = {
 }
 
 /** Old saved preferences remain usable; explicit URL options take precedence. */
-export function readOptions(type: DisplayType, stored: unknown, query: URLSearchParams): DisplayOptions {
+export function readOptionOverrides(type: DisplayType, stored: unknown, query: URLSearchParams): Partial<DisplayOptions> {
   const saved: Record<string, unknown> = stored && typeof stored === 'object' ? { ...stored } : {}
   if (!saved.rowPrefix && ['before', 'after'].includes(String(saved.platformPosition))) saved.rowPrefix = 'platforms'
-  const values: Record<string, unknown> = { ...defaults }
+  const values: Record<string, unknown> = {}
   for (const key of optionKeys(type)) {
     for (const raw of [saved[key], query.has(key) ? query.get(key) : undefined]) {
       if (raw === undefined) continue
@@ -107,7 +107,18 @@ export function readOptions(type: DisplayType, stored: unknown, query: URLSearch
       }
     }
   }
-  return values as DisplayOptions
+  return values as Partial<DisplayOptions>
+}
+
+/** No platform filter means the whole station; only a single-platform board defaults to unnamed warnings. */
+export function resolveOptions(type: DisplayType, overrides: Partial<DisplayOptions>, platforms: string[]): DisplayOptions {
+  const platformCount = new Set(platforms.map(platform => platform.trim().toUpperCase()).filter(Boolean)).size
+  const warningPlatform = optionKeys(type).includes('warningPlatform') && platformCount !== 1
+  return { ...defaults, warningPlatform, ...overrides }
+}
+
+export function readOptions(type: DisplayType, stored: unknown, query: URLSearchParams): DisplayOptions {
+  return resolveOptions(type, readOptionOverrides(type, stored, query), query.getAll('platform'))
 }
 
 /** Include defaults too, so another browser's saved preferences cannot change a shared board. */

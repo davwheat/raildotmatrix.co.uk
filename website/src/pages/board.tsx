@@ -97,7 +97,7 @@ function IndexPage() {
           <h1 className="display">Board settings</h1>
           <p>Choose a station, then set up your display.</p>
         </header>
-        <BoardOptionsProvider key={boardSettings.type} type={boardSettings.type}>
+        <BoardOptionsProvider key={boardSettings.type} type={boardSettings.type} platforms={boardSettings.platforms}>
           <SetupForm type={boardSettings.type} station={boardSettings.station} params={boardParams(boardSettings.station)}>
             <div className={styles.station}>
               <AutocompleteSelect

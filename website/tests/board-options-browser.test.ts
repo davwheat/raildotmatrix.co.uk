@@ -62,7 +62,35 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
     params.append('platform', '4')
     await send('Page.navigate', { url: `${origin}/board?${params}` })
     await wait(`document.querySelector('button[type="submit"]') && document.body.textContent.includes('LED colour')`)
+    await wait(`document.querySelectorAll('.platform-picker label').length === 6`)
+    const warningInput = `[...document.querySelectorAll('label')].find(x => x.textContent.includes('Name the platform in warnings')).querySelector('input')`
+    const togglePlatform = async (platform: string) => {
+      await evaluate(
+        `[...document.querySelectorAll('.platform-picker label')].find(x => x.textContent.trim() === ${JSON.stringify(platform)}).querySelector('input').click()`,
+      )
+    }
+    // The default follows the platform selection, even after another option has been saved.
+    await wait(`${warningInput}.checked`)
+    await togglePlatform('4')
+    await wait(`!${warningInput}.checked`)
     await select('LED colour', 'white')
+    assert.equal(await evaluate(`'warningPlatform' in JSON.parse(localStorage.getItem('newGtrBoardSettings'))`), false)
+    await select('Display type', 'daktronics-data-display-dmi')
+    await wait(`document.body.textContent.includes('Casing colour') && !${warningInput}.checked`)
+    await select('Display type', 'infotec-landscape-dmi')
+    await wait(`document.body.textContent.includes('LED colour') && !${warningInput}.checked`)
+    await togglePlatform('2')
+    await wait(`${warningInput}.checked`)
+    await togglePlatform('2')
+    await wait(`!${warningInput}.checked`)
+    await togglePlatform('4')
+    await wait(`${warningInput}.checked`)
+    // An explicit opt-out survives later platform changes.
+    await evaluate(`${warningInput}.click()`)
+    await wait(`JSON.parse(localStorage.getItem('newGtrBoardSettings')).warningPlatform === false`)
+    await togglePlatform('4')
+    await togglePlatform('4')
+    assert.equal(await evaluate(`${warningInput}.checked`), false)
     await select('Services to show', '5')
     await wait(`JSON.parse(localStorage.getItem('newGtrBoardSettings')).serviceCount === 5`)
     await evaluate(
@@ -73,9 +101,7 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
       `[...document.querySelectorAll('label')].find(x => x.textContent.includes('Use smaller scrolling text')).querySelector('input').click()`,
     )
     await wait(`JSON.parse(localStorage.getItem('newGtrBoardSettings')).smallScrollingText === true`)
-    const labels = await evaluate(
-      `[...document.querySelectorAll('fieldset label')].map(x => x.textContent.trim()).filter(x => !['2', '4'].includes(x))`,
-    )
+    const labels = await evaluate(`[...document.querySelectorAll('fieldset:not(.platform-picker) label')].map(x => x.textContent.trim())`)
     await select('Display type', 'daktronics-data-display-dmi')
     await wait(`document.body.textContent.includes('Casing colour')`)
     await select('Display type', 'infotec-landscape-dmi')
@@ -104,6 +130,7 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
     assert.equal(boardQuery.get('serviceCount'), '5')
     assert.equal(boardQuery.get('smallScrollingText'), '1')
     assert.equal(boardQuery.get('formationIcons'), 'accessibility,cycles,food,first-class')
+    assert.equal(boardQuery.get('warningPlatform'), '0')
     assert.deepEqual(boardQuery.getAll('platform'), ['2', '4'])
     assert.equal(await evaluate(`!!document.querySelector('.board-settings, dialog')`), false)
     assert.equal(await evaluate(`[...document.querySelectorAll('a')].some(x => x.textContent === 'Edit board')`), true)

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { applyOptions, readOptions, storageKeys, type DisplayOptions, type DisplayType } from './settings'
+import { applyOptions, readOptionOverrides, resolveOptions, storageKeys, type DisplayOptions, type DisplayType } from './settings'
 
 const Context = createContext<{
   type: DisplayType
@@ -7,8 +7,8 @@ const Context = createContext<{
   update: (change: Partial<DisplayOptions>) => void
 } | null>(null)
 
-export function BoardOptionsProvider({ type, children }: { type: DisplayType; children: React.ReactNode }) {
-  const [options, setOptions] = useState(() => {
+export function BoardOptionsProvider({ type, platforms, children }: { type: DisplayType; platforms: string[]; children: React.ReactNode }) {
+  const [overrides, setOverrides] = useState(() => {
     let stored: unknown
     try {
       stored = JSON.parse(window.localStorage.getItem(storageKeys[type]) || 'null')
@@ -18,13 +18,17 @@ export function BoardOptionsProvider({ type, children }: { type: DisplayType; ch
     const query = new URLSearchParams(window.location.search)
     const setup = !window.location.pathname.startsWith('/board/')
     const queryType = query.get('type') || 'infotec-landscape-dmi'
-    return readOptions(type, stored, setup && queryType !== type ? new URLSearchParams() : query)
+    return readOptionOverrides(type, stored, setup && queryType !== type ? new URLSearchParams() : query)
   })
+  const options = resolveOptions(type, overrides, platforms)
 
-  function updateUrl(next: DisplayOptions) {
+  function updateUrl(next: Partial<DisplayOptions>) {
     const url = new URL(window.location.href)
-    if (!url.pathname.startsWith('/board/')) url.searchParams.set('type', type)
-    applyOptions(url.searchParams, type, next)
+    const setup = !url.pathname.startsWith('/board/')
+    if (setup) url.searchParams.set('type', type)
+    applyOptions(url.searchParams, type, resolveOptions(type, next, platforms))
+    // Reopening setup or switching display types must still let this default follow the platform selection.
+    if (setup && next.warningPlatform === undefined) url.searchParams.delete('warningPlatform')
     window.history.replaceState(window.history.state, '', url)
   }
 
@@ -35,8 +39,8 @@ export function BoardOptionsProvider({ type, children }: { type: DisplayType; ch
         const saved: unknown = JSON.parse(event.newValue)
         if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return
         // A live change overrides this tab's initial URL preferences, without rebroadcasting.
-        const next = readOptions(type, saved, new URLSearchParams())
-        setOptions(next)
+        const next = readOptionOverrides(type, saved, new URLSearchParams())
+        setOverrides(next)
         updateUrl(next)
       } catch {
         // Ignore malformed preferences from another tab.
@@ -44,11 +48,12 @@ export function BoardOptionsProvider({ type, children }: { type: DisplayType; ch
     }
     window.addEventListener('storage', receive)
     return () => window.removeEventListener('storage', receive)
-  }, [type])
+  }, [type, platforms])
 
   function update(change: Partial<DisplayOptions>) {
-    const next = { ...options, ...change }
-    setOptions(next)
+    // Keep automatic defaults out of storage so they can follow a later platform selection.
+    const next = { ...overrides, ...change }
+    setOverrides(next)
     try {
       window.localStorage.setItem(storageKeys[type], JSON.stringify(next))
     } catch {

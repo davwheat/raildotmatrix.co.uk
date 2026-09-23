@@ -60,7 +60,15 @@ const UPDATE_DELAY = 100
 
 /** The fixture name is the URL path prefix, which streamUrl() preserves when it appends /v1/cis/live. */
 export function serveFeed(): Promise<{ port: number; close: () => Promise<void> }> {
-  const server = createServer((_request, response) => response.writeHead(426).end('WebSocket only'))
+  const server = createServer((request, response) => {
+    if (new URL(request.url || '/', 'http://localhost').pathname.endsWith('/v1/platforms')) {
+      response
+        .writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' })
+        .end(JSON.stringify({ platforms: ['1', '2', '3', '4', '5', '6'] }))
+      return
+    }
+    response.writeHead(426).end('WebSocket only')
+  })
   const sockets = new WebSocketServer({ server })
 
   sockets.on('connection', (socket: any, request: any) => {

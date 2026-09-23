@@ -27,8 +27,9 @@ test('invalid preferences and unknown URL values fall back safely', () => {
     { color: 'pink', serviceCount: -5, platformBox: 'yes' },
     new URLSearchParams('color=purple&serviceCount=100'),
   )
-  assert.deepEqual(result, defaults)
-  assert.deepEqual(readOptions(infotec, null, new URLSearchParams()), defaults)
+  const stationDefaults = { ...defaults, warningPlatform: true }
+  assert.deepEqual(result, stationDefaults)
+  assert.deepEqual(readOptions(infotec, null, new URLSearchParams()), stationDefaults)
 })
 test('shared URLs round-trip independently of recipient preferences', () => {
   const params = new URLSearchParams(
