@@ -192,6 +192,26 @@ go run ./cmd/preview -board infotec -fixture first-departs -seconds 6 -every 0.1
 go run ./cmd/livedump -crs BTN
 ```
 
+### Run the board in a desktop window
+
+To watch the board without a Pi or LED panel, run `cmd/board` with `-display window`. It opens a window that
+draws each LED as a round dot, and it accepts the same config file, environment variables and flags as on the
+Pi. Press Esc or close the window to quit.
+
+```sh
+go run ./cmd/board -display window -crs BTN
+go run ./cmd/board -display window -board infotec -platform-box -crs BTN
+go run ./cmd/board -display window -fixture first-departs -board infotec
+```
+
+The `-scale` flag sets the number of pixels per LED (default 5), and the `-led-*` flags set the board size, so
+the layout matches the real panel. To write every frame to numbered PNG files instead, use `-display png`
+and name the directory with `-png-dir` (default `board-out`).
+
+The window uses [Ebitengine](https://ebitengine.org), which is only compiled on non-Linux builds, so
+`-display window` works on macOS and Windows but fails on the Pi. For more information, see
+[Running on a desktop](docs/build.md#running-on-a-desktop).
+
 `go test` compares every board format, drawn through every fixture at the panel and web sizes and with each display
 option, against the round-dot images in `internal/formats/testdata/golden`. They're ordinary PNGs, so a change to how
 a board looks shows up as a reviewable image in the diff. A frame that doesn't match is written to
