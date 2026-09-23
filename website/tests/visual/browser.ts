@@ -38,7 +38,7 @@ export class Browser {
   private closed = false
   private readonly pending = new Map<number, { resolve: (result: any) => void; reject: (error: Error) => void }>()
 
-  static async launch(): Promise<Browser> {
+  static async launch({ gpu = false }: { gpu?: boolean } = {}): Promise<Browser> {
     const profile = await mkdtemp(join(tmpdir(), 'board-visual-'))
     const port = 9222 + Math.floor(Math.random() * 500)
     const executable = CHROME_CANDIDATES.find(path => existsSync(path))
@@ -58,7 +58,7 @@ export class Browser {
         '--disable-lcd-text',
         '--force-color-profile=srgb',
         '--font-render-hinting=none',
-        '--disable-gpu',
+        ...(gpu ? [] : ['--disable-gpu']),
         '--disable-dev-shm-usage',
         // CI images install Chrome for Testing, whose sandbox helper is not setuid root, so the sandbox cannot start.
         '--no-sandbox',

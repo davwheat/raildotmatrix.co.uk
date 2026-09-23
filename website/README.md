@@ -12,6 +12,14 @@ The Daktronics (Data Display) DMI and Infotec landscape DMI boards aren't React 
 [`../led-board`](../led-board), which also drives a physical LED panel, compiled to WebAssembly. `src/components/displays/LedBoard` loads that
 build and draws its frames. These two boards always read the live WebSocket feed, whatever the train data source is set to.
 
+The browser uses WebGL when hardware acceleration is available: each changed frame uploads the small RGB board image, and one GPU draw scales it
+and applies a cached dot mask. Canvas 2D remains the fallback. The renderer restores its textures and latest frame after a GPU context loss, and
+releases GPU resources when a board closes.
+
+`yarn test:renderer` compares both renderers in GPU-enabled headless Chrome and checks resizing, transparency, context recovery and fallback.
+`yarn test:renderer --benchmark` also measures main-thread paint submission time at 1920- and 3840-pixel widths; it does not measure GPU time or
+overall frame rate. These checks need hardware WebGL and do not require a site build.
+
 `yarn build` and `yarn dev` build the WebAssembly bundle into `public/led-board` first, so they need Go 1.21 or later (Go fetches the version
 `led-board/go.mod` asks for) and [Just](https://just.systems). `yarn board` rebuilds just the bundle. To change how either board looks or
 behaves, change the Go code in `led-board`; git ignores `public/led-board`.

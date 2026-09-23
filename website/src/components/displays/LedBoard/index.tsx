@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 
-import { DotPainter } from './DotPainter'
+import { createDotPainter } from './DotPainter'
 import { loadLedBoard, type LedBoardHandle, type LedBoardOptions } from './loadLedBoard'
 
 type Props = Omit<LedBoardOptions, 'width' | 'height'> & {
@@ -40,7 +40,7 @@ export default function LedBoard({
   alignPlatformRows,
   colour,
 }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const surfaceRef = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState<'loading' | 'running' | 'failed'>('loading')
 
   // A key rather than the options themselves, so that a parent passing an equal array every render doesn't restart
@@ -72,9 +72,10 @@ export default function LedBoard({
   })
 
   useEffect(() => {
-    const canvas = canvasRef.current!
-    const painter = new DotPainter(canvas, columns, rows)
-    const observer = observeDevicePixelSize(canvas, (width, height) => painter.resize(width, height))
+    const surface = surfaceRef.current!
+    const painter = createDotPainter(columns, rows)
+    surface.appendChild(painter.canvas)
+    const observer = observeDevicePixelSize(surface, (width, height) => painter.resize(width, height))
     let handle: LedBoardHandle | undefined
     let frame = 0
     let stopped = false
@@ -111,14 +112,21 @@ export default function LedBoard({
       cancelAnimationFrame(frame)
       observer.disconnect()
       handle?.close()
+      painter.dispose()
+      painter.canvas.remove()
     }
   }, [key])
 
   return (
     <div className={className} css={{ position: 'relative' }} aria-busy={status === 'loading'}>
-      <canvas
-        ref={canvasRef}
-        css={{ display: 'block', width: '100%', aspectRatio: `${columns} / ${rows}`, background: 'var(--led-board-background, #000)' }}
+      <div
+        ref={surfaceRef}
+        css={{
+          width: '100%',
+          aspectRatio: `${columns} / ${rows}`,
+          background: 'var(--led-board-background, #000)',
+          '& canvas': { display: 'block', width: '100%', height: '100%' },
+        }}
       />
       {status === 'failed' && (
         <p
