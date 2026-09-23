@@ -69,6 +69,10 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
       `[...document.querySelectorAll('label')].find(x => x.textContent.trim() === 'Standard toilets').querySelector('input').click()`,
     )
     await wait(`JSON.parse(localStorage.getItem('newGtrBoardSettings')).formationIcons.join(',') === 'accessibility,cycles,food,first-class'`)
+    await evaluate(
+      `[...document.querySelectorAll('label')].find(x => x.textContent.includes('Use smaller scrolling text')).querySelector('input').click()`,
+    )
+    await wait(`JSON.parse(localStorage.getItem('newGtrBoardSettings')).smallScrollingText === true`)
     const labels = await evaluate(
       `[...document.querySelectorAll('fieldset label')].map(x => x.textContent.trim()).filter(x => !['2', '4'].includes(x))`,
     )
@@ -98,6 +102,7 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
     const boardQuery = new URL(boardUrl).searchParams
     assert.equal(boardQuery.get('color'), 'white')
     assert.equal(boardQuery.get('serviceCount'), '5')
+    assert.equal(boardQuery.get('smallScrollingText'), '1')
     assert.equal(boardQuery.get('formationIcons'), 'accessibility,cycles,food,first-class')
     assert.deepEqual(boardQuery.getAll('platform'), ['2', '4'])
     assert.equal(await evaluate(`!!document.querySelector('.board-settings, dialog')`), false)
@@ -147,6 +152,12 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
     await wait(`${frame}.querySelector('dialog').open`)
     assert.equal(await evaluate(`${frame}.querySelector('dialog').matches(':modal')`), true)
     assert.deepEqual(await evaluate(`[...${frame}.querySelectorAll('fieldset label')].map(x => x.textContent.trim())`), labels)
+    assert.equal(
+      await evaluate(
+        `[...${frame}.querySelectorAll('label')].find(x => x.textContent.includes('Use smaller scrolling text')).querySelector('input').checked`,
+      ),
+      true,
+    )
     assert.equal(
       await evaluate(
         `[...${frame}.querySelectorAll('label')].find(x => x.textContent.trim() === 'Standard toilets').querySelector('input').checked`,

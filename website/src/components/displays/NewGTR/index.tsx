@@ -62,6 +62,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
             warningPlatform={!!settings.warningPlatform}
             platformBox={!!settings.platformBox}
             compactLowerRow={settings.compactLowerRow !== false}
+            smallScrollingText={settings.smallScrollingText}
             serviceCount={settings.serviceCount ?? 3}
             clockStyle={settings.clockStyle}
             loadingBrightness={settings.loadingBrightness}

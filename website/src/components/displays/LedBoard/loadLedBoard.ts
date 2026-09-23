@@ -38,6 +38,8 @@ export interface LedBoardOptions {
   alignPlatformRows?: boolean
   colour?: 'amber' | 'white'
   scrollSpeed?: number
+  /** Use the compact font for Infotec calling points and service information. */
+  smallScrollingText?: boolean
   width?: number
   height?: number
   verbose?: boolean

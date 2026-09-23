@@ -36,6 +36,7 @@ export default function LedBoard({
   warningPlatform,
   platformBox,
   compactLowerRow,
+  smallScrollingText,
   alignPlatformRows,
   colour,
 }: Props) {
@@ -65,6 +66,7 @@ export default function LedBoard({
     warningPlatform,
     platformBox,
     compactLowerRow,
+    smallScrollingText,
     alignPlatformRows,
     colour,
   })

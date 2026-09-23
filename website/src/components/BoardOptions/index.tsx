@@ -154,6 +154,9 @@ export default function BoardOptions() {
                 Align lower rows with the platform box
               </Check>
               <Check name="compactLowerRow">Place lower service row beside the clock</Check>
+              <Check name="smallScrollingText" hint="Use the compact font for calling points and service information.">
+                Use smaller scrolling text
+              </Check>
             </>
           )}
           {daktronics && (

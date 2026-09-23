@@ -45,9 +45,19 @@ test('shared URLs round-trip independently of recipient preferences', () => {
   assert.deepEqual(readOptions(infotec, { color: 'orange', warningPlatform: true, compactLowerRow: false }, params), wanted)
 })
 test('display-specific options do not leak between formats', () => {
-  const params = new URLSearchParams('platformBox=1&serviceCount=6&color=white')
+  const params = new URLSearchParams('platformBox=1&serviceCount=6&color=white&smallScrollingText=1')
   applyOptions(params, 'blackbox-landscape-lcd', defaults)
   assert.deepEqual([...params.keys()].sort(), ['showUnconfirmedPlatforms', 'useLegacyTocNames'])
+})
+
+test('small scrolling text defaults off and shared links override saved preferences', () => {
+  assert.equal(readOptions(infotec, {}, new URLSearchParams()).smallScrollingText, false)
+  assert.equal(readOptions(infotec, { smallScrollingText: true }, new URLSearchParams()).smallScrollingText, true)
+  for (const smallScrollingText of [true, false]) {
+    const query = new URLSearchParams()
+    applyOptions(query, infotec, { ...defaults, smallScrollingText })
+    assert.equal(readOptions(infotec, { smallScrollingText: !smallScrollingText }, query).smallScrollingText, smallScrollingText)
+  }
 })
 test('RailAnnouncements modal requires an iframe and a matching marker or referrer', () => {
   const marker = new URLSearchParams('from-railannouncements.co.uk=1')
