@@ -133,42 +133,58 @@ func TestFormationChangesWithTrainLength(t *testing.T) {
 
 func TestPlatformBoxLabelAndNumber(t *testing.T) {
 	for _, size := range sizes {
-		for _, platform := range []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "10A"} {
-			b := New(Config{CompactLowerRow: &separateClock, Width: size[0], Height: size[1], PlatformBox: platform})
-			g := b.geo
-			f := frame.New(size[0], size[1])
-			b.drawPlatformBox(f, board.White)
-			label := frame.New(size[0], size[1])
-			labelY := 2
-			if size[1] == 70 {
-				labelY = 5
-			}
-			font.PISTall.Draw(label, (g.boxW-font.PISTall.Width("Plat"))/2, labelY, "Plat", board.White)
-			for y := labelY; y < labelY+font.PISTall.Baseline; y++ {
-				for x := 1; x < g.boxW-1; x++ {
-					if f.At(x, y) != label.At(x, y) {
-						t.Fatalf("%q: Plat must be centred above the number, slightly above the box centre", platform)
+		for _, cfg := range []Config{
+			{CompactLowerRow: &separateClock},
+			{CompactLowerRow: &separateClock, SmallScrollingText: true},
+			{},
+			{SmallScrollingText: true},
+		} {
+			for _, platform := range []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "10A", "10b"} {
+				cfg.Width, cfg.Height, cfg.PlatformBox = size[0], size[1], platform
+				b := New(cfg)
+				g := b.geo
+				f := frame.New(size[0], size[1])
+				b.drawPlatformBox(f, board.White)
+				label := frame.New(size[0], size[1])
+				labelY := g.sepY
+				for y := 1; y < g.sepY; y++ {
+					for x := 1; x < g.boxW-1; x++ {
+						if f.At(x, y) != frame.Black {
+							labelY = min(labelY, y)
+						}
 					}
 				}
-			}
-			left, right, top, bottom := g.boxW, 0, g.sepY, 0
-			for y := labelY + font.PISTall.Baseline; y < labelY+font.PISTall.Baseline+6; y++ {
-				for x := 1; x < g.boxW-1; x++ {
-					if f.At(x, y) != frame.Black {
-						t.Fatalf("%q: gap below Plat must have six blank rows", platform)
+				font.PISTall.Draw(label, (g.boxW-font.PISTall.Width("Plat"))/2, labelY, "Plat", board.White)
+				for y := labelY; y < labelY+font.PISTall.Baseline; y++ {
+					for x := 1; x < g.boxW-1; x++ {
+						if f.At(x, y) != label.At(x, y) {
+							t.Fatalf("%q: Plat must be centred above the number", platform)
+						}
 					}
 				}
-			}
-			for y := labelY + font.PISTall.Baseline + 6; y < g.sepY; y++ {
-				for x := 1; x < g.boxW-1; x++ {
-					if f.At(x, y) != frame.Black {
-						left, right, top, bottom = min(left, x), max(right, x), min(top, y), max(bottom, y)
+				left, right, top, bottom := g.boxW, 0, g.sepY, 0
+				for y := labelY + font.PISTall.Baseline; y < labelY+font.PISTall.Baseline+6; y++ {
+					for x := 1; x < g.boxW-1; x++ {
+						if f.At(x, y) != frame.Black {
+							t.Fatalf("%q: gap below Plat must have six blank rows", platform)
+						}
 					}
 				}
-			}
-			// An odd spare dot belongs on the left: half-dot positions round right.
-			if delta := left - (g.boxW - 1 - right); delta < 0 || delta > 1 || bottom-top+1 != font.InfotecPlatform.Height {
-				t.Errorf("%q: enlarged number is not centred: bounds (%d,%d)-(%d,%d), box width %d", platform, left, top, right, bottom, g.boxW)
+				for y := labelY + font.PISTall.Baseline + 6; y < g.sepY; y++ {
+					for x := 1; x < g.boxW-1; x++ {
+						if f.At(x, y) != frame.Black {
+							left, right, top, bottom = min(left, x), max(right, x), min(top, y), max(bottom, y)
+						}
+					}
+				}
+				// An odd spare dot belongs on the left: half-dot positions round right.
+				if delta := left - (g.boxW - 1 - right); delta < 0 || delta > 1 || bottom-top+1 != font.InfotecPlatform.Height {
+					t.Errorf("%q: enlarged number is not centred: bounds (%d,%d)-(%d,%d), box width %d", platform, left, top, right, bottom, g.boxW)
+				}
+				above, below := labelY-1, g.sepY-bottom-1
+				if above < 0 || below < above || below-above > 1 {
+					t.Errorf("%q: platform content is not vertically centred in box height %d: gaps %d/%d", platform, g.sepY+1, above, below)
+				}
 			}
 		}
 	}
@@ -188,7 +204,12 @@ func TestServicePlatformBoxFollowsFirstTrain(t *testing.T) {
 			if !b.Tick(now, f) || b.last.platform != platform {
 				t.Fatalf("platform change to %q did not redraw the box", platform)
 			}
-			if b.geo.boxW != max(font.PISTall.Width("Plat"), font.InfotecPlatform.Width(platform))+6 {
+			width, padding := font.InfotecPlatform.Width(platform), 4
+			if len(platform) == 3 {
+				width -= 2 // Two character gaps, each reduced by one dot.
+				padding = 3
+			}
+			if b.geo.boxW != max(font.PISTall.Width("Plat"), width)+2*(padding+1) {
 				t.Fatalf("box does not fit platform %q", platform)
 			}
 			want := frame.New(size[0], size[1])

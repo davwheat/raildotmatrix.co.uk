@@ -95,6 +95,9 @@ func goldenCases() []goldenCase {
 	}
 	add("infotec", "busy-board", "white", panel, Config{Colour: board.White}, settled["infotec"])
 	for _, size := range []goldenSize{panel, webSizes["infotec"]} {
+		add("infotec", "busy-board", "small-scrolling-text", size, Config{SmallScrollingText: true}, settled["infotec"])
+		add("infotec", "busy-board", "small-scrolling-text-platform-box", size, Config{SmallScrollingText: true, PlatformBox: true}, settled["infotec"])
+		add("infotec", "busy-board", "small-scrolling-text-calling", size, Config{SmallScrollingText: true, PlatformBox: true}, 11*time.Second)
 		for _, style := range []string{"number", "coaches", "coaches-no-brackets", "carriages", "carriages-no-brackets"} {
 			add("infotec", "detailed-formation", "count-"+style, size, Config{PlatformBox: true, FormationCount: style}, settled["infotec"])
 		}
@@ -105,6 +108,7 @@ func goldenCases() []goldenCase {
 			add("infotec", "detailed-formation", page, size, Config{PlatformBox: true, ClockStyle: "small-seconds"}, time.Duration(i*5+4)*time.Second)
 		}
 		compact := false
+		add("infotec", "busy-board", "small-scrolling-text-platform-box-separate-clock", size, Config{SmallScrollingText: true, PlatformBox: true, CompactLowerRow: &compact}, settled["infotec"])
 		add("infotec", "busy-board", "platform-box-separate-clock", size, Config{PlatformBox: true, Platforms: []string{"2"}, CompactLowerRow: &compact}, settled["infotec"])
 		add("infotec", "busy-board", "compact-dot-ordinals", size, Config{PlatformBox: true, Platforms: []string{"2"}, OrdinalFormat: board.OrdinalDot, ServiceCount: 6}, settled["infotec"])
 		add("infotec", "busy-board", "platform-box-multiple", size, Config{PlatformBox: true, Platforms: []string{"1", "2"}}, settled["infotec"])

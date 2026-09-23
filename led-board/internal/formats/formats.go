@@ -35,6 +35,8 @@ type Config struct {
 	Worldline bool
 	// ScrollSpeed is in dots per second.
 	ScrollSpeed int
+	// SmallScrollingText uses the compact Infotec information font.
+	SmallScrollingText bool
 	// RowPrefix selects ordinals or platform numbers before each train's time.
 	RowPrefix board.RowPrefix
 	// WarningPlatform names the platform in a warning when the warning is for one platform.
@@ -76,7 +78,8 @@ func New(name string, c Config) (board.Board, error) {
 		}
 		return infotec.New(infotec.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, ScrollSpeed: c.ScrollSpeed,
-			RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform,
+			SmallScrollingText: c.SmallScrollingText,
+			RowPrefix:          c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform,
 			FormationCount:    c.FormationCount,
 			CoachLetterTOCs:   c.CoachLetterTOCs,
 			FormationIcons:    c.FormationIcons,

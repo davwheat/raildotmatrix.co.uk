@@ -1,10 +1,6 @@
 package infotec
 
-import (
-	"time"
-
-	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
-)
+import "time"
 
 // DefaultScrollSpeed is the scroll speed in dots per second. The web scrolls at 550 px/s, which is 77 dots/s at
 // 7.17 px per dot, but that reads as too fast on the physical panel, whose dots are larger.
@@ -64,7 +60,7 @@ type scroller struct {
 }
 
 func (s *scroller) reset(p page, g *geometry, now time.Time) {
-	text := font.PISTall
+	text := g.infoFace()
 	s.prefix, s.text = p.prefix, p.text
 	s.textW = text.Width(p.text)
 	s.x0 = g.infoX

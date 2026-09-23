@@ -23,6 +23,7 @@
 //	  platformBox: false,               // Infotec only; shows the first service platform when watching multiple platforms
 //	  colour: 'amber',                  // or 'white'
 //	  scrollSpeed: 0,                   // dots per second; 0 for the board's default
+//	  smallScrollingText: false,        // Infotec only; compact calling points and service information
 //	  width: 256, height: 64,           // in dots
 //	  verbose: false,                   // debug logging to the console
 //	})
@@ -125,10 +126,11 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 	b, err := formats.New(o.string("board", "daktronics"), formats.Config{
 		Width: w, Height: h, Zone: zone, Colour: colour, Worldline: o.bool("worldline"), ScrollSpeed: o.int("scrollSpeed", 0),
 		RowPrefix: rowPrefix, OrdinalFormat: ordinalFormat, LoadingBrightness: o.int("loadingBrightness", 50), ClockStyle: o.string("clockStyle", ""), ServiceCount: serviceCount, WarningPlatform: o.bool("warningPlatform"),
-		FormationCount:  o.string("formationCount", "none"),
-		CoachLetterTOCs: o.strings("coachLetterTocs"),
-		FormationIcons:  o.strings("formationIcons"),
-		CompactLowerRow: &compactLowerRow, PlatformBox: o.bool("platformBox"), Platforms: platforms, AlignPlatformRows: &alignPlatformRows,
+		FormationCount:     o.string("formationCount", "none"),
+		CoachLetterTOCs:    o.strings("coachLetterTocs"),
+		FormationIcons:     o.strings("formationIcons"),
+		SmallScrollingText: o.bool("smallScrollingText"),
+		CompactLowerRow:    &compactLowerRow, PlatformBox: o.bool("platformBox"), Platforms: platforms, AlignPlatformRows: &alignPlatformRows,
 	})
 	if err != nil {
 		return js.Value{}, err

@@ -111,6 +111,9 @@ settings. The lower train row uses the selected `row_prefix`.
 The platform number uses the "Large Platform Number" face from `../tools/font.json`. Regenerate its native
 dot patterns with `python3 scripts/import-platform-font.py ../tools/font.json internal/font/infotec_platform_gen.go`.
 The import removes the one shared blank row above the glyphs so the six-dot label gap stays exact.
+The label and number are vertically centred together inside the platform box at every box height.
+Three-character platforms use one-dot character spacing and three blank dots of horizontal padding on
+each side; other platforms use two-dot character spacing and four blank dots of padding.
 
 `align_platform_rows` (default `true`) aligns the lower row's time and destination with the first service and
 centres its prefix beneath the platform box. Turn it off to keep the lower row's original columns and
@@ -118,7 +121,8 @@ left-aligned prefix. It only affects Infotec displays with an active platform bo
 and Pi management UI expose the same toggle; the CLI flag is `-align-platform-rows=false`.
 
 `compact_lower_row` (default `true`) places the lower service row beside a small clock when the platform
-box is enabled. Disable it to put the main clock beneath the row. Both clocks use the corresponding
+box is enabled, with the row and clock vertically centred between the separator and the bottom edge.
+Disable it to put the main clock beneath the row. Both clocks use the corresponding
 "Clock" and "Small Clock" faces in `tools/font.json`; the compact service text uses "Small main row".
 Run `python3 scripts/import-clock-fonts.py ../tools/font.json internal/font/infotec_clocks_gen.go` to regenerate the clocks.
 
@@ -173,6 +177,13 @@ and update (an empty list clears it). Notices are not currently rendered by the 
 
 `scroll_speed` sets how fast text scrolls, in dots per second. The defaults are 48 for Daktronics (the web
 board's 550 px/s) and 60 for Infotec (the web's 77 dots/s reads too fast on the panel).
+
+`small_scrolling_text = true` uses the Infotec "Small main row" font for calling points and service
+information, including their prefixes and pages that fit without scrolling. It defaults to `false`.
+The website and Pi management UI offer a Use smaller scrolling text toggle. The command-line flag is
+`-small-scrolling-text`, the environment variable is `BOARD_SMALL_SCROLLING_TEXT=true`, and the browser
+API and shared URLs use `smallScrollingText`. The smaller font redistributes space around the information
+row, formation and separator; widths, clipping and scroll duration follow the selected font.
 
 Unless `led.limit_refresh` or `led.pwm_bits` is set, the panel timing follows the board. The refresh rate is
 the lowest whole multiple of the scroll speed from 60 Hz up, so that every scroll step lasts the same number

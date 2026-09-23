@@ -220,8 +220,8 @@ func (b *Board) drawInfo(f *frame.Frame, sc *scrollScene, base frame.RGB) {
 	c := g.infoBand()
 	y := g.infoY + sc.dy
 	colour := board.Scale(base, fadeSteps-sc.faded, fadeSteps)
-	board.DrawText(f, font.PISTall, g.infoX, y, sc.prefix, colour, c)
-	board.DrawText(f, font.PISTall, sc.x, y, sc.text, colour, c.Intersect(board.Clip{X0: sc.clipX, X1: g.w, Y1: g.h}))
+	board.DrawText(f, g.infoFace(), g.infoX, y, sc.prefix, colour, c)
+	board.DrawText(f, g.infoFace(), sc.x, y, sc.text, colour, c.Intersect(board.Clip{X0: sc.clipX, X1: g.w, Y1: g.h}))
 }
 
 func (b *Board) drawLines(f *frame.Frame, lines [3]string, colour frame.RGB) {

@@ -59,6 +59,9 @@ func TestDefaults(t *testing.T) {
 	if cfg.FormationCount != "none" {
 		t.Errorf("formation count = %q; want none by default", cfg.FormationCount)
 	}
+	if cfg.SmallScrollingText {
+		t.Error("scrolling text must use the normal font by default")
+	}
 	if cfg.LED.Options != *matrix.Default() {
 		t.Errorf("led = %+v, want %+v", cfg.LED.Options, *matrix.Default())
 	}
@@ -78,6 +81,7 @@ platform_box = true
 align_platform_rows = false
 formation_count = "coaches"
 scroll_speed = 40
+small_scrolling_text = true
 
 [led]
 brightness = 40
@@ -108,6 +112,9 @@ func TestFile(t *testing.T) {
 	if !cfg.PlatformBox {
 		t.Error("platform_box option was not loaded")
 	}
+	if !cfg.SmallScrollingText {
+		t.Error("small_scrolling_text option was not loaded")
+	}
 	if cfg.FormationCount != "coaches" {
 		t.Errorf("formation count = %q; want coaches from file", cfg.FormationCount)
 	}
@@ -135,7 +142,8 @@ func TestPrecedence(t *testing.T) {
 	t.Setenv("BOARD_PLATFORMS", "3,4")
 	t.Setenv("BOARD_WORLDLINE", "true")
 	t.Setenv("BOARD_ROW_PREFIX", "platforms")
-	fs := parse(t, "-crs", "ecr", "-platform", "5", "-platform", "6b", "-row-prefix", "ordinals", "-align-platform-rows=true", "-led-no-drop-privs")
+	t.Setenv("BOARD_SMALL_SCROLLING_TEXT", "false")
+	fs := parse(t, "-crs", "ecr", "-platform", "5", "-platform", "6b", "-row-prefix", "ordinals", "-align-platform-rows=true", "-led-no-drop-privs", "-small-scrolling-text")
 	v, err := configure(fs, writeConfig(t, testConfig))
 	if err != nil {
 		t.Fatal(err)
@@ -146,6 +154,9 @@ func TestPrecedence(t *testing.T) {
 	}
 	if cfg.CRS != "ECR" {
 		t.Errorf("crs = %q; the flag should beat env and file", cfg.CRS)
+	}
+	if !cfg.SmallScrollingText {
+		t.Error("small scrolling text flag should override the environment")
 	}
 	if !cfg.AlignPlatformRows {
 		t.Error("platform row alignment must default to on")
@@ -226,7 +237,7 @@ func TestKeys(t *testing.T) {
 		led.gpio_mapping led.limit_refresh led.multiplexing led.no_drop_privs led.no_hardware_pulse led.parallel
 		led.pwm_bits led.pwm_dither_bits led.pwm_lsb_nanoseconds led.rgb_sequence led.row_addr_type led.rows
 		led.scan_mode led.show_refresh led.slowdown_gpio align_platform_rows compact_lower_row loading_brightness formation_count clock_style ordinal_format service_count platform_box row_prefix platforms png_dir scale scroll_speed
-		show_unconfirmed_platforms url verbose warning_platform worldline`)
+		show_unconfirmed_platforms small_scrolling_text url verbose warning_platform worldline`)
 	slices.Sort(keys)
 	slices.Sort(want)
 	if !slices.Equal(keys, want) {
@@ -243,8 +254,8 @@ func TestSettingsCoverEveryKey(t *testing.T) {
 	if _, ok := settings(v)["led.limit_refresh"]; !ok {
 		t.Error("a key without a default must still be watched")
 	}
-	if got := len(v.AllKeys()); got != 45 {
-		t.Errorf("%d keys, want 45", got)
+	if got := len(v.AllKeys()); got != 46 {
+		t.Errorf("%d keys, want 46", got)
 	}
 }
 

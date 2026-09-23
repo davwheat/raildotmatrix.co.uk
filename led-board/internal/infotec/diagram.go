@@ -1,10 +1,21 @@
 package infotec
 
 import (
+	"unicode/utf8"
+
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 )
+
+func platformBoxStyle(platform string) (face font.Face, padding int) {
+	face, padding = *font.InfotecPlatform, 4
+	if utf8.RuneCountInString(platform) == 3 {
+		face.Spacing--
+		padding = 3
+	}
+	return
+}
 
 // Keep the departing train's platform until its slide finishes, just like its
 // time and destination. Empty means unknown or suppressed by the public feed.
@@ -23,18 +34,20 @@ func (b *Board) platformBox() string {
 
 func (b *Board) drawPlatformBox(f *frame.Frame, colour frame.RGB) {
 	g := &b.geo
+	platform := b.platformBox()
+	text, _ := platformBoxStyle(platform)
 	f.FillRect(0, 0, g.boxW, 1, colour)
 	f.FillRect(0, 0, 1, g.sepY+1, colour)
 	f.FillRect(g.boxW-1, 0, 1, g.sepY+1, colour)
 	f.FillRect(0, g.sepY, g.boxW, 1, colour)
-	// Centre the label and number as a group, two dots above the box's centre.
+	// Centre the label and number as a group between the top and bottom borders.
 	const gap = 6
 	height := font.PISTall.Baseline + gap + font.InfotecPlatform.Height
-	y := max(1, (g.sepY-height)/2-2)
+	y := max(1, 1+(g.sepY-1-height)/2)
 	board.DrawText(f, font.PISTall, (g.boxW-font.PISTall.Width("Plat"))/2, y, "Plat", colour, g.full)
 	// Round half-dot positions to the right so odd-width numbers do not sit left of centre.
-	numberX := (g.boxW - font.InfotecPlatform.Width(b.platformBox()) + 1) / 2
-	board.DrawText(f, font.InfotecPlatform, numberX, y+font.PISTall.Baseline+gap, b.platformBox(), colour, g.full)
+	numberX := (g.boxW - text.Width(platform) + 1) / 2
+	board.DrawText(f, &text, numberX, y+font.PISTall.Baseline+gap, platform, colour, g.full)
 }
 
 // formationDimensions narrows long trains so the complete formation stays on the board.

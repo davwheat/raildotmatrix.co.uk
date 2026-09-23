@@ -35,6 +35,8 @@ type Config struct {
 	Colour frame.RGB
 	// ScrollSpeed is how fast text scrolls, in dots per second; 0 means DefaultScrollSpeed.
 	ScrollSpeed int
+	// SmallScrollingText uses the compact font for calling points and service information.
+	SmallScrollingText bool
 	// RowPrefix selects ordinals or platform numbers before each train's time.
 	RowPrefix board.RowPrefix
 	// PlatformBox is the single requested platform to show in a box beside the first train, or empty.
@@ -92,10 +94,11 @@ const fadeLevels = 30
 // the advance of a digit; rows keep the dot positions measured from the web board, with the clock
 // bottom-aligned so it absorbs the shorter panel.
 type geometry struct {
-	clockStyle string
-	compact    bool
-	w, h       int
-	ch         int
+	smallScrollingText bool
+	clockStyle         string
+	compact            bool
+	w, h               int
+	ch                 int
 	// prefixW reserves one column for either ordinals or platform numbers.
 	prefixW int
 	// boxW reserves the first train's platform box; infoX is the information row's left edge.
@@ -169,6 +172,7 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 
 func (b *Board) geometry(details bool) geometry {
 	g := newGeometry(b.cfg.Width, b.cfg.Height, b.cfg.RowPrefix)
+	g.smallScrollingText = b.cfg.SmallScrollingText
 	g.clockStyle = b.cfg.ClockStyle
 	if g.clockStyle == "" {
 		g.clockStyle = "normal"
@@ -176,8 +180,10 @@ func (b *Board) geometry(details bool) geometry {
 	g.clockY = g.h - g.clockFace(false).Height
 	g.clockX = (g.w - g.clockWidth()) / 2
 	if b.cfg.PlatformBox != "" || b.cfg.ServicePlatformBox {
-		// Three dots of horizontal padding around the label and enlarged platform number.
-		g.boxW = max(font.PISTall.Width("Plat"), font.InfotecPlatform.Width(b.platformBox())) + 6
+		platform := b.platformBox()
+		text, padding := platformBoxStyle(platform)
+		// Include the blank padding and the one-dot border on each side.
+		g.boxW = max(font.PISTall.Width("Plat"), text.Width(platform)) + 2*(padding+1)
 		g.infoX = g.boxW + 2
 		g.infoDestX = g.infoX + g.timeW + 5
 		g.prefixW = g.boxW
@@ -213,12 +219,44 @@ func (b *Board) geometry(details bool) geometry {
 			g.formationY, g.formationH = g.sepY-12, 11
 		}
 	}
+	if g.smallScrollingText && details {
+		// Share the space above the lower row between the information, formation
+		// and separator. The main font already reserves descender space, so give
+		// its following gap one fewer dot before distributing the remainder.
+		firstEnd, lowerTop := g.firstY+font.PISTall.Height, g.secondY
+		if g.compact {
+			lowerTop = min(lowerTop, g.clockY)
+		}
+		spare := max(0, lowerTop-firstEnd-g.infoFace().Height-g.formationH-1)
+		firstGap := max(0, spare/4-1)
+		formationGap := (spare - firstGap) / 3
+		separatorGap := (spare - firstGap - formationGap) / 2
+		g.infoY = firstEnd + firstGap
+		g.formationY = g.infoY + g.infoFace().Height + formationGap
+		g.sepY = g.formationY + g.formationH + separatorGap
+	} else {
+		g.infoY += (font.PISTall.Height - g.infoFace().Height) / 2
+	}
+	if g.compact {
+		// Centre the service text and its clock in the band below the final separator.
+		top := g.sepY + 1
+		g.secondY = top + (g.h-top-font.InfotecSmall.Height)/2
+		g.clockY = top + (g.h-top-g.clockFace(false).Height)/2
+	}
+	g.infoSlide = (g.infoFace().Height*110 + 50) / 100
 	return g
+}
+
+func (g *geometry) infoFace() *font.Face {
+	if g.smallScrollingText {
+		return font.InfotecSmall
+	}
+	return font.PISTall
 }
 
 // infoBand is the area the information row is clipped to (clip-path: inset(0) in the web).
 func (g *geometry) infoBand() board.Clip {
-	return board.Clip{X0: g.infoX, Y0: g.infoY, X1: g.w, Y1: g.infoY + font.PISTall.Height}
+	return board.Clip{X0: g.infoX, Y0: g.infoY, X1: g.w, Y1: g.infoY + g.infoFace().Height}
 }
 
 // secondBand is the SwapBetween's 1em overflow box that the upcoming service rows slide through.

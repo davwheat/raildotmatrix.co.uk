@@ -59,6 +59,8 @@ worldline = false
 
 # Scroll speed in dots per second; 0 uses the board's default (48 Daktronics, 60 Infotec).
 scroll_speed = 0
+# Infotec only: use the compact font for calling points and service information.
+small_scrolling_text = false
 
 url = "wss://darwinbrowser.com"
 verbose = false

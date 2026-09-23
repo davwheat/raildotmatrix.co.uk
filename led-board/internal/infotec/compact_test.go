@@ -38,6 +38,30 @@ func TestCompactLowerRowKeepsClockClear(t *testing.T) {
 	}
 }
 
+func TestCompactLowerRowVerticallyCentred(t *testing.T) {
+	for _, size := range sizes {
+		for _, smallScrolling := range []bool{false, true} {
+			for _, clock := range []string{"", "normal", "small-seconds", "small"} {
+				b := New(Config{Width: size[0], Height: size[1], PlatformBox: "2", SmallScrollingText: smallScrolling, ClockStyle: clock})
+				g := b.geo
+				for _, item := range []struct {
+					name      string
+					y, height int
+				}{
+					{"service row", g.secondY, font.InfotecSmall.Height},
+					{"clock", g.clockY, g.clockFace(false).Height},
+				} {
+					topGap := item.y - (g.sepY + 1)
+					bottomGap := g.h - (item.y + item.height)
+					if topGap < 0 || bottomGap < topGap || bottomGap-topGap > 1 {
+						t.Fatalf("%dx%d small scrolling=%v clock=%q: %s gaps above/below = %d/%d", g.w, g.h, smallScrolling, clock, item.name, topGap, bottomGap)
+					}
+				}
+			}
+		}
+	}
+}
+
 func TestServiceRotationUpToSix(t *testing.T) {
 	for _, compact := range []bool{false, true} {
 		for count := 1; count <= 6; count++ {

@@ -42,6 +42,7 @@ type config struct {
 	CompactLowerRow          bool   `mapstructure:"compact_lower_row"`
 	PlatformBox              bool   `mapstructure:"platform_box"`
 	ScrollSpeed              int    `mapstructure:"scroll_speed"`
+	SmallScrollingText       bool   `mapstructure:"small_scrolling_text"`
 	URL                      string
 	Platforms                []string
 	ShowUnconfirmedPlatforms bool `mapstructure:"show_unconfirmed_platforms"`
@@ -89,6 +90,7 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.Bool("platform-box", false, "show a platform box beside the first train (Infotec only)")
 	fs.Bool("worldline", false, "Worldline-driven Daktronics board: single scrolling info line, capitalised locations")
 	fs.Int("scroll-speed", 0, "scroll speed in dots per second; 0 uses the board's default (48 daktronics, 60 infotec). The panel refresh and PWM depth follow it")
+	fs.Bool("small-scrolling-text", false, "use the smaller font for calling points and service information (Infotec only)")
 	fs.Int("fps", 50, "animation tick rate")
 	fs.Bool("v", false, "debug logging")
 	fs.String("display", "matrix", "where to show the board: matrix, window, or png")
