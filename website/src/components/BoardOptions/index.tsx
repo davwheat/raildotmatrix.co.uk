@@ -120,6 +120,14 @@ export default function BoardOptions() {
                   ['small', 'Small everything'],
                 ]}
               />
+              <Choice
+                name="loadingBrightness"
+                label="Loading fill brightness"
+                values={[
+                  [50, '50%'],
+                  [100, '100%'],
+                ]}
+              />
               <Choice name="serviceCount" label="Services to show" values={[1, 2, 3, 4, 5, 6].map(n => [n, String(n)] as const)} />
               <Check name="platformBox">Show platform box</Check>
               <Check name="alignPlatformRows" disabled={!options.platformBox}>

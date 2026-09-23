@@ -15,12 +15,13 @@ import (
 func describeConfig(fs *flag.FlagSet) []configschema.Field {
 	choices := map[string][]string{
 		"board": formats.Names, "colour": {"amber", "white"},
-		"clock_style":      {"normal", "small-seconds", "small"},
-		"ordinal_format":   {"suffix", "dot"},
-		"row_prefix":       {"ordinals", "platforms"},
-		"display":          {"matrix", "window", "png"},
-		"fixture":          append([]string{""}, fixtures.Names...),
-		"led.rgb_sequence": {"RGB", "RBG", "GRB", "GBR", "BRG", "BGR"},
+		"loading_brightness": {"50", "100"},
+		"clock_style":        {"normal", "small-seconds", "small"},
+		"ordinal_format":     {"suffix", "dot"},
+		"row_prefix":         {"ordinals", "platforms"},
+		"display":            {"matrix", "window", "png"},
+		"fixture":            append([]string{""}, fixtures.Names...),
+		"led.rgb_sequence":   {"RGB", "RBG", "GRB", "GBR", "BRG", "BGR"},
 	}
 	var fields []configschema.Field
 	fs.VisitAll(func(f *flag.Flag) {
@@ -42,6 +43,9 @@ func controlFlag(name string) bool {
 
 // Check before opening hardware, both for normal starts and GUI edits.
 func validateConfig(c config) error {
+	if c.LoadingBrightness != 50 && c.LoadingBrightness != 100 {
+		return fmt.Errorf("loading brightness must be 50 or 100")
+	}
 	if c.ClockStyle != "normal" && c.ClockStyle != "small-seconds" && c.ClockStyle != "small" {
 		return fmt.Errorf("clock style must be normal, small-seconds or small")
 	}

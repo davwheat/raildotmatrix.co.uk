@@ -14,6 +14,7 @@ export const defaults = {
   platformBox: false,
   compactLowerRow: true,
   serviceCount: 3,
+  loadingBrightness: 50 as 50 | 100,
   clockStyle: 'normal' as 'normal' | 'small-seconds' | 'small',
   alignPlatformRows: true,
   boardStyle: 'Yellow' as 'Yellow' | 'Blue' | 'Green/Blue',
@@ -38,7 +39,17 @@ const led: OptionKey[] = ['rowPrefix', 'ordinalFormat', 'warningPlatform']
 export function optionKeys(type: DisplayType): OptionKey[] {
   switch (type) {
     case 'infotec-landscape-dmi':
-      return [...common, ...led, 'color', 'platformBox', 'compactLowerRow', 'clockStyle', 'serviceCount', 'alignPlatformRows']
+      return [
+        ...common,
+        ...led,
+        'color',
+        'platformBox',
+        'compactLowerRow',
+        'clockStyle',
+        'loadingBrightness',
+        'serviceCount',
+        'alignPlatformRows',
+      ]
     case 'daktronics-data-display-dmi':
       return [...common, ...led, 'boardStyle', 'showCasing', 'worldlinePowered', 'withBackground']
     case 'blackbox-landscape-lcd':
@@ -66,6 +77,9 @@ export function readOptions(type: DisplayType, stored: unknown, query: URLSearch
       if (raw === undefined) continue
       if (key in choices) {
         if ((choices[key as keyof typeof choices] as readonly unknown[]).includes(raw)) values[key] = raw
+      } else if (key === 'loadingBrightness') {
+        const brightness = Number(raw)
+        if (brightness === 50 || brightness === 100) values[key] = brightness
       } else if (key === 'serviceCount') {
         const count = Number(raw)
         if (Number.isInteger(count) && count >= 1 && count <= 6) values[key] = count

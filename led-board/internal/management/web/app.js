@@ -69,6 +69,7 @@ const labels = {
   board: "Board style",
   colour: "Text colour",
   platforms: "Platforms to show",
+  loading_brightness: "Loading fill brightness (%)",
   clock_style: "Clock style",
   ordinal_format: "Ordinal format",
   service_count: "Services to show (1–6)",
@@ -122,7 +123,7 @@ const groups = [
   [
     "Station",
     "Leave the station empty to show setup instructions.",
-    "crs board colour platforms row_prefix clock_style ordinal_format service_count scroll_speed",
+    "crs board colour platforms row_prefix loading_brightness clock_style ordinal_format service_count scroll_speed",
   ],
   [
     "Display options",

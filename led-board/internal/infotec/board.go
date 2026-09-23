@@ -15,9 +15,10 @@ import (
 
 // Config sizes the board and sets what it shows.
 type Config struct {
-	ClockStyle    string
-	OrdinalFormat board.OrdinalFormat
-	ServiceCount  int
+	LoadingBrightness int
+	ClockStyle        string
+	OrdinalFormat     board.OrdinalFormat
+	ServiceCount      int
 	// CompactLowerRow places a smaller lower service row beside the clock.
 	CompactLowerRow *bool
 	Width, Height   int
@@ -274,6 +275,9 @@ func New(cfg Config) *Board {
 		cfg.ServiceCount = 3
 	}
 	cfg.ServiceCount = min(6, max(1, cfg.ServiceCount))
+	if cfg.LoadingBrightness == 0 {
+		cfg.LoadingBrightness = 50
+	}
 	c := cfg.Colour
 	b := &Board{cfg: cfg, dim: board.Scale(c, 1, 2)}
 	b.geo = b.geometry(false)

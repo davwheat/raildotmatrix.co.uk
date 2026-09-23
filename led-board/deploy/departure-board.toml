@@ -30,6 +30,8 @@ ordinal_format = "suffix"
 service_count = 3
 # Clock: normal, small-seconds (HH:MM ss), or small.
 clock_style = "normal"
+# Coach loading fill brightness: 50 or 100 percent.
+loading_brightness = 50
 
 # Name the platform in a stand clear or not-for-public-use warning, such as "to call at platform 2" in place of
 # "to call at this station". A warning for trains at several platforms at once keeps the general wording.

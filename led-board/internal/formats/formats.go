@@ -18,9 +18,10 @@ var Names = []string{"daktronics", "infotec"}
 
 // Config is what every format is built from. Zero values mean each format's defaults.
 type Config struct {
-	ClockStyle    string
-	OrdinalFormat board.OrdinalFormat
-	ServiceCount  int
+	LoadingBrightness int
+	ClockStyle        string
+	OrdinalFormat     board.OrdinalFormat
+	ServiceCount      int
 	// CompactLowerRow places a smaller lower service row beside the clock.
 	CompactLowerRow *bool
 	Width, Height   int
@@ -46,6 +47,9 @@ func New(name string, c Config) (board.Board, error) {
 	if err := infotec.ValidateClockStyle(c.ClockStyle); err != nil {
 		return nil, err
 	}
+	if c.LoadingBrightness != 0 && c.LoadingBrightness != 50 && c.LoadingBrightness != 100 {
+		return nil, fmt.Errorf("loading brightness must be 50 or 100")
+	}
 	if c.ServiceCount < 0 || c.ServiceCount > 6 {
 		return nil, fmt.Errorf("service count must be between 1 and 6")
 	}
@@ -63,7 +67,7 @@ func New(name string, c Config) (board.Board, error) {
 		return infotec.New(infotec.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, ScrollSpeed: c.ScrollSpeed,
 			RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform,
-			ClockStyle: c.ClockStyle, ServiceCount: c.ServiceCount, CompactLowerRow: c.CompactLowerRow, PlatformBox: platformBox, ServicePlatformBox: c.PlatformBox && platformBox == "", AlignPlatformRows: c.AlignPlatformRows,
+			LoadingBrightness: c.LoadingBrightness, ClockStyle: c.ClockStyle, ServiceCount: c.ServiceCount, CompactLowerRow: c.CompactLowerRow, PlatformBox: platformBox, ServicePlatformBox: c.PlatformBox && platformBox == "", AlignPlatformRows: c.AlignPlatformRows,
 		}), nil
 	default:
 		return nil, fmt.Errorf("unknown board %q; want daktronics or infotec", name)

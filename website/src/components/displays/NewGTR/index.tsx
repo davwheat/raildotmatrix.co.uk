@@ -64,6 +64,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
             compactLowerRow={settings.compactLowerRow !== false}
             serviceCount={settings.serviceCount ?? 3}
             clockStyle={settings.clockStyle}
+            loadingBrightness={settings.loadingBrightness}
             alignPlatformRows={settings.alignPlatformRows !== false}
           />
         </div>

@@ -135,7 +135,7 @@ in the website settings and Pi management UI.
 Infotec boards also draw a train formation below the service information whenever the websocket supplies a
 positive coach count or detailed formation. Each outlined carriage represents one coach; an unknown count leaves the diagram out.
 When details are available, all coaches share five-second pages: identifiers, loading, then facilities.
-Loading fills the interior from the floor upwards in proportion to the percentage at half brightness.
+Loading fills the interior from the floor upwards in proportion to the percentage at `loading_brightness` (50 or 100 percent, default 50). The website offers the same Loading fill brightness setting.
 Unknown loads remain hollow. Facility pages use the "Small formation contents" font: `§` for accessibility,
 `#` for cycles and `1st` for first class (including mixed-class coaches). Standard class is implicit.
 Coaches with fewer facilities hold their highest-priority facility for the spare slots (accessibility,

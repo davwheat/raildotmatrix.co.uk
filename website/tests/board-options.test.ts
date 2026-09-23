@@ -58,3 +58,13 @@ test('RailAnnouncements modal requires an iframe and a matching marker or referr
   assert.equal(isRailAnnouncementsEmbed(true, new URLSearchParams(), 'https://railannouncements.co.uk.example.org/'), false)
   assert.equal(isRailAnnouncementsEmbed(true, new URLSearchParams(), ''), false)
 })
+
+test('loading brightness accepts only 50 or 100 and round-trips in shared links', () => {
+  assert.equal(readOptions(infotec, {}, new URLSearchParams()).loadingBrightness, 50)
+  assert.equal(readOptions(infotec, { loadingBrightness: 100 }, new URLSearchParams()).loadingBrightness, 100)
+  assert.equal(readOptions(infotec, {}, new URLSearchParams('loadingBrightness=100')).loadingBrightness, 100)
+  assert.equal(readOptions(infotec, {}, new URLSearchParams('loadingBrightness=75')).loadingBrightness, 50)
+  const query = new URLSearchParams()
+  applyOptions(query, infotec, { ...defaults, loadingBrightness: 100 })
+  assert.equal(readOptions(infotec, {}, query).loadingBrightness, 100)
+})

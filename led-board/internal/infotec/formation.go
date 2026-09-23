@@ -75,7 +75,7 @@ func coachFacilities(c model.Coach) []string {
 	return options
 }
 
-func drawFormationContents(f *frame.Frame, x, y, width, height, length int, contents [128]coachContent, colour frame.RGB) {
+func drawFormationContents(f *frame.Frame, x, y, width, height, length int, contents [128]coachContent, colour frame.RGB, brightness int) {
 	if length <= 0 || height < 5 || width < 4 || length > (width-1)/3 {
 		return
 	}
@@ -87,7 +87,7 @@ func drawFormationContents(f *frame.Frame, x, y, width, height, length int, cont
 		interior := board.Clip{X0: left, X1: left + coachW - 1, Y0: y + 1, Y1: y + height - 1}
 		if c.loading >= 0 {
 			fill := (min(100, c.loading)*(height-2) + 50) / 100
-			f.FillRect(left, y+height-1-fill, coachW-1, fill, board.Scale(colour, 1, 2))
+			f.FillRect(left, y+height-1-fill, coachW-1, fill, board.Scale(colour, brightness, 100))
 		}
 		face := font.InfotecFormation
 		board.DrawText(f, face, left+(coachW-1-face.Width(c.text))/2, y+(height-face.Height)/2, c.text, colour, interior)

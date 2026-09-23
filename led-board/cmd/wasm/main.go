@@ -121,7 +121,7 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 	}
 	b, err := formats.New(o.string("board", "daktronics"), formats.Config{
 		Width: w, Height: h, Zone: zone, Colour: colour, Worldline: o.bool("worldline"), ScrollSpeed: o.int("scrollSpeed", 0),
-		RowPrefix: rowPrefix, OrdinalFormat: ordinalFormat, ClockStyle: o.string("clockStyle", ""), ServiceCount: serviceCount, WarningPlatform: o.bool("warningPlatform"),
+		RowPrefix: rowPrefix, OrdinalFormat: ordinalFormat, LoadingBrightness: o.int("loadingBrightness", 50), ClockStyle: o.string("clockStyle", ""), ServiceCount: serviceCount, WarningPlatform: o.bool("warningPlatform"),
 		CompactLowerRow: &compactLowerRow, PlatformBox: o.bool("platformBox"), Platforms: platforms, AlignPlatformRows: &alignPlatformRows,
 	})
 	if err != nil {

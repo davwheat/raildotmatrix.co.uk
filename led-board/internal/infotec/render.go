@@ -162,7 +162,7 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 	}
 	if s.formation > 0 {
 		drawFormation(f, g.infoX, g.formationY, g.w-g.infoX, g.formationH, s.formation, colour)
-		drawFormationContents(f, g.infoX, g.formationY, g.w-g.infoX, g.formationH, s.formation, s.coachContents, colour)
+		drawFormationContents(f, g.infoX, g.formationY, g.w-g.infoX, g.formationH, s.formation, s.coachContents, colour, b.cfg.LoadingBrightness)
 	}
 	// The separator stays lit through the slide-out, so fading it in with the new rows would blink it off.
 	for x := g.infoX; x < g.w; x++ {

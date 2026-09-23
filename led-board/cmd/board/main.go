@@ -115,7 +115,7 @@ func main() {
 	b, err := formats.New(cfg.Board, formats.Config{
 		Width: opts.Cols * opts.Chain, Height: opts.Rows * opts.Parallel,
 		Zone: zone, Colour: colour, Worldline: cfg.Worldline, ScrollSpeed: cfg.ScrollSpeed, RowPrefix: rowPrefix,
-		OrdinalFormat: ordinalFormat, ClockStyle: cfg.ClockStyle, ServiceCount: cfg.ServiceCount, WarningPlatform: cfg.WarningPlatform,
+		OrdinalFormat: ordinalFormat, LoadingBrightness: cfg.LoadingBrightness, ClockStyle: cfg.ClockStyle, ServiceCount: cfg.ServiceCount, WarningPlatform: cfg.WarningPlatform,
 		CompactLowerRow: &cfg.CompactLowerRow, PlatformBox: cfg.PlatformBox, Platforms: cfg.Platforms, AlignPlatformRows: &cfg.AlignPlatformRows,
 	})
 	if err != nil {
