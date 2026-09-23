@@ -67,7 +67,7 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.String("row-prefix", "ordinals", "prefix before each train time: ordinals (\"1st\") or platforms (\"Pl 1\")")
 	fs.Bool("warning-platform", false, "name the platform in a stand clear or not-for-public-use warning, in place of \"this station\"")
 	fs.Bool("align-platform-rows", true, "align lower service columns and centre their prefix beneath the platform box (Infotec only)")
-	fs.Bool("platform-box", false, "show the single requested platform in a box beside the first train (Infotec only)")
+	fs.Bool("platform-box", false, "show a platform box beside the first train (Infotec only)")
 	fs.Bool("worldline", false, "Worldline-driven Daktronics board: single scrolling info line, capitalised locations")
 	fs.Int("scroll-speed", 0, "scroll speed in dots per second; 0 uses the board's default (48 daktronics, 60 infotec). The panel refresh and PWM depth follow it")
 	fs.Int("fps", 50, "animation tick rate")

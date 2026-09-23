@@ -6,6 +6,21 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 )
 
+// Keep the departing train's platform until its slide finishes, just like its
+// time and destination. Empty means unknown or suppressed by the public feed.
+func (b *Board) platformBox() string {
+	if !b.cfg.ServicePlatformBox {
+		return b.cfg.PlatformBox
+	}
+	if b.phase == phaseSlideOut {
+		return b.outgoing.platform
+	}
+	if len(b.content.rows) > 0 {
+		return b.content.rows[0].platform
+	}
+	return ""
+}
+
 func (b *Board) drawPlatformBox(f *frame.Frame, colour frame.RGB) {
 	g := &b.geo
 	f.FillRect(0, 0, g.boxW, 1, colour)
@@ -14,10 +29,10 @@ func (b *Board) drawPlatformBox(f *frame.Frame, colour frame.RGB) {
 	f.FillRect(0, g.sepY, g.boxW, 1, colour)
 	// Centre the label and number as a group, two dots above the box's centre.
 	const gap = 6
-	height := font.PISTall.Baseline + gap + font.InfotecLarge.Height
+	height := font.PISTall.Baseline + gap + font.InfotecPlatform.Height
 	y := max(1, (g.sepY-height)/2-2)
 	board.DrawText(f, font.PISTall, (g.boxW-font.PISTall.Width("Plat"))/2, y, "Plat", colour, g.full)
-	board.DrawText(f, font.InfotecLarge, (g.boxW-font.InfotecLarge.Width(b.cfg.PlatformBox))/2, y+font.PISTall.Baseline+gap, b.cfg.PlatformBox, colour, g.full)
+	board.DrawText(f, font.InfotecPlatform, (g.boxW-font.InfotecPlatform.Width(b.platformBox()))/2, y+font.PISTall.Baseline+gap, b.platformBox(), colour, g.full)
 }
 
 // drawFormation draws outlined coaches with a filled, stepped cab and a rounded last coach.

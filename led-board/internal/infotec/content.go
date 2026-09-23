@@ -15,8 +15,9 @@ const destinationMaxLength = 21
 
 // row is one train's line as the board shows it, derived once per view so that ticks only copy strings.
 type row struct {
-	id     string
-	prefix string
+	id       string
+	prefix   string
+	platform string
 	// std is the scheduled time as HHmm, drawn in digit cells.
 	std string
 	// pages are the destination texts the row cycles through every three seconds.
@@ -49,6 +50,7 @@ func (b *Board) derive(v model.View) content {
 		s := &v.Services[i]
 		c.rows = append(c.rows, row{
 			id:        s.ID,
+			platform:  strings.ToUpper(strings.TrimSpace(s.Platform)),
 			prefix:    b.cfg.RowPrefix.Text(i, s.Platform),
 			std:       s.STD(b.cfg.Zone),
 			pages:     destinationPages(s),
@@ -150,8 +152,9 @@ func article(toc string) string {
 }
 
 type callingPage struct {
-	prefix string
-	points []string
+	prefix   string
+	platform string
+	points   []string
 }
 
 // callingPointPages lists the calling points of each portion of a train, as the web board does: the whole

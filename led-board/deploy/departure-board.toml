@@ -30,7 +30,7 @@ row_prefix = "ordinals"
 # "to call at this station". A warning for trains at several platforms at once keeps the general wording.
 warning_platform = false
 
-# Infotec only: replace the first row prefix with a platform box when exactly one platform is requested.
+# Infotec only: show the requested platform, or the first service's platform when watching several.
 platform_box = false
 # Align lower service columns and centre their prefix beneath the platform box.
 align_platform_rows = true

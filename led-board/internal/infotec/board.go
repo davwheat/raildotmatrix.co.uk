@@ -26,6 +26,8 @@ type Config struct {
 	RowPrefix board.RowPrefix
 	// PlatformBox is the single requested platform to show in a box beside the first train, or empty.
 	PlatformBox string
+	// ServicePlatformBox shows the platform of the first service instead of a fixed platform.
+	ServicePlatformBox bool
 	// AlignPlatformRows aligns lower service columns with the platform box; nil defaults to true.
 	AlignPlatformRows *bool
 	// WarningPlatform names the platform in a warning, in place of "this station", when the warning is for one
@@ -152,9 +154,9 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 
 func (b *Board) geometry(details bool) geometry {
 	g := newGeometry(b.cfg.Width, b.cfg.Height, b.cfg.RowPrefix)
-	if b.cfg.PlatformBox != "" {
+	if b.cfg.PlatformBox != "" || b.cfg.ServicePlatformBox {
 		// Three dots of horizontal padding around the label and enlarged platform number.
-		g.boxW = max(font.PISTall.Width("Plat"), font.InfotecLarge.Width(b.cfg.PlatformBox)) + 6
+		g.boxW = max(font.PISTall.Width("Plat"), font.InfotecPlatform.Width(b.platformBox())) + 6
 		g.infoX = g.boxW + 2
 		g.infoDestX = g.infoX + g.timeW + 5
 		g.prefixW = g.boxW
@@ -268,7 +270,11 @@ func (b *Board) Tick(now time.Time, f *frame.Frame) bool {
 	} else if len(b.content.rows) > 0 {
 		length = b.content.rows[0].length
 	}
+	previousGeo := b.geo
 	b.geo = b.geometry(length > 0)
+	if b.geo.infoX != previousGeo.infoX || b.geo.infoDestX != previousGeo.infoDestX {
+		b.selectPage(b.infoPage, now)
+	}
 
 	s := b.compose(now)
 	if b.drawn && s == b.last {

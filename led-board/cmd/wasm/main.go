@@ -14,7 +14,7 @@
 //	  rowPrefix: 'ordinals',            // or 'platforms' ("Pl 1")
 //	  warningPlatform: false,           // name the platform in warnings, in place of "this station"
 //	  alignPlatformRows: true,          // align lower rows beneath the Infotec platform box
-//	  platformBox: false,               // Infotec only; requires exactly one requested platform
+//	  platformBox: false,               // Infotec only; shows the first service platform when watching multiple platforms
 //	  colour: 'amber',                  // or 'white'
 //	  scrollSpeed: 0,                   // dots per second; 0 for the board's default
 //	  width: 256, height: 64,           // in dots

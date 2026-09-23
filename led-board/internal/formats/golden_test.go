@@ -91,6 +91,7 @@ func goldenCases() []goldenCase {
 	}
 	add("infotec", "busy-board", "white", panel, Config{Colour: board.White}, settled["infotec"])
 	for _, size := range []goldenSize{panel, webSizes["infotec"]} {
+		add("infotec", "busy-board", "platform-box-multiple", size, Config{PlatformBox: true, Platforms: []string{"1", "2"}}, settled["infotec"])
 		align := false
 		add("infotec", "busy-board", "platform-box-unaligned", size, Config{PlatformBox: true, Platforms: []string{"2"}, AlignPlatformRows: &align}, settled["infotec"])
 		add("infotec", "busy-board", "platform-box", size, Config{PlatformBox: true, Platforms: []string{"2"}}, settled["infotec"])

@@ -73,7 +73,7 @@ const labels = {
   show_unconfirmed_platforms: "Show unconfirmed platforms",
   warning_platform: "Name platforms in warnings",
   align_platform_rows: "Align lower service rows with platform box",
-  platform_box: "Infotec platform box (single platform only)",
+  platform_box: "Infotec platform box",
   worldline: "Worldline display style",
   legacy_toc_names: "Use historic operator names",
   scroll_speed: "Scroll speed (dots / second)",

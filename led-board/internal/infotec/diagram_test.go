@@ -171,6 +171,108 @@ func TestPlatformBoxLabelAndNumber(t *testing.T) {
 	}
 }
 
+func TestServicePlatformBoxFollowsFirstTrain(t *testing.T) {
+	for _, size := range sizes {
+		b := New(Config{Width: size[0], Height: size[1], ServicePlatformBox: true})
+		f := frame.New(size[0], size[1])
+		v := fixtures.Steps("busy-board")[0]
+		now := fixtures.Clock
+		// Updates at the same clock instant must redraw solely because the
+		// platform changed, including a hidden platform becoming blank.
+		for _, platform := range []string{"2", "10A", "", "10A"} {
+			v.Services[0].Platform = platform
+			b.Update(v)
+			if !b.Tick(now, f) || b.last.platform != platform {
+				t.Fatalf("platform change to %q did not redraw the box", platform)
+			}
+			if b.geo.boxW != max(font.PISTall.Width("Plat"), font.InfotecPlatform.Width(platform))+6 {
+				t.Fatalf("box does not fit platform %q", platform)
+			}
+			want := frame.New(size[0], size[1])
+			b.drawPlatformBox(want, b.cfg.Colour)
+			for y := 0; y <= b.geo.sepY; y++ {
+				for x := 0; x < b.geo.boxW; x++ {
+					if f.At(x, y) != want.At(x, y) {
+						t.Fatalf("box for %q overwritten at (%d,%d)", platform, x, y)
+					}
+				}
+			}
+		}
+		v.Services = v.Services[1:]
+		v.Services[0].Platform = "3"
+		b.Update(v)
+		b.Tick(now.Add(time.Second), f)
+		if b.phase != phaseSlideOut || b.last.platform != "10A" {
+			t.Fatal("outgoing train must retain its own platform during the slide")
+		}
+		b.Tick(now.Add(time.Second+slideOutTotal*time.Millisecond), f)
+		if b.last.platform != "3" {
+			t.Fatal("box did not switch to the new first service")
+		}
+		if b.info.x0 < b.geo.infoX {
+			t.Fatal("information scroller retained the previous box's geometry")
+		}
+	}
+}
+
+func TestSamePlatformBoxDoesNotFadeBetweenTrains(t *testing.T) {
+	for _, dynamic := range []bool{false, true} {
+		cfg := Config{Width: 256, Height: 64, PlatformBox: "2", ServicePlatformBox: dynamic}
+		if dynamic {
+			cfg.PlatformBox = ""
+		}
+		b := New(cfg)
+		f := frame.New(256, 64)
+		v := fixtures.Steps("busy-board")[0]
+		for i := range v.Services {
+			v.Services[i].Platform = "2"
+		}
+		b.Update(v)
+		b.Tick(fixtures.Clock, f)
+		want := frame.New(256, 64)
+		b.drawPlatformBox(want, b.cfg.Colour)
+		v.Services = v.Services[1:]
+		b.Update(v)
+		start := fixtures.Clock.Add(time.Second)
+		sawFade := false
+		for elapsed := time.Duration(0); elapsed < 3*time.Second; elapsed += tick {
+			b.Tick(start.Add(elapsed), f)
+			sawFade = sawFade || b.last.level < fadeLevels
+			for y := 0; y <= b.geo.sepY; y++ {
+				for x := 0; x < b.geo.boxW; x++ {
+					if f.At(x, y) != want.At(x, y) {
+						t.Fatalf("dynamic=%v: platform box changed at (%d,%d), %v into transition", dynamic, x, y, elapsed)
+					}
+				}
+			}
+		}
+		if !sawFade {
+			t.Fatal("test did not exercise the service fade-in")
+		}
+	}
+}
+
+func TestDifferentPlatformBoxFadesWithNewTrain(t *testing.T) {
+	b := New(Config{Width: 256, Height: 64, ServicePlatformBox: true})
+	f := frame.New(256, 64)
+	v := fixtures.Steps("busy-board")[0]
+	v.Services[0].Platform = "2"
+	b.Update(v)
+	b.Tick(fixtures.Clock, f)
+	v.Services = v.Services[1:]
+	v.Services[0].Platform = "3"
+	b.Update(v)
+	start := fixtures.Clock.Add(time.Second)
+	b.Tick(start, f)
+	b.Tick(start.Add(slideOutTotal*time.Millisecond+100*time.Millisecond), f)
+	if b.last.platform != "3" || b.last.steadyPlatform || b.last.level == fadeLevels {
+		t.Fatal("new platform must join the incoming train's fade")
+	}
+	if f.At(0, 0) != board.Scale(b.cfg.Colour, b.last.level, fadeLevels) {
+		t.Fatal("new platform box brightness differs from incoming train")
+	}
+}
+
 func TestPlatformBoxServiceColumnsAlign(t *testing.T) {
 	for _, size := range sizes {
 		for _, platform := range []string{"2", "10A"} {

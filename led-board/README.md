@@ -104,8 +104,14 @@ in place of "to call at this station" on the Daktronics board, and "MAY NOT STOP
 general wording.
 
 `platform_box` replaces the first Infotec train's row prefix with a box showing "Plat" and a larger platform
-number. It takes effect only when `platforms` contains exactly one platform. The website offers the same
-option in the Infotec display settings. The lower train row uses the selected `row_prefix`.
+number. With exactly one requested platform the box stays fixed to that platform. With multiple platforms
+or no filter, it follows the first service, retaining the outgoing service's platform during its slide-out.
+The box stays fully lit when consecutive services use the same platform. An unknown or suppressed platform leaves the number blank. The website offers the same option in Infotec
+settings. The lower train row uses the selected `row_prefix`.
+
+The platform number uses the "Large Platform Number" face from `../tools/font.json`. Regenerate its native
+dot patterns with `python3 scripts/import-platform-font.py ../tools/font.json internal/font/infotec_platform_gen.go`.
+The import removes the one shared blank row above the glyphs so the six-dot label gap stays exact.
 
 `align_platform_rows` (default `true`) aligns the lower row's time and destination with the first service and
 centres its prefix beneath the platform box. Turn it off to keep the lower row's original columns and

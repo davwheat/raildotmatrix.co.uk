@@ -29,8 +29,7 @@ type Config struct {
 	RowPrefix board.RowPrefix
 	// WarningPlatform names the platform in a warning when the warning is for one platform.
 	WarningPlatform bool
-	// PlatformBox shows the single requested platform beside the first Infotec train.
-	// It has no effect unless Platforms contains exactly one non-empty platform.
+	// PlatformBox shows the requested platform, or the first service's platform when watching several.
 	PlatformBox bool
 	// AlignPlatformRows aligns lower service columns with the platform box; nil defaults to true.
 	AlignPlatformRows *bool
@@ -53,7 +52,7 @@ func New(name string, c Config) (board.Board, error) {
 		return infotec.New(infotec.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, ScrollSpeed: c.ScrollSpeed,
 			RowPrefix: c.RowPrefix, WarningPlatform: c.WarningPlatform,
-			PlatformBox: platformBox, AlignPlatformRows: c.AlignPlatformRows,
+			PlatformBox: platformBox, ServicePlatformBox: c.PlatformBox && platformBox == "", AlignPlatformRows: c.AlignPlatformRows,
 		}), nil
 	default:
 		return nil, fmt.Errorf("unknown board %q; want daktronics or infotec", name)

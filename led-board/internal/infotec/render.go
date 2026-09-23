@@ -26,9 +26,11 @@ type scene struct {
 	// level is the brightness of everything but the clock, out of fadeLevels.
 	level int
 
-	first     rowScene
-	info      scrollScene
-	formation int
+	platform       string
+	steadyPlatform bool
+	first          rowScene
+	info           scrollScene
+	formation      int
 	// lower holds the 2nd and 3rd rows, which share one band and slide past each other when they swap.
 	lower [2]rowScene
 
@@ -36,7 +38,8 @@ type scene struct {
 }
 
 func (b *Board) compose(now time.Time) scene {
-	s := scene{mode: b.mode, warning: b.content.warning, level: b.level(now), clock: clockDigits(now, b.cfg.Zone)}
+	s := scene{platform: b.platformBox(), mode: b.mode, warning: b.content.warning, level: b.level(now), clock: clockDigits(now, b.cfg.Zone)}
+	s.steadyPlatform = !b.cfg.ServicePlatformBox || b.outgoing.platform == s.platform
 	if b.mode == modeTrains {
 		b.composeTrains(now, &s)
 	}
@@ -137,7 +140,11 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 		b.drawRow(f, &first, g, g.firstY, g.full, colour)
 	}
 	if g.boxW > 0 {
-		b.drawPlatformBox(f, colour)
+		boxColour := colour
+		if s.steadyPlatform {
+			boxColour = b.cfg.Colour
+		}
+		b.drawPlatformBox(f, boxColour)
 	}
 	if s.info.on {
 		b.drawInfo(f, &s.info, colour)

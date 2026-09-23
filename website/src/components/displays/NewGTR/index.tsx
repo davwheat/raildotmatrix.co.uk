@@ -133,7 +133,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
         <PlatformSettings settings={settings} onChange={change => setSettings(s => ({ ...s, ...change }))} />
         <ToggleSwitch
           checked={!!settings.platformBox}
-          label="Show a platform box (single platform only)"
+          label="Show a platform box"
           onChange={e => setSettings(s => ({ ...s, platformBox: e.currentTarget.checked }))}
         />
         <br />

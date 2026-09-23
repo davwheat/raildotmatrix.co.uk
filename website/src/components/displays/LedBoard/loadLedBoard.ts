@@ -15,7 +15,7 @@ export interface LedBoardOptions {
   rowPrefix?: RowPrefix
   /** Names the platform in a warning, in place of "this station", when the warning is for one platform. */
   warningPlatform?: boolean
-  /** Infotec only: show a platform box beside the first train when exactly one platform is requested. */
+  /** Infotec only: show a platform box beside the first train. */
   platformBox?: boolean
   /** Align lower service rows with the Infotec platform box; defaults to true. */
   alignPlatformRows?: boolean
