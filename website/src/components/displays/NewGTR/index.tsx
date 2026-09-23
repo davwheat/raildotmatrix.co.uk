@@ -1,11 +1,6 @@
-import React, { useRef, useEffect, useCallback } from 'react'
+import React from 'react'
 import LedBoard from '../LedBoard'
-import PlatformSettings, { defaultPlatformSettings, getRowPrefix } from '../LedBoard/PlatformSettings'
-import ToggleSwitch from '../../common/form/ToggleSwitch'
-import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
-import { debounce } from 'throttle-debounce'
-
-import PageLink from '../../common/PageLink'
+import { useBoardOptions } from '../../BoardOptions/context'
 import { ZoomDiv } from '../ZoomDiv'
 import { useDataSource } from '../../../live/source'
 
@@ -35,148 +30,13 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
     searchParams = window && new URLSearchParams(window.location.search)
   }
 
-  const hideSettings = searchParams?.get('hideSettings')
-  const color: keyof typeof BoardColors = Object.keys(BoardColors).includes(searchParams?.get('color') || '')
-    ? (searchParams!!.get('color')!! as keyof typeof BoardColors)
-    : 'orange'
-
-  const [settings, setSettings] = useStateWithLocalStorage('newGtrBoardSettings', {
-    hideSettings: !!hideSettings,
-    color,
-    platformBox: false,
-    compactLowerRow: true,
-    serviceCount: 3,
-    clockStyle: 'normal' as 'normal' | 'small-seconds' | 'small',
-    alignPlatformRows: true,
-    ...defaultPlatformSettings,
-  })
+  const { options: settings } = useBoardOptions()
   const { baseUrl } = useDataSource()
-
-  const settingsRef = useRef<HTMLDivElement>(null)
-  const hideRef = useRef<HTMLInputElement>(null)
-  const colorRef = useRef<HTMLSelectElement>(null)
-
-  function updateState() {
-    setSettings({
-      ...settings,
-      hideSettings: !!hideRef.current?.checked,
-      color: colorRef.current?.value as keyof typeof BoardColors,
-    })
-
-    if (!hideRef.current?.checked) {
-      settingsRef.current?.classList.remove('hide')
-    }
-  }
-
-  const updateHidden = useCallback(() => {
-    settingsRef.current!.classList[settings.hideSettings ? 'add' : 'remove']('hide')
-  }, [settings.hideSettings])
-
-  const debouncedHide = debounce(1000, updateHidden)
-
-  useEffect(() => {
-    updateHidden()
-
-    if (!settings.hideSettings) {
-      return
-    }
-
-    function handler() {
-      settingsRef.current?.classList.remove('hide')
-
-      debouncedHide()
-    }
-
-    const events = ['click', 'mousemove', 'mouseover', 'mousemove', 'touchmove', 'touchstart', 'touchend', 'focus']
-
-    events.forEach(e => window.addEventListener(e, handler))
-
-    return () => {
-      debouncedHide.cancel()
-      events.forEach(e => window.removeEventListener(e, handler))
-    }
-  }, [settings.hideSettings])
 
   const platforms = searchParams?.getAll('platform')
 
   return (
     <>
-      <div className="board-settings" ref={settingsRef}>
-        {!searchParams?.get('from-railannouncements.co.uk') && (
-          <>
-            <PageLink
-              to={editBoardUrl}
-              style={{
-                cursor: 'pointer',
-                zIndex: 1000,
-              }}
-            >
-              Edit board
-            </PageLink>
-            <br />
-          </>
-        )}
-        <ToggleSwitch checked={settings.hideSettings} ref={hideRef} label="Hide this panel when idle" onChange={updateState} />
-        <br />
-        <label htmlFor="color-select">Color</label>
-        <select
-          id="color-select"
-          ref={colorRef}
-          value={settings.color}
-          onChange={updateState}
-          style={{ textTransform: 'capitalize', marginLeft: 4 }}
-        >
-          {Object.entries(BoardColors).map(([color]) => (
-            <option key={color} value={color}>
-              {color}
-            </option>
-          ))}
-        </select>
-        <br />
-        <PlatformSettings settings={settings} onChange={change => setSettings(s => ({ ...s, ...change }))} />
-        <ToggleSwitch
-          checked={!!settings.platformBox}
-          label="Show a platform box"
-          onChange={e => setSettings(s => ({ ...s, platformBox: e.currentTarget.checked }))}
-        />
-        <br />
-        <ToggleSwitch
-          checked={settings.alignPlatformRows !== false}
-          label="Align lower service row with platform box"
-          onChange={e => setSettings(s => ({ ...s, alignPlatformRows: e.currentTarget.checked }))}
-        />
-        <br />
-        <ToggleSwitch
-          checked={settings.compactLowerRow !== false}
-          label="Show lower service row beside clock"
-          onChange={e => setSettings(s => ({ ...s, compactLowerRow: e.currentTarget.checked }))}
-        />
-        <br />
-        <label htmlFor="clock-style">Clock style</label>
-        <select
-          id="clock-style"
-          value={settings.clockStyle ?? 'normal'}
-          onChange={e => setSettings(s => ({ ...s, clockStyle: e.currentTarget.value as typeof s.clockStyle }))}
-        >
-          <option value="normal">Normal</option>
-          <option value="small-seconds">Small seconds</option>
-          <option value="small">Small everything</option>
-        </select>
-        <br />
-        <label htmlFor="service-count">Services to show</label>
-        <select
-          id="service-count"
-          value={settings.serviceCount ?? 3}
-          onChange={e => setSettings(s => ({ ...s, serviceCount: Number(e.currentTarget.value) }))}
-        >
-          {[1, 2, 3, 4, 5, 6].map(n => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-        </select>
-        {(platforms?.length ?? 0) > 0 && <p>Showing only platform(s) {platforms!.join(', ')}</p>}
-      </div>
       <ZoomDiv>
         <div
           css={{
@@ -194,16 +54,16 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
             crs={station}
             url={baseUrl}
             platforms={platforms}
-            showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
-            legacyTocNames={!!searchParams?.get('useLegacyTocNames')}
+            showUnconfirmedPlatforms={settings.showUnconfirmedPlatforms}
+            legacyTocNames={settings.useLegacyTocNames}
             colour={BoardColors[settings.color]}
-            rowPrefix={getRowPrefix(settings)}
+            rowPrefix={settings.rowPrefix}
             ordinalFormat={settings.ordinalFormat ?? 'suffix'}
             warningPlatform={!!settings.warningPlatform}
             platformBox={!!settings.platformBox}
             compactLowerRow={settings.compactLowerRow !== false}
             serviceCount={settings.serviceCount ?? 3}
-            clockStyle={settings.clockStyle ?? 'normal'}
+            clockStyle={settings.clockStyle}
             alignPlatformRows={settings.alignPlatformRows !== false}
           />
         </div>

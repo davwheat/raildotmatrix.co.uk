@@ -1,16 +1,13 @@
 import React from 'react'
 
-import BoardSettings from '../../common/BoardSettings'
+import { useBoardOptions } from '../../BoardOptions/context'
 import LedBoard from '../LedBoard'
-import PlatformSettings, { defaultPlatformSettings, getRowPrefix, type IPlatformSettings } from '../LedBoard/PlatformSettings'
 import { ZoomDiv } from '../ZoomDiv'
 
-import useStateWithLocalStorage from '../../../hooks/useStateWithLocalStorage'
 import { useDataSource } from '../../../live/source'
 
 import BoardAsset from './board-outline.inline.svg'
 import boardFill from './board-fill.svg'
-import ToggleSwitch from '../../common/form/ToggleSwitch'
 
 interface IProps {
   station: string
@@ -50,26 +47,13 @@ const faceBackground = `linear-gradient(to bottom, ${ROW_FACES.map(
     `transparent ${percent(top, ROWS)}, var(--dmi-row-background) ${percent(top, ROWS)} ${percent(bottom, ROWS)}, transparent ${percent(bottom, ROWS)}`,
 ).join(', ')}), var(--dmi-background)`
 
-interface IBoardSettings extends IPlatformSettings {
-  boardStyle: keyof typeof BoardStyles
-  showCasing: boolean
-  worldlinePowered: boolean
-  withBackground: boolean
-}
-
 export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps) {
   let searchParams: URLSearchParams | null = null
   if (typeof window !== 'undefined') {
     searchParams = window && new URLSearchParams(window.location.search)
   }
 
-  const [customBoardSettings, setCustomBoardSettings] = useStateWithLocalStorage<IBoardSettings>('dataDisplayBoardSettings', {
-    boardStyle: 'Yellow',
-    showCasing: true,
-    worldlinePowered: false,
-    withBackground: false,
-    ...defaultPlatformSettings,
-  })
+  const { options: customBoardSettings } = useBoardOptions()
   const { baseUrl } = useDataSource()
 
   const platforms = searchParams?.getAll('platform')
@@ -82,44 +66,6 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
 
   return (
     <>
-      <BoardSettings editBoardUrl={editBoardUrl}>
-        <ToggleSwitch
-          checked={customBoardSettings.showCasing}
-          label="Show board casing"
-          onChange={e => setCustomBoardSettings(s => ({ ...s, showCasing: e.currentTarget.checked }))}
-        />
-
-        <ToggleSwitch
-          checked={customBoardSettings.worldlinePowered}
-          label="Worldline-driven (capitalised locations)"
-          onChange={e => setCustomBoardSettings(s => ({ ...s, worldlinePowered: e.currentTarget.checked }))}
-        />
-
-        <ToggleSwitch
-          checked={!customBoardSettings.withBackground}
-          label="Black background"
-          onChange={e => setCustomBoardSettings(s => ({ ...s, withBackground: !e.currentTarget.checked }))}
-        />
-
-        <label htmlFor="style">Style</label>
-        <select
-          id="style"
-          value={customBoardSettings.boardStyle}
-          onChange={e => setCustomBoardSettings(s => ({ ...s, boardStyle: e.currentTarget.value as any }))}
-          css={{ marginLeft: 4 }}
-        >
-          {Object.keys(BoardStyles).map(k => (
-            <option key={k} value={k}>
-              {k}
-            </option>
-          ))}
-        </select>
-
-        <PlatformSettings settings={customBoardSettings} onChange={change => setCustomBoardSettings(s => ({ ...s, ...change }))} />
-
-        {!!platforms?.length && <p>Showing only platform(s) {platforms.join(', ')}</p>}
-      </BoardSettings>
-
       <ZoomDiv>
         <div
           css={[
@@ -162,11 +108,11 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
             crs={station}
             url={baseUrl}
             platforms={platforms}
-            showUnconfirmedPlatforms={!!searchParams?.get('showUnconfirmedPlatforms')}
-            legacyTocNames={!!searchParams?.get('useLegacyTocNames')}
+            showUnconfirmedPlatforms={customBoardSettings.showUnconfirmedPlatforms}
+            legacyTocNames={customBoardSettings.useLegacyTocNames}
             worldline={customBoardSettings.worldlinePowered}
-            rowPrefix={getRowPrefix(customBoardSettings)}
-            ordinalFormat={customBoardSettings.ordinalFormat ?? 'suffix'}
+            rowPrefix={customBoardSettings.rowPrefix}
+            ordinalFormat={customBoardSettings.ordinalFormat}
             warningPlatform={!!customBoardSettings.warningPlatform}
           />
 

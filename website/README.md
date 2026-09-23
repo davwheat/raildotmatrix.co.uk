@@ -16,6 +16,18 @@ build and draws its frames. These two boards always read the live WebSocket feed
 `led-board/go.mod` asks for) and [Just](https://just.systems). `yarn board` rebuilds just the bundle. To change how either board looks or
 behaves, change the Go code in `led-board`; git ignores `public/led-board`.
 
+## Board settings
+
+Board options live on `/board`, before opening the display. A running board links back to that page. Inside a RailAnnouncements iframe, the
+Settings button opens a native `<dialog>` instead. Both use `src/components/BoardOptions`, and changes in the dialog apply immediately. Saved
+preferences are read from the existing per-display storage keys; explicit URL options take precedence. Generated board links include their
+display options so another browser's preferences do not change the shared display.
+
+Settings changes sync live between open tabs of the same display type on the same site. Each tab keeps its station and platform filters.
+
+`yarn test:settings` checks preference migration, URL handling and embed detection. After building the site, `yarn test:settings --browser` also
+checks the setup flow, mobile layout, shared controls, cross-tab synchronization and dialog keyboard behaviour in headless Chrome.
+
 ## Running locally
 
 You'll need:

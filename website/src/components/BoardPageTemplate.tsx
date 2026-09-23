@@ -2,6 +2,10 @@ import React from 'react'
 import Link from 'next/link'
 import NoSSR from '@mpth/react-no-ssr'
 
+import { BoardOptionsProvider } from './BoardOptions/context'
+import BoardControls from './BoardOptions/BoardControls'
+import { storageKeys, type DisplayType } from './BoardOptions/settings'
+
 import getEditBoardUrl from '../functions/getEditBoardUrl'
 import { DataSourceProvider } from '../live/source'
 
@@ -22,6 +26,8 @@ export default function createBoardPage(Component: React.ComponentType<any>, { r
 /** Rendered only after mount, so the query string is read straight from the address bar. */
 function Board({ component: Component, requireStation }: { component: React.ComponentType<any>; requireStation: boolean }) {
   const editBoardUrl = getEditBoardUrl(window.location.pathname, window.location.search)
+  const requestedType = window.location.pathname.split('/')[2] as DisplayType
+  const type = requestedType in storageKeys ? requestedType : 'infotec-landscape-dmi'
   const station = new URLSearchParams(window.location.search).get('station') || ''
 
   if (requireStation && station === '') {
@@ -35,7 +41,10 @@ function Board({ component: Component, requireStation }: { component: React.Comp
 
   return (
     <DataSourceProvider>
-      <Component station={station} editBoardUrl={editBoardUrl} />
+      <BoardOptionsProvider key={type} type={type}>
+        <BoardControls editBoardUrl={editBoardUrl} />
+        <Component station={station} editBoardUrl={editBoardUrl} />
+      </BoardOptionsProvider>
     </DataSourceProvider>
   )
 }

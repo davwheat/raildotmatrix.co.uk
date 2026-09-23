@@ -57,6 +57,7 @@
     "start": "yarn develop",
     "serve": "yarn wrangler pages dev out/",
     "clean": "rm -rf .next out",
+    "test:settings": "node scripts/test-settings.mjs",
     "test:live": "node scripts/test-live.mjs",
     "test:visual": "node scripts/test-visual.mjs"
   },
