@@ -15,6 +15,7 @@ import (
 func describeConfig(fs *flag.FlagSet) []configschema.Field {
 	choices := map[string][]string{
 		"board": formats.Names, "colour": {"amber", "white"},
+		"ordinal_format":   {"suffix", "dot"},
 		"row_prefix":       {"ordinals", "platforms"},
 		"display":          {"matrix", "window", "png"},
 		"fixture":          append([]string{""}, fixtures.Names...),
@@ -40,6 +41,12 @@ func controlFlag(name string) bool {
 
 // Check before opening hardware, both for normal starts and GUI edits.
 func validateConfig(c config) error {
+	if c.ServiceCount < 1 || c.ServiceCount > 6 {
+		return fmt.Errorf("service count must be between 1 and 6")
+	}
+	if c.OrdinalFormat != "suffix" && c.OrdinalFormat != "dot" {
+		return fmt.Errorf("ordinal format must be suffix or dot")
+	}
 	if c.CRS != "" && (len(c.CRS) != 3 || strings.Trim(c.CRS, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") != "") {
 		return fmt.Errorf("station must be a three-letter CRS code, or empty for setup")
 	}

@@ -166,6 +166,7 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
             legacyTocNames={!!searchParams?.get('useLegacyTocNames')}
             worldline={customBoardSettings.worldlinePowered}
             rowPrefix={getRowPrefix(customBoardSettings)}
+            ordinalFormat={customBoardSettings.ordinalFormat ?? 'suffix'}
             warningPlatform={!!customBoardSettings.warningPlatform}
           />
 

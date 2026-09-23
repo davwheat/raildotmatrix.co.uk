@@ -44,6 +44,8 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
     hideSettings: !!hideSettings,
     color,
     platformBox: false,
+    compactLowerRow: true,
+    serviceCount: 3,
     alignPlatformRows: true,
     ...defaultPlatformSettings,
   })
@@ -142,6 +144,21 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
           label="Align lower service row with platform box"
           onChange={e => setSettings(s => ({ ...s, alignPlatformRows: e.currentTarget.checked }))}
         />
+        <br />
+        <ToggleSwitch
+          checked={settings.compactLowerRow !== false}
+          label="Show lower service row beside clock"
+          onChange={e => setSettings(s => ({ ...s, compactLowerRow: e.currentTarget.checked }))}
+        />
+        <br />
+        <label htmlFor="service-count">Services to show</label>
+        <select
+          id="service-count"
+          value={settings.serviceCount ?? 3}
+          onChange={e => setSettings(s => ({ ...s, serviceCount: Number(e.currentTarget.value) }))}
+        >
+          {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
+        </select>
         {(platforms?.length ?? 0) > 0 && <p>Showing only platform(s) {platforms!.join(', ')}</p>}
       </div>
       <ZoomDiv>
@@ -165,8 +182,11 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
             legacyTocNames={!!searchParams?.get('useLegacyTocNames')}
             colour={BoardColors[settings.color]}
             rowPrefix={getRowPrefix(settings)}
+            ordinalFormat={settings.ordinalFormat ?? 'suffix'}
             warningPlatform={!!settings.warningPlatform}
             platformBox={!!settings.platformBox}
+            compactLowerRow={settings.compactLowerRow !== false}
+            serviceCount={settings.serviceCount ?? 3}
             alignPlatformRows={settings.alignPlatformRows !== false}
           />
         </div>

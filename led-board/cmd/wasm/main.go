@@ -14,6 +14,9 @@
 //	  rowPrefix: 'ordinals',            // or 'platforms' ("Pl 1")
 //	  warningPlatform: false,           // name the platform in warnings, in place of "this station"
 //	  alignPlatformRows: true,          // align lower rows beneath the Infotec platform box
+//	  ordinalFormat: "suffix",          // suffix (1st) or dot (1.)
+//	  serviceCount: 3,                   // Infotec only; 1 to 6
+//	  compactLowerRow: true,           // smaller lower service row beside the clock
 //	  platformBox: false,               // Infotec only; shows the first service platform when watching multiple platforms
 //	  colour: 'amber',                  // or 'white'
 //	  scrollSpeed: 0,                   // dots per second; 0 for the board's default
@@ -95,10 +98,22 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 	if err != nil {
 		return js.Value{}, err
 	}
+	ordinalFormat, err := board.ParseOrdinalFormat(o.string("ordinalFormat", "suffix"))
+	if err != nil {
+		return js.Value{}, err
+	}
+	serviceCount := o.int("serviceCount", 3)
+	if serviceCount < 1 || serviceCount > 6 {
+		return js.Value{}, errors.New("service count must be between 1 and 6")
+	}
 	w, h := o.int("width", 256), o.int("height", 64)
 	platforms := o.strings("platforms")
 	for i := range platforms {
 		platforms[i] = strings.ToUpper(platforms[i])
+	}
+	compactLowerRow := true
+	if value, ok := o.get("compactLowerRow", js.TypeBoolean); ok {
+		compactLowerRow = value.Bool()
 	}
 	alignPlatformRows := true
 	if value, ok := o.get("alignPlatformRows", js.TypeBoolean); ok {
@@ -106,8 +121,8 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 	}
 	b, err := formats.New(o.string("board", "daktronics"), formats.Config{
 		Width: w, Height: h, Zone: zone, Colour: colour, Worldline: o.bool("worldline"), ScrollSpeed: o.int("scrollSpeed", 0),
-		RowPrefix: rowPrefix, WarningPlatform: o.bool("warningPlatform"),
-		PlatformBox: o.bool("platformBox"), Platforms: platforms, AlignPlatformRows: &alignPlatformRows,
+		RowPrefix: rowPrefix, OrdinalFormat: ordinalFormat, ServiceCount: serviceCount, WarningPlatform: o.bool("warningPlatform"),
+		CompactLowerRow: &compactLowerRow, PlatformBox: o.bool("platformBox"), Platforms: platforms, AlignPlatformRows: &alignPlatformRows,
 	})
 	if err != nil {
 		return js.Value{}, err

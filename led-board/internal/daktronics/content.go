@@ -46,7 +46,7 @@ func (b *Board) derive(v model.View) content {
 		s := &v.Services[i]
 		r := row{
 			id:       s.ID,
-			prefix:   b.cfg.RowPrefix.Text(i, s.Platform),
+			prefix:   b.cfg.RowPrefix.Text(i, s.Platform, b.cfg.OrdinalFormat),
 			std:      s.STD(b.cfg.Zone),
 			etd:      s.ETD(b.cfg.Zone),
 			dividing: len(s.Destinations) > 1,

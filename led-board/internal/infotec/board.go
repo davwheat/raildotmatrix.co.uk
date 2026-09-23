@@ -15,7 +15,11 @@ import (
 
 // Config sizes the board and sets what it shows.
 type Config struct {
-	Width, Height int
+	OrdinalFormat board.OrdinalFormat
+	ServiceCount  int
+	// CompactLowerRow places a smaller lower service row beside the clock.
+	CompactLowerRow *bool
+	Width, Height   int
 	// Zone is the time zone of the clock and the timetable; nil means UTC.
 	Zone *time.Location
 	// Colour is the text colour; the zero value means board.Amber.
@@ -79,8 +83,9 @@ const fadeLevels = 30
 // the advance of a digit; rows keep the dot positions measured from the web board, with the clock
 // bottom-aligned so it absorbs the shorter panel.
 type geometry struct {
-	w, h int
-	ch   int
+	compact bool
+	w, h    int
+	ch      int
 	// prefixW reserves one column for either ordinals or platform numbers.
 	prefixW int
 	// boxW reserves the first train's platform box; infoX is the information row's left edge.
@@ -137,10 +142,9 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 	g.infoSlide = (text.Height*110 + 50) / 100
 	g.swapTravel = (text.Height*105 + 50) / 100
 
-	g.clockY = h - font.InfotecLarge.Height
-	g.clockCell = font.InfotecLarge.Advance('0')
-	// A colon cell is 0.4ch.
-	g.colon = (2*g.clockCell + 2) / 5
+	g.clockY = h - font.InfotecClock.Height
+	g.clockCell = font.InfotecClock.Advance('0')
+	g.colon = font.InfotecClock.Advance(':')
 	g.clockX = (w - 6*g.clockCell - 2*g.colon) / 2
 
 	// The message screens share the space above the clock (less the 24 px gap) equally between three rows and
@@ -170,10 +174,24 @@ func (b *Board) geometry(details bool) geometry {
 		g.secondY = g.clockY - font.PISTall.Height - 1
 		g.sepY = g.secondY - 2
 		// On the 64-row panel, remove the extra gaps above and below the info
-		// row rather than shortening the cab for the thirteen-row clock.
+		// row rather than shortening the cab for the main clock.
 		g.infoY = max(font.PISTall.Height, min(g.infoY, g.sepY-font.PISTall.Height-12))
 		g.formationY = min(g.infoY+font.PISTall.Height+1, g.sepY-12)
 		g.formationH = min(11, g.sepY-g.formationY-1)
+	}
+	if g.boxW > 0 && (b.cfg.CompactLowerRow == nil || *b.cfg.CompactLowerRow) {
+		g.compact = true
+		g.clockY = g.h - font.InfotecSmall.Height
+		g.clockCell = font.InfotecSmallClock.Advance('0')
+		g.colon = font.InfotecSmallClock.Advance(':')
+		g.clockX = g.w - 6*g.clockCell - 2*g.colon
+		g.secondY = g.clockY
+		g.sepY = g.clockY - 2
+		g.infoY = font.PISTall.Height + 5
+		g.swapTravel = font.InfotecSmall.Height + 1
+		if details {
+			g.formationY, g.formationH = g.sepY-12, 11
+		}
 	}
 	return g
 }
@@ -183,9 +201,13 @@ func (g *geometry) infoBand() board.Clip {
 	return board.Clip{X0: g.infoX, Y0: g.infoY, X1: g.w, Y1: g.infoY + font.PISTall.Height}
 }
 
-// secondBand is the SwapBetween's 1em overflow box that the 2nd and 3rd rows slide through.
+// secondBand is the SwapBetween's 1em overflow box that the upcoming service rows slide through.
 func (g *geometry) secondBand() board.Clip {
-	return board.Clip{X0: 0, Y0: g.secondY, X1: g.w, Y1: g.secondY + font.PISTall.Height}
+	width := g.w
+	if g.compact {
+		width = g.clockX - 3
+	}
+	return board.Clip{X0: 0, Y0: g.secondY, X1: width, Y1: g.secondY + g.lowerFace().Height}
 }
 
 // Board is the departure board state machine and renderer. Update may be called from any goroutine; Tick must
@@ -236,6 +258,10 @@ func New(cfg Config) *Board {
 	if cfg.ScrollSpeed <= 0 {
 		cfg.ScrollSpeed = DefaultScrollSpeed
 	}
+	if cfg.ServiceCount == 0 {
+		cfg.ServiceCount = 3
+	}
+	cfg.ServiceCount = min(6, max(1, cfg.ServiceCount))
 	c := cfg.Colour
 	b := &Board{cfg: cfg, dim: board.Scale(c, 1, 2)}
 	b.geo = b.geometry(false)
@@ -334,7 +360,7 @@ func (b *Board) show(m mode, now time.Time, previous content) {
 	if !samePages(previous.pages, b.content.pages) {
 		b.selectPage(0, now)
 	}
-	if hasSwap(previous) != hasSwap(b.content) {
+	if len(previous.rows) != len(b.content.rows) {
 		b.swapIndex, b.swapFrom, b.swapStart = 0, 0, now
 	}
 }
@@ -351,7 +377,7 @@ func samePages(a, b []page) bool {
 	return true
 }
 
-// hasSwap reports whether the lower row alternates between the 2nd and 3rd trains.
+// hasSwap reports whether the lower row rotates through upcoming trains.
 func hasSwap(c content) bool { return len(c.rows) >= 3 }
 
 // slideOut starts the outgoing first row's slide unless one is already running, in which case whatever
@@ -403,7 +429,9 @@ func (b *Board) advance(now time.Time) {
 		b.info.advance(now)
 	}
 	if hasSwap(b.content) && now.Sub(b.swapStart).Milliseconds() >= swapInterval {
-		b.swapFrom, b.swapIndex = b.swapIndex, b.swapIndex^1
-		b.swapStart = b.swapStart.Add(swapInterval * time.Millisecond)
+		steps := int(now.Sub(b.swapStart).Milliseconds() / swapInterval)
+		count := len(b.content.rows) - 1
+		b.swapFrom, b.swapIndex = (b.swapIndex+steps-1)%count, (b.swapIndex+steps)%count
+		b.swapStart = b.swapStart.Add(time.Duration(steps) * swapInterval * time.Millisecond)
 	}
 }

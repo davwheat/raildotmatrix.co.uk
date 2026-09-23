@@ -15,6 +15,7 @@ import (
 
 // Config sizes the board and sets what it shows.
 type Config struct {
+	OrdinalFormat board.OrdinalFormat
 	Width, Height int
 	// Zone is the time zone of the clock and the timetable; nil means UTC.
 	Zone *time.Location

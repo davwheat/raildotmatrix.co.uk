@@ -18,9 +18,13 @@ var Names = []string{"daktronics", "infotec"}
 
 // Config is what every format is built from. Zero values mean each format's defaults.
 type Config struct {
-	Width, Height int
-	Zone          *time.Location
-	Colour        frame.RGB
+	OrdinalFormat board.OrdinalFormat
+	ServiceCount  int
+	// CompactLowerRow places a smaller lower service row beside the clock.
+	CompactLowerRow *bool
+	Width, Height   int
+	Zone            *time.Location
+	Colour          frame.RGB
 	// Worldline selects the Daktronics variant with one scrolling information line. Other formats ignore it.
 	Worldline bool
 	// ScrollSpeed is in dots per second.
@@ -38,11 +42,14 @@ type Config struct {
 
 // New returns the named board format.
 func New(name string, c Config) (board.Board, error) {
+	if c.ServiceCount < 0 || c.ServiceCount > 6 {
+		return nil, fmt.Errorf("service count must be between 1 and 6")
+	}
 	switch name {
 	case "daktronics":
 		return daktronics.New(daktronics.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, WorldlinePowered: c.Worldline,
-			ScrollSpeed: c.ScrollSpeed, RowPrefix: c.RowPrefix, WarningPlatform: c.WarningPlatform,
+			ScrollSpeed: c.ScrollSpeed, RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform,
 		}), nil
 	case "infotec":
 		platformBox := ""
@@ -51,8 +58,8 @@ func New(name string, c Config) (board.Board, error) {
 		}
 		return infotec.New(infotec.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, ScrollSpeed: c.ScrollSpeed,
-			RowPrefix: c.RowPrefix, WarningPlatform: c.WarningPlatform,
-			PlatformBox: platformBox, ServicePlatformBox: c.PlatformBox && platformBox == "", AlignPlatformRows: c.AlignPlatformRows,
+			RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform,
+			ServiceCount: c.ServiceCount, CompactLowerRow: c.CompactLowerRow, PlatformBox: platformBox, ServicePlatformBox: c.PlatformBox && platformBox == "", AlignPlatformRows: c.AlignPlatformRows,
 		}), nil
 	default:
 		return nil, fmt.Errorf("unknown board %q; want daktronics or infotec", name)

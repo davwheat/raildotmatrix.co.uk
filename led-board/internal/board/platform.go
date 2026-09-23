@@ -2,9 +2,27 @@ package board
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
 )
+
+type OrdinalFormat uint8
+
+const (
+	OrdinalSuffix OrdinalFormat = iota
+	OrdinalDot
+)
+
+func ParseOrdinalFormat(name string) (OrdinalFormat, error) {
+	switch name {
+	case "", "suffix":
+		return OrdinalSuffix, nil
+	case "dot":
+		return OrdinalDot, nil
+	}
+	return 0, fmt.Errorf("unknown ordinal format %q; want suffix or dot", name)
+}
 
 // RowPrefix selects the single prefix shown before a train's scheduled time.
 type RowPrefix uint8
@@ -25,12 +43,27 @@ func ParseRowPrefix(name string) (RowPrefix, error) {
 	return 0, fmt.Errorf("unknown row prefix %q; want ordinals or platforms", name)
 }
 
-// Text returns the prefix for one of the board's three train rows, indexed from zero.
-func (p RowPrefix) Text(index int, platform string) string {
+// Text returns the prefix for a train row, indexed from zero.
+func (p RowPrefix) Text(index int, platform string, format ...OrdinalFormat) string {
 	if p == PrefixPlatforms {
 		return PlatformText(platform)
 	}
-	return [...]string{"1st", "2nd", "3rd"}[index]
+	n := index + 1
+	if len(format) > 0 && format[0] == OrdinalDot {
+		return strconv.Itoa(n) + "."
+	}
+	suffix := "th"
+	if n%100 < 11 || n%100 > 13 {
+		switch n % 10 {
+		case 1:
+			suffix = "st"
+		case 2:
+			suffix = "nd"
+		case 3:
+			suffix = "rd"
+		}
+	}
+	return strconv.Itoa(n) + suffix
 }
 
 // PlatformText is what a row shows in its platform column. A row whose platform isn't published shows nothing

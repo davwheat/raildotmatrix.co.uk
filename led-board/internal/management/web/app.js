@@ -69,10 +69,13 @@ const labels = {
   board: "Board style",
   colour: "Text colour",
   platforms: "Platforms to show",
+  ordinal_format: "Ordinal format",
+  service_count: "Services to show (1–6)",
   row_prefix: "Row prefix",
   show_unconfirmed_platforms: "Show unconfirmed platforms",
   warning_platform: "Name platforms in warnings",
   align_platform_rows: "Align lower service rows with platform box",
+  compact_lower_row: "Show lower service row beside clock",
   platform_box: "Infotec platform box",
   worldline: "Worldline display style",
   legacy_toc_names: "Use historic operator names",
@@ -118,12 +121,12 @@ const groups = [
   [
     "Station",
     "Leave the station empty to show setup instructions.",
-    "crs board colour platforms row_prefix scroll_speed",
+    "crs board colour platforms row_prefix ordinal_format service_count scroll_speed",
   ],
   [
     "Display options",
     "",
-    "show_unconfirmed_platforms warning_platform platform_box align_platform_rows worldline legacy_toc_names",
+    "show_unconfirmed_platforms warning_platform platform_box compact_lower_row align_platform_rows worldline legacy_toc_names",
   ],
   [
     "LED panels",

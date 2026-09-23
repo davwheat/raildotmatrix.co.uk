@@ -46,12 +46,12 @@ type content struct {
 func (b *Board) derive(v model.View) content {
 	var c content
 	c.warning = warningLines(v.Notice, b.warningPlatform(v))
-	for i := range min(len(v.Services), 3) {
+	for i := range min(len(v.Services), b.cfg.ServiceCount) {
 		s := &v.Services[i]
 		c.rows = append(c.rows, row{
 			id:        s.ID,
 			platform:  strings.ToUpper(strings.TrimSpace(s.Platform)),
-			prefix:    b.cfg.RowPrefix.Text(i, s.Platform),
+			prefix:    b.cfg.RowPrefix.Text(i, s.Platform, b.cfg.OrdinalFormat),
 			std:       s.STD(b.cfg.Zone),
 			pages:     destinationPages(s),
 			etd:       b.etd(s),

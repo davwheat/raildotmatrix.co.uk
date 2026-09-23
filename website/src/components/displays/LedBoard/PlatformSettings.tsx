@@ -1,14 +1,15 @@
 import React from 'react'
 
 import ToggleSwitch from '../../common/form/ToggleSwitch'
-import type { RowPrefix } from './loadLedBoard'
+import type { RowPrefix, OrdinalFormat } from './loadLedBoard'
 
 export interface IPlatformSettings {
   rowPrefix: RowPrefix
+  ordinalFormat: OrdinalFormat
   warningPlatform: boolean
 }
 
-export const defaultPlatformSettings: IPlatformSettings = { rowPrefix: 'ordinals', warningPlatform: false }
+export const defaultPlatformSettings: IPlatformSettings = { rowPrefix: 'ordinals', ordinalFormat: 'suffix', warningPlatform: false }
 
 const RowPrefixes: Record<RowPrefix, string> = {
   ordinals: 'Ordinals',
@@ -50,6 +51,18 @@ export default function PlatformSettings({ settings, onChange }: IProps) {
               {label}
             </option>
           ))}
+        </select>
+      </div>
+      <div>
+        <label htmlFor="ordinal-format">Ordinal format</label>
+        <select
+          id="ordinal-format"
+          value={settings.ordinalFormat ?? 'suffix'}
+          onChange={e => onChange({ ordinalFormat: e.currentTarget.value as OrdinalFormat })}
+          css={{ marginLeft: 4 }}
+        >
+          <option value="suffix">1st / 2nd / 3rd</option>
+          <option value="dot">1. / 2. / 3.</option>
         </select>
       </div>
     </>

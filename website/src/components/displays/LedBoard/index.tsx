@@ -26,8 +26,11 @@ export default function LedBoard({
   legacyTocNames,
   worldline,
   rowPrefix,
+  ordinalFormat,
+  serviceCount,
   warningPlatform,
   platformBox,
+  compactLowerRow,
   alignPlatformRows,
   colour,
 }: Props) {
@@ -47,8 +50,11 @@ export default function LedBoard({
     legacyTocNames,
     worldline,
     rowPrefix,
+    ordinalFormat,
+    serviceCount,
     warningPlatform,
     platformBox,
+    compactLowerRow,
     alignPlatformRows,
     colour,
   })

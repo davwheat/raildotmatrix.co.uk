@@ -118,6 +118,16 @@ centres its prefix beneath the platform box. Turn it off to keep the lower row's
 left-aligned prefix. It only affects Infotec displays with an active platform box. The website settings
 and Pi management UI expose the same toggle; the CLI flag is `-align-platform-rows=false`.
 
+`compact_lower_row` (default `true`) places the lower service row beside a small clock when the platform
+box is enabled. Disable it to put the main clock beneath the row. Both clocks use the corresponding
+"Clock" and "Small Clock" faces in `tools/font.json`; the compact service text uses "Small main row".
+Run `python3 scripts/import-clock-fonts.py ../tools/font.json internal/font/infotec_clocks_gen.go` to regenerate the clocks.
+
+`ordinal_format` selects `suffix` (`1st`, `2nd`, `3rd`) or `dot` (`1.`, `2.`, `3.`), defaulting to `suffix`.
+`service_count` selects how many Infotec services to show, from 1 to 6 (default 3). The first stays on the main
+row while the bottom row rotates through services 2 to the selected limit. These settings are also available
+in the website settings and Pi management UI.
+
 Infotec boards also draw a train formation below the service information whenever the websocket supplies a
 positive coach count. Each outlined carriage represents one coach; an unknown count leaves the diagram out.
 

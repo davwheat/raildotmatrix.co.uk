@@ -98,6 +98,11 @@ func main() {
 		fs.Usage()
 		os.Exit(2)
 	}
+	ordinalFormat, err := board.ParseOrdinalFormat(cfg.OrdinalFormat)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
 	if !slices.Contains([]string{"matrix", "window", "png"}, cfg.Display) {
 		fmt.Fprintf(os.Stderr, "unknown display %q; want matrix, window, or png\n", cfg.Display)
 		fs.Usage()
@@ -110,8 +115,8 @@ func main() {
 	b, err := formats.New(cfg.Board, formats.Config{
 		Width: opts.Cols * opts.Chain, Height: opts.Rows * opts.Parallel,
 		Zone: zone, Colour: colour, Worldline: cfg.Worldline, ScrollSpeed: cfg.ScrollSpeed, RowPrefix: rowPrefix,
-		WarningPlatform: cfg.WarningPlatform,
-		PlatformBox:     cfg.PlatformBox, Platforms: cfg.Platforms, AlignPlatformRows: &cfg.AlignPlatformRows,
+		OrdinalFormat: ordinalFormat, ServiceCount: cfg.ServiceCount, WarningPlatform: cfg.WarningPlatform,
+		CompactLowerRow: &cfg.CompactLowerRow, PlatformBox: cfg.PlatformBox, Platforms: cfg.Platforms, AlignPlatformRows: &cfg.AlignPlatformRows,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

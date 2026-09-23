@@ -10,6 +10,8 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 )
 
+var separateClock = false
+
 func TestFormationCoachCount(t *testing.T) {
 	for _, width := range []int{160, 224, 256, 272} {
 		for _, length := range []int{-1, 0, 1, 4, 8, 12, 16} {
@@ -132,7 +134,7 @@ func TestFormationChangesWithTrainLength(t *testing.T) {
 func TestPlatformBoxLabelAndNumber(t *testing.T) {
 	for _, size := range sizes {
 		for _, platform := range []string{"2", "10", "10A"} {
-			b := New(Config{Width: size[0], Height: size[1], PlatformBox: platform})
+			b := New(Config{CompactLowerRow: &separateClock, Width: size[0], Height: size[1], PlatformBox: platform})
 			g := b.geo
 			f := frame.New(size[0], size[1])
 			b.drawPlatformBox(f, board.White)
@@ -173,7 +175,7 @@ func TestPlatformBoxLabelAndNumber(t *testing.T) {
 
 func TestServicePlatformBoxFollowsFirstTrain(t *testing.T) {
 	for _, size := range sizes {
-		b := New(Config{Width: size[0], Height: size[1], ServicePlatformBox: true})
+		b := New(Config{CompactLowerRow: &separateClock, Width: size[0], Height: size[1], ServicePlatformBox: true})
 		f := frame.New(size[0], size[1])
 		v := fixtures.Steps("busy-board")[0]
 		now := fixtures.Clock
@@ -217,7 +219,7 @@ func TestServicePlatformBoxFollowsFirstTrain(t *testing.T) {
 
 func TestSamePlatformBoxDoesNotFadeBetweenTrains(t *testing.T) {
 	for _, dynamic := range []bool{false, true} {
-		cfg := Config{Width: 256, Height: 64, PlatformBox: "2", ServicePlatformBox: dynamic}
+		cfg := Config{CompactLowerRow: &separateClock, Width: 256, Height: 64, PlatformBox: "2", ServicePlatformBox: dynamic}
 		if dynamic {
 			cfg.PlatformBox = ""
 		}
@@ -253,7 +255,7 @@ func TestSamePlatformBoxDoesNotFadeBetweenTrains(t *testing.T) {
 }
 
 func TestDifferentPlatformBoxFadesWithNewTrain(t *testing.T) {
-	b := New(Config{Width: 256, Height: 64, ServicePlatformBox: true})
+	b := New(Config{CompactLowerRow: &separateClock, Width: 256, Height: 64, ServicePlatformBox: true})
 	f := frame.New(256, 64)
 	v := fixtures.Steps("busy-board")[0]
 	v.Services[0].Platform = "2"
@@ -277,11 +279,11 @@ func TestPlatformBoxServiceColumnsAlign(t *testing.T) {
 	for _, size := range sizes {
 		for _, platform := range []string{"2", "10A"} {
 			for _, ordinal := range []string{"2nd", "3rd"} {
-				b := New(Config{Width: size[0], Height: size[1], PlatformBox: platform})
+				b := New(Config{CompactLowerRow: &separateClock, Width: size[0], Height: size[1], PlatformBox: platform})
 				g := b.geo
 				f := frame.New(size[0], size[1])
 				r := rowScene{on: true, std: "1234", dest: "London Victoria", etd: "On time", etdLevel: fadeLevels}
-				s := scene{first: r, lower: [2]rowScene{r}}
+				s := scene{first: r, lower: [5]rowScene{r}}
 				s.lower[0].prefix = ordinal
 				b.renderTrains(f, &s, board.White)
 				for y := range font.PISTall.Height {
@@ -309,12 +311,12 @@ func TestPlatformBoxAlignmentCanBeDisabled(t *testing.T) {
 	for _, size := range sizes {
 		for _, platform := range []string{"2", "10A"} {
 			align := false
-			b := New(Config{Width: size[0], Height: size[1], PlatformBox: platform, AlignPlatformRows: &align})
-			aligned := New(Config{Width: size[0], Height: size[1], PlatformBox: platform})
+			b := New(Config{CompactLowerRow: &separateClock, Width: size[0], Height: size[1], PlatformBox: platform, AlignPlatformRows: &align})
+			aligned := New(Config{CompactLowerRow: &separateClock, Width: size[0], Height: size[1], PlatformBox: platform})
 			g := b.geo
 			for _, ordinal := range []string{"2nd", "3rd"} {
 				r := rowScene{on: true, prefix: ordinal, std: "1234", dest: "London Victoria", etd: "On time", etdLevel: fadeLevels}
-				s := scene{first: r, lower: [2]rowScene{r}}
+				s := scene{first: r, lower: [5]rowScene{r}}
 				got, want := frame.New(g.w, g.h), frame.New(g.w, g.h)
 				b.renderTrains(got, &s, board.White)
 				aligned.renderTrains(want, &s, board.White)
@@ -339,7 +341,7 @@ func TestPlatformBoxAlignmentCanBeDisabled(t *testing.T) {
 
 func TestPlatformBoxSurvivesScrollingAndDeparture(t *testing.T) {
 	for _, size := range sizes {
-		b := New(Config{Width: size[0], Height: size[1], PlatformBox: "2"})
+		b := New(Config{CompactLowerRow: &separateClock, Width: size[0], Height: size[1], PlatformBox: "2"})
 		if b.geo.infoX-b.geo.boxW != 2 {
 			t.Fatal("platform box must be two dots from the service information")
 		}
@@ -362,7 +364,7 @@ func TestPlatformBoxSurvivesScrollingAndDeparture(t *testing.T) {
 			}
 		})
 		// The platform remains fixed when the first train slides away.
-		b = New(Config{Width: size[0], Height: size[1], PlatformBox: "2"})
+		b = New(Config{CompactLowerRow: &separateClock, Width: size[0], Height: size[1], PlatformBox: "2"})
 		run(t, b, "first-departs", 3*time.Second, func(_ time.Time, _ bool, f *frame.Frame) {
 			if b.phase == phaseSlideOut && f.At(0, 8) != board.Amber {
 				t.Fatal("platform box disappeared with the outgoing train")

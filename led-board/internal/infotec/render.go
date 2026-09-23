@@ -31,8 +31,8 @@ type scene struct {
 	first          rowScene
 	info           scrollScene
 	formation      int
-	// lower holds the 2nd and 3rd rows, which share one band and slide past each other when they swap.
-	lower [2]rowScene
+	// lower holds services 2–6, which share one band and slide past each other when they swap.
+	lower [5]rowScene
 
 	clock [8]byte
 }
@@ -77,15 +77,24 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 		s.lower[0] = b.rowScene(&b.content.rows[1], now)
 	default:
 		e := now.Sub(b.swapStart).Milliseconds()
-		for i := range s.lower {
-			r := b.rowScene(&b.content.rows[1+i], now)
-			// SwapBetween.tsx places each child at (index - shown) x 105% and lets the transform transition.
-			from, to := (i-b.swapFrom)*g.swapTravel, (i-b.swapIndex)*g.swapTravel
-			r.dy = to
-			if e < swapSlide {
-				r.dy = from + int(int64(to-from)*e/swapSlide)
+		for i := range len(b.content.rows) - 1 {
+			if i != b.swapIndex && (i != b.swapFrom || e >= swapSlide) {
+				continue
 			}
-			r.on = r.dy > -font.PISTall.Height && r.dy < font.PISTall.Height
+			r := b.rowScene(&b.content.rows[1+i], now)
+			if e < swapSlide && b.swapFrom != b.swapIndex {
+				direction := 1
+				if len(b.content.rows) == 3 && b.swapIndex == 0 {
+					direction = -1
+				}
+				travel := direction * g.swapTravel
+				if i == b.swapFrom {
+					r.dy = -int(int64(travel) * e / swapSlide)
+				} else {
+					r.dy = travel - int(int64(travel)*e/swapSlide)
+				}
+			}
+			r.on = r.dy > -g.lowerFace().Height && r.dy < g.lowerFace().Height
 			s.lower[i] = r
 		}
 	}
@@ -163,7 +172,11 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 	}
 	for i := range s.lower {
 		if s.lower[i].on {
-			b.drawRow(f, &s.lower[i], lowerGeo, g.secondY, g.secondBand(), colour)
+			if g.compact {
+				b.drawCompactRow(f, &s.lower[i], colour)
+			} else {
+				b.drawRow(f, &s.lower[i], lowerGeo, g.secondY, g.secondBand(), colour)
+			}
 		}
 	}
 }
@@ -220,7 +233,10 @@ func (b *Board) drawLines(f *frame.Frame, lines [3]string, colour frame.RGB) {
 // fixed-width cell and the colon dots in narrower cells.
 func (b *Board) drawClock(f *frame.Frame, digits [8]byte) {
 	g := &b.geo
-	face := font.InfotecLarge
+	face := font.InfotecClock
+	if g.compact {
+		face = font.InfotecSmallClock
+	}
 	x := g.clockX
 	for _, d := range digits {
 		cell := g.clockCell

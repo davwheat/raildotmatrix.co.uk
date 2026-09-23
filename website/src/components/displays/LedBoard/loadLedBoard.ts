@@ -1,5 +1,7 @@
 const BUNDLE_DIRECTORY = '/led-board/'
 
+export type OrdinalFormat = 'suffix' | 'dot'
+
 export type RowPrefix = 'ordinals' | 'platforms'
 
 /** The options of `ledDepartureBoard.create`, documented in the Go repository's `cmd/wasm/main.go`. */
@@ -13,10 +15,15 @@ export interface LedBoardOptions {
   worldline?: boolean
   /** The single prefix before each train's time: an ordinal or its platform number. */
   rowPrefix?: RowPrefix
+  ordinalFormat?: OrdinalFormat
+  /** Infotec service limit, 1–6; defaults to 3. */
+  serviceCount?: number
   /** Names the platform in a warning, in place of "this station", when the warning is for one platform. */
   warningPlatform?: boolean
   /** Infotec only: show a platform box beside the first train. */
   platformBox?: boolean
+  /** Place a smaller lower service row beside the clock (Infotec only). */
+  compactLowerRow?: boolean
   /** Align lower service rows with the Infotec platform box; defaults to true. */
   alignPlatformRows?: boolean
   colour?: 'amber' | 'white'

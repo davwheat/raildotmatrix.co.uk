@@ -25,6 +25,9 @@ show_unconfirmed_platforms = false
 # The single prefix before each train's time: "ordinals" ("1st") or "platforms" ("Pl 1").
 # Platform prefixes have room for a three-character platform such as "10A", and stay blank when unpublished.
 row_prefix = "ordinals"
+ordinal_format = "suffix"
+# Infotec: rotate services 2 through this limit on the bottom row.
+service_count = 3
 
 # Name the platform in a stand clear or not-for-public-use warning, such as "to call at platform 2" in place of
 # "to call at this station". A warning for trains at several platforms at once keeps the general wording.
@@ -32,6 +35,8 @@ warning_platform = false
 
 # Infotec only: show the requested platform, or the first service's platform when watching several.
 platform_box = false
+# Smaller lower service text beside the clock, freeing room for the main service.
+compact_lower_row = true
 # Align lower service columns and centre their prefix beneath the platform box.
 align_platform_rows = true
 
