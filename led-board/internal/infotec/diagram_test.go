@@ -133,7 +133,7 @@ func TestFormationChangesWithTrainLength(t *testing.T) {
 
 func TestPlatformBoxLabelAndNumber(t *testing.T) {
 	for _, size := range sizes {
-		for _, platform := range []string{"2", "10", "10A"} {
+		for _, platform := range []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "10A"} {
 			b := New(Config{CompactLowerRow: &separateClock, Width: size[0], Height: size[1], PlatformBox: platform})
 			g := b.geo
 			f := frame.New(size[0], size[1])
@@ -166,7 +166,8 @@ func TestPlatformBoxLabelAndNumber(t *testing.T) {
 					}
 				}
 			}
-			if delta := left - (g.boxW - 1 - right); delta < -1 || delta > 1 || bottom-top+1 != font.InfotecLarge.Height {
+			// An odd spare dot belongs on the left: half-dot positions round right.
+			if delta := left - (g.boxW - 1 - right); delta < 0 || delta > 1 || bottom-top+1 != font.InfotecPlatform.Height {
 				t.Errorf("%q: enlarged number is not centred: bounds (%d,%d)-(%d,%d), box width %d", platform, left, top, right, bottom, g.boxW)
 			}
 		}

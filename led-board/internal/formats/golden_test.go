@@ -91,6 +91,9 @@ func goldenCases() []goldenCase {
 	}
 	add("infotec", "busy-board", "white", panel, Config{Colour: board.White}, settled["infotec"])
 	for _, size := range []goldenSize{panel, webSizes["infotec"]} {
+		for _, style := range []string{"number", "coaches", "coaches-no-brackets", "carriages", "carriages-no-brackets"} {
+			add("infotec", "detailed-formation", "count-"+style, size, Config{PlatformBox: true, FormationCount: style}, settled["infotec"])
+		}
 		for _, style := range []string{"normal", "small-seconds", "small"} {
 			add("infotec", "busy-board", "clock-"+style, size, Config{PlatformBox: true, ClockStyle: style}, settled["infotec"])
 		}

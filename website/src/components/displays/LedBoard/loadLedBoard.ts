@@ -19,6 +19,8 @@ export interface LedBoardOptions {
   /** Infotec service limit, 1–6; defaults to 3. */
   serviceCount?: number
   loadingBrightness?: 50 | 100
+  /** Infotec formation count; wording falls back to a number when space is limited. */
+  formationCount?: 'none' | 'number' | 'coaches' | 'coaches-no-brackets' | 'carriages' | 'carriages-no-brackets'
   clockStyle?: 'normal' | 'small-seconds' | 'small'
   /** Names the platform in a warning, in place of "this station", when the warning is for one platform. */
   warningPlatform?: boolean

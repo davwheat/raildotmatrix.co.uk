@@ -68,3 +68,18 @@ test('loading brightness accepts only 50 or 100 and round-trips in shared links'
   applyOptions(query, infotec, { ...defaults, loadingBrightness: 100 })
   assert.equal(readOptions(infotec, {}, query).loadingBrightness, 100)
 })
+
+test('formation count validates all six choices and round-trips in shared links', () => {
+  assert.equal(readOptions(infotec, {}, new URLSearchParams()).formationCount, 'none')
+  for (const formationCount of ['none', 'number', 'coaches', 'coaches-no-brackets', 'carriages', 'carriages-no-brackets'] as const) {
+    assert.equal(readOptions(infotec, { formationCount }, new URLSearchParams()).formationCount, formationCount)
+    const query = new URLSearchParams()
+    applyOptions(query, infotec, { ...defaults, formationCount })
+    assert.equal(query.get('formationCount'), formationCount)
+    assert.equal(readOptions(infotec, { formationCount: 'coaches' }, query).formationCount, formationCount)
+  }
+  assert.equal(readOptions(infotec, { formationCount: 'invalid' }, new URLSearchParams()).formationCount, 'none')
+  assert.equal(readOptions(infotec, {}, new URLSearchParams('formationCount=invalid')).formationCount, 'none')
+  assert.equal(readOptions(infotec, {}, new URLSearchParams('formationCount=number-no-brackets')).formationCount, 'none')
+  assert.equal(readOptions(infotec, { formationCount: 'coaches' }, new URLSearchParams('formationCount=invalid')).formationCount, 'coaches')
+})

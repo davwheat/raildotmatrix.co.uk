@@ -15,6 +15,9 @@ import (
 
 // Config sizes the board and sets what it shows.
 type Config struct {
+	// FormationCount selects none, number, coaches or carriages beside the graphic.
+	// The coaches-no-brackets and carriages-no-brackets variants omit brackets around wording.
+	FormationCount    string
 	LoadingBrightness int
 	ClockStyle        string
 	OrdinalFormat     board.OrdinalFormat

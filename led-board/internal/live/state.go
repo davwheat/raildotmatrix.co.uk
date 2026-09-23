@@ -16,13 +16,14 @@ const (
 // State is the view this connection holds: the movements the service sent, keyed by movement ID, in the order
 // the service wants them shown.
 type State struct {
-	Station   Location
-	Epoch     string
-	Revision  uint64
-	Window    Window
-	Movements map[string]*Movement
-	Ordering  []string
-	Overrides map[string]*PlatformOverride
+	Station      Location
+	Epoch        string
+	Revision     uint64
+	Window       Window
+	Movements    map[string]*Movement
+	Ordering     []string
+	Overrides    map[string]*PlatformOverride
+	NRCCMessages []NRCCMessage
 }
 
 // Reduce folds a snapshot or update into the state and returns the result. A snapshot replaces the state
@@ -33,13 +34,14 @@ func Reduce(state *State, message Message) *State {
 	switch m := message.(type) {
 	case *Snapshot:
 		next := &State{
-			Station:   m.Station,
-			Epoch:     m.Epoch,
-			Revision:  m.Revision,
-			Window:    m.Window,
-			Movements: make(map[string]*Movement, len(m.Movements)),
-			Ordering:  m.Ordering,
-			Overrides: make(map[string]*PlatformOverride, len(m.Overrides)),
+			Station:      m.Station,
+			Epoch:        m.Epoch,
+			Revision:     m.Revision,
+			Window:       m.Window,
+			Movements:    make(map[string]*Movement, len(m.Movements)),
+			Ordering:     m.Ordering,
+			Overrides:    make(map[string]*PlatformOverride, len(m.Overrides)),
+			NRCCMessages: m.NRCCMessages,
 		}
 		for i := range m.Movements {
 			next.Movements[m.Movements[i].ID] = &m.Movements[i]
@@ -53,13 +55,14 @@ func Reduce(state *State, message Message) *State {
 			return nil
 		}
 		next := &State{
-			Station:   state.Station,
-			Epoch:     state.Epoch,
-			Revision:  m.Revision,
-			Window:    m.Window,
-			Movements: maps.Clone(state.Movements),
-			Ordering:  m.Ordering,
-			Overrides: maps.Clone(state.Overrides),
+			Station:      state.Station,
+			Epoch:        state.Epoch,
+			Revision:     m.Revision,
+			Window:       m.Window,
+			Movements:    maps.Clone(state.Movements),
+			Ordering:     m.Ordering,
+			Overrides:    maps.Clone(state.Overrides),
+			NRCCMessages: m.NRCCMessages,
 		}
 		for _, id := range m.Removals {
 			delete(next.Movements, id)

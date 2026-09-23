@@ -10,12 +10,14 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/configschema"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/fixtures"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/formats"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/infotec"
 )
 
 func describeConfig(fs *flag.FlagSet) []configschema.Field {
 	choices := map[string][]string{
 		"board": formats.Names, "colour": {"amber", "white"},
 		"loading_brightness": {"50", "100"},
+		"formation_count":    {"none", "number", "coaches", "coaches-no-brackets", "carriages", "carriages-no-brackets"},
 		"clock_style":        {"normal", "small-seconds", "small"},
 		"ordinal_format":     {"suffix", "dot"},
 		"row_prefix":         {"ordinals", "platforms"},
@@ -43,6 +45,9 @@ func controlFlag(name string) bool {
 
 // Check before opening hardware, both for normal starts and GUI edits.
 func validateConfig(c config) error {
+	if err := infotec.ValidateFormationCount(c.FormationCount); err != nil {
+		return err
+	}
 	if c.LoadingBrightness != 50 && c.LoadingBrightness != 100 {
 		return fmt.Errorf("loading brightness must be 50 or 100")
 	}

@@ -137,6 +137,7 @@ function snapshot(movements: Movement[], overrides: PlatformOverride[] = []): Sn
     movements,
     ordering: movements.map(item => item.id),
     overrides,
+    nrcc_messages: [],
   }
 }
 
@@ -243,6 +244,7 @@ function update(initial: Snapshot, upserts: Movement[]): Update {
     ordering: initial.ordering,
     override_upserts: [],
     override_removals: [],
+    nrcc_messages: [],
   }
 }
 

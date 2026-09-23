@@ -134,18 +134,28 @@ in the website settings and Pi management UI.
 
 Infotec boards also draw a train formation below the service information whenever the websocket supplies a
 positive coach count or detailed formation. Each outlined carriage represents one coach; an unknown count leaves the diagram out.
+`formation_count` selects `none` (the default), `number` (`(n)`), `coaches` (`(n coaches)`),
+`coaches-no-brackets` (`n coaches`), `carriages` (`(n carriages)`), or `carriages-no-brackets` (`n carriages`).
+The label sits four dots after the last coach, with its bottom aligned
+to the graphic. Wording falls back to `(n)` when it cannot fit. Long formations narrow their coaches
+to leave room for the number. The website and Pi management UI offer the same Formation count setting.
 When details are available, all coaches share five-second pages: identifiers, loading, then facilities.
 Loading fills the interior from the floor upwards in proportion to the percentage at `loading_brightness` (50 or 100 percent, default 50). The website offers the same Loading fill brightness setting.
 Unknown loads remain hollow. Facility pages use the "Small formation contents" font: `§` for accessibility,
-`#` for cycles and `1st` for first class (including mixed-class coaches). Standard class is implicit.
+`#` for cycles, `±` for toilets, `€` for food and `1st` for first class (including mixed-class coaches). Standard class is implicit.
 Coaches with fewer facilities hold their highest-priority facility for the spare slots (accessibility,
-then cycles, then first class), so the whole formation stays synchronised.
+then cycles, toilets, food and first class), so the whole formation stays synchronised.
+The optional coach `food` flag is supported by the protocol and renderer; Darwin Browser does not yet populate it.
 
-The current structured websocket exposes coach identifiers, class, loading and accessible toilets,
-following the [Darwin coach fields](https://lite.realtime.nationalrail.co.uk/OpenLDBWS/documentation.aspx).
-It does not expose bicycle storage or dedicated wheelchair spaces; the model and renderer support these
-facilities for a future feed adapter, but do not invent them. Coach order is retained as supplied.
-An accessible-toilet marker identifies its location, not whether the toilet is currently in service.
+The structured websocket exposes coach identifiers, class, loading and toilets, plus wheelchair-space
+and cycle-space flags enriched by Darwin Browser's Gemini allocation rules. The formation shows accessibility
+when either wheelchair spaces or an accessible toilet are reported, and cycles when cycle spaces are reported.
+Unset facility flags remain unknown. Coach order is retained as supplied.
+Standard and accessible toilets both show the toilet icon; accessible toilets also show accessibility.
+Toilet icons identify their locations, not whether the toilets are currently in service.
+
+The protocol adapter also retains the complete NRCC station-notice list, replacing it on every snapshot
+and update (an empty list clears it). Notices are not currently rendered by the boards.
 
 `scroll_speed` sets how fast text scrolls, in dots per second. The defaults are 48 for Daktronics (the web
 board's 550 px/s) and 60 for Infotec (the web's 77 dots/s reads too fast on the panel).

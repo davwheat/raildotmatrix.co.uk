@@ -310,20 +310,30 @@ func TestFormationDetailsUpdateThroughWebsocket(t *testing.T) {
 	conn := s.accept(t)
 	movement := movementFrame("formation-details", "2", time.Now().Add(10*time.Minute))
 	movement.Coaches = &pb.CoachList{Coaches: []*pb.Coach{
-		{Number: "A", Class: ptr("Mixed"), ToiletType: ptr("Accessible"), LoadingPercent: ptr(int32(42))},
-		{Number: "B", Class: ptr("Standard")},
+		{Number: "A", Class: ptr("Mixed"), ToiletType: ptr("Accessible"), LoadingPercent: ptr(int32(42)), CycleSpaces: ptr(true), Food: ptr(true)},
+		{Number: "B", Class: ptr("Standard"), ToiletType: ptr("Standard"), Accessible: ptr(true)},
 	}}
 	s.send(t, conn, snapshotFrame(1, []*pb.Movement{movement}, nil))
 	got := expectView(t, views, true, 1).Services[0]
 	if got.Length != 2 || len(got.Coaches) != 2 || got.Coaches[0].Label != "A" || !got.Coaches[0].FirstClass || !got.Coaches[0].Accessible || got.Coaches[0].Loading != 42 || got.Coaches[1].Loading != -1 || got.Coaches[1].FirstClass {
 		t.Fatalf("formation mapping: %+v", got)
 	}
+	if !got.Coaches[0].Cycles || !got.Coaches[0].Food || !got.Coaches[1].Accessible || got.Coaches[1].Cycles || got.Coaches[1].Food {
+		t.Fatalf("enriched coach facilities: %+v", got.Coaches)
+	}
+	if !got.Coaches[0].Toilet || !got.Coaches[1].Toilet {
+		t.Fatalf("accessible/standard toilets missing: %+v", got.Coaches)
+	}
 	movement.Coaches.Coaches[0].LoadingPercent = ptr(int32(0))
+	movement.Coaches.Coaches[0].CycleSpaces = nil
+	movement.Coaches.Coaches[0].Food = nil
+	movement.Coaches.Coaches[1].Accessible = nil
+	movement.Coaches.Coaches[1].ToiletType = ptr("None")
 	update := updateFrame(1, 2, []string{movement.Id})
 	update.GetUpdate().Upserts = []*pb.Movement{movement}
 	s.send(t, conn, update)
-	if got := expectView(t, views, true, 1).Services[0].Coaches[0].Loading; got != 0 {
-		t.Fatalf("live loading update: %d", got)
+	if got := expectView(t, views, true, 1).Services[0].Coaches; got[0].Loading != 0 || got[0].Cycles || got[0].Food || !got[0].Toilet || got[1].Accessible || got[1].Toilet {
+		t.Fatalf("live loading/facilities update: %+v", got)
 	}
 	movement.Coaches = nil
 	update = updateFrame(2, 3, []string{movement.Id})

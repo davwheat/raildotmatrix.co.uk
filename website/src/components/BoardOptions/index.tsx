@@ -129,6 +129,18 @@ export default function BoardOptions() {
                 ]}
               />
               <Choice name="serviceCount" label="Services to show" values={[1, 2, 3, 4, 5, 6].map(n => [n, String(n)] as const)} />
+              <Choice
+                name="formationCount"
+                label="Formation count"
+                values={[
+                  ['none', 'Nothing'],
+                  ['number', '(n)'],
+                  ['coaches', '(n coaches)'],
+                  ['coaches-no-brackets', 'n coaches'],
+                  ['carriages', '(n carriages)'],
+                  ['carriages-no-brackets', 'n carriages'],
+                ]}
+              />
               <Check name="platformBox">Show platform box</Check>
               <Check name="alignPlatformRows" disabled={!options.platformBox}>
                 Align lower rows with the platform box

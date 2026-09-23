@@ -367,8 +367,8 @@ func derefTime(value *time.Time) time.Time {
 	return *value
 }
 
-// The structured feed supplies class, accessible toilets and per-coach loads.
-// It currently has no cycle-storage or dedicated wheelchair-space fields.
+// The structured feed supplies class, toilets, per-coach loads and optional
+// wheelchair-space and cycle-space flags enriched from Gemini allocations.
 func formationCoaches(coaches []Coach) []model.Coach {
 	result := make([]model.Coach, len(coaches))
 	for i, c := range coaches {
@@ -377,9 +377,13 @@ func formationCoaches(coaches []Coach) []model.Coach {
 			load = min(100, max(0, int(*c.LoadingPercent)))
 		}
 		class := strings.ToLower(deref(c.Class))
+		toilet := strings.ToLower(deref(c.ToiletType))
 		result[i] = model.Coach{Label: c.Number, Loading: load,
 			FirstClass: class == "first" || class == "mixed",
-			Accessible: strings.EqualFold(deref(c.ToiletType), "Accessible"),
+			Accessible: (c.Accessible != nil && *c.Accessible) || toilet == "accessible",
+			Cycles:     c.CycleSpaces != nil && *c.CycleSpaces,
+			Toilet:     toilet == "standard" || toilet == "accessible",
+			Food:       c.Food != nil && *c.Food,
 		}
 	}
 	return result

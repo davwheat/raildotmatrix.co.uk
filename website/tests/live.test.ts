@@ -14,9 +14,15 @@ import serviceStoppingSnapshot from './fixtures/stopping_snapshot.json'
 import serviceStoppingSnapshotFrame from './fixtures/stopping_snapshot.pb'
 import serviceUpdate from './fixtures/override_removal.json'
 import serviceUpdateFrame from './fixtures/override_removal.pb'
+import nrccSnapshot from './fixtures/nrcc_snapshot.json'
+import nrccSnapshotFrame from './fixtures/nrcc_snapshot.pb'
+import nrccUpdate from './fixtures/nrcc_update.json'
+import nrccUpdateFrame from './fixtures/nrcc_update.pb'
+import nrccClear from './fixtures/nrcc_clear.json'
+import nrccClearFrame from './fixtures/nrcc_clear.pb'
 import type { CISState, Heartbeat, ServerMessage, Snapshot, Update } from '../src/live/types'
 
-const snapshot = () => structuredClone(fixture) as Snapshot
+const snapshot = () => ({ ...structuredClone(fixture), nrcc_messages: [] }) as Snapshot
 const update = (values: Partial<Update> = {}): Update => ({
   version: 2,
   type: 'update',
@@ -29,6 +35,7 @@ const update = (values: Partial<Update> = {}): Update => ({
   ordering: fixture.ordering,
   override_upserts: [],
   override_removals: [],
+  nrcc_messages: [],
   ...values,
 })
 
@@ -406,9 +413,40 @@ test('frames written by the service decode to the messages it encoded', () => {
     [serviceSnapshotFrame, serviceSnapshot],
     [serviceStoppingSnapshotFrame, serviceStoppingSnapshot],
     [serviceUpdateFrame, serviceUpdate],
+    [nrccSnapshotFrame, nrccSnapshot],
+    [nrccUpdateFrame, nrccUpdate],
+    [nrccClearFrame, nrccClear],
   ] as const) {
-    assert.deepEqual(decodeServerMessage(frame), message)
+    assert.deepEqual(decodeServerMessage(frame), { nrcc_messages: [], ...message })
   }
+})
+
+test('station notices replace completely on snapshots and updates, including withdrawal', () => {
+  const initial = reduceCIS(null, decodeServerMessage(nrccSnapshotFrame) as Snapshot)!
+  assert.deepEqual(initial.nrcc_messages, nrccSnapshot.nrcc_messages)
+  const changed = reduceCIS(initial, decodeServerMessage(nrccUpdateFrame) as Update)!
+  assert.deepEqual(changed.nrcc_messages, nrccUpdate.nrcc_messages)
+  assert.deepEqual(initial.nrcc_messages, nrccSnapshot.nrcc_messages, 'the previous state stays untouched')
+  assert.deepEqual(reduceCIS(changed, decodeServerMessage(nrccClearFrame) as Update)!.nrcc_messages, [])
+  assert.deepEqual(reduceCIS(changed, snapshot())!.nrcc_messages, [], 'an authoritative snapshot clears old notices too')
+
+  const future = { ...snapshot(), nrcc_messages: [{ ...nrccSnapshot.nrcc_messages[0], category: 'Future', severity: '99' }] }
+  assert.deepEqual(decodeServerMessage(new Uint8Array(encodeServerMessage(future))), future)
+})
+
+test('coach facilities preserve unknown, true and false through protobuf', () => {
+  const sent = snapshot()
+  sent.movements[0].coaches = [null, true, false].map((facility, i) => ({
+    number: String(i),
+    class: null,
+    toilet_type: null,
+    toilet_status: null,
+    loading_percent: null,
+    accessible: facility,
+    cycle_spaces: facility,
+    food: facility,
+  }))
+  assert.deepEqual(decodeServerMessage(new Uint8Array(encodeServerMessage(sent))), sent)
 })
 
 test('null, empty and zero survive the wire as themselves', () => {

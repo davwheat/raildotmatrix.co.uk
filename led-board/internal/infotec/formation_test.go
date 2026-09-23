@@ -11,16 +11,23 @@ import (
 
 func TestFormationRotationSynchronised(t *testing.T) {
 	coaches := []model.Coach{
-		{Label: "A", Loading: 50, Accessible: true, FirstClass: true},
-		{Label: "B", Loading: -1, Accessible: true, Cycles: true, FirstClass: true},
+		{Label: "A", Loading: 50, Accessible: true, Toilet: true, FirstClass: true},
+		{Label: "B", Loading: -1, Accessible: true, Cycles: true, Toilet: true, Food: true, FirstClass: true},
 		{Label: "C", Loading: 0},
+		{Label: "D", Loading: -1, Toilet: true},
 	}
-	want := [][2]string{{"A", "B"}, {"", ""}, {"§", "§"}, {"§", "#"}, {"1st", "1st"}, {"A", "B"}}
+	want := [][4]string{
+		{"A", "B", "C", "D"}, {"", "", "", ""},
+		{"§", "§", "", "±"}, {"§", "#", "", "±"}, {"§", "±", "", "±"}, {"±", "€", "", "±"}, {"1st", "1st", "", "±"},
+		{"A", "B", "C", "D"},
+	}
 	for i, pair := range want {
 		for _, offset := range []time.Duration{0, 4999 * time.Millisecond} {
 			got := formationContents(coaches, time.Duration(i)*5*time.Second+offset)
-			if got[0].text != pair[0] || got[1].text != pair[1] {
-				t.Fatalf("slot %d: %+v", i, got[:3])
+			for c, text := range pair {
+				if got[c].text != text {
+					t.Fatalf("slot %d: %+v", i, got[:len(coaches)])
+				}
 			}
 			if i == 1 && (got[0].loading != 50 || got[1].loading != -1 || got[2].loading != 0) {
 				t.Fatalf("loading unknown/zero lost: %+v", got[:3])
@@ -71,6 +78,21 @@ func TestFormationUpdateRedrawsAtSameTime(t *testing.T) {
 	}
 	if b.last.coachContents[0].loading != 90 {
 		t.Fatal("stale loading")
+	}
+	v.Services[0].Coaches = []model.Coach{{Loading: -1, Toilet: true}}
+	b.Update(v)
+	if !b.Tick(now, f) || b.last.coachContents[0].text != "±" {
+		t.Fatal("toilet-only formation did not redraw")
+	}
+	v.Services[0].Coaches = []model.Coach{{Loading: -1, Food: true}}
+	b.Update(v)
+	if !b.Tick(now, f) || b.last.coachContents[0].text != "€" {
+		t.Fatal("food-only formation did not redraw")
+	}
+	v.Services[0].Coaches = []model.Coach{{Loading: -1}}
+	b.Update(v)
+	if !b.Tick(now, f) || b.last.coachContents[0].text != "" {
+		t.Fatal("stale icon after facility removal")
 	}
 	v.Services[0].Coaches = nil
 	b.Update(v)

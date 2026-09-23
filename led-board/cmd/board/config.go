@@ -23,6 +23,7 @@ const configName = "departure-board"
 
 // config is every setting the board takes, in the shape of the config file.
 type config struct {
+	FormationCount           string `mapstructure:"formation_count"`
 	LoadingBrightness        int    `mapstructure:"loading_brightness"`
 	ClockStyle               string `mapstructure:"clock_style"`
 	OrdinalFormat            string `mapstructure:"ordinal_format"`
@@ -74,6 +75,7 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.Bool("align-platform-rows", true, "align lower service columns and centre their prefix beneath the platform box (Infotec only)")
 	fs.String("ordinal-format", "suffix", "ordinal style: suffix (1st/2nd/3rd) or dot (1./2./3.)")
 	fs.Int("loading-brightness", 50, "coach loading fill brightness: 50 or 100 percent (Infotec only)")
+	fs.String("formation-count", "none", "count beside the formation: none, number, coaches, coaches-no-brackets, carriages or carriages-no-brackets (Infotec only; wording falls back to a bracketed number if space is limited)")
 	fs.String("clock-style", "normal", "Infotec clock: normal, small-seconds or small")
 	fs.Int("service-count", 3, "number of services to show, from 1 to 6 (Infotec only)")
 	fs.Bool("compact-lower-row", true, "show smaller lower service text beside the clock (Infotec only)")

@@ -15,6 +15,7 @@ export const defaults = {
   compactLowerRow: true,
   serviceCount: 3,
   loadingBrightness: 50 as 50 | 100,
+  formationCount: 'none' as 'none' | 'number' | 'coaches' | 'coaches-no-brackets' | 'carriages' | 'carriages-no-brackets',
   clockStyle: 'normal' as 'normal' | 'small-seconds' | 'small',
   alignPlatformRows: true,
   boardStyle: 'Yellow' as 'Yellow' | 'Blue' | 'Green/Blue',
@@ -47,6 +48,7 @@ export function optionKeys(type: DisplayType): OptionKey[] {
         'compactLowerRow',
         'clockStyle',
         'loadingBrightness',
+        'formationCount',
         'serviceCount',
         'alignPlatformRows',
       ]
@@ -60,6 +62,7 @@ export function optionKeys(type: DisplayType): OptionKey[] {
 }
 
 const choices = {
+  formationCount: ['none', 'number', 'coaches', 'coaches-no-brackets', 'carriages', 'carriages-no-brackets'],
   color: ['orange', 'white'],
   clockStyle: ['normal', 'small-seconds', 'small'],
   rowPrefix: ['ordinals', 'platforms'],

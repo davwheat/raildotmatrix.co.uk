@@ -116,6 +116,7 @@ func main() {
 		Width: opts.Cols * opts.Chain, Height: opts.Rows * opts.Parallel,
 		Zone: zone, Colour: colour, Worldline: cfg.Worldline, ScrollSpeed: cfg.ScrollSpeed, RowPrefix: rowPrefix,
 		OrdinalFormat: ordinalFormat, LoadingBrightness: cfg.LoadingBrightness, ClockStyle: cfg.ClockStyle, ServiceCount: cfg.ServiceCount, WarningPlatform: cfg.WarningPlatform,
+		FormationCount:  cfg.FormationCount,
 		CompactLowerRow: &cfg.CompactLowerRow, PlatformBox: cfg.PlatformBox, Platforms: cfg.Platforms, AlignPlatformRows: &cfg.AlignPlatformRows,
 	})
 	if err != nil {

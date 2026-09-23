@@ -56,6 +56,9 @@ func TestDefaults(t *testing.T) {
 	if cfg.RowPrefix != "ordinals" {
 		t.Errorf("row prefix = %q; want ordinals by default", cfg.RowPrefix)
 	}
+	if cfg.FormationCount != "none" {
+		t.Errorf("formation count = %q; want none by default", cfg.FormationCount)
+	}
 	if cfg.LED.Options != *matrix.Default() {
 		t.Errorf("led = %+v, want %+v", cfg.LED.Options, *matrix.Default())
 	}
@@ -73,6 +76,7 @@ platforms = ["1", "2"]
 row_prefix = "platforms"
 platform_box = true
 align_platform_rows = false
+formation_count = "coaches"
 scroll_speed = 40
 
 [led]
@@ -103,6 +107,9 @@ func TestFile(t *testing.T) {
 	}
 	if !cfg.PlatformBox {
 		t.Error("platform_box option was not loaded")
+	}
+	if cfg.FormationCount != "coaches" {
+		t.Errorf("formation count = %q; want coaches from file", cfg.FormationCount)
 	}
 	if cfg.RowPrefix != "platforms" {
 		t.Errorf("row prefix = %q; want platforms from the file", cfg.RowPrefix)
@@ -218,7 +225,7 @@ func TestKeys(t *testing.T) {
 	want := strings.Fields(`board colour crs display fixture fps legacy_toc_names led.brightness led.chain led.cols
 		led.gpio_mapping led.limit_refresh led.multiplexing led.no_drop_privs led.no_hardware_pulse led.parallel
 		led.pwm_bits led.pwm_dither_bits led.pwm_lsb_nanoseconds led.rgb_sequence led.row_addr_type led.rows
-		led.scan_mode led.show_refresh led.slowdown_gpio align_platform_rows compact_lower_row loading_brightness clock_style ordinal_format service_count platform_box row_prefix platforms png_dir scale scroll_speed
+		led.scan_mode led.show_refresh led.slowdown_gpio align_platform_rows compact_lower_row loading_brightness formation_count clock_style ordinal_format service_count platform_box row_prefix platforms png_dir scale scroll_speed
 		show_unconfirmed_platforms url verbose warning_platform worldline`)
 	slices.Sort(keys)
 	slices.Sort(want)
@@ -236,9 +243,40 @@ func TestSettingsCoverEveryKey(t *testing.T) {
 	if _, ok := settings(v)["led.limit_refresh"]; !ok {
 		t.Error("a key without a default must still be watched")
 	}
-	if got := len(v.AllKeys()); got != 42 {
-		t.Errorf("%d keys, want 42", got)
+	if got := len(v.AllKeys()); got != 43 {
+		t.Errorf("%d keys, want 43", got)
 	}
+}
+
+func TestFormationCountConfig(t *testing.T) {
+	for _, style := range []string{"none", "number", "coaches", "coaches-no-brackets", "carriages", "carriages-no-brackets", "invalid", "number-no-brackets"} {
+		t.Run(style, func(t *testing.T) {
+			t.Setenv("BOARD_FORMATION_COUNT", "number")
+			v, err := configure(parse(t, "-formation-count", style), writeConfig(t, testConfig))
+			if err != nil {
+				t.Fatal(err)
+			}
+			cfg, err := load(v)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if cfg.FormationCount != style {
+				t.Fatalf("formation count = %q, want flag %q", cfg.FormationCount, style)
+			}
+			if err := validateConfig(cfg); (err != nil) != (style == "invalid" || style == "number-no-brackets") {
+				t.Fatalf("validation for %q: %v", style, err)
+			}
+		})
+	}
+	for _, field := range describeConfig(parse(t)) {
+		if field.Key == "formation_count" {
+			if !slices.Equal(field.Choices, []string{"none", "number", "coaches", "coaches-no-brackets", "carriages", "carriages-no-brackets"}) {
+				t.Fatalf("formation count choices = %v", field.Choices)
+			}
+			return
+		}
+	}
+	t.Fatal("formation count missing from management schema")
 }
 
 var _ viper.FlagValue = flagValue{}

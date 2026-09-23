@@ -32,20 +32,30 @@ func (b *Board) drawPlatformBox(f *frame.Frame, colour frame.RGB) {
 	height := font.PISTall.Baseline + gap + font.InfotecPlatform.Height
 	y := max(1, (g.sepY-height)/2-2)
 	board.DrawText(f, font.PISTall, (g.boxW-font.PISTall.Width("Plat"))/2, y, "Plat", colour, g.full)
-	board.DrawText(f, font.InfotecPlatform, (g.boxW-font.InfotecPlatform.Width(b.platformBox()))/2, y+font.PISTall.Baseline+gap, b.platformBox(), colour, g.full)
+	// Round half-dot positions to the right so odd-width numbers do not sit left of centre.
+	numberX := (g.boxW - font.InfotecPlatform.Width(b.platformBox()) + 1) / 2
+	board.DrawText(f, font.InfotecPlatform, numberX, y+font.PISTall.Baseline+gap, b.platformBox(), colour, g.full)
 }
 
-// drawFormation draws outlined coaches with a filled, stepped cab and a rounded last coach.
-// Long trains use narrower carriages so the complete formation stays on the board.
-func drawFormation(f *frame.Frame, x, y, width, height, length int, colour frame.RGB) {
+// formationDimensions narrows long trains so the complete formation stays on the board.
+func formationDimensions(width, height, length int) (cab, coachW, w int) {
 	if length <= 0 || height < 5 || width < 4 || length > (width-1)/3 {
 		return
 	}
 	// The nose slopes by one dot every two rows, almost down to the floor.
 	// Reserve it ahead of the coaches so every hollow body has the same width.
-	cab := min((height-2)/2, width-1-3*length)
-	coachW := min(14, (width-cab-1)/length)
-	w := cab + coachW*length + 1
+	cab = min((height-2)/2, width-1-3*length)
+	coachW = min(14, (width-cab-1)/length)
+	w = cab + coachW*length + 1
+	return
+}
+
+// drawFormation draws outlined coaches with a filled, stepped cab and a rounded last coach.
+func drawFormation(f *frame.Frame, x, y, width, height, length int, colour frame.RGB) {
+	cab, coachW, w := formationDimensions(width, height, length)
+	if w == 0 {
+		return
+	}
 	f.FillRect(x+cab, y, w-cab, 1, colour)
 	f.FillRect(x, y+height-1, w, 1, colour)
 	for row := range height {

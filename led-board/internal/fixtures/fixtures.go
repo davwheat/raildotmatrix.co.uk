@@ -34,12 +34,12 @@ func Steps(name string) []model.View {
 		s := victoria()
 		s.Length = 8
 		s.Coaches = []model.Coach{
-			{Label: "A", Loading: 15, FirstClass: true, Accessible: true},
+			{Label: "A", Loading: 15, FirstClass: true, Accessible: true, Toilet: true},
 			{Label: "B", Loading: 45, FirstClass: true, Accessible: true, Cycles: true},
 			{Label: "C", Loading: 100, Cycles: true},
-			{Label: "D", Loading: 0},
-			{Label: "E", Loading: -1, Accessible: true},
-			{Label: "F", Loading: 70},
+			{Label: "D", Loading: 0, Toilet: true},
+			{Label: "E", Loading: -1, Accessible: true, Toilet: true},
+			{Label: "F", Loading: 70, Food: true},
 			{Label: "G", Loading: 30},
 			{Label: "H", Loading: 90},
 		}

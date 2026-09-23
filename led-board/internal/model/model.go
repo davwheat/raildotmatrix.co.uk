@@ -39,6 +39,9 @@ type Coach struct {
 	// Loading is a percentage; -1 means unknown.
 	Loading                        int
 	FirstClass, Accessible, Cycles bool
+	// Toilet identifies the facility's location, irrespective of service status.
+	Toilet bool
+	Food   bool
 }
 
 // Service is one train on the board.

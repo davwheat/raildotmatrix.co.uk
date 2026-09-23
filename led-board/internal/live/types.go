@@ -102,6 +102,9 @@ type Coach struct {
 	ToiletType     *string `json:"toilet_type"`
 	ToiletStatus   *string `json:"toilet_status"`
 	LoadingPercent *int32  `json:"loading_percent"`
+	Accessible     *bool   `json:"accessible"`
+	CycleSpaces    *bool   `json:"cycle_spaces"`
+	Food           *bool   `json:"food"`
 }
 
 // MovementKind says what the train does at the station.
@@ -230,18 +233,30 @@ type Message interface {
 	messageType() string
 }
 
+// NRCCMessage is a station notice. Text is the original HTML fragment; category
+// and severity remain strings so unfamiliar codes survive decoding.
+type NRCCMessage struct {
+	ID        string    `json:"id"`
+	Text      string    `json:"text"`
+	Category  string    `json:"category"`
+	Severity  string    `json:"severity"`
+	Suppress  bool      `json:"suppress"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 // Snapshot is the complete state of the stream's view.
 type Snapshot struct {
-	Version   int                `json:"version"`
-	Type      string             `json:"type"`
-	RequestID *string            `json:"request_id,omitempty"`
-	Station   Location           `json:"station"`
-	Window    Window             `json:"window"`
-	Epoch     string             `json:"epoch"`
-	Revision  uint64             `json:"revision"`
-	Movements []Movement         `json:"movements"`
-	Ordering  []string           `json:"ordering"`
-	Overrides []PlatformOverride `json:"overrides"`
+	Version      int                `json:"version"`
+	Type         string             `json:"type"`
+	RequestID    *string            `json:"request_id,omitempty"`
+	Station      Location           `json:"station"`
+	Window       Window             `json:"window"`
+	Epoch        string             `json:"epoch"`
+	Revision     uint64             `json:"revision"`
+	Movements    []Movement         `json:"movements"`
+	Ordering     []string           `json:"ordering"`
+	Overrides    []PlatformOverride `json:"overrides"`
+	NRCCMessages []NRCCMessage      `json:"nrcc_messages,omitempty"`
 }
 
 // Update is a delta from PreviousRevision to Revision within one epoch.
@@ -257,6 +272,8 @@ type Update struct {
 	Ordering         []string           `json:"ordering"`
 	OverrideUpserts  []PlatformOverride `json:"override_upserts"`
 	OverrideRemovals []OverrideRemoval  `json:"override_removals"`
+	// NRCCMessages replaces the entire notice list, including when empty.
+	NRCCMessages []NRCCMessage `json:"nrcc_messages,omitempty"`
 }
 
 // Heartbeat attests the state the service holds for this connection.

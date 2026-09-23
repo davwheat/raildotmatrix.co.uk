@@ -70,6 +70,7 @@ const labels = {
   colour: "Text colour",
   platforms: "Platforms to show",
   loading_brightness: "Loading fill brightness (%)",
+  formation_count: "Formation count",
   clock_style: "Clock style",
   ordinal_format: "Ordinal format",
   service_count: "Services to show (1–6)",
@@ -118,12 +119,18 @@ const nice = {
   matrix: "LED matrix",
   png: "PNG images",
   window: "Desktop window",
+  none: "Nothing",
+  number: "(n)",
+  coaches: "(n coaches)",
+  "coaches-no-brackets": "n coaches",
+  carriages: "(n carriages)",
+  "carriages-no-brackets": "n carriages",
 };
 const groups = [
   [
     "Station",
     "Leave the station empty to show setup instructions.",
-    "crs board colour platforms row_prefix loading_brightness clock_style ordinal_format service_count scroll_speed",
+    "crs board colour platforms row_prefix loading_brightness formation_count clock_style ordinal_format service_count scroll_speed",
   ],
   [
     "Display options",

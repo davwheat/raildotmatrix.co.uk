@@ -17,6 +17,7 @@ export function reduceCIS(state: CISState | null, message: Snapshot | Update): C
       movements: new Map(message.movements.map(movement => [movement.id, movement])),
       ordering: message.ordering,
       overrides: new Map(message.overrides.map(override => [override.id, override])),
+      nrcc_messages: message.nrcc_messages,
     }
   }
   if (message.type !== 'update') throw new Error('Unexpected CIS message')
@@ -29,7 +30,15 @@ export function reduceCIS(state: CISState | null, message: Snapshot | Update): C
   for (const { id } of message.override_removals) overrides.delete(id)
   for (const override of message.override_upserts) overrides.set(override.id, override)
 
-  return { ...state, revision: message.revision, window: message.window, ordering: message.ordering, movements, overrides }
+  return {
+    ...state,
+    revision: message.revision,
+    window: message.window,
+    ordering: message.ordering,
+    movements,
+    overrides,
+    nrcc_messages: message.nrcc_messages,
+  }
 }
 
 /** Whether a heartbeat describes the state we hold, rather than a diverged one. */

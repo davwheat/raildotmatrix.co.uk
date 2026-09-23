@@ -62,6 +62,8 @@ message CisSnapshot {
   repeated Movement movements = 6;
   repeated string ordering = 7;
   repeated PlatformOverride overrides = 8;
+  // Complete station notices. Clients choose whether/how to display them.
+  repeated NrccMessage nrcc_messages = 9;
 }
 
 message CisUpdate {
@@ -74,6 +76,21 @@ message CisUpdate {
   repeated string ordering = 7;
   repeated PlatformOverride override_upserts = 8;
   repeated OverrideRemoval override_removals = 9;
+  // Full replacement on EVERY update. An empty list clears all notices.
+  repeated NrccMessage nrcc_messages = 10;
+}
+
+message NrccMessage {
+  // Opaque Darwin OW identity, not a hash of the text.
+  string id = 1;
+  // Original HTML fragment, including paragraphs, links and entities.
+  string text = 2;
+  string category = 3;
+  // Darwin severity code (0, 1, 2, 3). Preserve unknown future codes.
+  string severity = 4;
+  // Advisory train-table suppression; the server still sends movements.
+  bool suppress = 5;
+  google.protobuf.Timestamp updated_at = 6;
 }
 
 // On the announcement stream only sent_at is set: that stream attests no state.
@@ -226,6 +243,13 @@ message Coach {
   optional string toilet_type = 3;
   optional string toilet_status = 4;
   optional int32 loading_percent = 5;
+  // Darwin carries neither; both come from local rules over the Gemini
+  // allocation, so unset means unknown and false is never sent.
+  optional bool accessible = 6;
+  optional bool cycle_spaces = 7;
+  // Food/catering facilities in this coach. Unset means unknown.
+  // Reserved for a future producer; current enrichment leaves this unset.
+  optional bool food = 8;
 }
 
 // Wrapped so that "formation unknown" (unset) differs from "no coaches".

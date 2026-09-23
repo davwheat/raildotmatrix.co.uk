@@ -18,6 +18,7 @@ var Names = []string{"daktronics", "infotec"}
 
 // Config is what every format is built from. Zero values mean each format's defaults.
 type Config struct {
+	FormationCount    string
 	LoadingBrightness int
 	ClockStyle        string
 	OrdinalFormat     board.OrdinalFormat
@@ -44,6 +45,9 @@ type Config struct {
 
 // New returns the named board format.
 func New(name string, c Config) (board.Board, error) {
+	if err := infotec.ValidateFormationCount(c.FormationCount); err != nil {
+		return nil, err
+	}
 	if err := infotec.ValidateClockStyle(c.ClockStyle); err != nil {
 		return nil, err
 	}
@@ -67,6 +71,7 @@ func New(name string, c Config) (board.Board, error) {
 		return infotec.New(infotec.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, ScrollSpeed: c.ScrollSpeed,
 			RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform,
+			FormationCount:    c.FormationCount,
 			LoadingBrightness: c.LoadingBrightness, ClockStyle: c.ClockStyle, ServiceCount: c.ServiceCount, CompactLowerRow: c.CompactLowerRow, PlatformBox: platformBox, ServicePlatformBox: c.PlatformBox && platformBox == "", AlignPlatformRows: c.AlignPlatformRows,
 		}), nil
 	default:

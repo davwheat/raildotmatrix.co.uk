@@ -69,16 +69,17 @@ func Decode(frame []byte) (Message, error) {
 	case *pb.ServerMessage_Snapshot:
 		value := payload.Snapshot
 		return &Snapshot{
-			Version:   ProtocolVersion,
-			Type:      "snapshot",
-			RequestID: value.RequestId,
-			Station:   location(value.GetStation()),
-			Window:    window(value.GetWindow()),
-			Epoch:     value.GetEpoch(),
-			Revision:  value.GetRevision(),
-			Movements: movements(value.GetMovements()),
-			Ordering:  stringList(value.GetOrdering()),
-			Overrides: overrides(value.GetOverrides()),
+			Version:      ProtocolVersion,
+			Type:         "snapshot",
+			RequestID:    value.RequestId,
+			Station:      location(value.GetStation()),
+			Window:       window(value.GetWindow()),
+			Epoch:        value.GetEpoch(),
+			Revision:     value.GetRevision(),
+			Movements:    movements(value.GetMovements()),
+			Ordering:     stringList(value.GetOrdering()),
+			Overrides:    overrides(value.GetOverrides()),
+			NRCCMessages: nrccMessages(value.GetNrccMessages()),
 		}, nil
 	case *pb.ServerMessage_Update:
 		value := payload.Update
@@ -98,6 +99,7 @@ func Decode(frame []byte) (Message, error) {
 			Ordering:         stringList(value.GetOrdering()),
 			OverrideUpserts:  overrides(value.GetOverrideUpserts()),
 			OverrideRemovals: removals,
+			NRCCMessages:     nrccMessages(value.GetNrccMessages()),
 		}, nil
 	case *pb.ServerMessage_Heartbeat:
 		value := payload.Heartbeat
@@ -319,6 +321,9 @@ func coaches(value *pb.CoachList) []Coach {
 			ToiletType:     coach.ToiletType,
 			ToiletStatus:   coach.ToiletStatus,
 			LoadingPercent: coach.LoadingPercent,
+			Accessible:     coach.Accessible,
+			CycleSpaces:    coach.CycleSpaces,
+			Food:           coach.Food,
 		}
 	}
 	return out
@@ -425,6 +430,17 @@ func movements(values []*pb.Movement) []Movement {
 	out := make([]Movement, len(values))
 	for i, value := range values {
 		out[i] = movement(value)
+	}
+	return out
+}
+
+func nrccMessages(values []*pb.NrccMessage) []NRCCMessage {
+	out := make([]NRCCMessage, len(values))
+	for i, value := range values {
+		out[i] = NRCCMessage{
+			ID: value.GetId(), Text: value.GetText(), Category: value.GetCategory(),
+			Severity: value.GetSeverity(), Suppress: value.GetSuppress(), UpdatedAt: instant(value.GetUpdatedAt()),
+		}
 	}
 	return out
 }

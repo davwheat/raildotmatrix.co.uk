@@ -14,7 +14,7 @@ type coachContent struct {
 }
 
 // Shared five-second slots show identifiers, loading, then facilities. Extra
-// facility slots repeat accessibility first, then cycles, then first class.
+// facility slots repeat accessibility first, then cycles, toilets, food and first class.
 func formationContents(coaches []model.Coach, elapsed time.Duration) (out [128]coachContent) {
 	labels, loads, facilities := false, false, 0
 	for _, c := range coaches {
@@ -69,6 +69,12 @@ func coachFacilities(c model.Coach) []string {
 	if c.Cycles {
 		options = append(options, "#")
 	}
+	if c.Toilet {
+		options = append(options, "±")
+	}
+	if c.Food {
+		options = append(options, "€")
+	}
 	if c.FirstClass {
 		options = append(options, "1st")
 	}
@@ -76,11 +82,10 @@ func coachFacilities(c model.Coach) []string {
 }
 
 func drawFormationContents(f *frame.Frame, x, y, width, height, length int, contents [128]coachContent, colour frame.RGB, brightness int) {
-	if length <= 0 || height < 5 || width < 4 || length > (width-1)/3 {
+	cab, coachW, w := formationDimensions(width, height, length)
+	if w == 0 {
 		return
 	}
-	cab := min((height-2)/2, width-1-3*length)
-	coachW := min(14, (width-cab-1)/length)
 	for i := 0; i < min(length, len(contents)); i++ {
 		c := contents[i]
 		left := x + cab + i*coachW + 1
