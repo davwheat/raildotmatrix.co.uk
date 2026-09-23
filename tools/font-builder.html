@@ -1,0 +1,1255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dot Matrix Font Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@700;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --ground: #e9ece8;
+  --surface: #f8faf7;
+  --ink: #17201b;
+  --muted: #5b6861;
+  --line: #cdd4cf;
+  --accent: #1b5fd1;
+  --accent-ink: #ffffff;
+  --ok: #2c7a4b;
+  --warn: #a8570b;
+  --danger: #b3261e;
+  --panel: #101411;
+  --led-off: #222b25;
+  --led-on: #eef3ff;
+  --sel: #ffb020;
+  --glyph-box: #4e8bff;
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: "Doto", var(--font-mono);
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #0d110f;
+    --surface: #161b18;
+    --ink: #e4eae6;
+    --muted: #8c9a92;
+    --line: #2a332e;
+    --accent: #7aa5ff;
+    --accent-ink: #0d110f;
+    --ok: #6fcf97;
+    --warn: #f2b46b;
+    --danger: #ff8a80;
+    --panel: #080a09;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #0d110f;
+  --surface: #161b18;
+  --ink: #e4eae6;
+  --muted: #8c9a92;
+  --line: #2a332e;
+  --accent: #7aa5ff;
+  --accent-ink: #0d110f;
+  --ok: #6fcf97;
+  --warn: #f2b46b;
+  --danger: #ff8a80;
+  --panel: #080a09;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font: 14px/1.5 var(--font-ui);
+  padding-inline: 16px;
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 1400px; margin-inline: auto; display: grid; gap: 20px; }
+
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(26px, 4vw, 38px);
+  letter-spacing: 0.02em;
+  margin: 0;
+  line-height: 1;
+}
+header p { margin: 0; color: var(--muted); max-width: 62ch; }
+
+h2 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0;
+}
+
+.board-card {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.board-bar {
+  display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center;
+  color: #9aa7a0; font: 12px var(--font-mono);
+}
+.board-bar label { display: flex; align-items: center; gap: 8px; }
+.board-bar .spacer { flex: 1; }
+.board-scroll { overflow: auto; max-height: 70vh; }
+#board { display: block; cursor: crosshair; touch-action: none; }
+
+.cols { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+
+section.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > span { font-size: 12px; color: var(--muted); }
+.field.grow { flex: 1 1 160px; }
+.rect-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.hint { font-size: 12px; color: var(--muted); margin: 0; }
+
+input[type="text"], input[type="number"], select, textarea {
+  font: inherit;
+  color: var(--ink);
+  background: var(--ground);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 6px 8px;
+  width: 100%;
+  min-width: 0;
+}
+input[type="number"] { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+#label { font-family: var(--font-mono); font-size: 15px; }
+textarea { font-family: var(--font-mono); font-size: 12px; line-height: 1.35; resize: vertical; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, .glyph:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.checks { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.checks label { display: flex; gap: 6px; align-items: center; }
+
+button {
+  font: 500 13px var(--font-ui);
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--muted); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.danger { color: var(--danger); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+.board-bar button { color: #cfd8d3; border-color: #34403a; }
+
+.preview-strip {
+  background: var(--panel);
+  border-radius: 4px;
+  padding: 10px;
+  overflow-x: auto;
+}
+.preview-strip .cells { display: flex; gap: 10px; align-items: end; }
+.preview-strip figure { margin: 0; display: grid; justify-items: center; gap: 4px; }
+.preview-strip figcaption { font: 12px var(--font-mono); color: #cfd8d3; min-height: 18px; }
+.preview-strip figcaption.missing { color: var(--sel); }
+
+.status { font-size: 13px; margin: 0; min-height: 20px; }
+.status.ok { color: var(--ok); }
+.status.warn { color: var(--warn); }
+
+.font-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.font-head .field { flex: 1 1 180px; }
+.glyph-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+}
+.glyph {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 8px 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--ground);
+  cursor: pointer;
+  color: var(--ink);
+}
+.glyph:hover { border-color: var(--accent); }
+.glyph canvas { background: var(--panel); border-radius: 2px; }
+.glyph .ch { font: 500 15px var(--font-mono); }
+.glyph .dim { font: 11px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.empty { color: var(--muted); margin: 0; }
+
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+#exportText { min-height: 240px; }
+
+details.panel > summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+details.panel > summary::-webkit-details-marker { display: none; }
+details.panel > summary::after { content: "Show"; font-size: 12px; color: var(--accent); }
+details.panel[open] > summary::after { content: "Hide"; }
+details.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+details.panel[open] > summary { margin-bottom: 14px; }
+details.panel .body { display: grid; gap: 12px; }
+#sourceText { min-height: 200px; white-space: pre; overflow-x: auto; }
+
+dialog {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 20px;
+  max-width: min(720px, calc(100vw - 32px));
+  width: 100%;
+}
+dialog::backdrop { background: rgb(0 0 0 / 0.5); }
+.editor { display: grid; gap: 14px; }
+.editor-canvas-wrap { background: var(--panel); border-radius: 4px; padding: 12px; overflow: auto; max-height: 60vh; }
+#editorCanvas { display: block; margin-inline: auto; cursor: pointer; touch-action: none; }
+.edit-tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.edit-tools .group { display: grid; gap: 4px; }
+.edit-tools .group > span { font-size: 12px; color: var(--muted); }
+.edit-tools .btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.edit-tools .btns button { padding: 4px 8px; font-family: var(--font-mono); }
+.missing { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
+.missing .row { align-items: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chips button { font: 500 13px var(--font-mono); min-width: 30px; padding: 4px 6px; }
+.dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; }
+.dialog-actions .right { display: flex; gap: 8px; }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--surface);
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  max-width: calc(100vw - 32px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.toast.show { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Dot Matrix Font Builder</h1>
+    <p>Drag across the board to select a line of text, type the characters it shows, and add them to a font. Export the font as JSON, C, or plain text.</p>
+  </header>
+
+  <div class="board-card">
+    <div class="board-bar">
+      <label for="zoom">Zoom <input id="zoom" type="range" min="3" max="18" value="6"></label>
+      <label><input id="showGlyphBoxes" type="checkbox" checked> Outline captured glyphs</label>
+      <span class="spacer"></span>
+      <span id="boardSize"></span>
+      <span id="hover">—</span>
+    </div>
+    <div class="board-scroll"><canvas id="board"></canvas></div>
+  </div>
+
+  <div class="cols">
+    <section class="panel" aria-labelledby="capHead">
+      <h2 id="capHead">Capture</h2>
+      <div class="rect-inputs">
+        <label class="field"><span>Column</span><input id="selX" type="number" min="0"></label>
+        <label class="field"><span>Row</span><input id="selY" type="number" min="0"></label>
+        <label class="field"><span>Width</span><input id="selW" type="number" min="1"></label>
+        <label class="field"><span>Height</span><input id="selH" type="number" min="1"></label>
+      </div>
+      <p class="hint">The selection height becomes the glyph height, so select the full line height (including descender rows) to keep glyphs aligned on a common baseline.</p>
+      <label class="field"><span>Characters in the selection, left to right</span><input id="label" type="text" autocomplete="off" spellcheck="false"></label>
+      <div class="checks">
+        <label><input id="splitMode" type="checkbox" checked> Split on empty columns</label>
+        <label><input id="trimRows" type="checkbox"> Trim empty rows</label>
+      </div>
+      <p class="hint" id="splitHint">Spaces in the text are ignored, so you can type the text as it appears on the board.</p>
+      <div class="preview-strip"><div class="cells" id="preview"></div></div>
+      <p class="status" id="capStatus" role="status"></p>
+      <div class="row">
+        <label class="field grow"><span>Add to font</span><select id="targetFont"></select></label>
+        <button class="primary" id="addBtn" type="button">Add glyphs</button>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="fontHead">
+      <h2 id="fontHead">Fonts</h2>
+      <div class="font-head">
+        <label class="field"><span>Font</span><select id="fontSelect"></select></label>
+        <label class="field"><span>Name</span><input id="fontName" type="text" autocomplete="off"></label>
+        <button type="button" id="newFontBtn">New font</button>
+        <button type="button" class="danger" id="delFontBtn">Delete font</button>
+      </div>
+      <p class="hint" id="fontSummary"></p>
+      <div class="glyph-grid" id="glyphGrid"></div>
+      <div class="missing">
+        <div class="row">
+          <h2 id="missingHead">Draw a new glyph</h2>
+          <span class="spacer" style="flex:1"></span>
+          <button type="button" id="newGlyphBtn">New glyph</button>
+        </div>
+        <p class="hint">These characters aren't in this font yet. Select one to draw it, or use <b>New glyph</b> for any other character, such as £ or →.</p>
+        <div class="chips" id="missingChips" aria-labelledby="missingHead"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="expHead">
+    <h2 id="expHead">Export</h2>
+    <div class="row">
+      <div class="tabs" role="tablist" id="formatTabs">
+        <button type="button" role="tab" data-format="json" aria-selected="true">JSON</button>
+        <button type="button" role="tab" data-format="c" aria-selected="false">C header</button>
+        <button type="button" role="tab" data-format="text" aria-selected="false">Text</button>
+      </div>
+      <label class="checks"><label><input id="exportAll" type="checkbox" checked> All fonts</label></label>
+      <span class="spacer" style="flex:1"></span>
+      <button type="button" id="copyBtn">Copy</button>
+      <button type="button" id="downloadBtn">Download</button>
+      <button type="button" id="importBtn">Import JSON</button>
+      <input id="importFile" type="file" accept=".json,application/json" hidden>
+    </div>
+    <textarea id="exportText" readonly spellcheck="false" aria-label="Export output"></textarea>
+  </section>
+
+  <details class="panel" id="sourcePanel">
+    <summary><h2>Board bitmap</h2></summary>
+    <div class="body">
+      <p class="hint">Paste one row per line. Use <code>1</code> or <code>#</code> for a lit LED and <code>0</code> or <code>.</code> for an unlit LED. Short rows are padded with unlit LEDs. Loading a new board keeps your fonts.</p>
+      <textarea id="sourceText" spellcheck="false" aria-label="Board bitmap"></textarea>
+      <div class="row">
+        <button type="button" class="primary" id="loadSourceBtn">Load bitmap</button>
+        <button type="button" id="openFileBtn">Open .txt file</button>
+        <button type="button" id="resetSourceBtn">Restore sample board</button>
+        <input id="sourceFile" type="file" accept=".txt,text/plain" hidden>
+      </div>
+      <p class="status" id="sourceStatus" role="status"></p>
+    </div>
+  </details>
+</div>
+
+<dialog id="editor" aria-labelledby="editorTitle">
+  <form method="dialog" class="editor" id="editorForm">
+    <h2 id="editorTitle">Edit glyph</h2>
+    <div class="row">
+      <label class="field"><span>Character</span><input id="editChar" type="text" maxlength="2" style="width:80px;font-family:var(--font-mono);font-size:18px"></label>
+      <label class="field"><span>Width</span><input id="editW" type="number" min="1" max="64" style="width:72px"></label>
+      <label class="field"><span>Height</span><input id="editH" type="number" min="1" max="64" style="width:72px"></label>
+      <label class="field grow"><span>Start from</span><select id="editStart"></select></label>
+      <label class="field grow"><span>Reference</span><select id="editRef"></select></label>
+    </div>
+    <div class="editor-canvas-wrap"><canvas id="editorCanvas"></canvas></div>
+    <p class="hint"><span id="editDims"></span> Click or drag to turn LEDs on and off. Rings show the reference glyph.</p>
+    <div class="edit-tools">
+      <div class="group"><span>Flip</span><div class="btns"><button type="button" data-op="flipH">Horizontal</button><button type="button" data-op="flipV">Vertical</button></div></div>
+      <div class="group"><span>Move</span><div class="btns"><button type="button" data-op="moveL" aria-label="Move left">←</button><button type="button" data-op="moveR" aria-label="Move right">→</button><button type="button" data-op="moveU" aria-label="Move up">↑</button><button type="button" data-op="moveD" aria-label="Move down">↓</button></div></div>
+      <div class="group"><span>All LEDs</span><div class="btns"><button type="button" data-op="clear">Clear</button><button type="button" data-op="invert">Invert</button></div></div>
+      <div class="group"><span>Left column</span><div class="btns"><button type="button" data-op="addL">Add</button><button type="button" data-op="delL">Remove</button></div></div>
+      <div class="group"><span>Right column</span><div class="btns"><button type="button" data-op="addR">Add</button><button type="button" data-op="delR">Remove</button></div></div>
+      <div class="group"><span>Top row</span><div class="btns"><button type="button" data-op="addT">Add</button><button type="button" data-op="delT">Remove</button></div></div>
+      <div class="group"><span>Bottom row</span><div class="btns"><button type="button" data-op="addB">Add</button><button type="button" data-op="delB">Remove</button></div></div>
+    </div>
+    <p class="status warn" id="editStatus" role="status"></p>
+    <div class="dialog-actions">
+      <button type="button" class="danger" id="editDelete">Delete glyph</button>
+      <div class="right">
+        <button type="button" id="editCancel">Cancel</button>
+        <button type="button" class="primary" id="editSave">Save</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const SAMPLE_BOARD = `1111111111111111111111111111000100000000000000000000010000000000000000001000100000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111000000000000000000000000000
+1000000000000000000000000001000100000000000000000000010000000000000000001000100000000100000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000100000000000010000000000000
+1000000000000000000000000001000100000000000000000000010000000000000000001000100000000100000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000
+1000000000000000000000000001000100000011100101100011010011100101100000001000100111001111001110010110010011100011100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000011010010101100011100
+1000000000000000000000000001000100000100010110010100110100010110010000001000100000100100010001011001010100010100010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000010101010110010100000
+1000000000000000000000000001000100000100010100010100010100010100010000001010100111100100011111010000010100010100010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000010101010100010011100
+1000000000000000000000000001000100000100010100010100010100010100010000001010101000100100010000010000010100010100010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000010101010100010000010
+1000011110010000000000000001000100000100010100010100110100010100010000001101101000100100010001010000010100010100010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000100000010101010100010100010
+1000010001010000000010000001000111110011100100010011010011100100010000001000100111100011001110010000010011100011100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111000000010101010100010011100
+1000010001010000000010000001000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000010001010011100111100001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000011110010000010010000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000010000010011110010000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000010000010100010010000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000010000010100010010000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000010000010011110001100001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000010000000000000000000001000011100000000101000000000000000000000000000000000000000100000000001111000000011011110001100000111111011110110000000000000000001100000000000000000000110000000000000000111001100000000000000000000000110000000000000000000110111100
+1000000000000000000000000001000100010000000101010000000000000000000000000100000000000100000000001111000000110110011011100000110000110011011000000011000000001100000000000000000000110000000000000000111001100000001100000000000000110000000000000000001101100110
+1000000000000000000000000001000100000000000101000000000000000000000000000100000000000100000000001111000001100000011001100000110000110011001100000111100000001100000000000000000000110000000000000000111001100000001100000000000000110000000000000000011000000110
+1000000000000000000000000001000100000011100101010101100011010000000111001111001000000111100111101111000001100000011001100011111110110011001100000111100000001100000111101111100111110111101111100000111001101111011111011110111110110111100111100000011000000110
+1000000000000000000000000001000100000000010101010110010100110000000000100100000000000110110000111111000001100000110001100000000011110011001100000011000000001100001100111110110101111000111110110000011001100001101100110011111011111100111100110000011000001100
+1000000000000000000000000001000100000011110101010100010100010000000111100100000000000100110111111111000001100001100001100000000011110011001100000111111000001100001100111100111100111000111100110000011111100111001100111111110000111100111100110000011000001000
+1000000000111111000000000001000100000100010101010100010100010000001000100100000000000100111100111111000001100011000001100000000011110011001100000110110000001100001100111100111100111100111100110000011111111000101100110000110000111110111100110000011000111000
+1000000001100001100000000001000100010100010101010100010100110000001000100100001000000100111100111111000000110110000001100011110011110011011000000110110000001100001100111100111101111100111100110000011111111100111110010001111000011110011100110000001101110000
+1000000000000000110000000001000011100011110101010100010011010000000111100011000000000100110111111111000000011111111011110000011110011110110000000011111000001111110111101100110111110111101100110000011001111111100111011110110000110111100111100000000111111110
+1000000000000000110000000001000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000110000000001000000000000000000000000000100010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000001100000000001000000000000000000000000000011100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000011000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000110000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000001100000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000011000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000110000000000000001000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000001100000000000000001000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000001111111110000000001000001100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000000000000001000001100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000000000000001000011100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000000000000001000011100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000000000000001000111100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000000000000001000111100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000000000000001001111100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000000000000001001111100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000000000000001000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1111111111111111111111111111001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111110000011000000001111100000111100000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000011000011000000011000110001100110000000000000
+0000000011000000000010000000000100000000000000000100000000000000010001000000010000000000000110000000000000000000000000000000000000000000000000000000000000000000000000000000100000100000000000100000000000000000000011001111000000000000011011000011000000000000
+0000000100100000000010000000000100000000000000000100000000000000010001000000010000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000001100001100000000000000000000000000000000011000011000011000000011011000011000000000000
+0000000000101011001110000000000100000110011100011100110011100000010001001100111000110010110010001100011000000000000000000000000000000000000000000000000000000000000000000000100010100000110100101110001111000000000110000011000011000000110011000011000100001110
+0000000011001100010010000000000100001001010010100101001010010000010101000010010001001011000010010010100100000000000000000000000000000000000000000000000000000000000000000000100100100000101010101001011000000000001100000011000000000111100001100111001100010001
+0000000000101000010010000000000100001001010010100101001010010000010101001110010001111010000010010010100100000000000000000000000000000000000000000000000000000000000000000000100111100000101010101001001110000000011000000011000000000000110000111011000100010001
+0000000100101000010010000000000100001001010010100101001010010000011011010010010001000010000010010010100100000000000000000000000000000000000000000000000000000000000000000000100000100000100010101001000001000000110000000011000011000000011000000011000100001111
+0000000011001000001110000000000111100110010010011100110010010000010001001110001100111010000111001100011000000000000000000000000000000000000000000000000000000000000000000001110000100000100010101001011110000001100000000011000011000000011000000011000100000001
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000011000000011000111011000111000100011001
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111000011000000001111110001111110001111001110`;
+const STORAGE_KEY = "raildotmatrix.fontBuilder.v1";
+
+const $ = (id) => document.getElementById(id);
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+const state = {
+  board: [],
+  fonts: [{ name: "Small", glyphs: {} }],
+  fontIndex: 0,
+  sel: { x: 31, y: 50, w: 75, h: 9 },
+  label: "London Waterloo",
+};
+
+function parseBitmap(text) {
+  const lines = text.replace(/\r/g, "").split("\n").map((l) => l.replace(/\s+/g, "")).filter((l) => l.length);
+  if (!lines.length) throw new Error("The bitmap is empty. Paste at least one row of 1s and 0s.");
+  const bad = lines.findIndex((l) => /[^01#.]/.test(l));
+  if (bad >= 0) throw new Error(`Row ${bad + 1} contains characters other than 1, 0, #, and . — remove them and try again.`);
+  const width = Math.max(...lines.map((l) => l.length));
+  return lines.map((l) => l.replace(/#/g, "1").replace(/\./g, "0").padEnd(width, "0"));
+}
+
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      board: state.board, fonts: state.fonts, fontIndex: state.fontIndex, sel: state.sel, label: state.label,
+    }));
+  } catch {}
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (Array.isArray(d.board) && d.board.length) state.board = d.board;
+    if (Array.isArray(d.fonts) && d.fonts.length) state.fonts = d.fonts;
+    if (Number.isInteger(d.fontIndex)) state.fontIndex = Math.min(d.fontIndex, state.fonts.length - 1);
+    if (d.sel) state.sel = d.sel;
+    if (typeof d.label === "string") state.label = d.label;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const boardW = () => state.board[0]?.length ?? 0;
+const boardH = () => state.board.length;
+const lit = (x, y) => state.board[y]?.[x] === "1";
+const currentFont = () => state.fonts[state.fontIndex];
+
+function clampSel() {
+  const s = state.sel;
+  s.x = Math.max(0, Math.min(boardW() - 1, s.x | 0));
+  s.y = Math.max(0, Math.min(boardH() - 1, s.y | 0));
+  s.w = Math.max(1, Math.min(boardW() - s.x, s.w | 0));
+  s.h = Math.max(1, Math.min(boardH() - s.y, s.h | 0));
+}
+
+const board = $("board");
+const bctx = board.getContext("2d");
+let cell = 6;
+
+function drawLedGrid(ctx, rows, size, offX = 0, offY = 0) {
+  const on = css("--led-on"), off = css("--led-off");
+  const r = Math.max(1, size * 0.36);
+  for (let y = 0; y < rows.length; y++) {
+    for (let x = 0; x < rows[y].length; x++) {
+      ctx.fillStyle = rows[y][x] === "1" ? on : off;
+      ctx.beginPath();
+      ctx.arc(offX + x * size + size / 2, offY + y * size + size / 2, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function sizeCanvas(canvas, w, h) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  canvas.style.width = w + "px";
+  canvas.style.height = h + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return ctx;
+}
+
+function renderBoard() {
+  sizeCanvas(board, boardW() * cell, boardH() * cell);
+  bctx.fillStyle = css("--panel");
+  bctx.fillRect(0, 0, boardW() * cell, boardH() * cell);
+  drawLedGrid(bctx, state.board, cell);
+
+  if ($("showGlyphBoxes").checked) {
+    bctx.strokeStyle = css("--glyph-box");
+    bctx.globalAlpha = 0.55;
+    bctx.lineWidth = 1;
+    for (const g of Object.values(currentFont()?.glyphs ?? {})) {
+      if (!g.src) continue;
+      bctx.strokeRect(g.src.x * cell + 0.5, g.src.y * cell + 0.5, g.src.w * cell - 1, g.src.h * cell - 1);
+    }
+    bctx.globalAlpha = 1;
+  }
+
+  const s = state.sel;
+  bctx.strokeStyle = css("--sel");
+  bctx.lineWidth = 2;
+  bctx.strokeRect(s.x * cell + 1, s.y * cell + 1, s.w * cell - 2, s.h * cell - 2);
+  $("boardSize").textContent = `${boardW()} × ${boardH()} LEDs`;
+}
+
+function cellAt(ev) {
+  const rect = board.getBoundingClientRect();
+  return {
+    x: Math.max(0, Math.min(boardW() - 1, Math.floor((ev.clientX - rect.left) / cell))),
+    y: Math.max(0, Math.min(boardH() - 1, Math.floor((ev.clientY - rect.top) / cell))),
+  };
+}
+
+let dragFrom = null;
+board.addEventListener("pointerdown", (ev) => {
+  dragFrom = cellAt(ev);
+  board.setPointerCapture(ev.pointerId);
+  state.sel = { x: dragFrom.x, y: dragFrom.y, w: 1, h: 1 };
+  selectionChanged();
+});
+board.addEventListener("pointermove", (ev) => {
+  const c = cellAt(ev);
+  $("hover").textContent = `column ${c.x}, row ${c.y}`;
+  if (!dragFrom) return;
+  state.sel = {
+    x: Math.min(dragFrom.x, c.x), y: Math.min(dragFrom.y, c.y),
+    w: Math.abs(c.x - dragFrom.x) + 1, h: Math.abs(c.y - dragFrom.y) + 1,
+  };
+  selectionChanged();
+});
+board.addEventListener("pointerup", () => { dragFrom = null; save(); });
+board.addEventListener("pointerleave", () => { if (!dragFrom) $("hover").textContent = "—"; });
+
+$("zoom").addEventListener("input", (e) => { cell = +e.target.value; renderBoard(); });
+$("showGlyphBoxes").addEventListener("change", renderBoard);
+
+function extract(x, y, w, h) {
+  const rows = [];
+  for (let r = y; r < y + h; r++) rows.push(state.board[r].slice(x, x + w));
+  return rows;
+}
+
+function trimRows(rows) {
+  let top = 0, bot = rows.length - 1;
+  while (top < bot && !rows[top].includes("1")) top++;
+  while (bot > top && !rows[bot].includes("1")) bot--;
+  return { rows: rows.slice(top, bot + 1), top };
+}
+
+function segments() {
+  const s = state.sel;
+  if (!$("splitMode").checked) return [{ x: s.x, w: s.w }];
+  const segs = [];
+  let start = null;
+  for (let c = s.x; c <= s.x + s.w; c++) {
+    let any = false;
+    if (c < s.x + s.w) for (let r = s.y; r < s.y + s.h; r++) if (lit(c, r)) { any = true; break; }
+    if (any && start === null) start = c;
+    if (!any && start !== null) { segs.push({ x: start, w: c - start }); start = null; }
+  }
+  return segs;
+}
+
+function pendingGlyphs() {
+  const s = state.sel;
+  const chars = [...state.label.replace(/\s+/g, "")];
+  return segments().map((seg, i) => {
+    let rows = extract(seg.x, s.y, seg.w, s.h);
+    let src = { x: seg.x, y: s.y, w: seg.w, h: s.h };
+    if ($("trimRows").checked) {
+      const t = trimRows(rows);
+      rows = t.rows;
+      src = { ...src, y: s.y + t.top, h: rows.length };
+    }
+    return { ch: chars[i], rows, src };
+  }).concat(chars.slice(segments().length).map((ch) => ({ ch, rows: null })));
+}
+
+function renderMini(rows, size) {
+  const c = document.createElement("canvas");
+  const w = Math.max(1, rows[0]?.length ?? 1), h = Math.max(1, rows.length);
+  const ctx = sizeCanvas(c, w * size, h * size);
+  drawLedGrid(ctx, rows, size);
+  return c;
+}
+
+function renderPreview() {
+  const list = pendingGlyphs();
+  const host = $("preview");
+  host.replaceChildren();
+  const size = Math.max(3, Math.min(7, Math.floor(56 / Math.max(1, state.sel.h))));
+  for (const g of list) {
+    const fig = document.createElement("figure");
+    if (g.rows) fig.append(renderMini(g.rows, size));
+    const cap = document.createElement("figcaption");
+    cap.textContent = g.ch ?? "?";
+    if (!g.ch || !g.rows) cap.classList.add("missing");
+    fig.append(cap);
+    host.append(fig);
+  }
+  if (!list.length) {
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.style.color = "#9aa7a0";
+    p.textContent = "The selection has no lit LEDs.";
+    host.append(p);
+  }
+
+  const segCount = list.filter((g) => g.rows).length;
+  const charCount = list.filter((g) => g.ch).length;
+  const status = $("capStatus");
+  const add = $("addBtn");
+  if (!segCount) {
+    status.textContent = "Select an area that contains lit LEDs.";
+    status.className = "status warn";
+    add.disabled = true;
+  } else if (segCount !== charCount) {
+    status.textContent = `Found ${segCount} glyph${segCount === 1 ? "" : "s"} but ${charCount} character${charCount === 1 ? "" : "s"}. Edit the text or the selection until they match.`;
+    status.className = "status warn";
+    add.disabled = true;
+  } else {
+    const font = currentTargetFont();
+    const replaced = list.filter((g) => font.glyphs[g.ch] && font.glyphs[g.ch].rows.join() !== g.rows.join()).length;
+    status.textContent = `Ready to add ${segCount} glyph${segCount === 1 ? "" : "s"}` + (replaced ? `. ${replaced} will replace a different existing bitmap.` : ".");
+    status.className = replaced ? "status warn" : "status ok";
+    add.disabled = false;
+  }
+  add.textContent = segCount > 1 ? `Add ${segCount} glyphs` : "Add glyph";
+}
+
+function syncSelInputs() {
+  const s = state.sel;
+  $("selX").value = s.x; $("selY").value = s.y; $("selW").value = s.w; $("selH").value = s.h;
+}
+
+function selectionChanged() {
+  clampSel();
+  syncSelInputs();
+  renderBoard();
+  renderPreview();
+}
+
+for (const [id, key] of [["selX", "x"], ["selY", "y"], ["selW", "w"], ["selH", "h"]]) {
+  $(id).addEventListener("input", (e) => {
+    const v = parseInt(e.target.value, 10);
+    if (Number.isNaN(v)) return;
+    state.sel[key] = v;
+    clampSel();
+    renderBoard();
+    renderPreview();
+    save();
+  });
+  $(id).addEventListener("change", syncSelInputs);
+}
+
+$("label").addEventListener("input", (e) => { state.label = e.target.value; renderPreview(); save(); });
+$("splitMode").addEventListener("change", () => {
+  $("splitHint").textContent = $("splitMode").checked
+    ? "Spaces in the text are ignored, so you can type the text as it appears on the board."
+    : "The whole selection becomes one glyph. Use this for characters that contain an empty column, such as a double quote.";
+  renderPreview();
+});
+$("trimRows").addEventListener("change", renderPreview);
+$("targetFont").addEventListener("change", renderPreview);
+
+const currentTargetFont = () => state.fonts[+$("targetFont").value] ?? currentFont();
+
+$("addBtn").addEventListener("click", () => {
+  const list = pendingGlyphs();
+  const fontIdx = +$("targetFont").value;
+  const font = state.fonts[fontIdx];
+  let added = 0, replaced = 0, same = 0;
+  for (const g of list) {
+    const prev = font.glyphs[g.ch];
+    if (prev && prev.rows.join() === g.rows.join()) { same++; prev.src = g.src; continue; }
+    if (prev) replaced++; else added++;
+    font.glyphs[g.ch] = { rows: g.rows, src: g.src };
+  }
+  state.fontIndex = fontIdx;
+  const parts = [];
+  if (added) parts.push(`added ${added}`);
+  if (replaced) parts.push(`replaced ${replaced}`);
+  if (same) parts.push(`${same} already matched`);
+  toast(`${font.name}: ${parts.join(", ")}.`);
+  state.label = "";
+  $("label").value = "";
+  save();
+  renderAll();
+  $("label").focus();
+});
+
+function renderFontSelects() {
+  for (const sel of [$("fontSelect"), $("targetFont")]) {
+    sel.replaceChildren(...state.fonts.map((f, i) => new Option(`${f.name} (${Object.keys(f.glyphs).length})`, i)));
+    sel.value = state.fontIndex;
+  }
+  $("fontName").value = currentFont().name;
+  $("delFontBtn").disabled = state.fonts.length < 2;
+}
+
+function sortedChars(glyphs) {
+  return Object.keys(glyphs).sort((a, b) => a.codePointAt(0) - b.codePointAt(0));
+}
+
+function renderGlyphs() {
+  const font = currentFont();
+  const grid = $("glyphGrid");
+  grid.replaceChildren();
+  const chars = sortedChars(font.glyphs);
+  const heights = new Set(chars.map((c) => font.glyphs[c].rows.length));
+  $("fontSummary").textContent = chars.length
+    ? `${chars.length} glyph${chars.length === 1 ? "" : "s"}. Height: ${[...heights].sort((a, b) => a - b).join(", ")} rows.` +
+      (heights.size > 1 ? " Glyphs have different heights, so check that each was captured with the same line height." : "")
+    : "";
+  if (!chars.length) {
+    const p = document.createElement("p");
+    p.className = "empty";
+    p.textContent = "This font has no glyphs. Select a line of text on the board and add it, or draw one below.";
+    grid.append(p);
+    renderMissing();
+    return;
+  }
+  for (const ch of chars) {
+    const g = font.glyphs[ch];
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "glyph";
+    b.title = `Edit ${ch}`;
+    const chEl = document.createElement("span");
+    chEl.className = "ch";
+    chEl.textContent = ch;
+    const dim = document.createElement("span");
+    dim.className = "dim";
+    dim.textContent = `${g.rows[0]?.length ?? 0}×${g.rows.length}`;
+    b.append(renderMini(g.rows, Math.max(2, Math.min(5, Math.floor(60 / g.rows.length)))), chEl, dim);
+    b.addEventListener("click", () => openEditor(ch));
+    grid.append(b);
+  }
+  renderMissing();
+}
+
+const PRINTABLE = Array.from({ length: 94 }, (_, i) => String.fromCharCode(33 + i));
+
+function renderMissing() {
+  const font = currentFont();
+  const host = $("missingChips");
+  host.replaceChildren();
+  const missing = PRINTABLE.filter((ch) => !font.glyphs[ch]);
+  if (!missing.length) {
+    const p = document.createElement("p");
+    p.className = "empty";
+    p.textContent = "This font has every printable ASCII character.";
+    host.append(p);
+    return;
+  }
+  for (const ch of missing) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = ch;
+    b.title = `Draw ${ch}`;
+    b.addEventListener("click", () => openNewGlyph(ch));
+    host.append(b);
+  }
+}
+
+$("newGlyphBtn").addEventListener("click", () => openNewGlyph(""));
+
+$("fontSelect").addEventListener("change", (e) => {
+  state.fontIndex = +e.target.value;
+  save();
+  renderAll();
+});
+$("fontName").addEventListener("change", (e) => {
+  const name = e.target.value.trim();
+  if (!name) { e.target.value = currentFont().name; return; }
+  currentFont().name = name;
+  save();
+  renderFontSelects();
+  renderExport();
+});
+$("newFontBtn").addEventListener("click", () => {
+  let n = state.fonts.length + 1;
+  while (state.fonts.some((f) => f.name === `Font ${n}`)) n++;
+  state.fonts.push({ name: `Font ${n}`, glyphs: {} });
+  state.fontIndex = state.fonts.length - 1;
+  save();
+  renderAll();
+  $("fontName").focus();
+  $("fontName").select();
+});
+
+let deleteArmed = null;
+$("delFontBtn").addEventListener("click", (e) => {
+  const btn = e.currentTarget;
+  if (deleteArmed !== state.fontIndex) {
+    deleteArmed = state.fontIndex;
+    btn.textContent = `Confirm delete of ${currentFont().name}`;
+    setTimeout(() => { deleteArmed = null; btn.textContent = "Delete font"; }, 4000);
+    return;
+  }
+  const name = currentFont().name;
+  state.fonts.splice(state.fontIndex, 1);
+  state.fontIndex = Math.max(0, state.fontIndex - 1);
+  deleteArmed = null;
+  btn.textContent = "Delete font";
+  save();
+  renderAll();
+  toast(`Deleted ${name}.`);
+});
+
+const editor = $("editor");
+const ecv = $("editorCanvas");
+let edit = null;
+const ECELL = 26;
+
+const toCells = (rows) => rows.map((r) => r.split(""));
+const blankCells = (w, h) => Array.from({ length: h }, () => Array(w).fill("0"));
+
+function mostCommon(values, fallback) {
+  if (!values.length) return fallback;
+  const counts = new Map();
+  for (const v of values) counts.set(v, (counts.get(v) ?? 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
+}
+
+// Glyphs captured from a board share the line height, so new ones default to it to stay on the same baseline.
+function fontDefaults(font) {
+  const gs = Object.values(font.glyphs);
+  return {
+    h: mostCommon(gs.map((g) => g.rows.length), 9),
+    w: mostCommon(gs.map((g) => g.rows[0]?.length ?? 0), 4),
+  };
+}
+
+function glyphOptions(sel, first) {
+  sel.replaceChildren(new Option(first, ""));
+  state.fonts.forEach((f, fi) => {
+    const group = document.createElement("optgroup");
+    group.label = f.name;
+    for (const ch of sortedChars(f.glyphs)) group.append(new Option(`${ch}  (${f.glyphs[ch].rows[0]?.length ?? 0}×${f.glyphs[ch].rows.length})`, `${fi}\u0000${ch}`));
+    if (group.children.length) sel.append(group);
+  });
+}
+
+function glyphFromOption(value) {
+  if (!value) return null;
+  const [fi, ch] = value.split("\u0000");
+  return state.fonts[+fi]?.glyphs[ch] ?? null;
+}
+
+function showEditor() {
+  $("editStatus").textContent = "";
+  $("editDelete").textContent = "Delete glyph";
+  glyphOptions($("editStart"), edit.original === null ? "Blank" : "Current glyph");
+  glyphOptions($("editRef"), "None");
+  $("editRef").value = edit.ref ?? "";
+  renderEditor();
+  editor.showModal();
+}
+
+function openEditor(ch) {
+  const g = currentFont().glyphs[ch];
+  edit = { original: ch, rows: toCells(g.rows), src: g.src, initial: toCells(g.rows), ref: null };
+  $("editorTitle").textContent = "Edit glyph";
+  $("editDelete").hidden = false;
+  $("editChar").value = ch;
+  showEditor();
+}
+
+function openNewGlyph(ch) {
+  const { w, h } = fontDefaults(currentFont());
+  const neighbour = sortedChars(currentFont().glyphs).find((c) => c.codePointAt(0) > (ch || "a").codePointAt(0)) ?? sortedChars(currentFont().glyphs)[0];
+  edit = { original: null, rows: blankCells(w, h), src: null, initial: blankCells(w, h), ref: neighbour ? `${state.fontIndex}\u0000${neighbour}` : null };
+  $("editorTitle").textContent = "New glyph";
+  $("editDelete").hidden = true;
+  $("editChar").value = ch;
+  showEditor();
+  (ch ? ecv : $("editChar")).focus();
+}
+
+function renderEditor() {
+  const h = edit.rows.length, w = edit.rows[0]?.length ?? 0;
+  const ref = glyphFromOption($("editRef").value);
+  const cw = Math.max(w, ref?.rows[0]?.length ?? 0, 1), chh = Math.max(h, ref?.rows.length ?? 0, 1);
+  const ctx = sizeCanvas(ecv, cw * ECELL, chh * ECELL);
+  ctx.fillStyle = css("--panel");
+  ctx.fillRect(0, 0, cw * ECELL, chh * ECELL);
+  drawLedGrid(ctx, edit.rows.map((r) => r.join("")), ECELL);
+  if (ref) {
+    ctx.strokeStyle = css("--glyph-box");
+    ctx.lineWidth = 2;
+    ref.rows.forEach((row, y) => [...row].forEach((v, x) => {
+      if (v !== "1") return;
+      ctx.beginPath();
+      ctx.arc(x * ECELL + ECELL / 2, y * ECELL + ECELL / 2, ECELL * 0.44, 0, Math.PI * 2);
+      ctx.stroke();
+    }));
+  }
+  if (cw > w || chh > h) {
+    ctx.fillStyle = "rgb(0 0 0 / 0.45)";
+    ctx.fillRect(w * ECELL, 0, (cw - w) * ECELL, chh * ECELL);
+    ctx.fillRect(0, h * ECELL, w * ECELL, (chh - h) * ECELL);
+  }
+  $("editDims").textContent = `${w} columns × ${h} rows.`;
+  $("editW").value = w;
+  $("editH").value = h;
+}
+
+function resizeEdit(w, h) {
+  w = Math.max(1, Math.min(64, w | 0));
+  h = Math.max(1, Math.min(64, h | 0));
+  edit.rows = Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => edit.rows[y]?.[x] ?? "0"));
+  renderEditor();
+}
+
+$("editW").addEventListener("change", (e) => resizeEdit(+e.target.value, edit.rows.length));
+$("editH").addEventListener("change", (e) => resizeEdit(edit.rows[0]?.length ?? 1, +e.target.value));
+$("editRef").addEventListener("change", (e) => { edit.ref = e.target.value || null; renderEditor(); });
+$("editStart").addEventListener("change", (e) => {
+  const g = glyphFromOption(e.target.value);
+  edit.rows = g ? toCells(g.rows) : edit.initial.map((r) => [...r]);
+  renderEditor();
+});
+
+let paintValue = null;
+function editorCell(ev) {
+  const r = ecv.getBoundingClientRect();
+  return { x: Math.floor((ev.clientX - r.left) / ECELL), y: Math.floor((ev.clientY - r.top) / ECELL) };
+}
+function paint(ev) {
+  const { x, y } = editorCell(ev);
+  if (!edit.rows[y] || edit.rows[y][x] === undefined) return;
+  if (paintValue === null) paintValue = edit.rows[y][x] === "1" ? "0" : "1";
+  if (edit.rows[y][x] !== paintValue) { edit.rows[y][x] = paintValue; renderEditor(); }
+}
+ecv.addEventListener("pointerdown", (ev) => { ecv.setPointerCapture(ev.pointerId); paintValue = null; paint(ev); });
+ecv.addEventListener("pointermove", (ev) => { if (ev.buttons) paint(ev); });
+ecv.addEventListener("pointerup", () => { paintValue = null; });
+
+document.querySelectorAll(".edit-tools button").forEach((b) => b.addEventListener("click", () => {
+  const rows = edit.rows, w = rows[0]?.length ?? 0;
+  const blank = () => Array(w).fill("0");
+  switch (b.dataset.op) {
+    case "addL": rows.forEach((r) => r.unshift("0")); break;
+    case "addR": rows.forEach((r) => r.push("0")); break;
+    case "delL": if (w > 1) rows.forEach((r) => r.shift()); break;
+    case "delR": if (w > 1) rows.forEach((r) => r.pop()); break;
+    case "addT": rows.unshift(blank()); break;
+    case "addB": rows.push(blank()); break;
+    case "delT": if (rows.length > 1) rows.shift(); break;
+    case "delB": if (rows.length > 1) rows.pop(); break;
+    case "flipH": rows.forEach((r) => r.reverse()); break;
+    case "flipV": rows.reverse(); break;
+    case "moveL": rows.forEach((r) => { r.shift(); r.push("0"); }); break;
+    case "moveR": rows.forEach((r) => { r.pop(); r.unshift("0"); }); break;
+    case "moveU": rows.shift(); rows.push(blank()); break;
+    case "moveD": rows.pop(); rows.unshift(blank()); break;
+    case "clear": rows.forEach((r) => r.fill("0")); break;
+    case "invert": rows.forEach((r) => r.forEach((v, i) => { r[i] = v === "1" ? "0" : "1"; })); break;
+  }
+  renderEditor();
+}));
+
+$("editCancel").addEventListener("click", () => editor.close());
+$("editSave").addEventListener("click", () => {
+  const ch = $("editChar").value;
+  if ([...ch].length !== 1) {
+    $("editStatus").textContent = "Enter exactly one character.";
+    return;
+  }
+  const font = currentFont();
+  if (ch !== edit.original && font.glyphs[ch]) {
+    $("editStatus").textContent = `${font.name} already has a glyph for ${ch}. Edit that glyph instead, or choose another character.`;
+    return;
+  }
+  if (edit.original !== null) delete font.glyphs[edit.original];
+  font.glyphs[ch] = { rows: edit.rows.map((r) => r.join("")), src: edit.src };
+  editor.close();
+  save();
+  renderAll();
+  toast(`Saved ${ch}.`);
+});
+$("editDelete").addEventListener("click", (e) => {
+  if (e.currentTarget.textContent !== "Confirm delete") {
+    e.currentTarget.textContent = "Confirm delete";
+    return;
+  }
+  delete currentFont().glyphs[edit.original];
+  editor.close();
+  save();
+  renderAll();
+  toast(`Deleted ${edit.original}.`);
+});
+
+let format = "json";
+
+function exportFonts() {
+  return $("exportAll").checked ? state.fonts : [currentFont()];
+}
+
+function toJSON(fonts) {
+  const out = {
+    fonts: fonts.map((f) => ({
+      name: f.name,
+      glyphs: Object.fromEntries(sortedChars(f.glyphs).map((ch) => {
+        const g = f.glyphs[ch];
+        return [ch, { width: g.rows[0]?.length ?? 0, height: g.rows.length, rows: g.rows }];
+      })),
+    })),
+  };
+  return JSON.stringify(out, null, 2);
+}
+
+function cIdent(name) {
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+  return /^[0-9]/.test(id) ? `font_${id}` : id || "font";
+}
+
+function cChar(ch) {
+  const cp = ch.codePointAt(0);
+  if (ch === "'" || ch === "\\") return `'\\${ch}'`;
+  if (cp >= 32 && cp < 127) return `'${ch}'`;
+  return `0x${cp.toString(16).toUpperCase()}`;
+}
+
+function toC(fonts) {
+  const maxW = Math.max(1, ...fonts.flatMap((f) => Object.values(f.glyphs).map((g) => g.rows[0]?.length ?? 0)));
+  const maxH = Math.max(1, ...fonts.flatMap((f) => Object.values(f.glyphs).map((g) => g.rows.length)));
+  const type = maxW <= 8 ? "uint8_t" : maxW <= 16 ? "uint16_t" : "uint32_t";
+  const lines = [
+    "#pragma once",
+    "#include <stdint.h>",
+    "",
+    "// Each row is left-aligned: bit (width - 1) is the leftmost LED.",
+    "typedef struct {",
+    "  uint32_t codepoint;",
+    "  uint8_t width;",
+    "  uint8_t height;",
+    `  ${type} rows[${maxH}];`,
+    "} dm_glyph_t;",
+  ];
+  for (const f of fonts) {
+    const id = cIdent(f.name);
+    const chars = sortedChars(f.glyphs);
+    lines.push("", `// ${f.name}`, `static const dm_glyph_t ${id}_glyphs[${chars.length}] = {`);
+    for (const ch of chars) {
+      const g = f.glyphs[ch];
+      const w = g.rows[0]?.length ?? 0;
+      const vals = g.rows.map((r) => "0b" + r.padStart(w, "0"));
+      lines.push(`  { ${cChar(ch)}, ${w}, ${g.rows.length}, { ${vals.join(", ")} } },`);
+    }
+    lines.push("};", `#define ${id.toUpperCase()}_GLYPH_COUNT ${chars.length}`);
+  }
+  return lines.join("\n") + "\n";
+}
+
+function toText(fonts) {
+  const out = [];
+  for (const f of fonts) {
+    out.push(`# ${f.name}`, "");
+    for (const ch of sortedChars(f.glyphs)) {
+      const g = f.glyphs[ch];
+      out.push(`${ch}  ${g.rows[0]?.length ?? 0}x${g.rows.length}`, ...g.rows, "");
+    }
+  }
+  return out.join("\n");
+}
+
+function renderExport() {
+  const fonts = exportFonts();
+  $("exportText").value = format === "json" ? toJSON(fonts) : format === "c" ? toC(fonts) : toText(fonts);
+}
+
+$("formatTabs").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-format]");
+  if (!b) return;
+  format = b.dataset.format;
+  $("formatTabs").querySelectorAll("button").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
+  renderExport();
+});
+$("exportAll").addEventListener("change", renderExport);
+
+$("copyBtn").addEventListener("click", async () => {
+  const ta = $("exportText");
+  try {
+    await navigator.clipboard.writeText(ta.value);
+    toast("Copied.");
+  } catch {
+    ta.focus();
+    ta.select();
+    toast("Copy failed. The text is selected so you can copy it yourself.");
+  }
+});
+
+$("downloadBtn").addEventListener("click", () => {
+  const ext = { json: "json", c: "h", text: "txt" }[format];
+  const fonts = exportFonts();
+  const base = fonts.length === 1 ? cIdent(fonts[0].name) : "dotmatrix_fonts";
+  const blob = new Blob([$("exportText").value], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${base}.${ext}`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
+$("importBtn").addEventListener("click", () => $("importFile").click());
+$("importFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    if (!Array.isArray(data.fonts)) throw new Error("no fonts array");
+    let count = 0;
+    for (const f of data.fonts) {
+      if (!f || typeof f.name !== "string" || typeof f.glyphs !== "object") continue;
+      let target = state.fonts.find((x) => x.name === f.name);
+      if (!target) { target = { name: f.name, glyphs: {} }; state.fonts.push(target); }
+      for (const [ch, g] of Object.entries(f.glyphs)) {
+        if (!Array.isArray(g.rows) || g.rows.some((r) => typeof r !== "string" || /[^01]/.test(r))) continue;
+        target.glyphs[ch] = { rows: g.rows, src: g.src };
+        count++;
+      }
+    }
+    save();
+    renderAll();
+    toast(`Imported ${count} glyph${count === 1 ? "" : "s"}.`);
+  } catch (err) {
+    toast(`${file.name} isn't a font file from this tool. Export JSON from here, then import that file.`);
+  }
+});
+
+function setBoard(rows, message) {
+  state.board = rows;
+  clampSel();
+  $("sourceText").value = rows.join("\n");
+  $("sourceStatus").textContent = message;
+  $("sourceStatus").className = "status ok";
+  save();
+  renderAll();
+}
+
+$("loadSourceBtn").addEventListener("click", () => {
+  try {
+    const rows = parseBitmap($("sourceText").value);
+    setBoard(rows, `Loaded a ${rows[0].length} × ${rows.length} board.`);
+  } catch (err) {
+    $("sourceStatus").textContent = err.message;
+    $("sourceStatus").className = "status warn";
+  }
+});
+$("openFileBtn").addEventListener("click", () => $("sourceFile").click());
+$("sourceFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  $("sourceText").value = await file.text();
+  $("loadSourceBtn").click();
+});
+$("resetSourceBtn").addEventListener("click", () => {
+  const rows = parseBitmap(SAMPLE_BOARD);
+  setBoard(rows, `Restored the sample ${rows[0].length} × ${rows.length} board.`);
+});
+
+let toastTimer;
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+function renderAll() {
+  renderFontSelects();
+  renderBoard();
+  renderPreview();
+  renderGlyphs();
+  renderExport();
+}
+
+state.board = parseBitmap(SAMPLE_BOARD);
+load();
+clampSel();
+syncSelInputs();
+$("label").value = state.label;
+$("sourceText").value = state.board.join("\n");
+cell = +$("zoom").value;
+renderAll();
+
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
+if (document.fonts?.ready) document.fonts.ready.then(renderAll);
+</script>
+</body>
+</html>
