@@ -14,7 +14,6 @@ hands each frame to the panel in a single call.
 | `cmd/board` | The app: connects to the feed and drives the panel. |
 | `cmd/preview` | Renders fixture boards to PNG contact sheets on a desktop. |
 | `cmd/livedump` | Prints the live feed for a station as a table. |
-| `cmd/fontgen` | Regenerates the dot fonts in `internal/font` from their WOFF files. |
 | `cmd/panel-test` | Draws a moving test pattern to check the panel wiring. |
 | `cmd/wasm` | The boards for a web page, as a WebAssembly module with a small JavaScript API. |
 | `cmd/webbundle` | Compresses the WebAssembly module with Zopfli and writes the bundle a website serves. |
@@ -229,7 +228,6 @@ On GitHub, the board screenshots workflow rewrites them and commits any change t
 go install github.com/aperturerobotics/protobuf-go-lite/cmd/protoc-gen-go-lite@v0.19.0
 ```
 
-The dot fonts are generated into `internal/font/data_gen.go`, which is checked in, so you only need the source
-fonts to change them. To regenerate them with `go generate ./internal/font`, put
-`DataDisplayDaktronicsDMIfont.woff`, `DataDisplayDaktronicsDMIClockfont.woff`, `ModernNationalRailPISTall.woff`,
-and `subset-Dot_Matrix_Bold_Tall.woff` in `assets/fonts`. The repository doesn't include them.
+The dot fonts are embedded in `internal/font`. Run `go generate ./internal/font` to regenerate the
+platform, compact service, formation and clock faces from `../tools/font.json` (requires Python 3 and Go).
+The remaining glyph bitmaps are maintained directly in `internal/font/data_gen.go`.
