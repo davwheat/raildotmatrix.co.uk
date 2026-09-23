@@ -149,9 +149,14 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 	for x := g.infoX; x < g.w; x++ {
 		f.Set(x, g.sepY, b.dim)
 	}
+	lowerGeo := g
+	if g.boxW > 0 && b.cfg.AlignPlatformRows != nil && !*b.cfg.AlignPlatformRows {
+		legacy := newGeometry(g.w, g.h, b.cfg.RowPrefix)
+		lowerGeo = &legacy
+	}
 	for i := range s.lower {
 		if s.lower[i].on {
-			b.drawRow(f, &s.lower[i], g, g.secondY, g.secondBand(), colour)
+			b.drawRow(f, &s.lower[i], lowerGeo, g.secondY, g.secondBand(), colour)
 		}
 	}
 }

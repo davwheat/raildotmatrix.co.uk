@@ -107,6 +107,11 @@ general wording.
 number. It takes effect only when `platforms` contains exactly one platform. The website offers the same
 option in the Infotec display settings. The lower train row uses the selected `row_prefix`.
 
+`align_platform_rows` (default `true`) aligns the lower row's time and destination with the first service and
+centres its prefix beneath the platform box. Turn it off to keep the lower row's original columns and
+left-aligned prefix. It only affects Infotec displays with an active platform box. The website settings
+and Pi management UI expose the same toggle; the CLI flag is `-align-platform-rows=false`.
+
 Infotec boards also draw a train formation below the service information whenever the websocket supplies a
 positive coach count. Each outlined carriage represents one coach; an unknown count leaves the diagram out.
 

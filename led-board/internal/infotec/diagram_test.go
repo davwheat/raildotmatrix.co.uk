@@ -203,6 +203,38 @@ func TestPlatformBoxServiceColumnsAlign(t *testing.T) {
 	}
 }
 
+func TestPlatformBoxAlignmentCanBeDisabled(t *testing.T) {
+	for _, size := range sizes {
+		for _, platform := range []string{"2", "10A"} {
+			align := false
+			b := New(Config{Width: size[0], Height: size[1], PlatformBox: platform, AlignPlatformRows: &align})
+			aligned := New(Config{Width: size[0], Height: size[1], PlatformBox: platform})
+			g := b.geo
+			for _, ordinal := range []string{"2nd", "3rd"} {
+				r := rowScene{on: true, prefix: ordinal, std: "1234", dest: "London Victoria", etd: "On time", etdLevel: fadeLevels}
+				s := scene{first: r, lower: [2]rowScene{r}}
+				got, want := frame.New(g.w, g.h), frame.New(g.w, g.h)
+				b.renderTrains(got, &s, board.White)
+				aligned.renderTrains(want, &s, board.White)
+				legacy := newGeometry(g.w, g.h, b.cfg.RowPrefix)
+				for y := g.secondY; y < g.secondY+font.PISTall.Height; y++ {
+					for x := range g.w {
+						want.Set(x, y, frame.Black)
+					}
+				}
+				b.drawRow(want, &r, &legacy, g.secondY, g.secondBand(), board.White)
+				for y := range g.h {
+					for x := range g.w {
+						if got.At(x, y) != want.At(x, y) {
+							t.Fatalf("platform %s %s: disabling alignment must restore only the lower row; differs at (%d,%d)", platform, ordinal, x, y)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 func TestPlatformBoxSurvivesScrollingAndDeparture(t *testing.T) {
 	for _, size := range sizes {
 		b := New(Config{Width: size[0], Height: size[1], PlatformBox: "2"})

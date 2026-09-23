@@ -32,6 +32,8 @@ warning_platform = false
 
 # Infotec only: replace the first row prefix with a platform box when exactly one platform is requested.
 platform_box = false
+# Align lower service columns and centre their prefix beneath the platform box.
+align_platform_rows = true
 
 # Historic operator names, such as "London Midland".
 legacy_toc_names = false

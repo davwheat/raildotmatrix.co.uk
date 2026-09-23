@@ -26,6 +26,8 @@ type Config struct {
 	RowPrefix board.RowPrefix
 	// PlatformBox is the single requested platform to show in a box beside the first train, or empty.
 	PlatformBox string
+	// AlignPlatformRows aligns lower service columns with the platform box; nil defaults to true.
+	AlignPlatformRows *bool
 	// WarningPlatform names the platform in a warning, in place of "this station", when the warning is for one
 	// platform.
 	WarningPlatform bool

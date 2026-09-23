@@ -11,4 +11,5 @@ use the same thirteen-row Infotec numeral font, with rounded bowls and two-dot v
 information. Known websocket coach counts produce a train formation with a filled cab stepping sideways once every two rows and rounded corners
 only at the rear end. The cab extends ahead of the first coach, leaving every hollow coach body the same width.
 
-With a platform box, every service shares the same time and destination columns. The lower row's prefix is centred beneath the box.
+With a platform box, "Align lower service row with platform box" defaults to on: every service shares the same time and destination columns, and
+the lower prefix is centred beneath the box. Turn it off to restore the lower row's original columns and left-aligned prefix.

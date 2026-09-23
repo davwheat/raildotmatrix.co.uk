@@ -44,6 +44,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
     hideSettings: !!hideSettings,
     color,
     platformBox: false,
+    alignPlatformRows: true,
     ...defaultPlatformSettings,
   })
   const { baseUrl } = useDataSource()
@@ -135,6 +136,12 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
           label="Show a platform box (single platform only)"
           onChange={e => setSettings(s => ({ ...s, platformBox: e.currentTarget.checked }))}
         />
+        <br />
+        <ToggleSwitch
+          checked={settings.alignPlatformRows !== false}
+          label="Align lower service row with platform box"
+          onChange={e => setSettings(s => ({ ...s, alignPlatformRows: e.currentTarget.checked }))}
+        />
         {(platforms?.length ?? 0) > 0 && <p>Showing only platform(s) {platforms!.join(', ')}</p>}
       </div>
       <ZoomDiv>
@@ -160,6 +167,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
             rowPrefix={getRowPrefix(settings)}
             warningPlatform={!!settings.warningPlatform}
             platformBox={!!settings.platformBox}
+            alignPlatformRows={settings.alignPlatformRows !== false}
           />
         </div>
       </ZoomDiv>

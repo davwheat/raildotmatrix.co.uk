@@ -13,6 +13,7 @@
 //	  worldline: false,                 // Daktronics only
 //	  rowPrefix: 'ordinals',            // or 'platforms' ("Pl 1")
 //	  warningPlatform: false,           // name the platform in warnings, in place of "this station"
+//	  alignPlatformRows: true,          // align lower rows beneath the Infotec platform box
 //	  platformBox: false,               // Infotec only; requires exactly one requested platform
 //	  colour: 'amber',                  // or 'white'
 //	  scrollSpeed: 0,                   // dots per second; 0 for the board's default
@@ -99,10 +100,14 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 	for i := range platforms {
 		platforms[i] = strings.ToUpper(platforms[i])
 	}
+	alignPlatformRows := true
+	if value, ok := o.get("alignPlatformRows", js.TypeBoolean); ok {
+		alignPlatformRows = value.Bool()
+	}
 	b, err := formats.New(o.string("board", "daktronics"), formats.Config{
 		Width: w, Height: h, Zone: zone, Colour: colour, Worldline: o.bool("worldline"), ScrollSpeed: o.int("scrollSpeed", 0),
 		RowPrefix: rowPrefix, WarningPlatform: o.bool("warningPlatform"),
-		PlatformBox: o.bool("platformBox"), Platforms: platforms,
+		PlatformBox: o.bool("platformBox"), Platforms: platforms, AlignPlatformRows: &alignPlatformRows,
 	})
 	if err != nil {
 		return js.Value{}, err

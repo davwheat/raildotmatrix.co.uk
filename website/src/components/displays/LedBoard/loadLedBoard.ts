@@ -17,6 +17,8 @@ export interface LedBoardOptions {
   warningPlatform?: boolean
   /** Infotec only: show a platform box beside the first train when exactly one platform is requested. */
   platformBox?: boolean
+  /** Align lower service rows with the Infotec platform box; defaults to true. */
+  alignPlatformRows?: boolean
   colour?: 'amber' | 'white'
   scrollSpeed?: number
   width?: number

@@ -111,7 +111,7 @@ func main() {
 		Width: opts.Cols * opts.Chain, Height: opts.Rows * opts.Parallel,
 		Zone: zone, Colour: colour, Worldline: cfg.Worldline, ScrollSpeed: cfg.ScrollSpeed, RowPrefix: rowPrefix,
 		WarningPlatform: cfg.WarningPlatform,
-		PlatformBox:     cfg.PlatformBox, Platforms: cfg.Platforms,
+		PlatformBox:     cfg.PlatformBox, Platforms: cfg.Platforms, AlignPlatformRows: &cfg.AlignPlatformRows,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

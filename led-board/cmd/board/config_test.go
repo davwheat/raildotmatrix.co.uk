@@ -50,6 +50,9 @@ func TestDefaults(t *testing.T) {
 	if cfg.CRS != "" || len(cfg.Platforms) != 0 {
 		t.Errorf("crs %q, platforms %v; want none", cfg.CRS, cfg.Platforms)
 	}
+	if !cfg.AlignPlatformRows {
+		t.Error("platform row alignment must default to on")
+	}
 	if cfg.RowPrefix != "ordinals" {
 		t.Errorf("row prefix = %q; want ordinals by default", cfg.RowPrefix)
 	}
@@ -69,6 +72,7 @@ board = "infotec"
 platforms = ["1", "2"]
 row_prefix = "platforms"
 platform_box = true
+align_platform_rows = false
 scroll_speed = 40
 
 [led]
@@ -93,6 +97,9 @@ func TestFile(t *testing.T) {
 	}
 	if !slices.Equal(cfg.Platforms, []string{"1", "2"}) {
 		t.Errorf("platforms = %v", cfg.Platforms)
+	}
+	if cfg.AlignPlatformRows {
+		t.Error("explicitly disabled platform row alignment was ignored")
 	}
 	if !cfg.PlatformBox {
 		t.Error("platform_box option was not loaded")
@@ -121,7 +128,7 @@ func TestPrecedence(t *testing.T) {
 	t.Setenv("BOARD_PLATFORMS", "3,4")
 	t.Setenv("BOARD_WORLDLINE", "true")
 	t.Setenv("BOARD_ROW_PREFIX", "platforms")
-	fs := parse(t, "-crs", "ecr", "-platform", "5", "-platform", "6b", "-row-prefix", "ordinals", "-led-no-drop-privs")
+	fs := parse(t, "-crs", "ecr", "-platform", "5", "-platform", "6b", "-row-prefix", "ordinals", "-align-platform-rows=true", "-led-no-drop-privs")
 	v, err := configure(fs, writeConfig(t, testConfig))
 	if err != nil {
 		t.Fatal(err)
@@ -132,6 +139,9 @@ func TestPrecedence(t *testing.T) {
 	}
 	if cfg.CRS != "ECR" {
 		t.Errorf("crs = %q; the flag should beat env and file", cfg.CRS)
+	}
+	if !cfg.AlignPlatformRows {
+		t.Error("platform row alignment must default to on")
 	}
 	if cfg.RowPrefix != "ordinals" {
 		t.Errorf("row prefix = %q; the flag should beat env and file", cfg.RowPrefix)
@@ -208,7 +218,7 @@ func TestKeys(t *testing.T) {
 	want := strings.Fields(`board colour crs display fixture fps legacy_toc_names led.brightness led.chain led.cols
 		led.gpio_mapping led.limit_refresh led.multiplexing led.no_drop_privs led.no_hardware_pulse led.parallel
 		led.pwm_bits led.pwm_dither_bits led.pwm_lsb_nanoseconds led.rgb_sequence led.row_addr_type led.rows
-		led.scan_mode led.show_refresh led.slowdown_gpio platform_box row_prefix platforms png_dir scale scroll_speed
+		led.scan_mode led.show_refresh led.slowdown_gpio align_platform_rows platform_box row_prefix platforms png_dir scale scroll_speed
 		show_unconfirmed_platforms url verbose warning_platform worldline`)
 	slices.Sort(keys)
 	slices.Sort(want)
@@ -226,8 +236,8 @@ func TestSettingsCoverEveryKey(t *testing.T) {
 	if _, ok := settings(v)["led.limit_refresh"]; !ok {
 		t.Error("a key without a default must still be watched")
 	}
-	if got := len(v.AllKeys()); got != 36 {
-		t.Errorf("%d keys, want 36", got)
+	if got := len(v.AllKeys()); got != 37 {
+		t.Errorf("%d keys, want 37", got)
 	}
 }
 
