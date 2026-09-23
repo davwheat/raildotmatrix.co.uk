@@ -31,6 +31,7 @@ type scene struct {
 	first          rowScene
 	info           scrollScene
 	formation      int
+	coachContents  [128]coachContent
 	// lower holds services 2–6, which share one band and slide past each other when they swap.
 	lower [5]rowScene
 
@@ -68,6 +69,7 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 	}
 	s.first = b.rowScene(&b.content.rows[0], now)
 	s.formation = s.first.length
+	s.coachContents = formationContents(b.content.rows[0].coaches, now.Sub(b.steadyStart))
 	if len(b.content.pages) > 0 {
 		s.info = b.info.scene(now)
 	}
@@ -160,6 +162,7 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 	}
 	if s.formation > 0 {
 		drawFormation(f, g.infoX, g.formationY, g.w-g.infoX, g.formationH, s.formation, colour)
+		drawFormationContents(f, g.infoX, g.formationY, g.w-g.infoX, g.formationH, s.formation, s.coachContents, colour)
 	}
 	// The separator stays lit through the slide-out, so fading it in with the new rows would blink it off.
 	for x := g.infoX; x < g.w; x++ {
@@ -226,25 +229,5 @@ func (b *Board) drawLines(f *frame.Frame, lines [3]string, colour frame.RGB) {
 	g := &b.geo
 	for i, line := range lines {
 		board.DrawText(f, font.PISTall, (g.w-font.PISTall.Width(line))/2, g.lineY[i], line, colour, g.full)
-	}
-}
-
-// drawClock keeps HH:MM:SS still as its digits change, centring each numeral in a
-// fixed-width cell and the colon dots in narrower cells.
-func (b *Board) drawClock(f *frame.Frame, digits [8]byte) {
-	g := &b.geo
-	face := font.InfotecClock
-	if g.compact {
-		face = font.InfotecSmallClock
-	}
-	x := g.clockX
-	for _, d := range digits {
-		cell := g.clockCell
-		if d == ':' {
-			cell = g.colon
-		}
-		glyph := board.GlyphOf(face, rune(d))
-		board.DrawGlyph(f, glyph, x+(cell-glyph.Width)/2, g.clockY, b.cfg.Colour, g.full)
-		x += cell
 	}
 }

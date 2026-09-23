@@ -18,6 +18,7 @@ export interface LedBoardOptions {
   ordinalFormat?: OrdinalFormat
   /** Infotec service limit, 1–6; defaults to 3. */
   serviceCount?: number
+  clockStyle?: 'normal' | 'small-seconds' | 'small'
   /** Names the platform in a warning, in place of "this station", when the warning is for one platform. */
   warningPlatform?: boolean
   /** Infotec only: show a platform box beside the first train. */

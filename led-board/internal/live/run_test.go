@@ -303,3 +303,33 @@ func TestClientReevaluatesOverrideWindowsAndReportsAlterations(t *testing.T) {
 		t.Errorf("alterations must not persist: %v", view.Alterations)
 	}
 }
+
+func TestFormationDetailsUpdateThroughWebsocket(t *testing.T) {
+	s := newFakeService(t)
+	views := startClient(t, s, nil)
+	conn := s.accept(t)
+	movement := movementFrame("formation-details", "2", time.Now().Add(10*time.Minute))
+	movement.Coaches = &pb.CoachList{Coaches: []*pb.Coach{
+		{Number: "A", Class: ptr("Mixed"), ToiletType: ptr("Accessible"), LoadingPercent: ptr(int32(42))},
+		{Number: "B", Class: ptr("Standard")},
+	}}
+	s.send(t, conn, snapshotFrame(1, []*pb.Movement{movement}, nil))
+	got := expectView(t, views, true, 1).Services[0]
+	if got.Length != 2 || len(got.Coaches) != 2 || got.Coaches[0].Label != "A" || !got.Coaches[0].FirstClass || !got.Coaches[0].Accessible || got.Coaches[0].Loading != 42 || got.Coaches[1].Loading != -1 || got.Coaches[1].FirstClass {
+		t.Fatalf("formation mapping: %+v", got)
+	}
+	movement.Coaches.Coaches[0].LoadingPercent = ptr(int32(0))
+	update := updateFrame(1, 2, []string{movement.Id})
+	update.GetUpdate().Upserts = []*pb.Movement{movement}
+	s.send(t, conn, update)
+	if got := expectView(t, views, true, 1).Services[0].Coaches[0].Loading; got != 0 {
+		t.Fatalf("live loading update: %d", got)
+	}
+	movement.Coaches = nil
+	update = updateFrame(2, 3, []string{movement.Id})
+	update.GetUpdate().Upserts = []*pb.Movement{movement}
+	s.send(t, conn, update)
+	if got := expectView(t, views, true, 1).Services[0]; len(got.Coaches) != 0 || got.Length != 0 {
+		t.Fatalf("stale formation: %+v", got)
+	}
+}

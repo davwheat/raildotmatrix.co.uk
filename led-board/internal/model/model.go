@@ -33,6 +33,14 @@ type CallPoint struct {
 	Divides []Portion
 }
 
+// Coach describes an individual vehicle, in the order supplied by the feed.
+type Coach struct {
+	Label string
+	// Loading is a percentage; -1 means unknown.
+	Loading                        int
+	FirstClass, Accessible, Cycles bool
+}
+
 // Service is one train on the board.
 type Service struct {
 	ID string
@@ -55,7 +63,8 @@ type Service struct {
 	// StartsHere is true when this station is one of the train's origins.
 	StartsHere bool
 	// Length is the coach count, or 0 when unknown.
-	Length int
+	Length  int
+	Coaches []Coach
 	// TOC is the operator's name, or empty.
 	TOC string
 	// Platform is the platform number, or empty when it's unknown or Darwin suppresses it from public display.

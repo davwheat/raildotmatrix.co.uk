@@ -43,9 +43,13 @@ func (b *Board) drawCompactRow(f *frame.Frame, r *rowScene, colour frame.RGB) {
 	etd := board.Scale(colour, r.etdLevel, fadeLevels)
 	etdX := c.X1 - text.Width(r.etd)
 	if isTime(r.etd) {
-		etdX = c.X1 - timeW - text.Width("Expt ") - text.Spacing
+		// Align the last lit digit edge, excluding its cell's trailing blank dots.
+		last := board.GlyphOf(text, rune(r.etd[3]))
+		trailing := ch - (ch-last.Width)/2 - last.Width
+		timeX := c.X1 - timeW + trailing
+		etdX = timeX - text.Width("Expt ") - text.Spacing
 		board.DrawText(f, text, etdX, y, "Expt ", etd, c)
-		drawTime(c.X1-timeW, r.etd, etd)
+		drawTime(timeX, r.etd, etd)
 	} else {
 		board.DrawText(f, text, etdX, y, r.etd, etd, c)
 	}

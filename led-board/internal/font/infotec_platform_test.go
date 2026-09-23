@@ -23,7 +23,7 @@ func TestImportedFontsMatchBuilderExport(t *testing.T) {
 	if err := json.Unmarshal(data, &source); err != nil {
 		t.Fatal(err)
 	}
-	faces := map[string]*Face{"Large Platform Number": InfotecPlatform, "Small main row": InfotecSmall, "Clock": InfotecClock, "Small Clock": InfotecSmallClock}
+	faces := map[string]*Face{"Large Platform Number": InfotecPlatform, "Small main row": InfotecSmall, "Small formation contents": InfotecFormation, "Clock": InfotecClock, "Small Clock": InfotecSmallClock}
 	for _, face := range source.Fonts {
 		imported, exists := faces[face.Name]
 		if !exists {

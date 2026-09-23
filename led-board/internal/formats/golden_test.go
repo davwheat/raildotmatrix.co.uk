@@ -91,6 +91,12 @@ func goldenCases() []goldenCase {
 	}
 	add("infotec", "busy-board", "white", panel, Config{Colour: board.White}, settled["infotec"])
 	for _, size := range []goldenSize{panel, webSizes["infotec"]} {
+		for _, style := range []string{"normal", "small-seconds", "small"} {
+			add("infotec", "busy-board", "clock-"+style, size, Config{PlatformBox: true, ClockStyle: style}, settled["infotec"])
+		}
+		for i, page := range []string{"letters", "loading", "facilities-1", "facilities-2", "facilities-3"} {
+			add("infotec", "detailed-formation", page, size, Config{PlatformBox: true, ClockStyle: "small-seconds"}, time.Duration(i*5+4)*time.Second)
+		}
 		compact := false
 		add("infotec", "busy-board", "platform-box-separate-clock", size, Config{PlatformBox: true, Platforms: []string{"2"}, CompactLowerRow: &compact}, settled["infotec"])
 		add("infotec", "busy-board", "compact-dot-ordinals", size, Config{PlatformBox: true, Platforms: []string{"2"}, OrdinalFormat: board.OrdinalDot, ServiceCount: 6}, settled["infotec"])

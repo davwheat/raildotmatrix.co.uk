@@ -123,13 +123,29 @@ box is enabled. Disable it to put the main clock beneath the row. Both clocks us
 "Clock" and "Small Clock" faces in `tools/font.json`; the compact service text uses "Small main row".
 Run `python3 scripts/import-clock-fonts.py ../tools/font.json internal/font/infotec_clocks_gen.go` to regenerate the clocks.
 
+`clock_style` selects `normal`, `small-seconds`, or `small` (small everything). The small-seconds
+layout displays HH:MM followed by small seconds with a gap and no second colon. The compact service row
+reserves four dots between its expected-time text and the clock.
+
 `ordinal_format` selects `suffix` (`1st`, `2nd`, `3rd`) or `dot` (`1.`, `2.`, `3.`), defaulting to `suffix`.
 `service_count` selects how many Infotec services to show, from 1 to 6 (default 3). The first stays on the main
 row while the bottom row rotates through services 2 to the selected limit. These settings are also available
 in the website settings and Pi management UI.
 
 Infotec boards also draw a train formation below the service information whenever the websocket supplies a
-positive coach count. Each outlined carriage represents one coach; an unknown count leaves the diagram out.
+positive coach count or detailed formation. Each outlined carriage represents one coach; an unknown count leaves the diagram out.
+When details are available, all coaches share five-second pages: identifiers, loading, then facilities.
+Loading fills the interior from the floor upwards in proportion to the percentage at half brightness.
+Unknown loads remain hollow. Facility pages use the "Small formation contents" font: `§` for accessibility,
+`#` for cycles and `1st` for first class (including mixed-class coaches). Standard class is implicit.
+Coaches with fewer facilities hold their highest-priority facility for the spare slots (accessibility,
+then cycles, then first class), so the whole formation stays synchronised.
+
+The current structured websocket exposes coach identifiers, class, loading and accessible toilets,
+following the [Darwin coach fields](https://lite.realtime.nationalrail.co.uk/OpenLDBWS/documentation.aspx).
+It does not expose bicycle storage or dedicated wheelchair spaces; the model and renderer support these
+facilities for a future feed adapter, but do not invent them. Coach order is retained as supplied.
+An accessible-toilet marker identifies its location, not whether the toilet is currently in service.
 
 `scroll_speed` sets how fast text scrolls, in dots per second. The defaults are 48 for Daktronics (the web
 board's 550 px/s) and 60 for Infotec (the web's 77 dots/s reads too fast on the panel).

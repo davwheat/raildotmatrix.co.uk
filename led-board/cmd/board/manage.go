@@ -15,6 +15,7 @@ import (
 func describeConfig(fs *flag.FlagSet) []configschema.Field {
 	choices := map[string][]string{
 		"board": formats.Names, "colour": {"amber", "white"},
+		"clock_style":      {"normal", "small-seconds", "small"},
 		"ordinal_format":   {"suffix", "dot"},
 		"row_prefix":       {"ordinals", "platforms"},
 		"display":          {"matrix", "window", "png"},
@@ -41,6 +42,9 @@ func controlFlag(name string) bool {
 
 // Check before opening hardware, both for normal starts and GUI edits.
 func validateConfig(c config) error {
+	if c.ClockStyle != "normal" && c.ClockStyle != "small-seconds" && c.ClockStyle != "small" {
+		return fmt.Errorf("clock style must be normal, small-seconds or small")
+	}
 	if c.ServiceCount < 1 || c.ServiceCount > 6 {
 		return fmt.Errorf("service count must be between 1 and 6")
 	}

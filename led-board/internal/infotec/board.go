@@ -15,6 +15,7 @@ import (
 
 // Config sizes the board and sets what it shows.
 type Config struct {
+	ClockStyle    string
 	OrdinalFormat board.OrdinalFormat
 	ServiceCount  int
 	// CompactLowerRow places a smaller lower service row beside the clock.
@@ -83,9 +84,10 @@ const fadeLevels = 30
 // the advance of a digit; rows keep the dot positions measured from the web board, with the clock
 // bottom-aligned so it absorbs the shorter panel.
 type geometry struct {
-	compact bool
-	w, h    int
-	ch      int
+	clockStyle string
+	compact    bool
+	w, h       int
+	ch         int
 	// prefixW reserves one column for either ordinals or platform numbers.
 	prefixW int
 	// boxW reserves the first train's platform box; infoX is the information row's left edge.
@@ -105,6 +107,7 @@ type geometry struct {
 	// lineY holds the cap tops of the three-line message screens.
 	lineY                            [3]int
 	clockX, clockY, clockCell, colon int
+	clockInset                       int
 	full                             board.Clip
 }
 
@@ -158,6 +161,12 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 
 func (b *Board) geometry(details bool) geometry {
 	g := newGeometry(b.cfg.Width, b.cfg.Height, b.cfg.RowPrefix)
+	g.clockStyle = b.cfg.ClockStyle
+	if g.clockStyle == "" {
+		g.clockStyle = "normal"
+	}
+	g.clockY = g.h - g.clockFace(false).Height
+	g.clockX = (g.w - g.clockWidth()) / 2
 	if b.cfg.PlatformBox != "" || b.cfg.ServicePlatformBox {
 		// Three dots of horizontal padding around the label and enlarged platform number.
 		g.boxW = max(font.PISTall.Width("Plat"), font.InfotecPlatform.Width(b.platformBox())) + 6
@@ -181,11 +190,14 @@ func (b *Board) geometry(details bool) geometry {
 	}
 	if g.boxW > 0 && (b.cfg.CompactLowerRow == nil || *b.cfg.CompactLowerRow) {
 		g.compact = true
-		g.clockY = g.h - font.InfotecSmall.Height
-		g.clockCell = font.InfotecSmallClock.Advance('0')
-		g.colon = font.InfotecSmallClock.Advance(':')
-		g.clockX = g.w - 6*g.clockCell - 2*g.colon
-		g.secondY = g.clockY
+		if b.cfg.ClockStyle == "" {
+			g.clockStyle = "small"
+		}
+		g.clockY = g.h - max(font.InfotecSmall.Height, g.clockFace(false).Height)
+		g.clockCell = g.clockFace(false).Advance('0')
+		g.colon = g.clockFace(false).Advance(':')
+		g.clockX = g.w - g.clockWidth()
+		g.secondY = g.h - font.InfotecSmall.Height
 		g.sepY = g.clockY - 2
 		g.infoY = font.PISTall.Height + 5
 		g.swapTravel = font.InfotecSmall.Height + 1
@@ -205,7 +217,7 @@ func (g *geometry) infoBand() board.Clip {
 func (g *geometry) secondBand() board.Clip {
 	width := g.w
 	if g.compact {
-		width = g.clockX - 3
+		width = g.clockX + g.clockInset - 4
 	}
 	return board.Clip{X0: 0, Y0: g.secondY, X1: width, Y1: g.secondY + g.lowerFace().Height}
 }
@@ -298,6 +310,10 @@ func (b *Board) Tick(now time.Time, f *frame.Frame) bool {
 	}
 	previousGeo := b.geo
 	b.geo = b.geometry(length > 0)
+	digits := clockDigits(now, b.cfg.Zone)
+	face := b.geo.clockFace(false)
+	glyph := board.GlyphOf(face, rune(digits[0]))
+	b.geo.clockInset = (face.Advance('0') - glyph.Width) / 2
 	if b.geo.infoX != previousGeo.infoX || b.geo.infoDestX != previousGeo.infoDestX {
 		b.selectPage(b.infoPage, now)
 	}

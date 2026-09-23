@@ -228,8 +228,12 @@ func service(movement *Movement, legacyNames bool, now time.Time) model.Service 
 		Actual:         movement.Departure.Actual,
 		Arrived:        movement.Arrival.Actual != nil && !movement.Arrival.Actual.After(now),
 		Length:         int(derefInt(movement.CoachCount)),
+		Coaches:        formationCoaches(movement.Coaches),
 		TOC:            operatorName(movement, legacyNames),
 		CallPoints:     callPoints(movement.CallingPoints, movement),
+	}
+	if len(s.Coaches) > 0 {
+		s.Length = len(s.Coaches)
 	}
 	if s.TerminatesHere {
 		s.Destinations = []model.Location{{Name: terminatesHereName}}
@@ -361,4 +365,22 @@ func derefTime(value *time.Time) time.Time {
 		return time.Time{}
 	}
 	return *value
+}
+
+// The structured feed supplies class, accessible toilets and per-coach loads.
+// It currently has no cycle-storage or dedicated wheelchair-space fields.
+func formationCoaches(coaches []Coach) []model.Coach {
+	result := make([]model.Coach, len(coaches))
+	for i, c := range coaches {
+		load := -1
+		if c.LoadingPercent != nil {
+			load = min(100, max(0, int(*c.LoadingPercent)))
+		}
+		class := strings.ToLower(deref(c.Class))
+		result[i] = model.Coach{Label: c.Number, Loading: load,
+			FirstClass: class == "first" || class == "mixed",
+			Accessible: strings.EqualFold(deref(c.ToiletType), "Accessible"),
+		}
+	}
+	return result
 }

@@ -30,6 +30,20 @@ func Steps(name string) []model.View {
 		return snapshot(terminating(), bedford())
 	case "single-departure":
 		return snapshot(victoria())
+	case "detailed-formation":
+		s := victoria()
+		s.Length = 8
+		s.Coaches = []model.Coach{
+			{Label: "A", Loading: 15, FirstClass: true, Accessible: true},
+			{Label: "B", Loading: 45, FirstClass: true, Accessible: true, Cycles: true},
+			{Label: "C", Loading: 100, Cycles: true},
+			{Label: "D", Loading: 0},
+			{Label: "E", Loading: -1, Accessible: true},
+			{Label: "F", Loading: 70},
+			{Label: "G", Loading: 30},
+			{Label: "H", Loading: 90},
+		}
+		return snapshot(s, bedford())
 	case "busy-board":
 		return snapshot(victoria(), bedford(), gatwick(), londonBridge(), brighton())
 	case "delayed":

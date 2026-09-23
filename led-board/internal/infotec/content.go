@@ -26,6 +26,7 @@ type row struct {
 	etd       string
 	cancelled bool
 	length    int
+	coaches   []model.Coach
 }
 
 // page is one screen of the information row: a prefix fixed at the left edge and the text that scrolls
@@ -56,7 +57,8 @@ func (b *Board) derive(v model.View) content {
 			pages:     destinationPages(s),
 			etd:       b.etd(s),
 			cancelled: s.Cancelled,
-			length:    max(0, s.Length),
+			length:    max(0, s.Length, len(s.Coaches)),
+			coaches:   append([]model.Coach(nil), s.Coaches...),
 		})
 		if i == 0 {
 			c.pages = b.infoPages(s)

@@ -27,7 +27,7 @@ func TestCompactLowerRowKeepsClockClear(t *testing.T) {
 					t.Fatalf("compact row escaped its band at (%d,%d)", x, y)
 				}
 				for y := range g.h {
-					for x := g.clockX - 3; x < g.w; x++ {
+					for x := g.clockX - 4; x < g.w; x++ {
 						if f.At(x, y) != frame.Black {
 							t.Fatalf("row overwrote clock or gap at (%d,%d)", x, y)
 						}

@@ -46,6 +46,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
     platformBox: false,
     compactLowerRow: true,
     serviceCount: 3,
+    clockStyle: 'normal' as 'normal' | 'small-seconds' | 'small',
     alignPlatformRows: true,
     ...defaultPlatformSettings,
   })
@@ -151,13 +152,28 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
           onChange={e => setSettings(s => ({ ...s, compactLowerRow: e.currentTarget.checked }))}
         />
         <br />
+        <label htmlFor="clock-style">Clock style</label>
+        <select
+          id="clock-style"
+          value={settings.clockStyle ?? 'normal'}
+          onChange={e => setSettings(s => ({ ...s, clockStyle: e.currentTarget.value as typeof s.clockStyle }))}
+        >
+          <option value="normal">Normal</option>
+          <option value="small-seconds">Small seconds</option>
+          <option value="small">Small everything</option>
+        </select>
+        <br />
         <label htmlFor="service-count">Services to show</label>
         <select
           id="service-count"
           value={settings.serviceCount ?? 3}
           onChange={e => setSettings(s => ({ ...s, serviceCount: Number(e.currentTarget.value) }))}
         >
-          {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
+          {[1, 2, 3, 4, 5, 6].map(n => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
         </select>
         {(platforms?.length ?? 0) > 0 && <p>Showing only platform(s) {platforms!.join(', ')}</p>}
       </div>
@@ -187,6 +203,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
             platformBox={!!settings.platformBox}
             compactLowerRow={settings.compactLowerRow !== false}
             serviceCount={settings.serviceCount ?? 3}
+            clockStyle={settings.clockStyle ?? 'normal'}
             alignPlatformRows={settings.alignPlatformRows !== false}
           />
         </div>
