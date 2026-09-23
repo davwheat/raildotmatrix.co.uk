@@ -115,8 +115,9 @@ The label and number are vertically centred together inside the platform box at 
 Three-character platforms use one-dot character spacing and three blank dots of horizontal padding on
 each side; other platforms use two-dot character spacing and four blank dots of padding.
 
-`align_platform_rows` (default `true`) aligns the lower row's time and destination with the first service and
-centres its prefix beneath the platform box. Turn it off to keep the lower row's original columns and
+`align_platform_rows` (default `true`) aligns the lower row's time with the first service and centres its
+prefix beneath the platform box. The compact row uses its normal spacing before the destination;
+the full-size row also aligns destinations. Turn it off to keep the lower row's original columns and
 left-aligned prefix. It only affects Infotec displays with an active platform box. The website settings
 and Pi management UI expose the same toggle; the CLI flag is `-align-platform-rows=false`.
 

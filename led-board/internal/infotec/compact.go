@@ -24,12 +24,12 @@ func (b *Board) drawCompactRow(f *frame.Frame, r *rowScene, colour frame.RGB) {
 		prefixW = board.PlatformWidth(text)
 	}
 	prefixX, stdX := 0, prefixW+3
-	destX := stdX + timeW + 3
 	if g.boxW > 0 && (b.cfg.AlignPlatformRows == nil || *b.cfg.AlignPlatformRows) {
 		prefixW = g.boxW
 		prefixX = (g.boxW - text.Width(r.prefix)) / 2
-		stdX, destX = g.stdX, g.destX
+		stdX = g.stdX
 	}
+	destX := stdX + timeW + 3
 	board.DrawText(f, text, prefixX, y, r.prefix, colour, c.Intersect(board.Clip{X1: prefixW, Y1: g.h}))
 	drawTime := func(x int, value string, colour frame.RGB) {
 		if len(value) != 4 {
