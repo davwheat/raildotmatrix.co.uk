@@ -42,17 +42,17 @@ func TestCoachLetterTOCs(t *testing.T) {
 				// Suppressed letters must not leave an empty slot before loading and facilities.
 				elapsed := time.Duration(0)
 				if tc.show {
-					if got := formationContents(row.coaches, elapsed)[0]; got.text != "A" {
+					if got := b.formationContents(row.coaches, elapsed)[0]; got.text != "A" {
 						t.Fatalf("letter page = %+v", got)
 					}
 					elapsed += 5 * time.Second
 				}
-				if got := formationContents(row.coaches, elapsed)[0]; got.loading != 50 || got.text != "" {
+				if got := b.formationContents(row.coaches, elapsed)[0]; got.loading != 50 || got.text != "" {
 					t.Fatalf("loading page = %+v", got)
 				}
-				for _, icon := range []string{"§", "#", "±", "€", "1st"} {
+				for _, icon := range []string{"§", "#", "€", "1st"} {
 					elapsed += 5 * time.Second
-					if got := formationContents(row.coaches, elapsed)[0]; got.text != icon {
+					if got := b.formationContents(row.coaches, elapsed)[0]; got.text != icon {
 						t.Fatalf("facility page = %+v, want %s", got, icon)
 					}
 				}
@@ -84,6 +84,7 @@ func TestCoachLettersFollowOperatorUpdates(t *testing.T) {
 }
 
 func TestFormationRotationSynchronised(t *testing.T) {
+	b := New(Config{})
 	coaches := []model.Coach{
 		{Label: "A", Loading: 50, Accessible: true, Toilet: true, FirstClass: true},
 		{Label: "B", Loading: -1, Accessible: true, Cycles: true, Toilet: true, Food: true, FirstClass: true},
@@ -92,12 +93,12 @@ func TestFormationRotationSynchronised(t *testing.T) {
 	}
 	want := [][4]string{
 		{"A", "B", "C", "D"}, {"", "", "", ""},
-		{"§", "§", "", "±"}, {"§", "#", "", "±"}, {"§", "±", "", "±"}, {"±", "€", "", "±"}, {"1st", "1st", "", "±"},
+		{"§", "§", "", "±"}, {"§", "#", "", "±"}, {"§", "€", "", "±"}, {"1st", "1st", "", "±"},
 		{"A", "B", "C", "D"},
 	}
 	for i, pair := range want {
 		for _, offset := range []time.Duration{0, 4999 * time.Millisecond} {
-			got := formationContents(coaches, time.Duration(i)*5*time.Second+offset)
+			got := b.formationContents(coaches, time.Duration(i)*5*time.Second+offset)
 			for c, text := range pair {
 				if got[c].text != text {
 					t.Fatalf("slot %d: %+v", i, got[:len(coaches)])
@@ -110,9 +111,52 @@ func TestFormationRotationSynchronised(t *testing.T) {
 	}
 }
 
+func TestEnabledFormationIcons(t *testing.T) {
+	coaches := []model.Coach{
+		{Loading: -1, Accessible: true, Cycles: true, Toilet: true, Food: true, FirstClass: true},
+		{Loading: -1, Toilet: true},
+	}
+	for _, tc := range []struct {
+		name  string
+		icons []string
+		pages [][2]string
+	}{
+		{"defaults", nil, [][2]string{{"§", "±"}, {"#", "±"}, {"€", "±"}, {"1st", "±"}}},
+		{"no toilets", []string{"accessibility", "cycles", "food", "first-class"}, [][2]string{{"§", ""}, {"#", ""}, {"€", ""}, {"1st", ""}}},
+		{"accessibility only", []string{"accessibility"}, [][2]string{{"§", ""}}},
+		{"cycles only", []string{"cycles"}, [][2]string{{"#", ""}}},
+		{"toilets only", []string{"toilets"}, [][2]string{{"±", "±"}}},
+		{"food only", []string{"food"}, [][2]string{{"€", ""}}},
+		{"first class only", []string{"first-class"}, [][2]string{{"1st", ""}}},
+		{"empty", []string{}, [][2]string{{"", ""}}},
+		{"priority ignores list order and duplicates", []string{"first-class", "toilets", "accessibility", "accessibility"}, [][2]string{{"§", "±"}, {"1st", "±"}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			b := New(Config{FormationIcons: tc.icons})
+			// Check two full cycles: disabled icons must not leave blank pages.
+			for slot := 0; slot < 2*len(tc.pages); slot++ {
+				got := b.formationContents(coaches, time.Duration(slot)*5*time.Second)
+				want := tc.pages[slot%len(tc.pages)]
+				if got[0].text != want[0] || got[1].text != want[1] {
+					t.Fatalf("slot %d: contents = %+v, want %v", slot, got[:2], want)
+				}
+			}
+		})
+	}
+	// Hiding icons must preserve identifier and loading pages.
+	b := New(Config{FormationIcons: []string{}})
+	coaches[0].Label, coaches[0].Loading = "A", 50
+	for slot, want := range []coachContent{{text: "A", loading: -1}, {loading: 50}, {text: "A", loading: -1}} {
+		if got := b.formationContents(coaches, time.Duration(slot)*5*time.Second)[0]; got != want {
+			t.Fatalf("icons disabled, slot %d: %+v, want %+v", slot, got, want)
+		}
+	}
+}
+
 func TestLoadingFillAndCoachBorders(t *testing.T) {
+	b := New(Config{})
 	f := frame.New(100, 11)
-	contents := formationContents([]model.Coach{{Loading: 50}, {Loading: 100}, {Loading: -1}, {Loading: 0}}, 0)
+	contents := b.formationContents([]model.Coach{{Loading: 50}, {Loading: 100}, {Loading: -1}, {Loading: 0}}, 0)
 	drawFormation(f, 0, 0, 100, 11, 4, board.White)
 	before := append([]byte(nil), f.Pix...)
 	drawFormationContents(f, 0, 0, 100, 11, 4, contents, board.White, 50)
@@ -177,9 +221,10 @@ func TestFormationUpdateRedrawsAtSameTime(t *testing.T) {
 }
 
 func TestLoadingBrightnessPreservesFillArea(t *testing.T) {
+	b := New(Config{})
 	for _, brightness := range []int{50, 100} {
 		f := frame.New(40, 11)
-		contents := formationContents([]model.Coach{{Loading: 50}}, 0)
+		contents := b.formationContents([]model.Coach{{Loading: 50}}, 0)
 		drawFormationContents(f, 0, 0, 40, 11, 1, contents, board.White, brightness)
 		expected := board.Scale(board.White, brightness, 100)
 		lit := 0

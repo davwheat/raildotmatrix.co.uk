@@ -118,6 +118,7 @@ func main() {
 		OrdinalFormat: ordinalFormat, LoadingBrightness: cfg.LoadingBrightness, ClockStyle: cfg.ClockStyle, ServiceCount: cfg.ServiceCount, WarningPlatform: cfg.WarningPlatform,
 		FormationCount:  cfg.FormationCount,
 		CoachLetterTOCs: cfg.CoachLetterTOCs,
+		FormationIcons:  cfg.FormationIcons,
 		CompactLowerRow: &cfg.CompactLowerRow, PlatformBox: cfg.PlatformBox, Platforms: cfg.Platforms, AlignPlatformRows: &cfg.AlignPlatformRows,
 	})
 	if err != nil {

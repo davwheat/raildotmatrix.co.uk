@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { applyOptions, defaults, isRailAnnouncementsEmbed, readOptions } from '../src/components/BoardOptions/settings'
+import { applyOptions, defaults, formationIconTypes, isRailAnnouncementsEmbed, readOptions } from '../src/components/BoardOptions/settings'
 
 const infotec = 'infotec-landscape-dmi'
 test('old preferences merge with new defaults and migrate platform labels', () => {
@@ -82,4 +82,24 @@ test('formation count validates all six choices and round-trips in shared links'
   assert.equal(readOptions(infotec, {}, new URLSearchParams('formationCount=invalid')).formationCount, 'none')
   assert.equal(readOptions(infotec, {}, new URLSearchParams('formationCount=number-no-brackets')).formationCount, 'none')
   assert.equal(readOptions(infotec, { formationCount: 'coaches' }, new URLSearchParams('formationCount=invalid')).formationCount, 'coaches')
+})
+
+test('formation icons preserve defaults, subsets and empty lists in storage and shared links', () => {
+  assert.deepEqual(readOptions(infotec, {}, new URLSearchParams()).formationIcons, formationIconTypes)
+  for (const formationIcons of [defaults.formationIcons, defaults.formationIcons.filter(icon => icon !== 'toilets'), [], ['toilets'] as const]) {
+    const options = { ...defaults, formationIcons: [...formationIcons] }
+    assert.deepEqual(readOptions(infotec, options, new URLSearchParams()).formationIcons, formationIcons)
+    const query = new URLSearchParams()
+    applyOptions(query, infotec, options)
+    assert.equal(query.get('formationIcons'), formationIcons.join(','))
+    assert.deepEqual(readOptions(infotec, defaults, query).formationIcons, formationIcons)
+  }
+  assert.deepEqual(readOptions(infotec, {}, new URLSearchParams('formationIcons=FOOD, accessibility,food')).formationIcons, [
+    'accessibility',
+    'food',
+  ])
+  for (const formationIcons of [['unknown'], [true], false, {}, 'toilet']) {
+    assert.deepEqual(readOptions(infotec, { formationIcons }, new URLSearchParams()).formationIcons, defaults.formationIcons)
+  }
+  assert.deepEqual(readOptions(infotec, { formationIcons: [] }, new URLSearchParams('formationIcons=invalid')).formationIcons, [])
 })

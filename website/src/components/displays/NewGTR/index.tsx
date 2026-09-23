@@ -66,6 +66,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
             clockStyle={settings.clockStyle}
             loadingBrightness={settings.loadingBrightness}
             formationCount={settings.formationCount}
+            formationIcons={settings.formationIcons}
             alignPlatformRows={settings.alignPlatformRows !== false}
           />
         </div>

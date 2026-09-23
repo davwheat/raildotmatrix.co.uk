@@ -20,6 +20,7 @@ var Names = []string{"daktronics", "infotec"}
 type Config struct {
 	// CoachLetterTOCs limits Infotec coach letters to these operator codes; nil uses the defaults.
 	CoachLetterTOCs   []string
+	FormationIcons    []string
 	FormationCount    string
 	LoadingBrightness int
 	ClockStyle        string
@@ -47,6 +48,9 @@ type Config struct {
 
 // New returns the named board format.
 func New(name string, c Config) (board.Board, error) {
+	if err := infotec.ValidateFormationIcons(c.FormationIcons); err != nil {
+		return nil, err
+	}
 	if err := infotec.ValidateFormationCount(c.FormationCount); err != nil {
 		return nil, err
 	}
@@ -75,6 +79,7 @@ func New(name string, c Config) (board.Board, error) {
 			RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform,
 			FormationCount:    c.FormationCount,
 			CoachLetterTOCs:   c.CoachLetterTOCs,
+			FormationIcons:    c.FormationIcons,
 			LoadingBrightness: c.LoadingBrightness, ClockStyle: c.ClockStyle, ServiceCount: c.ServiceCount, CompactLowerRow: c.CompactLowerRow, PlatformBox: platformBox, ServicePlatformBox: c.PlatformBox && platformBox == "", AlignPlatformRows: c.AlignPlatformRows,
 		}), nil
 	default:

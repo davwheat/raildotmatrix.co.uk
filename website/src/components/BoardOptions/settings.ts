@@ -6,6 +6,9 @@ export const displayTypes = [
 
 export type DisplayType = (typeof displayTypes)[number]['value'] | 'class-700'
 
+export const formationIconTypes = ['accessibility', 'cycles', 'toilets', 'food', 'first-class'] as const
+export type FormationIcon = (typeof formationIconTypes)[number]
+
 export const defaults = {
   color: 'orange' as 'orange' | 'white',
   rowPrefix: 'ordinals' as 'ordinals' | 'platforms',
@@ -16,6 +19,7 @@ export const defaults = {
   serviceCount: 3,
   loadingBrightness: 50 as 50 | 100,
   formationCount: 'none' as 'none' | 'number' | 'coaches' | 'coaches-no-brackets' | 'carriages' | 'carriages-no-brackets',
+  formationIcons: [...formationIconTypes] as FormationIcon[],
   clockStyle: 'normal' as 'normal' | 'small-seconds' | 'small',
   alignPlatformRows: true,
   boardStyle: 'Yellow' as 'Yellow' | 'Blue' | 'Green/Blue',
@@ -49,6 +53,7 @@ export function optionKeys(type: DisplayType): OptionKey[] {
         'clockStyle',
         'loadingBrightness',
         'formationCount',
+        'formationIcons',
         'serviceCount',
         'alignPlatformRows',
       ]
@@ -78,7 +83,12 @@ export function readOptions(type: DisplayType, stored: unknown, query: URLSearch
   for (const key of optionKeys(type)) {
     for (const raw of [saved[key], query.has(key) ? query.get(key) : undefined]) {
       if (raw === undefined) continue
-      if (key in choices) {
+      if (key === 'formationIcons') {
+        const icons = typeof raw === 'string' ? (raw.trim() ? raw.split(',').map(icon => icon.trim().toLowerCase()) : []) : raw
+        if (Array.isArray(icons) && icons.every(icon => formationIconTypes.includes(icon))) {
+          values[key] = formationIconTypes.filter(icon => icons.includes(icon))
+        }
+      } else if (key in choices) {
         if ((choices[key as keyof typeof choices] as readonly unknown[]).includes(raw)) values[key] = raw
       } else if (key === 'loadingBrightness') {
         const brightness = Number(raw)

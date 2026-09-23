@@ -25,6 +25,7 @@ const configName = "departure-board"
 // config is every setting the board takes, in the shape of the config file.
 type config struct {
 	CoachLetterTOCs          []string `mapstructure:"coach_letter_tocs"`
+	FormationIcons           []string `mapstructure:"formation_icons"`
 	FormationCount           string   `mapstructure:"formation_count"`
 	LoadingBrightness        int      `mapstructure:"loading_brightness"`
 	ClockStyle               string   `mapstructure:"clock_style"`
@@ -78,8 +79,10 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.String("ordinal-format", "suffix", "ordinal style: suffix (1st/2nd/3rd) or dot (1./2./3.)")
 	fs.Int("loading-brightness", 50, "coach loading fill brightness: 50 or 100 percent (Infotec only)")
 	fs.String("formation-count", "none", "count beside the formation: none, number, coaches, coaches-no-brackets, carriages or carriages-no-brackets (Infotec only; wording falls back to a bracketed number if space is limited)")
-	coachLetterTOCs := tocList(infotec.DefaultCoachLetterTOCs())
+	coachLetterTOCs := commaList(infotec.DefaultCoachLetterTOCs())
 	fs.Var(&coachLetterTOCs, "coach-letter-tocs", "comma-separated TOC codes whose coach letters are shown; empty hides all letters (Infotec only)")
+	formationIcons := commaList(infotec.DefaultFormationIcons())
+	fs.Var(&formationIcons, "formation-icons", "comma-separated enabled icons: accessibility, cycles, toilets, food, first-class; empty hides all facility icons (Infotec only)")
 	fs.String("clock-style", "normal", "Infotec clock: normal, small-seconds or small")
 	fs.Int("service-count", 3, "number of services to show, from 1 to 6 (Infotec only)")
 	fs.Bool("compact-lower-row", true, "show smaller lower service text beside the clock (Infotec only)")
@@ -203,13 +206,13 @@ func (p *platformList) String() string     { return strings.Join(*p, ",") }
 func (p *platformList) Set(v string) error { *p = append(*p, v); return nil }
 func (p *platformList) Get() any           { return []string(*p) }
 
-// tocList replaces the operator allowlist with a comma-separated flag value.
-type tocList []string
+// commaList replaces a list with a comma-separated flag value.
+type commaList []string
 
-func (t *tocList) String() string { return strings.Join(*t, ",") }
-func (t *tocList) Get() any       { return []string(*t) }
-func (t *tocList) Set(v string) error {
-	*t = tocList{}
+func (t *commaList) String() string { return strings.Join(*t, ",") }
+func (t *commaList) Get() any       { return []string(*t) }
+func (t *commaList) Set(v string) error {
+	*t = commaList{}
 	if v != "" {
 		*t = strings.Split(v, ",")
 	}
@@ -230,6 +233,9 @@ func load(v *viper.Viper) (config, error) {
 	}
 	for i, toc := range cfg.CoachLetterTOCs {
 		cfg.CoachLetterTOCs[i] = strings.ToUpper(strings.TrimSpace(toc))
+	}
+	for i, icon := range cfg.FormationIcons {
+		cfg.FormationIcons[i] = strings.ToLower(strings.TrimSpace(icon))
 	}
 	cfg.LED.DropPrivileges = !cfg.LED.NoDropPrivs
 	return cfg, nil

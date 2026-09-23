@@ -1,6 +1,8 @@
 package infotec
 
 import (
+	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -9,6 +11,20 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
+
+// DefaultFormationIcons returns all facility icon types in display priority order.
+func DefaultFormationIcons() []string {
+	return []string{"accessibility", "cycles", "toilets", "food", "first-class"}
+}
+
+func ValidateFormationIcons(icons []string) error {
+	for _, icon := range icons {
+		if !slices.Contains(DefaultFormationIcons(), icon) {
+			return fmt.Errorf("unknown formation icon %q; want accessibility, cycles, toilets, food or first-class", icon)
+		}
+	}
+	return nil
+}
 
 // DefaultCoachLetterTOCs returns the operators whose formations show coach letters by default.
 func DefaultCoachLetterTOCs() []string {
@@ -35,12 +51,12 @@ type coachContent struct {
 
 // Shared five-second slots show identifiers, loading, then facilities. Extra
 // facility slots repeat accessibility first, then cycles, toilets, food and first class.
-func formationContents(coaches []model.Coach, elapsed time.Duration) (out [128]coachContent) {
+func (b *Board) formationContents(coaches []model.Coach, elapsed time.Duration) (out [128]coachContent) {
 	labels, loads, facilities := false, false, 0
 	for _, c := range coaches {
 		labels = labels || c.Label != ""
 		loads = loads || c.Loading >= 0
-		facilities = max(facilities, len(coachFacilities(c)))
+		facilities = max(facilities, len(b.coachFacilities(c)))
 	}
 	slots := facilities
 	if labels {
@@ -73,7 +89,7 @@ func formationContents(coaches []model.Coach, elapsed time.Duration) (out [128]c
 			}
 			page--
 		}
-		options := coachFacilities(c)
+		options := b.coachFacilities(c)
 		if len(options) != 0 {
 			out[i].text = options[max(0, page-(facilities-len(options)))]
 		}
@@ -81,21 +97,22 @@ func formationContents(coaches []model.Coach, elapsed time.Duration) (out [128]c
 	return
 }
 
-func coachFacilities(c model.Coach) []string {
+func (b *Board) coachFacilities(c model.Coach) []string {
 	var options []string
-	if c.Accessible {
+	accessible := c.Accessible && slices.Contains(b.cfg.FormationIcons, "accessibility")
+	if accessible {
 		options = append(options, "§")
 	}
-	if c.Cycles {
+	if c.Cycles && slices.Contains(b.cfg.FormationIcons, "cycles") {
 		options = append(options, "#")
 	}
-	if c.Toilet {
+	if c.Toilet && !accessible && slices.Contains(b.cfg.FormationIcons, "toilets") {
 		options = append(options, "±")
 	}
-	if c.Food {
+	if c.Food && slices.Contains(b.cfg.FormationIcons, "food") {
 		options = append(options, "€")
 	}
-	if c.FirstClass {
+	if c.FirstClass && slices.Contains(b.cfg.FormationIcons, "first-class") {
 		options = append(options, "1st")
 	}
 	return options

@@ -222,7 +222,7 @@ func TestKeys(t *testing.T) {
 			keys = append(keys, key(f.Name))
 		}
 	})
-	want := strings.Fields(`board colour coach_letter_tocs crs display fixture fps legacy_toc_names led.brightness led.chain led.cols
+	want := strings.Fields(`board colour coach_letter_tocs formation_icons crs display fixture fps legacy_toc_names led.brightness led.chain led.cols
 		led.gpio_mapping led.limit_refresh led.multiplexing led.no_drop_privs led.no_hardware_pulse led.parallel
 		led.pwm_bits led.pwm_dither_bits led.pwm_lsb_nanoseconds led.rgb_sequence led.row_addr_type led.rows
 		led.scan_mode led.show_refresh led.slowdown_gpio align_platform_rows compact_lower_row loading_brightness formation_count clock_style ordinal_format service_count platform_box row_prefix platforms png_dir scale scroll_speed
@@ -243,8 +243,8 @@ func TestSettingsCoverEveryKey(t *testing.T) {
 	if _, ok := settings(v)["led.limit_refresh"]; !ok {
 		t.Error("a key without a default must still be watched")
 	}
-	if got := len(v.AllKeys()); got != 44 {
-		t.Errorf("%d keys, want 44", got)
+	if got := len(v.AllKeys()); got != 45 {
+		t.Errorf("%d keys, want 45", got)
 	}
 }
 
@@ -316,6 +316,51 @@ func TestFormationCountConfig(t *testing.T) {
 		}
 	}
 	t.Fatal("formation count missing from management schema")
+}
+
+func TestFormationIconsConfig(t *testing.T) {
+	defaults := []string{"accessibility", "cycles", "toilets", "food", "first-class"}
+	for _, tc := range []struct {
+		name, file, env string
+		flags           []string
+		want            []string
+		invalid         bool
+	}{
+		{name: "defaults", want: defaults},
+		{name: "file replaces defaults", file: `formation_icons = ["Accessibility", " cycles "]`, want: []string{"accessibility", "cycles"}},
+		{name: "empty file list", file: `formation_icons = []`, want: []string{}},
+		{name: "env replaces file", file: `formation_icons = ["toilets"]`, env: " food,first-class ", want: []string{"food", "first-class"}},
+		{name: "flag replaces env", file: `formation_icons = ["toilets"]`, env: "food", flags: []string{"-formation-icons", " accessibility,cycles "}, want: []string{"accessibility", "cycles"}},
+		{name: "empty flag", env: "toilets", flags: []string{"-formation-icons="}, want: []string{}},
+		{name: "unknown icon", file: `formation_icons = ["toilet"]`, want: []string{"toilet"}, invalid: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("BOARD_FORMATION_ICONS", tc.env)
+			v, err := configure(parse(t, tc.flags...), writeConfig(t, tc.file))
+			if err != nil {
+				t.Fatal(err)
+			}
+			cfg, err := load(v)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if cfg.FormationIcons == nil || !slices.Equal(cfg.FormationIcons, tc.want) {
+				t.Fatalf("formation icons = %#v, want %#v", cfg.FormationIcons, tc.want)
+			}
+			if err := validateConfig(cfg); (err != nil) != tc.invalid {
+				t.Fatalf("validation: %v, want invalid = %v", err, tc.invalid)
+			}
+		})
+	}
+	for _, field := range describeConfig(parse(t)) {
+		if field.Key == "formation_icons" {
+			if field.Type != "stringSlice" || !slices.Equal(field.Default.([]string), defaults) {
+				t.Fatalf("formation icons schema = %+v", field)
+			}
+			return
+		}
+	}
+	t.Fatal("formation icons missing from management schema")
 }
 
 var _ viper.FlagValue = flagValue{}

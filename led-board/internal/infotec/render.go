@@ -69,7 +69,7 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 	}
 	s.first = b.rowScene(&b.content.rows[0], now)
 	s.formation = s.first.length
-	s.coachContents = formationContents(b.content.rows[0].coaches, now.Sub(b.steadyStart))
+	s.coachContents = b.formationContents(b.content.rows[0].coaches, now.Sub(b.steadyStart))
 	if len(b.content.pages) > 0 {
 		s.info = b.info.scene(now)
 	}

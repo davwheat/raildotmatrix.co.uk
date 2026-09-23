@@ -17,6 +17,8 @@ import (
 type Config struct {
 	// CoachLetterTOCs lists operators whose coach letters are shown. Nil uses the defaults; empty hides all letters.
 	CoachLetterTOCs []string
+	// FormationIcons enables facility icon types. Nil enables all; empty hides all facility icons.
+	FormationIcons []string
 	// FormationCount selects none, number, coaches or carriages beside the graphic.
 	// The coaches-no-brackets and carriages-no-brackets variants omit brackets around wording.
 	FormationCount    string
@@ -285,6 +287,9 @@ func New(cfg Config) *Board {
 	}
 	if cfg.CoachLetterTOCs == nil {
 		cfg.CoachLetterTOCs = DefaultCoachLetterTOCs()
+	}
+	if cfg.FormationIcons == nil {
+		cfg.FormationIcons = DefaultFormationIcons()
 	}
 	c := cfg.Colour
 	b := &Board{cfg: cfg, dim: board.Scale(c, 1, 2)}

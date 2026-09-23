@@ -65,6 +65,10 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
     await select('LED colour', 'white')
     await select('Services to show', '5')
     await wait(`JSON.parse(localStorage.getItem('newGtrBoardSettings')).serviceCount === 5`)
+    await evaluate(
+      `[...document.querySelectorAll('label')].find(x => x.textContent.trim() === 'Standard toilets').querySelector('input').click()`,
+    )
+    await wait(`JSON.parse(localStorage.getItem('newGtrBoardSettings')).formationIcons.join(',') === 'accessibility,cycles,food,first-class'`)
     const labels = await evaluate(
       `[...document.querySelectorAll('fieldset label')].map(x => x.textContent.trim()).filter(x => !['2', '4'].includes(x))`,
     )
@@ -94,6 +98,7 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
     const boardQuery = new URL(boardUrl).searchParams
     assert.equal(boardQuery.get('color'), 'white')
     assert.equal(boardQuery.get('serviceCount'), '5')
+    assert.equal(boardQuery.get('formationIcons'), 'accessibility,cycles,food,first-class')
     assert.deepEqual(boardQuery.getAll('platform'), ['2', '4'])
     assert.equal(await evaluate(`!!document.querySelector('.board-settings, dialog')`), false)
     assert.equal(await evaluate(`[...document.querySelectorAll('a')].some(x => x.textContent === 'Edit board')`), true)
@@ -142,6 +147,12 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
     await wait(`${frame}.querySelector('dialog').open`)
     assert.equal(await evaluate(`${frame}.querySelector('dialog').matches(':modal')`), true)
     assert.deepEqual(await evaluate(`[...${frame}.querySelectorAll('fieldset label')].map(x => x.textContent.trim())`), labels)
+    assert.equal(
+      await evaluate(
+        `[...${frame}.querySelectorAll('label')].find(x => x.textContent.trim() === 'Standard toilets').querySelector('input').checked`,
+      ),
+      false,
+    )
     await screenshot('embed-dialog')
     // Modal changes reach the live options and URL immediately.
     await evaluate(`(() => {

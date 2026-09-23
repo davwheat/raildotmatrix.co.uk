@@ -1,3 +1,5 @@
+import type { FormationIcon } from '../../BoardOptions/settings'
+
 const BUNDLE_DIRECTORY = '/led-board/'
 
 export type OrdinalFormat = 'suffix' | 'dot'
@@ -21,6 +23,8 @@ export interface LedBoardOptions {
   loadingBrightness?: 50 | 100
   /** TOC codes whose Infotec coach letters are shown; an empty list hides all letters. */
   coachLetterTocs?: string[]
+  /** Enabled Infotec facility icons; defaults to all, while an empty list hides all. */
+  formationIcons?: FormationIcon[]
   /** Infotec formation count; wording falls back to a number when space is limited. */
   formationCount?: 'none' | 'number' | 'coaches' | 'coaches-no-brackets' | 'carriages' | 'carriages-no-brackets'
   clockStyle?: 'normal' | 'small-seconds' | 'small'

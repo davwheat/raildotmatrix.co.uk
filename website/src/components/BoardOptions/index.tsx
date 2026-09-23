@@ -1,9 +1,17 @@
 import React from 'react'
 import { useBoardOptions } from './context'
-import type { DisplayOptions } from './settings'
+import { formationIconTypes, type DisplayOptions, type FormationIcon } from './settings'
 import styles from './options.module.scss'
 
 type BooleanKey = { [K in keyof DisplayOptions]: DisplayOptions[K] extends boolean ? K : never }[keyof DisplayOptions]
+
+const formationIconLabels: Record<FormationIcon, string> = {
+  accessibility: 'Accessibility',
+  cycles: 'Cycles',
+  toilets: 'Standard toilets',
+  food: 'Food',
+  'first-class': 'First class',
+}
 
 function Check({ name, children, hint, disabled = false }: { name: BooleanKey; children: React.ReactNode; hint?: string; disabled?: boolean }) {
   const { options, update } = useBoardOptions()
@@ -50,7 +58,7 @@ function Choice<K extends keyof DisplayOptions>({
 
 /** The same controls are used on the setup page and inside the embed dialog. */
 export default function BoardOptions() {
-  const { type, options } = useBoardOptions()
+  const { type, options, update } = useBoardOptions()
   const infotec = type === 'infotec-landscape-dmi'
   const daktronics = type === 'daktronics-data-display-dmi'
   if (type === 'class-700') return <p className={styles.help}>This display has no additional options.</p>
@@ -154,6 +162,28 @@ export default function BoardOptions() {
             </Check>
           )}
           <Check name="warningPlatform">Name the platform in warnings</Check>
+        </fieldset>
+      )}
+      {infotec && (
+        <fieldset>
+          <legend>Formation icons</legend>
+          <p className={styles.help}>Accessibility takes precedence over the toilet icon in the same coach.</p>
+          {formationIconTypes.map(icon => (
+            <label key={icon} className={styles.check}>
+              <input
+                type="checkbox"
+                checked={options.formationIcons.includes(icon)}
+                onChange={e =>
+                  update({
+                    formationIcons: formationIconTypes.filter(type =>
+                      type === icon ? e.currentTarget.checked : options.formationIcons.includes(type),
+                    ),
+                  })
+                }
+              />
+              <span>{formationIconLabels[icon]}</span>
+            </label>
+          ))}
         </fieldset>
       )}
       <fieldset>

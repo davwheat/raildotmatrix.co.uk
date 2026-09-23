@@ -45,6 +45,9 @@ func controlFlag(name string) bool {
 
 // Check before opening hardware, both for normal starts and GUI edits.
 func validateConfig(c config) error {
+	if err := infotec.ValidateFormationIcons(c.FormationIcons); err != nil {
+		return err
+	}
 	if err := infotec.ValidateFormationCount(c.FormationCount); err != nil {
 		return err
 	}

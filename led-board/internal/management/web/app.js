@@ -72,6 +72,7 @@ const labels = {
   loading_brightness: "Loading fill brightness (%)",
   formation_count: "Formation count",
   coach_letter_tocs: "TOCs with coach letters",
+  formation_icons: "Enabled formation icons",
   clock_style: "Clock style",
   ordinal_format: "Ordinal format",
   service_count: "Services to show (1–6)",
@@ -131,7 +132,7 @@ const groups = [
   [
     "Station",
     "Leave the station empty to show setup instructions.",
-    "crs board colour platforms row_prefix loading_brightness formation_count coach_letter_tocs clock_style ordinal_format service_count scroll_speed",
+    "crs board colour platforms row_prefix loading_brightness formation_count coach_letter_tocs formation_icons clock_style ordinal_format service_count scroll_speed",
   ],
   [
     "Display options",

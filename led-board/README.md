@@ -155,8 +155,18 @@ The structured websocket exposes coach identifiers, class, loading and toilets, 
 and cycle-space flags enriched by Darwin Browser's Gemini allocation rules. The formation shows accessibility
 when either wheelchair spaces or an accessible toilet are reported, and cycles when cycle spaces are reported.
 Unset facility flags remain unknown. Coach order is retained as supplied.
-Standard and accessible toilets both show the toilet icon; accessible toilets also show accessibility.
+The accessibility icon takes precedence over the toilet icon in the same coach.
 Toilet icons identify their locations, not whether the toilets are currently in service.
+
+`formation_icons` selects the enabled facility icons, defaulting to
+`["accessibility", "cycles", "toilets", "food", "first-class"]`. Remove `"toilets"` to hide standard toilet
+icons while keeping accessibility, or use `[]` to hide all facility icons. Coach letters and loading are
+unaffected, and disabled icons do not add rotation pages. If accessibility is disabled, a coach with a toilet
+can show the toilet icon instead. Icon order remains accessibility, cycles, toilets, food, then first class.
+The website offers individual Formation icons checkboxes, and the Pi management UI accepts the list.
+`-formation-icons accessibility,cycles,food,first-class` and `BOARD_FORMATION_ICONS=accessibility,cycles,food,first-class`
+override the file setting. The browser API and shared URLs use `formationIcons` (an array in the API,
+a comma-separated list in URLs; an empty value disables all facility icons).
 
 The protocol adapter also retains the complete NRCC station-notice list, replacing it on every snapshot
 and update (an empty list clears it). Notices are not currently rendered by the boards.
