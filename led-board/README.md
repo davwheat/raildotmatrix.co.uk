@@ -132,8 +132,10 @@ layout displays HH:MM followed by small seconds with a gap and no second colon. 
 reserves four dots between its expected-time text and the clock.
 
 `ordinal_format` selects `suffix` (`1st`, `2nd`, `3rd`) or `dot` (`1.`, `2.`, `3.`), defaulting to `suffix`.
-`service_count` selects how many Infotec services to show, from 1 to 6 (default 3). The first stays on the main
-row while the bottom row rotates through services 2 to the selected limit. These settings are also available
+`service_count` selects how many services either format shows, from 1 to 6 (default 3). The first stays on the main
+row while the lower service row rotates through services 2 to the selected limit. Daktronics rotates every 12
+seconds; dividing trains continue paging through their destinations within that row. Its lower service row is
+hidden when the first service's destination needs a second line. These settings are also available
 in the website settings and Pi management UI.
 
 Infotec boards also draw a train formation below the service information whenever the websocket supplies a

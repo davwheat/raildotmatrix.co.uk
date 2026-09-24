@@ -27,6 +27,8 @@ type Config struct {
 	Platforms       []string
 	ShowUnconfirmed bool
 	LegacyTOCNames  bool
+	// MaxServices limits the projected view, leaving the protocol state and platform alterations intact.
+	MaxServices int
 	// Logger is optional. Nil discards the log.
 	Logger *slog.Logger
 }
@@ -76,7 +78,7 @@ func run(ctx context.Context, cfg Config, t timings, emit func(model.View)) erro
 	b := &board{
 		log:      cfg.Logger.With("crs", cfg.CRS),
 		emit:     emit,
-		opts:     Options{Platforms: cfg.Platforms, ShowUnconfirmed: cfg.ShowUnconfirmed, LegacyTOCNames: cfg.LegacyTOCNames},
+		opts:     Options{Platforms: cfg.Platforms, ShowUnconfirmed: cfg.ShowUnconfirmed, LegacyTOCNames: cfg.LegacyTOCNames, MaxServices: cfg.MaxServices},
 		timings:  t,
 		boundary: time.NewTimer(time.Hour),
 	}

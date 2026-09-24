@@ -77,8 +77,16 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
     assert.equal(await evaluate(`'warningPlatform' in JSON.parse(localStorage.getItem('newGtrBoardSettings'))`), false)
     await select('Display type', 'daktronics-data-display-dmi')
     await wait(`document.body.textContent.includes('Casing colour') && !${warningInput}.checked`)
+    await select('Services to show', '6')
+    await wait(`JSON.parse(localStorage.getItem('dataDisplayBoardSettings')).serviceCount === 6`)
     await select('Display type', 'infotec-landscape-dmi')
     await wait(`document.body.textContent.includes('LED colour') && !${warningInput}.checked`)
+    assert.equal(
+      await evaluate(
+        `[...document.querySelectorAll('label')].find(x => x.textContent.includes('Services to show')).querySelector('select').value`,
+      ),
+      '3',
+    )
     await togglePlatform('2')
     await wait(`${warningInput}.checked`)
     await togglePlatform('2')
@@ -104,6 +112,12 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
     const labels = await evaluate(`[...document.querySelectorAll('fieldset:not(.platform-picker) label')].map(x => x.textContent.trim())`)
     await select('Display type', 'daktronics-data-display-dmi')
     await wait(`document.body.textContent.includes('Casing colour')`)
+    assert.equal(
+      await evaluate(
+        `[...document.querySelectorAll('label')].find(x => x.textContent.includes('Services to show')).querySelector('select').value`,
+      ),
+      '6',
+    )
     await select('Display type', 'infotec-landscape-dmi')
     await wait(`document.body.textContent.includes('LED colour')`)
     assert.equal(

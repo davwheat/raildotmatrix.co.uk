@@ -246,7 +246,7 @@ test('an unanswered resync is retried before the socket is replaced', context =>
   stop()
 })
 
-import { displayServices, platformAlterations } from '../src/live/displayServices'
+import { displayServices, nextDisplayBoundary, platformAlterations } from '../src/live/displayServices'
 
 test('display policy keeps TrainOrder, feed names, null data and available split portions', () => {
   const initial = snapshot()
@@ -371,6 +371,12 @@ test('warnings replace only their platform and expire using the client clock', (
     },
   ]
   const state = reduceCIS(null, initial)!
+  const starts = Date.parse(fixture.window.from)
+  const expires = Date.parse('2026-09-13T10:01:00Z')
+  assert.equal(nextDisplayBoundary(state, null, starts - 1), starts)
+  assert.equal(nextDisplayBoundary(state, null, starts), expires)
+  assert.equal(nextDisplayBoundary(state, null, expires), null)
+  assert.equal(nextDisplayBoundary(state, ['3'], starts - 1), null)
   const active = displayServices(state, null, false, false, Date.parse(fixture.window.from))
   assert.deepEqual(
     active.services.map(service => service.id),
@@ -381,6 +387,17 @@ test('warnings replace only their platform and expire using the client clock', (
   assert.equal(expired.services.length, 2)
   assert.equal(expired.overrides.length, 0)
   assert.equal(displayServices(state, ['3'], false, false, Date.parse(fixture.window.from)).overrides.length, 0)
+})
+
+test('reported arrivals use the supplied display time and schedule a single boundary', () => {
+  const initial = snapshot()
+  const arrives = Date.parse(initial.window.from) + 5500
+  initial.movements[0].arrival.actual = new Date(arrives).toISOString()
+  const state = reduceCIS(null, initial)!
+  assert.equal(nextDisplayBoundary(state, null, arrives - 1), arrives)
+  assert.equal(displayServices(state, null, false, false, arrives - 1).services[0].hasArrived, false)
+  assert.equal(displayServices(state, null, false, false, arrives).services[0].hasArrived, true)
+  assert.equal(nextDisplayBoundary(state, null, arrives), null)
 })
 
 test('the initial snapshot displays five published platforms without waiting for confirmation updates', () => {

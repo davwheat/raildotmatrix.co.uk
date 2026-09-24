@@ -24,6 +24,14 @@ type Board interface {
 	RefreshHz() int
 }
 
+// ServiceLimit is how many services a format can show. Formats without a limit receive the whole view.
+func ServiceLimit(b Board) int {
+	if limited, ok := b.(interface{ ServiceLimit() int }); ok {
+		return limited.ServiceLimit()
+	}
+	return 0
+}
+
 // MinRefreshHz is the slowest panel refresh a board may ask for. A HUB75 panel strobes at its refresh rate,
 // and 60 Hz looks steady on the panels the boards were developed on.
 const MinRefreshHz = 60

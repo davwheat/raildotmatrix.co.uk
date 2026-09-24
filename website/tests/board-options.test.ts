@@ -3,6 +3,21 @@ import { test } from 'node:test'
 import { applyOptions, defaults, formationIconTypes, isRailAnnouncementsEmbed, readOptions } from '../src/components/BoardOptions/settings'
 
 const infotec = 'infotec-landscape-dmi'
+test('Daktronics service count accepts 1–6 and round-trips independently of Infotec options', () => {
+  const type = 'daktronics-data-display-dmi'
+  assert.equal(readOptions(type, {}, new URLSearchParams()).serviceCount, 3)
+  for (let serviceCount = 1; serviceCount <= 6; serviceCount++) {
+    assert.equal(readOptions(type, { serviceCount }, new URLSearchParams()).serviceCount, serviceCount)
+    const query = new URLSearchParams()
+    applyOptions(query, type, { ...defaults, serviceCount })
+    assert.equal(query.get('serviceCount'), String(serviceCount))
+    assert.equal(query.has('compactLowerRow'), false)
+    assert.equal(readOptions(type, { serviceCount: 3 }, query).serviceCount, serviceCount)
+  }
+  for (const invalid of ['0', '7', '1.5', 'invalid']) {
+    assert.equal(readOptions(type, {}, new URLSearchParams({ serviceCount: invalid })).serviceCount, 3)
+  }
+})
 test('old preferences merge with new defaults and migrate platform labels', () => {
   const result = readOptions(infotec, { color: 'white', platformPosition: 'after' }, new URLSearchParams())
   assert.equal(result.color, 'white')

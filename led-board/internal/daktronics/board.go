@@ -17,6 +17,8 @@ import (
 type Config struct {
 	OrdinalFormat board.OrdinalFormat
 	Width, Height int
+	// ServiceCount selects how many services to show, from 1 to 6; 0 means 3. Later services rotate on the lower row.
+	ServiceCount int
 	// Zone is the time zone of the clock and the timetable; nil means UTC.
 	Zone *time.Location
 	// WorldlinePowered selects the variant that folds the information row into one scrolling sentence and
@@ -152,7 +154,7 @@ type Board struct {
 	steadyStart time.Time
 	info        scroller
 	infoPage    int
-	// swapIndex selects the 2nd or 3rd train for the third row; swapStart is when it last changed and
+	// swapIndex selects a later train for the third row; swapStart is when it last changed and
 	// rowSlideStart when the third row last slid up.
 	swapIndex     int
 	swapStart     time.Time
@@ -176,6 +178,10 @@ func New(cfg Config) *Board {
 	if cfg.ScrollSpeed <= 0 {
 		cfg.ScrollSpeed = DefaultScrollSpeed
 	}
+	if cfg.ServiceCount == 0 {
+		cfg.ServiceCount = 3
+	}
+	cfg.ServiceCount = min(6, max(1, cfg.ServiceCount))
 	b := &Board{cfg: cfg, geo: newGeometry(cfg.Width, cfg.Height, cfg.RowPrefix)}
 	b.info.speed = cfg.ScrollSpeed
 	return b
@@ -183,6 +189,8 @@ func New(cfg Config) *Board {
 
 // RefreshHz returns the refresh rate at which every scroll step lasts a whole number of refreshes.
 func (b *Board) RefreshHz() int { return board.RefreshFor(b.cfg.ScrollSpeed) }
+
+func (b *Board) ServiceLimit() int { return b.cfg.ServiceCount }
 
 // Update replaces the view. It takes effect on the next Tick, so it is safe to call from another goroutine.
 func (b *Board) Update(v model.View) {
@@ -290,18 +298,10 @@ func samePages(a, b []page) bool {
 	return true
 }
 
-// thirdRowCount is how many trains the third row cycles through: the 2nd and 3rd, unless either divides,
-// in which case the 2nd alone, cycling its destinations. (TrainServices.tsx leaves the row empty when the 2nd
-// train divides; showing it is the deliberate departure.)
+// thirdRowCount is how many later services the third row cycles through. Dividing trains page through their
+// destinations while shown, without preventing later services from appearing.
 func thirdRowCount(c content) int {
-	switch {
-	case len(c.rows) < 2:
-		return 0
-	case len(c.rows) < 3, c.rows[1].dividing, c.rows[2].dividing:
-		return 1
-	default:
-		return 2
-	}
+	return max(0, len(c.rows)-1)
 }
 
 // clearDown wipes the outgoing first row unless a wipe is already running, in which case whatever follows it
@@ -362,9 +362,10 @@ func (b *Board) advance(now time.Time) {
 		b.info.reset(b.content.pages[b.infoPage], b.geo.w, b.info.start)
 		b.info.advance(now)
 	}
-	if thirdRowCount(b.content) == 2 && now.Sub(b.swapStart).Milliseconds() >= swapInterval {
-		b.swapIndex ^= 1
-		b.swapStart = b.swapStart.Add(swapInterval * time.Millisecond)
+	if count := thirdRowCount(b.content); count > 1 && now.Sub(b.swapStart).Milliseconds() >= swapInterval {
+		steps := now.Sub(b.swapStart).Milliseconds() / swapInterval
+		b.swapIndex = (b.swapIndex + int(steps%int64(count))) % count
+		b.swapStart = b.swapStart.Add(time.Duration(steps*swapInterval) * time.Millisecond)
 		b.rowSlideStart = b.swapStart
 	}
 }

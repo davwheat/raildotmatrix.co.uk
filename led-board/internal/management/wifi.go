@@ -1,6 +1,7 @@
 package management
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -41,6 +42,7 @@ type WiFi struct {
 	status  setupdisplay.Status
 	busy    bool
 	profile string
+	written []byte
 }
 
 func NewWiFi(o Options) *WiFi {
@@ -104,8 +106,17 @@ func (w *WiFi) set(mode, ssid, message string) {
 	}
 	w.status = state
 	data, _ := json.Marshal(state)
+	if bytes.Equal(data, w.written) {
+		// Polling a stable connection must not rewrite and fsync the SD card every three seconds. Recreate
+		// the status if it was removed; a failed write is retried on the next poll.
+		if _, err := os.Stat(w.opts.StatusPath); err == nil {
+			return
+		}
+	}
 	if err := atomicWrite(w.opts.StatusPath, data, 0644); err != nil {
 		log.Printf("write matrix setup status: %v", err)
+	} else {
+		w.written = data
 	}
 }
 func (w *WiFi) nm(ctx context.Context, args ...string) ([]byte, error) {

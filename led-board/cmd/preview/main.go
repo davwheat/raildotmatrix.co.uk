@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/png"
+	"image/draw"
 	"os"
 	"path/filepath"
 	"time"
@@ -90,7 +90,7 @@ func main() {
 			t := float64(i) / float64(*fps)
 			img := pngdisplay.Dots(f, *scale)
 			name := filepath.Join(dir, fmt.Sprintf("t%06.2f.png", t))
-			if err := save(name, img); err != nil {
+			if err := pngdisplay.EncodeImage(name, img); err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
@@ -99,7 +99,7 @@ func main() {
 	}
 	sheet := contactSheet(shots, *columns, *sheetScale)
 	name := filepath.Join(dir, "contact-sheet.png")
-	if err := save(name, sheet); err != nil {
+	if err := pngdisplay.EncodeImage(name, sheet); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -129,11 +129,7 @@ func contactSheet(shots []shot, columns, scale int) *image.RGBA {
 		y0 := gutter + (i/columns)*cellH
 		drawLabel(sheet, x0, y0, fmt.Sprintf("t=%.2fs", s.t))
 		b := s.img.Bounds()
-		for y := 0; y < b.Dy(); y++ {
-			for x := 0; x < b.Dx(); x++ {
-				sheet.Set(x0+x, y0+labelH+y, s.img.At(x, y))
-			}
-		}
+		draw.Draw(sheet, image.Rect(x0, y0+labelH, x0+b.Dx(), y0+labelH+b.Dy()), s.img, b.Min, draw.Src)
 		frameRect(sheet, x0-1, y0+labelH-1, b.Dx()+2, b.Dy()+2)
 	}
 	return sheet
@@ -165,13 +161,4 @@ func frameRect(img *image.RGBA, x, y, w, h int) {
 		img.SetRGBA(x, y+i, c)
 		img.SetRGBA(x+w-1, y+i, c)
 	}
-}
-
-func save(name string, img image.Image) error {
-	out, err := os.Create(name)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-	return png.Encode(out, img)
 }

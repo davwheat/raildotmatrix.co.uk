@@ -41,7 +41,7 @@ export const storageKeys: Record<DisplayType, string> = {
 }
 
 const common: OptionKey[] = ['showUnconfirmedPlatforms', 'useLegacyTocNames']
-const led: OptionKey[] = ['rowPrefix', 'ordinalFormat', 'warningPlatform']
+const led: OptionKey[] = ['rowPrefix', 'ordinalFormat', 'warningPlatform', 'serviceCount']
 export function optionKeys(type: DisplayType): OptionKey[] {
   switch (type) {
     case 'infotec-landscape-dmi':
@@ -56,7 +56,6 @@ export function optionKeys(type: DisplayType): OptionKey[] {
         'loadingBrightness',
         'formationCount',
         'formationIcons',
-        'serviceCount',
         'alignPlatformRows',
       ]
     case 'daktronics-data-display-dmi':

@@ -1,0 +1,177 @@
+=== panel ===
+refresh_hz=60 pwm_bits=11 sleep=false
+CPU (100% = one core): 132.9%
+display 256x64
+600 frames in 10.01s: 60.0 fps
+frame interval ms: p50=16.665 p95=16.721 p99=16.845 max=23.347
+temp=55.8'C
+throttled=0x20000
+refresh_hz=60 pwm_bits=11 sleep=true
+CPU (100% = one core): 96.4%
+display 256x64
+600 frames in 10.01s: 60.0 fps
+frame interval ms: p50=16.665 p95=16.769 p99=16.802 max=23.989
+temp=55.8'C
+throttled=0x20000
+refresh_hz=96 pwm_bits=8 sleep=false
+CPU (100% = one core): 144.5%
+display 256x64
+960 frames in 10.01s: 95.9 fps
+frame interval ms: p50=10.402 p95=10.538 p99=10.582 max=17.161
+temp=56.4'C
+throttled=0x20000
+refresh_hz=96 pwm_bits=8 sleep=true
+CPU (100% = one core): 134.6%
+display 256x64
+960 frames in 10.01s: 95.9 fps
+frame interval ms: p50=10.418 p95=10.503 p99=10.549 max=17.338
+temp=56.9'C
+throttled=0x20000
+
+=== uploads ===
+refresh_hz=60 pwm_bits=11 sleep=true upload=full-upload
+CPU (100% = one core): 96.3%
+display 256x64
+601 frames in 10.02s: 60.0 fps
+frame interval ms: p50=16.670 p95=16.763 p99=16.801 max=23.841
+temp=55.8'C
+throttled=0x20000
+refresh_hz=60 pwm_bits=11 sleep=true upload=changed-rows
+CPU (100% = one core): 64.4%
+display 256x64
+600 frames in 10.01s: 60.0 fps
+frame interval ms: p50=16.666 p95=16.704 p99=16.802 max=24.242
+temp=54.8'C
+throttled=0x20000
+refresh_hz=96 pwm_bits=8 sleep=true upload=full-upload
+CPU (100% = one core): 135.0%
+display 256x64
+960 frames in 10.01s: 95.9 fps
+frame interval ms: p50=10.417 p95=10.511 p99=10.612 max=17.342
+temp=55.8'C
+throttled=0x20000
+refresh_hz=96 pwm_bits=8 sleep=true upload=changed-rows
+CPU (100% = one core): 81.3%
+display 256x64
+961 frames in 10.02s: 95.9 fps
+frame interval ms: p50=10.414 p95=10.448 p99=10.520 max=17.485
+temp=55.3'C
+throttled=0x20000
+
+=== application ===
+application=before-performance fixture=busy-board
+CPU (100% = one core): 113.0%; measured 20.02s
+VmRSS:	   12496 kB
+time=2026-09-24T00:54:13.174+01:00 level=INFO msg="using config file" path=/etc/departure-board.toml
+time=2026-09-24T00:54:13.176+01:00 level=INFO msg="panel timing" refresh_hz=60 pwm_bits=11
+temp=55.8'C
+throttled=0x20000
+application=after-performance fixture=busy-board
+CPU (100% = one core): 65.8%; measured 20.02s
+VmRSS:	   12692 kB
+time=2026-09-24T00:54:38.271+01:00 level=INFO msg="using config file" path=/etc/departure-board.toml
+time=2026-09-24T00:54:38.273+01:00 level=INFO msg="panel timing" refresh_hz=60 pwm_bits=11
+temp=54.2'C
+throttled=0x20000
+application=idle fixture=no-departures
+CPU (100% = one core): 61.9%; measured 20.02s
+VmRSS:	   12508 kB
+time=2026-09-24T00:55:03.377+01:00 level=INFO msg="using config file" path=/etc/departure-board.toml
+time=2026-09-24T00:55:03.379+01:00 level=INFO msg="panel timing" refresh_hz=60 pwm_bits=11
+temp=55.3'C
+throttled=0x20000
+
+=== stress ===
+competing_cores=3 refresh_hz=60 pwm_bits=11 sleep=false
+display 256x64
+600 frames in 10.02s: 59.9 fps
+frame interval ms: p50=16.667 p95=20.208 p99=20.580 max=35.003
+temp=60.1'C
+throttled=0x20002
+competing_cores=3 refresh_hz=60 pwm_bits=11 sleep=true
+display 256x64
+600 frames in 10.01s: 59.9 fps
+frame interval ms: p50=16.665 p95=19.989 p99=20.490 max=34.633
+temp=61.2'C
+throttled=0x20002
+
+=== renderers ===
+PNG before
+goos: linux
+goarch: arm64
+pkg: github.com/davwheat/raildotmatrix.co.uk/led-board/build/perf-before/pngdisplay
+BenchmarkScaleInto/scale-1         	     399	   1467593 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-1         	     416	   1449395 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-1         	     418	   1448074 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-3         	      60	   9758782 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-3         	      60	   9744300 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-3         	      61	   9741390 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-6         	      16	  35442500 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-6         	      16	  35347913 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-6         	      15	  35573417 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDots                      	      43	  15606663 ns/op	 2359360 B/op	       2 allocs/op
+BenchmarkDots                      	      43	  15824736 ns/op	 2359360 B/op	       2 allocs/op
+BenchmarkDots                      	      39	  15823888 ns/op	 2359360 B/op	       2 allocs/op
+BenchmarkWriter                    	      10	  52672953 ns/op	 1126984 B/op	      31 allocs/op
+BenchmarkWriter                    	      10	  52966417 ns/op	 1126515 B/op	      30 allocs/op
+BenchmarkWriter                    	      10	  52881073 ns/op	 1126510 B/op	      30 allocs/op
+PASS
+SETUP before
+goos: linux
+goarch: arm64
+pkg: github.com/davwheat/raildotmatrix.co.uk/led-board/build/perf-before/setupdisplay
+BenchmarkTick/width-128         	   15937	     37109 ns/op	     368 B/op	       9 allocs/op
+BenchmarkTick/width-128         	   16380	     36439 ns/op	     368 B/op	       9 allocs/op
+BenchmarkTick/width-128         	   16630	     36370 ns/op	     368 B/op	       9 allocs/op
+BenchmarkTick/width-512         	   30129	     20037 ns/op	     368 B/op	       9 allocs/op
+BenchmarkTick/width-512         	   28940	     19930 ns/op	     368 B/op	       9 allocs/op
+BenchmarkTick/width-512         	   30420	     19566 ns/op	     368 B/op	       9 allocs/op
+PASS
+PNG after
+goos: linux
+goarch: arm64
+pkg: github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix/pngdisplay
+BenchmarkScaleInto/scale-1         	    1027	    569301 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-1         	    1052	    568005 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-1         	    1050	    568327 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-3         	     372	   1602249 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-3         	     368	   1605355 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-3         	     370	   1606259 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-6         	     145	   4118286 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-6         	     145	   4126848 ns/op	       0 B/op	       0 allocs/op
+BenchmarkScaleInto/scale-6         	     145	   4120843 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDots                      	      67	  10724403 ns/op	 2359456 B/op	       3 allocs/op
+BenchmarkDots                      	      69	  10636632 ns/op	 2359456 B/op	       3 allocs/op
+BenchmarkDots                      	      69	  10803214 ns/op	 2359456 B/op	       3 allocs/op
+BenchmarkWriter                    	      13	  41306815 ns/op	   87253 B/op	       7 allocs/op
+BenchmarkWriter                    	      13	  41261034 ns/op	     259 B/op	       5 allocs/op
+BenchmarkWriter                    	      14	  41142329 ns/op	     258 B/op	       5 allocs/op
+PASS
+SETUP after
+goos: linux
+goarch: arm64
+pkg: github.com/davwheat/raildotmatrix.co.uk/led-board/internal/setupdisplay
+BenchmarkTick/width-128         	   38822	     14973 ns/op	      18 B/op	       0 allocs/op
+BenchmarkTick/width-128         	   38848	     15031 ns/op	      18 B/op	       0 allocs/op
+BenchmarkTick/width-128         	   38845	     15039 ns/op	      18 B/op	       0 allocs/op
+BenchmarkTick/width-512         	  420409	      1463 ns/op	      18 B/op	       0 allocs/op
+BenchmarkTick/width-512         	  369417	      1469 ns/op	      18 B/op	       0 allocs/op
+BenchmarkTick/width-512         	  424060	      1468 ns/op	      18 B/op	       0 allocs/op
+PASS
+temp=58.0'C
+throttled=0x20000
+
+=== live ===
+goos: linux
+goarch: arm64
+pkg: github.com/davwheat/raildotmatrix.co.uk/led-board/internal/live
+BenchmarkDisplay/limit-0         	    2517	    299572 ns/op	   25968 B/op	     201 allocs/op
+BenchmarkDisplay/limit-0         	    2767	    307521 ns/op	   25968 B/op	     201 allocs/op
+BenchmarkDisplay/limit-0         	    2799	    306511 ns/op	   25968 B/op	     201 allocs/op
+BenchmarkDisplay/limit-3         	   31074	     19907 ns/op	    1640 B/op	      13 allocs/op
+BenchmarkDisplay/limit-3         	   31126	     19445 ns/op	    1640 B/op	      13 allocs/op
+BenchmarkDisplay/limit-3         	   30226	     19849 ns/op	    1640 B/op	      13 allocs/op
+BenchmarkDisplay/limit-6         	   16014	     37304 ns/op	    3280 B/op	      25 allocs/op
+BenchmarkDisplay/limit-6         	   15600	     38376 ns/op	    3280 B/op	      25 allocs/op
+BenchmarkDisplay/limit-6         	   15576	     38382 ns/op	    3280 B/op	      25 allocs/op
+PASS

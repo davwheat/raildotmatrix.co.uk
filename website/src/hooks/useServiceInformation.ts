@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import GetNextTrainsAtStationStaff, { type StaffServicesResponse } from '../api/GetNextTrainsAtStationStaff'
 import { processServices } from '../api/ProcessServices'
 import { connectCIS } from '../live/cis'
 import { streamUrl } from '../live/connection'
-import { displayServices, platformAlterations } from '../live/displayServices'
+import { displayServices, nextDisplayBoundary, platformAlterations } from '../live/displayServices'
 import { useDataSource } from '../live/source'
 import type { CISState } from '../live/types'
 
@@ -19,7 +19,7 @@ export function useServiceInformation(station: string, platforms: string[] | nul
     : ''
   const key = `${mode}:${baseUrl}:${station}:${platformKey}:${showUnconfirmed}`
   const [data, setData] = useState<{ key: string; legacy?: StaffServicesResponse; cis?: CISState } | null>(null)
-  const [now, setNow] = useState(Date.now)
+  const [boundaryVersion, setBoundaryVersion] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -77,13 +77,6 @@ export function useServiceInformation(station: string, platforms: string[] | nul
     }
   }, [key, mode, baseUrl, station, platformKey, showUnconfirmed])
 
-  useEffect(() => {
-    if (mode !== 'websocket') return
-    // Platform overrides activate and expire even between server messages.
-    const timer = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(timer)
-  }, [mode])
-
   const [alterations, setAlterations] = useState(0)
   // A board that has just connected holds no earlier platform for any train, so its first state announces nothing.
   const compared = useRef<CISState | null>(null)
@@ -98,18 +91,49 @@ export function useServiceInformation(station: string, platforms: string[] | nul
   }, [data, key, platformKey])
 
   const current = data?.key === key ? data : null
-  const view = current?.cis ? displayServices(current.cis, platforms, legacyNames, showUnconfirmed, now) : null
+  const watched = useMemo(() => (platformKey ? platformKey.split(',') : null), [platformKey])
+  // Keep service objects stable on parent renders. A quiet feed needs no one-second polling or repeated
+  // conversion of every calling point; only an actual time boundary can change this projection.
+  const projection = useMemo(() => {
+    const now = Date.now()
+    const view = current?.cis ? displayServices(current.cis, watched, legacyNames, showUnconfirmed, now) : null
+    return {
+      services:
+        view?.services ??
+        (current?.legacy
+          ? processServices(current.legacy.trainServices || [], watched, legacyNames, station, showUnconfirmed).filter(
+              service => !service.hasDeparted,
+            )
+          : null),
+      overrides: view?.overrides || [],
+      boundary: current?.cis ? nextDisplayBoundary(current.cis, watched, now) : null,
+    }
+  }, [current, watched, legacyNames, showUnconfirmed, station, boundaryVersion])
+
+  useEffect(() => {
+    if (!current?.cis) return
+    const refresh = () => setBoundaryVersion(version => version + 1)
+    // Cap long delays at the browser's signed 32-bit timer limit. Recompute/rearm if a timer runs early or
+    // the wall clock changes, and refresh after a suspended page becomes visible again.
+    const timer =
+      projection.boundary === null ? undefined : setTimeout(refresh, Math.min(2_147_483_647, Math.max(1, projection.boundary - Date.now())))
+    const resume = () => {
+      if (!document.hidden) refresh()
+    }
+    document.addEventListener('visibilitychange', resume)
+    window.addEventListener('pageshow', refresh)
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('visibilitychange', resume)
+      window.removeEventListener('pageshow', refresh)
+    }
+  }, [current, projection])
+
   return {
     /** Counts platform alterations rather than describing them: a board announces that one happened, not which train moved. */
     alterations,
-    services:
-      view?.services ??
-      (current?.legacy
-        ? processServices(current.legacy.trainServices || [], platforms, legacyNames, station, showUnconfirmed).filter(
-            service => !service.hasDeparted,
-          )
-        : null),
-    overrides: view?.overrides || [],
+    services: projection.services,
+    overrides: projection.overrides,
     stationName: current?.cis?.station.name || current?.legacy?.locationName || station,
   }
 }

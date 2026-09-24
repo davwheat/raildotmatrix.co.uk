@@ -6,7 +6,6 @@ package pngdisplay
 import (
 	"fmt"
 	"image"
-	"image/color"
 	"image/png"
 	"os"
 	"path/filepath"
@@ -14,6 +13,19 @@ import (
 
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 )
+
+// PNG's compression workspace is much larger than a board frame. Reuse it across images and writers while
+// retaining the default compression level and allowing concurrent snapshot exports.
+type encoderBuffers struct{ sync.Pool }
+
+func (p *encoderBuffers) Get() *png.EncoderBuffer {
+	b, _ := p.Pool.Get().(*png.EncoderBuffer)
+	return b
+}
+
+func (p *encoderBuffers) Put(b *png.EncoderBuffer) { p.Pool.Put(b) }
+
+var encoder = png.Encoder{BufferPool: &encoderBuffers{}}
 
 // Options configures a PNG-writing display.
 type Options struct {
@@ -68,7 +80,7 @@ func (w *Writer) Swap(f *frame.Frame) error {
 	if err != nil {
 		return fmt.Errorf("pngdisplay: %w", err)
 	}
-	if err := png.Encode(out, w.img); err != nil {
+	if err := encoder.Encode(out, w.img); err != nil {
 		out.Close()
 		return fmt.Errorf("pngdisplay: %w", err)
 	}
@@ -89,11 +101,16 @@ func Encode(path string, f *frame.Frame, scale int) error {
 	}
 	img := image.NewRGBA(image.Rect(0, 0, f.W*scale, f.H*scale))
 	scaleInto(img, f, scale)
+	return EncodeImage(path, img)
+}
+
+// EncodeImage saves an already-rendered image, reusing the PNG compression workspace across snapshots.
+func EncodeImage(path string, img image.Image) error {
 	out, err := os.Create(path)
 	if err != nil {
 		return err
 	}
-	if err := png.Encode(out, img); err != nil {
+	if err := encoder.Encode(out, img); err != nil {
 		out.Close()
 		return err
 	}
@@ -102,14 +119,18 @@ func Encode(path string, f *frame.Frame, scale int) error {
 
 func scaleInto(img *image.RGBA, f *frame.Frame, scale int) {
 	for y := 0; y < f.H; y++ {
+		start := img.PixOffset(img.Rect.Min.X, img.Rect.Min.Y+y*scale)
+		row := img.Pix[start : start+f.W*scale*4]
 		for x := 0; x < f.W; x++ {
 			i := (y*f.W + x) * 3
-			c := color.RGBA{f.Pix[i], f.Pix[i+1], f.Pix[i+2], 0xff}
-			for dy := 0; dy < scale; dy++ {
-				for dx := 0; dx < scale; dx++ {
-					img.SetRGBA(x*scale+dx, y*scale+dy, c)
-				}
+			for to := x * scale * 4; to < (x+1)*scale*4; to += 4 {
+				row[to], row[to+1], row[to+2], row[to+3] = f.Pix[i], f.Pix[i+1], f.Pix[i+2], 255
 			}
+		}
+		// All remaining rows of this enlarged source row are identical.
+		for dy := 1; dy < scale; dy++ {
+			to := start + dy*img.Stride
+			copy(img.Pix[to:to+len(row)], row)
 		}
 	}
 }
@@ -121,37 +142,48 @@ func Dots(f *frame.Frame, scale int) *image.RGBA {
 	for i := 3; i < len(img.Pix); i += 4 {
 		img.Pix[i] = 255
 	}
+	spans := dotSpans(scale)
 	for y := range f.H {
 		for x := range f.W {
 			c := f.At(x, y)
 			if c == frame.Black {
 				continue
 			}
-			fillDot(img, x*scale, y*scale, scale, color.RGBA{c.R, c.G, c.B, 255})
+			for dy, span := range spans {
+				start := (y*scale+dy)*img.Stride + (x*scale+span.start)*4
+				end := start + (span.end-span.start)*4
+				for i := start; i < end; i += 4 {
+					img.Pix[i], img.Pix[i+1], img.Pix[i+2] = c.R, c.G, c.B
+				}
+			}
 		}
 	}
 	return img
 }
 
-func fillDot(img *image.RGBA, x0, y0, scale int, c color.RGBA) {
-	if scale < 4 {
-		for y := y0; y < y0+scale; y++ {
-			for x := x0; x < x0+scale; x++ {
-				img.SetRGBA(x, y, c)
-			}
-		}
-		return
-	}
+type dotSpan struct{ start, end int }
+
+// Every LED has the same silhouette. Calculate its horizontal spans once per image, rather than testing the
+// circle equation for every output pixel of every lit LED.
+func dotSpans(scale int) []dotSpan {
+	spans := make([]dotSpan, scale)
 	r := float64(scale)/2 - 0.5
-	cx, cy := float64(x0)+float64(scale)/2, float64(y0)+float64(scale)/2
-	for y := y0; y < y0+scale; y++ {
-		for x := x0; x < x0+scale; x++ {
-			dx, dy := float64(x)+0.5-cx, float64(y)+0.5-cy
+	centre := float64(scale) / 2
+	for y := range scale {
+		if scale < 4 {
+			spans[y] = dotSpan{0, scale}
+			continue
+		}
+		spans[y].start = scale
+		for x := range scale {
+			dx, dy := float64(x)+0.5-centre, float64(y)+0.5-centre
 			if dx*dx+dy*dy <= r*r {
-				img.SetRGBA(x, y, c)
+				spans[y].start = min(spans[y].start, x)
+				spans[y].end = x + 1
 			}
 		}
 	}
+	return spans
 }
 
 // Sink is a frame.Display that keeps a copy of the most recent frame. It is

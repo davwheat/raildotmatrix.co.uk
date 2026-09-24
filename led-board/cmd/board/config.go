@@ -85,7 +85,7 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	formationIcons := commaList(infotec.DefaultFormationIcons())
 	fs.Var(&formationIcons, "formation-icons", "comma-separated enabled icons: accessibility, cycles, toilets, food, first-class; empty hides all facility icons (Infotec only)")
 	fs.String("clock-style", "normal", "Infotec clock: normal, small-seconds or small")
-	fs.Int("service-count", 3, "number of services to show, from 1 to 6 (Infotec only)")
+	fs.Int("service-count", 3, "number of services to show, from 1 to 6")
 	fs.Bool("compact-lower-row", true, "show smaller lower service text beside the clock (Infotec only)")
 	fs.Bool("platform-box", false, "show a platform box beside the first train (Infotec only)")
 	fs.Bool("worldline", false, "Worldline-driven Daktronics board: single scrolling info line, capitalised locations")

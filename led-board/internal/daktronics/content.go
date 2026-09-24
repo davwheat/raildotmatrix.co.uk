@@ -22,7 +22,6 @@ type row struct {
 	// needs the "triple line" layout.
 	line1, line2 string
 	etd          string
-	dividing     bool
 }
 
 // page is one screen of the information row: a prefix that drops in at the right edge, then the text that
@@ -39,18 +38,14 @@ type content struct {
 func (b *Board) derive(v model.View) content {
 	var c content
 	c.warning = warningLines(v.Notice, b.warningPlatform(v))
-	for i := range v.Services {
-		if i == 3 {
-			break
-		}
+	for i := range min(len(v.Services), b.cfg.ServiceCount) {
 		s := &v.Services[i]
 		r := row{
-			id:       s.ID,
-			prefix:   b.cfg.RowPrefix.Text(i, s.Platform, b.cfg.OrdinalFormat),
-			std:      s.STD(b.cfg.Zone),
-			etd:      s.ETD(b.cfg.Zone),
-			dividing: len(s.Destinations) > 1,
-			pages:    destinationPages(s, b.cfg.WorldlinePowered),
+			id:     s.ID,
+			prefix: b.cfg.RowPrefix.Text(i, s.Platform, b.cfg.OrdinalFormat),
+			std:    s.STD(b.cfg.Zone),
+			etd:    s.ETD(b.cfg.Zone),
+			pages:  destinationPages(s, b.cfg.WorldlinePowered),
 		}
 		if i == 0 {
 			r.line1, r.line2 = b.wrapDestination(strings.Join(r.pages, ""))

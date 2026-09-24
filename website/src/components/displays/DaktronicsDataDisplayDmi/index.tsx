@@ -113,6 +113,7 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
             worldline={customBoardSettings.worldlinePowered}
             rowPrefix={customBoardSettings.rowPrefix}
             ordinalFormat={customBoardSettings.ordinalFormat}
+            serviceCount={customBoardSettings.serviceCount}
             warningPlatform={!!customBoardSettings.warningPlatform}
           />
 

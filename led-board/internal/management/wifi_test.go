@@ -47,6 +47,52 @@ func TestHotspotClientDetection(t *testing.T) {
 	}
 }
 
+func TestStatusWritesOnlyChangesAndRetries(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "network.json")
+	w := NewWiFi(Options{Demo: true, StateDir: dir, StatusPath: path})
+	w.set("hotspot", "DepartureBoard", "")
+	first, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for range 20 {
+		w.set("hotspot", "DepartureBoard", "")
+	}
+	unchanged, err := os.Stat(path)
+	if err != nil || !os.SameFile(first, unchanged) {
+		t.Fatalf("stable status rewrote the file: %v", err)
+	}
+	w.set("connected", "Home", "")
+	changed, err := os.Stat(path)
+	if err != nil || os.SameFile(unchanged, changed) {
+		t.Fatalf("changed status was not written: %v", err)
+	}
+	// Recreate a removed status, and do not cache an unsuccessful write as published.
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	w.set("connected", "Home", "")
+	if _, err := os.Stat(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(path, 0755); err != nil {
+		t.Fatal(err)
+	}
+	w.set("connected", "New network", "") // rename over a directory fails
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	w.set("connected", "New network", "")
+	data, err := os.ReadFile(path)
+	if err != nil || !strings.Contains(string(data), "New network") {
+		t.Fatalf("failed status was not retried: %s, %v", data, err)
+	}
+}
+
 func TestFailedSavedNetworkRestoresHotspot(t *testing.T) {
 	dir := t.TempDir()
 	var commands []string

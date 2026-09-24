@@ -234,7 +234,7 @@ func TestKeys(t *testing.T) {
 		}
 	})
 	want := strings.Fields(`board colour coach_letter_tocs formation_icons crs display fixture fps legacy_toc_names led.brightness led.chain led.cols
-		led.gpio_mapping led.limit_refresh led.multiplexing led.no_drop_privs led.no_hardware_pulse led.parallel
+		led.gpio_mapping led.limit_refresh led.multiplexing led.no_busy_waiting led.no_drop_privs led.no_hardware_pulse led.parallel
 		led.pwm_bits led.pwm_dither_bits led.pwm_lsb_nanoseconds led.rgb_sequence led.row_addr_type led.rows
 		led.scan_mode led.show_refresh led.slowdown_gpio align_platform_rows compact_lower_row loading_brightness formation_count clock_style ordinal_format service_count platform_box row_prefix platforms png_dir scale scroll_speed
 		show_unconfirmed_platforms small_scrolling_text url verbose warning_platform worldline`)
@@ -254,8 +254,8 @@ func TestSettingsCoverEveryKey(t *testing.T) {
 	if _, ok := settings(v)["led.limit_refresh"]; !ok {
 		t.Error("a key without a default must still be watched")
 	}
-	if got := len(v.AllKeys()); got != 46 {
-		t.Errorf("%d keys, want 46", got)
+	if got := len(v.AllKeys()); got != 47 {
+		t.Errorf("%d keys, want 47", got)
 	}
 }
 

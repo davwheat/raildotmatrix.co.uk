@@ -1,6 +1,9 @@
 package pngdisplay
 
 import (
+	"fmt"
+	"image"
+	"image/color"
 	"image/png"
 	"os"
 	"path/filepath"
@@ -8,6 +11,71 @@ import (
 
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 )
+
+func TestScaleIntoReusesRowsAndHonoursStride(t *testing.T) {
+	f := frame.New(3, 2)
+	for y := range f.H {
+		for x := range f.W {
+			f.Set(x, y, frame.RGB{R: uint8(20 + x*40), G: uint8(30 + y*60), B: 70})
+		}
+	}
+	for _, scale := range []int{1, 2, 3, 6} {
+		t.Run(fmt.Sprint(scale), func(t *testing.T) {
+			backing := image.NewRGBA(image.Rect(0, 0, f.W*scale+4, f.H*scale+4))
+			bounds := image.Rect(2, 2, 2+f.W*scale, 2+f.H*scale)
+			img := backing.SubImage(bounds).(*image.RGBA)
+			scaleInto(img, f, scale)
+			for y := range backing.Rect.Dy() {
+				for x := range backing.Rect.Dx() {
+					want := color.RGBA{}
+					if image.Pt(x, y).In(bounds) {
+						c := f.At((x-bounds.Min.X)/scale, (y-bounds.Min.Y)/scale)
+						want = color.RGBA{c.R, c.G, c.B, 255}
+					}
+					if got := backing.RGBAAt(x, y); got != want {
+						t.Fatalf("pixel %d,%d = %v, want %v", x, y, got, want)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestConcurrentSnapshotsWithDifferentSizes(t *testing.T) {
+	for _, scale := range []int{1, 3, 6} {
+		t.Run(fmt.Sprint(scale), func(t *testing.T) {
+			t.Parallel()
+			f := frame.New(3, 2)
+			name := filepath.Join(t.TempDir(), "snapshot.png")
+			for _, c := range []frame.RGB{{R: 230, G: 150}, {}, {R: 239, G: 239, B: 239}} {
+				f.FillRect(0, 0, f.W, f.H, c)
+				if err := Encode(name, f, scale); err != nil {
+					t.Fatal(err)
+				}
+				in, err := os.Open(name)
+				if err != nil {
+					t.Fatal(err)
+				}
+				img, err := png.Decode(in)
+				in.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if img.Bounds() != image.Rect(0, 0, f.W*scale, f.H*scale) {
+					t.Fatalf("unexpected bounds: %v", img.Bounds())
+				}
+				for y := range img.Bounds().Dy() {
+					for x := range img.Bounds().Dx() {
+						r, g, b, a := img.At(x, y).RGBA()
+						if r>>8 != uint32(c.R) || g>>8 != uint32(c.G) || b>>8 != uint32(c.B) || a != 65535 {
+							t.Fatalf("pixel %d,%d does not match %v", x, y, c)
+						}
+					}
+				}
+			}
+		})
+	}
+}
 
 func TestWriterScalesAndNumbers(t *testing.T) {
 	dir := t.TempDir()

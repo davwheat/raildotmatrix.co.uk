@@ -1,11 +1,12 @@
 import React from 'react'
 
 import { useEffect, useRef } from 'react'
-import { debounce } from 'throttle-debounce'
 
 function fillDiv(div: HTMLDivElement) {
   const currentWidth = div.offsetWidth
   const currentHeight = div.offsetHeight
+
+  if (!currentWidth || !currentHeight) return
 
   const availableHeight = window.innerHeight
   const availableWidth = window.innerWidth
@@ -23,26 +24,24 @@ export function ZoomDiv({ children }: { children: React.ReactNode }) {
   const boardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    boardRef.current && requestAnimationFrame(() => fillDiv(boardRef.current!))
-  })
-
-  useEffect(() => {
-    const debouncedScale = debounce(250, () => {
-      if (boardRef.current) {
-        fillDiv(boardRef.current)
-      }
-    })
-
-    function scale() {
-      debouncedScale()
+    const div = boardRef.current
+    if (!div) return
+    let pending = 0
+    const scale = () => {
+      cancelAnimationFrame(pending)
+      pending = requestAnimationFrame(() => fillDiv(div))
     }
-
+    const observer = new ResizeObserver(scale)
+    observer.observe(div)
     window.addEventListener('resize', scale)
+    scale()
 
     return () => {
+      cancelAnimationFrame(pending)
+      observer.disconnect()
       window.removeEventListener('resize', scale)
     }
-  }, [boardRef.current])
+  }, [])
 
   return (
     <div ref={boardRef} className="ZoomDivContainer">

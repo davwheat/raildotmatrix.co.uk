@@ -25,7 +25,7 @@ func TestAddFlagsOverrides(t *testing.T) {
 	o := AddFlags(fs)
 	args := []string{
 		"-led-rows=32", "-led-chain=1", "-led-rgb-sequence=RGB",
-		"-led-no-drop-privs", "-led-limit-refresh=100", "-led-show-refresh",
+		"-led-no-drop-privs", "-led-limit-refresh=100", "-led-show-refresh", "-led-no-busy-waiting=false",
 	}
 	if err := fs.Parse(args); err != nil {
 		t.Fatal(err)
@@ -36,7 +36,7 @@ func TestAddFlagsOverrides(t *testing.T) {
 	if o.DropPrivileges {
 		t.Fatal("-led-no-drop-privs should clear DropPrivileges")
 	}
-	if o.LimitRefreshRateHz != 100 || !o.ShowRefreshRate {
+	if o.LimitRefreshRateHz != 100 || !o.ShowRefreshRate || o.DisableBusyWaiting {
 		t.Fatalf("runtime flags not applied: %+v", *o)
 	}
 }

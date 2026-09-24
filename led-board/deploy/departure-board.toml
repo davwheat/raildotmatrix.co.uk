@@ -26,7 +26,7 @@ show_unconfirmed_platforms = false
 # Platform prefixes have room for a three-character platform such as "10A", and stay blank when unpublished.
 row_prefix = "ordinals"
 ordinal_format = "suffix"
-# Infotec: rotate services 2 through this limit on the bottom row.
+# Both board formats: rotate services 2 through this limit (1–6) on the lower service row.
 service_count = 3
 # Clock: normal, small-seconds (HH:MM ss), or small.
 clock_style = "normal"

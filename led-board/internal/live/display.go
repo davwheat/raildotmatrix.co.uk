@@ -17,6 +17,8 @@ type Options struct {
 	ShowUnconfirmed bool
 	// LegacyTOCNames prefers the operator names of the boards' era over the feed's.
 	LegacyTOCNames bool
+	// MaxServices bounds projection work to the rows the renderer can show. Non-positive means unlimited.
+	MaxServices int
 }
 
 const terminatesHereName = "Terminates here"
@@ -30,7 +32,11 @@ func Display(state *State, opts Options, now time.Time) model.View {
 		overridden[strings.ToUpper(override.Platform)] = true
 	}
 
-	services := make([]model.Service, 0, len(state.Ordering))
+	capacity := len(state.Ordering)
+	if opts.MaxServices > 0 {
+		capacity = min(capacity, opts.MaxServices)
+	}
+	services := make([]model.Service, 0, capacity)
 	for _, id := range state.Ordering {
 		movement, held := state.Movements[id]
 		if !held || !isPassengerCall(movement) {
@@ -54,6 +60,9 @@ func Display(state *State, opts Options, now time.Time) model.View {
 			s.Platform = platform
 		}
 		services = append(services, s)
+		if opts.MaxServices > 0 && len(services) == opts.MaxServices {
+			break
+		}
 	}
 	n, platform := notice(overrides)
 	return model.View{Connected: true, Services: services, Notice: n, NoticePlatform: platform}

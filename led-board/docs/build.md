@@ -305,3 +305,23 @@ go run ./cmd/board -display window -fixture first-departs -board infotec
 The window is provided by [Ebitengine](https://ebitengine.org), which is only
 compiled on non-Linux builds. The cross-compiled Pi binary uses a stub, so
 `-display window` fails there with an error.
+
+The window uploads one small RGBA texture and draws the LEDs with one GPU shader call, using the same antialiased
+dot texture at every LED. The resulting image is cached until the board changes. PNG output expands each source row
+once and copies its repeats, and snapshot exports share a reusable compression workspace. Contact sheets copy whole
+image regions without converting each pixel through `color.Color`.
+
+To check and measure these paths:
+
+```sh
+go test ./...
+go test ./internal/matrix/pngdisplay -run '^$' -bench . -benchmem
+go test -tags renderertest ./internal/windowdisplay -bench BenchmarkRender -benchmem
+```
+
+The last command needs a macOS or Windows desktop session and briefly opens a test window. It compares GPU output
+with the previous per-LED drawing algorithm at several board sizes and scales. Its benchmark includes a GPU readback
+after each frame to wait for rendering to finish; that readback is test overhead and is not part of the live window.
+
+See [performance measurements](performance.md) for Pi Zero 2 results, the changed-row panel upload strategy,
+refresh sleep settings, configured service limits and reproducible benchmark commands.

@@ -15,7 +15,7 @@
 //	  warningPlatform: false,           // name the platform in warnings, in place of "this station"
 //	  alignPlatformRows: true,          // align lower rows beneath the Infotec platform box
 //	  ordinalFormat: "suffix",          // suffix (1st) or dot (1.)
-//	  serviceCount: 3,                   // Infotec only; 1 to 6
+//	  serviceCount: 3,                   // 1 to 6 services; later services rotate on the lower row
 //	  formationCount: 'none',           // Infotec only; none, number, coaches, coaches-no-brackets, carriages or carriages-no-brackets
 //	  coachLetterTocs: ['VT', 'GR', 'GW', 'LD', 'LF', 'GC', 'HT', 'SR', 'AW', 'EM'], // Infotec only; [] hides all letters
 //	  formationIcons: ['accessibility', 'cycles', 'toilets', 'food', 'first-class'], // Infotec only; [] hides all facility icons
@@ -146,6 +146,7 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 		Platforms:       platforms,
 		ShowUnconfirmed: o.bool("showUnconfirmedPlatforms"),
 		LegacyTOCNames:  o.bool("legacyTocNames"),
+		MaxServices:     board.ServiceLimit(b),
 		Logger:          slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})),
 	}
 	if _, err := live.StreamURL(cfg); err != nil {

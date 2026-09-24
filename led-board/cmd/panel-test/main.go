@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"slices"
 	"syscall"
 	"time"
 
@@ -45,16 +46,28 @@ func run(opts *matrix.Options, duration time.Duration) error {
 
 	start := time.Now()
 	frames := 0
+	var intervals []time.Duration
+	previous := start
 	for ctx.Err() == nil {
 		drawPattern(f, frames)
 		if err := disp.Swap(f); err != nil {
 			return err
 		}
 		frames++
+		now := time.Now()
+		intervals = append(intervals, now.Sub(previous))
+		previous = now
 	}
 
 	elapsed := time.Since(start)
 	fmt.Printf("%d frames in %.2fs: %.1f fps\n", frames, elapsed.Seconds(), float64(frames)/elapsed.Seconds())
+	// Include draw/upload time as well as the wait for VSync. Percentiles expose missed refreshes that an
+	// average FPS hides when comparing panel timing options on the target hardware.
+	if len(intervals) > 0 {
+		slices.Sort(intervals)
+		ms := func(p int) float64 { return float64(intervals[(len(intervals)-1)*p/100]) / float64(time.Millisecond) }
+		fmt.Printf("frame interval ms: p50=%.3f p95=%.3f p99=%.3f max=%.3f\n", ms(50), ms(95), ms(99), ms(100))
+	}
 	return nil
 }
 

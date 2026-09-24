@@ -1,0 +1,12 @@
+//kage:unit pixels
+
+package main
+
+var Scale float
+
+func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
+	p := srcPos - imageSrc0Origin()
+	rgb := imageSrc0UnsafeAt(imageSrc0Origin() + floor(p/Scale) + vec2(0.5)).rgb
+	coverage := imageSrc1UnsafeAtFromSrc0Pos(imageSrc0Origin() + mod(p, vec2(Scale))).a
+	return vec4(rgb*coverage, 1)
+}

@@ -3,12 +3,14 @@ package setupdisplay
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 )
 
@@ -28,6 +30,45 @@ func TestSetupInstructions(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := Lines(tc.status); !reflect.DeepEqual(got, tc.want) {
 				t.Fatalf("got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestCachedLayoutMatchesScrollingAndPaging(t *testing.T) {
+	status := Status{Mode: "connected", IPs: []string{"192.168.1.82", "10.0.0.1"}}
+	path := filepath.Join(t.TempDir(), "network.json")
+	data, _ := json.Marshal(status)
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		t.Fatal(err)
+	}
+	for _, size := range [][2]int{{128, 16}, {256, 32}, {512, 64}} {
+		t.Run(fmt.Sprint(size), func(t *testing.T) {
+			b := Board{Path: path, Colour: frame.RGB{R: 230, G: 150}}
+			f := frame.New(size[0], size[1])
+			want := frame.New(size[0], size[1])
+			for tick := range 1260 {
+				now := time.Unix(100, 0).Add(time.Duration(tick) * time.Second / 60)
+				b.Tick(now, f)
+				// Draw the original geometry afresh, without cached text, measurements or positions.
+				lines := Lines(status)
+				lineHeight := font.Text.Height + 3
+				perPage := max(1, f.H/lineHeight)
+				start := int(now.Unix()/7) % ((len(lines) + perPage - 1) / perPage) * perPage
+				lines = lines[start:min(start+perPage, len(lines))]
+				want.Clear()
+				y := max(0, (f.H-len(lines)*lineHeight)/2)
+				for i, line := range lines {
+					width := font.Text.Width(line)
+					x := max(0, (f.W-width)/2)
+					if width > f.W {
+						x = -int(now.UnixMilli()/55)%(width+f.W) + f.W
+					}
+					font.Text.Draw(want, x, y+i*lineHeight, line, b.Colour)
+				}
+				if !bytes.Equal(f.Pix, want.Pix) {
+					t.Fatalf("frame differs at tick %d", tick)
+				}
 			}
 		})
 	}

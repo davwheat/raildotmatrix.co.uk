@@ -118,6 +118,7 @@ const labels = {
   "led.multiplexing": "Multiplexing",
   "led.scan_mode": "Scan mode",
   "led.no_hardware_pulse": "Disable hardware pulse",
+  "led.no_busy_waiting": "Sleep between refreshes",
   "led.no_drop_privs": "Keep root privileges",
   "led.show_refresh": "Log panel refresh rate",
 };

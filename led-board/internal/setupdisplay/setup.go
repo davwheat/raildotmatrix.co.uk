@@ -4,7 +4,7 @@ package setupdisplay
 import (
 	"encoding/json"
 	"os"
-	"strings"
+	"slices"
 	"time"
 
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
@@ -56,11 +56,17 @@ func Lines(s Status) []string {
 }
 
 type Board struct {
-	Path     string
-	Colour   frame.RGB
-	status   Status
-	readAt   time.Time
-	previous string
+	Path   string
+	Colour frame.RGB
+	status Status
+	readAt time.Time
+	lines  []string
+	widths []int
+	x      []int
+	page   int
+	w, h   int
+	colour frame.RGB
+	drawn  bool
 }
 
 func (*Board) Update(model.View) {}
@@ -71,35 +77,53 @@ func (b *Board) Tick(now time.Time, f *frame.Frame) bool {
 			var s Status
 			if json.Unmarshal(data, &s) == nil {
 				b.status = s
+				b.setLines(Lines(s))
 			}
 		}
 		b.readAt = now
 	}
-	lines := Lines(b.status)
+	if b.lines == nil {
+		b.setLines(Lines(b.status))
+	}
 	lineHeight := font.Text.Height + 3
 	perPage := max(1, f.H/lineHeight)
-	pages := (len(lines) + perPage - 1) / perPage
+	pages := (len(b.lines) + perPage - 1) / perPage
 	start := int(now.Unix()/7) % pages * perPage
-	lines = lines[start:min(start+perPage, len(lines))]
+	end := min(start+perPage, len(b.lines))
+	changed := !b.drawn || start != b.page || f.W != b.w || f.H != b.h || b.Colour != b.colour
 	// Long addresses scroll instead of being clipped on smaller panel layouts.
-	positions := make([]int, len(lines))
-	for i, line := range lines {
-		width := font.Text.Width(line)
-		positions[i] = max(0, (f.W-width)/2)
+	for i := start; i < end; i++ {
+		width := b.widths[i]
+		x := max(0, (f.W-width)/2)
 		if width > f.W {
-			positions[i] = -int(now.UnixMilli()/55)%(width+f.W) + f.W
+			x = -int(now.UnixMilli()/55)%(width+f.W) + f.W
 		}
+		changed = changed || x != b.x[i]
+		b.x[i] = x
 	}
-	state, _ := json.Marshal(positions)
-	key := strings.Join(lines, "\n") + string(state)
-	if key == b.previous {
+	if !changed {
 		return false
 	}
 	f.Clear()
-	y := max(0, (f.H-len(lines)*lineHeight)/2)
-	for i, line := range lines {
-		font.Text.Draw(f, positions[i], y+i*lineHeight, line, b.Colour)
+	y := max(0, (f.H-(end-start)*lineHeight)/2)
+	for i := start; i < end; i++ {
+		font.Text.Draw(f, b.x[i], y+(i-start)*lineHeight, b.lines[i], b.Colour)
 	}
-	b.previous = key
+	b.page, b.w, b.h, b.colour, b.drawn = start, f.W, f.H, b.Colour, true
 	return true
+}
+
+// Status is polled once a second; text and font measurements stay valid between changes. In particular, a
+// client count change that leaves the same setup instructions on screen needs no new layout or redraw.
+func (b *Board) setLines(lines []string) {
+	if slices.Equal(lines, b.lines) {
+		return
+	}
+	b.lines = lines
+	b.widths = make([]int, len(lines))
+	b.x = make([]int, len(lines))
+	for i, line := range lines {
+		b.widths[i] = font.Text.Width(line)
+	}
+	b.drawn = false
 }

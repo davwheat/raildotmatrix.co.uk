@@ -100,6 +100,8 @@ export default function BoardOptions() {
       {(infotec || daktronics) && (
         <fieldset>
           <legend>Service rows</legend>
+          <Choice name="serviceCount" label="Services to show" values={[1, 2, 3, 4, 5, 6].map(n => [n, String(n)] as const)} />
+          <p className={styles.help}>Later services rotate on the lower service row.</p>
           <Choice
             name="rowPrefix"
             label="Row labels"
@@ -136,7 +138,6 @@ export default function BoardOptions() {
                   [100, '100%'],
                 ]}
               />
-              <Choice name="serviceCount" label="Services to show" values={[1, 2, 3, 4, 5, 6].map(n => [n, String(n)] as const)} />
               <Choice
                 name="formationCount"
                 label="Formation count"

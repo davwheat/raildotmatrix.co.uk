@@ -55,6 +55,10 @@ type Options struct {
 
 	// LimitRefreshRateHz caps the panel refresh rate. Zero leaves it uncapped.
 	LimitRefreshRateHz int `mapstructure:"limit_refresh"`
+
+	// DisableBusyWaiting lets the refresh thread sleep between capped refreshes.
+	// GPIO pulse timing is unchanged; leave this off if the OS's scheduling jitter is visible on the panel.
+	DisableBusyWaiting bool `mapstructure:"no_busy_waiting"`
 }
 
 // Default returns the configuration the boards are laid out for: two chained
@@ -79,6 +83,7 @@ func Default() *Options {
 		HardwareMapping:    "regular",
 		GPIOSlowdown:       2,
 		DropPrivileges:     true,
+		DisableBusyWaiting: true,
 	}
 }
 
@@ -119,6 +124,7 @@ func AddFlags(fs *flag.FlagSet) *Options {
 	fs.BoolVar(&o.DisableHardwarePulse, "led-no-hardware-pulse", o.DisableHardwarePulse, "don't use the PWM hardware for output-enable pulses")
 	fs.BoolVar(&o.ShowRefreshRate, "led-show-refresh", o.ShowRefreshRate, "print the panel refresh rate to stderr")
 	fs.IntVar(&o.LimitRefreshRateHz, "led-limit-refresh", o.LimitRefreshRateHz, "cap the panel refresh rate in Hz; 0 for no cap")
+	fs.BoolVar(&o.DisableBusyWaiting, "led-no-busy-waiting", o.DisableBusyWaiting, "sleep between capped refreshes to save CPU (may increase refresh jitter)")
 	fs.IntVar(&o.RowAddrType, "led-row-addr-type", o.RowAddrType, "row address type (0-5)")
 	fs.IntVar(&o.Multiplexing, "led-multiplexing", o.Multiplexing, "multiplexing type (0 = direct)")
 	fs.IntVar(&o.ScanMode, "led-scan-mode", o.ScanMode, "0 = progressive, 1 = interlaced")

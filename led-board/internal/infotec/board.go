@@ -339,6 +339,8 @@ func New(cfg Config) *Board {
 // RefreshHz returns the refresh rate at which every scroll step lasts a whole number of refreshes.
 func (b *Board) RefreshHz() int { return board.RefreshFor(b.cfg.ScrollSpeed) }
 
+func (b *Board) ServiceLimit() int { return b.cfg.ServiceCount }
+
 // Update replaces the view. It takes effect on the next Tick, so it is safe to call from another goroutine.
 func (b *Board) Update(v model.View) {
 	b.mu.Lock()

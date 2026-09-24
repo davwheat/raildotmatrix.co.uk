@@ -44,11 +44,12 @@ func Run(opts Options, app func(d frame.Display)) error {
 		closed:  make(chan struct{}),
 		appDone: make(chan struct{}),
 	}
-	g := &game{
-		d:      d,
-		dot:    newDot(opts.Scale),
-		canvas: ebiten.NewImage(opts.Width*opts.Scale, opts.Height*opts.Scale),
+	renderer, err := newDotRenderer(opts)
+	if err != nil {
+		return err
 	}
+	defer renderer.dispose()
+	g := &game{d: d, renderer: renderer}
 
 	ebiten.SetWindowTitle(opts.Title)
 	ebiten.SetWindowSize(opts.Width*opts.Scale, opts.Height*opts.Scale)
@@ -59,7 +60,7 @@ func Run(opts Options, app func(d frame.Display)) error {
 		app(d)
 	}()
 
-	err := ebiten.RunGame(g)
+	err = ebiten.RunGame(g)
 	close(d.closed)
 	if errors.Is(err, ebiten.Termination) {
 		return nil
@@ -137,10 +138,9 @@ func (d *display) take(f *frame.Frame) bool {
 // game implements ebiten.Game. The panel is rendered into canvas only when a
 // new frame arrives; Draw then blits the canvas at every window refresh.
 type game struct {
-	d      *display
-	dot    *ebiten.Image
-	canvas *ebiten.Image
-	last   *frame.Frame
+	d        *display
+	renderer *dotRenderer
+	last     *frame.Frame
 }
 
 func (g *game) Update() error {
@@ -156,40 +156,21 @@ func (g *game) Update() error {
 		g.last = frame.New(g.d.opts.Width, g.d.opts.Height)
 	}
 	if g.d.take(g.last) {
-		g.render()
+		g.renderer.render(g.last)
 	}
 	return nil
 }
 
-func (g *game) render() {
-	scale := float64(g.d.opts.Scale)
-	g.canvas.Fill(color.Black)
-	op := &ebiten.DrawImageOptions{}
-	for y := range g.last.H {
-		for x := range g.last.W {
-			c := g.last.At(x, y)
-			if c == frame.Black {
-				continue
-			}
-			op.GeoM.Reset()
-			op.GeoM.Translate(float64(x)*scale, float64(y)*scale)
-			op.ColorScale.Reset()
-			op.ColorScale.Scale(float32(c.R)/255, float32(c.G)/255, float32(c.B)/255, 1)
-			g.canvas.DrawImage(g.dot, op)
-		}
-	}
-}
-
 func (g *game) Draw(screen *ebiten.Image) {
-	screen.DrawImage(g.canvas, nil)
+	screen.DrawImage(g.renderer.canvas, nil)
 }
 
 func (g *game) Layout(int, int) (int, int) {
-	return g.canvas.Bounds().Dx(), g.canvas.Bounds().Dy()
+	return g.renderer.canvas.Bounds().Dx(), g.renderer.canvas.Bounds().Dy()
 }
 
 // newDot renders one white LED: an anti-aliased disc that leaves a gap to
-// its neighbours, tinted per pixel through ColorScale when drawn.
+// its neighbours. The shader uses its alpha as the coverage of each LED.
 func newDot(scale int) *ebiten.Image {
 	const samples = 4
 	gap := max(1, scale/5)

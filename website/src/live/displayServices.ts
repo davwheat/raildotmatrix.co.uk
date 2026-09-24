@@ -18,6 +18,7 @@ class LiveService extends Service {
   constructor(
     readonly movement: Movement,
     legacyNames: boolean,
+    now: number,
   ) {
     super({
       id: movement.id,
@@ -35,14 +36,14 @@ class LiveService extends Service {
       scheduledArrival: date(movement.arrival.planned),
       estimatedArrival: date(movement.arrival.estimated),
       actualArrival: date(movement.arrival.actual),
-      hasArrived: !!movement.arrival.actual && Date.parse(movement.arrival.actual) <= Date.now(),
+      hasArrived: !!movement.arrival.actual && Date.parse(movement.arrival.actual) <= now,
       length: movement.coach_count,
       toc:
         (legacyNames && movement.operator_code && getLegacyTocName(movement.operator_code)) ||
         movement.operator_name ||
         movement.operator_code ||
         '',
-      passengerCallPoints: passengerCalls(movement.calling_points).map(call => makeCall(call, movement, legacyNames)),
+      passengerCallPoints: passengerCalls(movement.calling_points).map(call => makeCall(call, movement, legacyNames, now)),
     })
   }
 
@@ -61,7 +62,7 @@ function passengerCalls(calls: Call[]): Call[] {
   return calls.filter(call => call.crs && !call.operational)
 }
 
-function makeCall(call: Call, movement: Movement, legacyNames: boolean): CallPoint {
+function makeCall(call: Call, movement: Movement, legacyNames: boolean, now: number): CallPoint {
   const portions = movement.portions.filter(
     portion => portion.at.tpl === call.tpl && portion.category === 'VV' && portion.available && !portion.cancelled,
   )
@@ -77,12 +78,12 @@ function makeCall(call: Call, movement: Movement, legacyNames: boolean): CallPoi
       .filter(portion => passengerCalls(portion.calls).length > 0)
       .map(portion => ({
         type: AssociationCategory.Divide,
-        service: portionService(portion, movement, legacyNames),
+        service: portionService(portion, movement, legacyNames, now),
       })),
   })
 }
 
-function portionService(portion: Portion, movement: Movement, legacyNames: boolean): IMyTrainService {
+function portionService(portion: Portion, movement: Movement, legacyNames: boolean, now: number): IMyTrainService {
   const destinations = movement.destinations.filter(destination => destination.assoc_rid === portion.rid)
   return new LiveService(
     {
@@ -99,6 +100,7 @@ function portionService(portion: Portion, movement: Movement, legacyNames: boole
       portions: [],
     },
     legacyNames,
+    now,
   )
 }
 
@@ -180,7 +182,27 @@ export function displayServices(
     const unconfirmed = !platform || movement.platform.suppressed
     if (unconfirmed && !showUnconfirmed) return []
     if (selected && (!platform || !selected.has(platform)) && !(unconfirmed && showUnconfirmed)) return []
-    return [new LiveService(movement, legacyNames)]
+    return [new LiveService(movement, legacyNames, now)]
   })
   return { services, overrides }
+}
+
+/** The next change that needs no server message: a warning starting/ending, or a reported arrival arriving. */
+export function nextDisplayBoundary(state: CISState, platforms: string[] | null, now: number): number | null {
+  const selected = selectedPlatforms(platforms)
+  let next = Infinity
+  const consider = (time: string | null) => {
+    if (!time) return
+    const at = Date.parse(time)
+    if (at > now && at < next) next = at
+  }
+  for (const override of state.overrides.values()) {
+    if (selected && !selected.has(override.platform.toUpperCase())) continue
+    consider(override.activates_at)
+    consider(override.expires_at)
+  }
+  for (const movement of state.movements.values()) {
+    if (isPassengerCall(movement)) consider(movement.arrival.actual)
+  }
+  return Number.isFinite(next) ? next : null
 }

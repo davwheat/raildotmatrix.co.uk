@@ -150,6 +150,7 @@ func main() {
 			Platforms:       cfg.Platforms,
 			ShowUnconfirmed: cfg.ShowUnconfirmedPlatforms,
 			LegacyTOCNames:  cfg.LegacyTOCNames,
+			MaxServices:     board.ServiceLimit(b),
 			Logger:          logger,
 		},
 		fixture:    fixture,

@@ -24,8 +24,9 @@ type display struct {
 	m *C.struct_RGBLedMatrix
 	// canvas is off-screen and receives the next frame; onscreen is the one
 	// the refresh thread is showing, or nil before the first swap.
-	canvas, onscreen *C.struct_LedCanvas
-	w, h             int
+	canvas, onscreen             *C.struct_LedCanvas
+	w, h                         int
+	canvasPixels, onscreenPixels uploadBuffer
 
 	// The library keeps these pointers and reads them again whenever it
 	// creates a canvas, so they live as long as the matrix does.
@@ -64,6 +65,7 @@ func Open(o *Options) (frame.Display, error) {
 	opts.show_refresh_rate = C.bool(o.ShowRefreshRate)
 	opts.led_rgb_sequence = sequence
 	opts.limit_refresh_rate_hz = C.int(o.LimitRefreshRateHz)
+	opts.disable_busy_waiting = C.bool(o.DisableBusyWaiting)
 
 	rt.gpio_slowdown = C.int(o.GPIOSlowdown)
 	// The C shim only copies non-zero fields over the library defaults, and
@@ -94,7 +96,7 @@ func Open(o *Options) (frame.Display, error) {
 
 func (d *display) Size() (w, h int) { return d.w, d.h }
 
-// Swap copies f into the off-screen canvas in one cgo call and blocks until
+// Swap copies changed row spans into the off-screen canvas and blocks until
 // the refresh thread has picked it up. frame.Frame.Pix is packed RGB, which is
 // exactly the layout of an array of struct Color, so no conversion is needed.
 func (d *display) Swap(f *frame.Frame) error {
@@ -104,10 +106,13 @@ func (d *display) Swap(f *frame.Frame) error {
 	if len(f.Pix) < f.W*f.H*3 {
 		return fmt.Errorf("matrix: frame buffer has %d bytes, need %d", len(f.Pix), f.W*f.H*3)
 	}
-	C.led_canvas_set_pixels(d.canvas, 0, 0, C.int(d.w), C.int(d.h),
-		(*C.struct_Color)(unsafe.Pointer(&f.Pix[0])))
+	d.canvasPixels.upload(f, func(y, height int) {
+		C.led_canvas_set_pixels(d.canvas, 0, C.int(y), C.int(d.w), C.int(height),
+			(*C.struct_Color)(unsafe.Pointer(&f.Pix[y*d.w*3])))
+	})
 	d.onscreen = d.canvas
 	d.canvas = C.led_matrix_swap_on_vsync(d.m, d.canvas)
+	d.canvasPixels, d.onscreenPixels = d.onscreenPixels, d.canvasPixels
 	return nil
 }
 
@@ -119,6 +124,7 @@ func (d *display) WaitVSync() error {
 		blank := d.canvas
 		d.canvas = C.led_matrix_swap_on_vsync(d.m, blank)
 		d.onscreen = blank
+		d.canvasPixels, d.onscreenPixels = d.onscreenPixels, d.canvasPixels
 		return nil
 	}
 	C.led_matrix_swap_on_vsync(d.m, d.onscreen)
@@ -132,6 +138,9 @@ func (d *display) SetBrightness(percent int) error {
 		return fmt.Errorf("matrix: brightness %d%% is outside 1-100", percent)
 	}
 	C.led_matrix_set_brightness(d.m, C.uint8_t(percent))
+	// Brightness is baked into native pixel data. Both canvases must be fully uploaded at their next swap,
+	// even when the source RGB bytes did not change.
+	d.canvasPixels.valid, d.onscreenPixels.valid = false, false
 	return nil
 }
 
