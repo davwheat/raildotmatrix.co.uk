@@ -64,13 +64,19 @@ func (s *scroller) reset(p page, g *geometry, now time.Time) {
 	s.prefix, s.text = p.prefix, p.text
 	s.textW = text.Width(p.text)
 	s.x0 = g.infoX
+	staticX := s.x0
 	if p.prefix != "" {
 		// The list lines up with the destination column unless the prefix is too wide for that (min-width and
 		// padding-right in the SCSS).
 		s.x0 = max(g.infoDestX, g.infoX+text.Width(p.prefix)+prefixSpacing)
+		// Stationary text needs a full word space after the prefix, including when checking whether it fits.
+		staticX = max(s.x0, g.infoX+text.Width(p.prefix+" ")+text.Spacing)
+	}
+	s.static = s.textW <= g.w-staticX
+	if s.static {
+		s.x0 = staticX
 	}
 	s.outerW = g.w - s.x0
-	s.static = s.textW <= s.outerW
 	// A page that fits its row rises into place; a list that has to scroll enters from the right instead.
 	s.slide = 0
 	if s.static || p.prefix == "" {
