@@ -149,6 +149,7 @@ func main() {
 			CRS:             cfg.CRS,
 			Platforms:       cfg.Platforms,
 			ShowUnconfirmed: cfg.ShowUnconfirmedPlatforms,
+			HideTerminating: cfg.HideTerminating,
 			LegacyTOCNames:  cfg.LegacyTOCNames,
 			MaxServices:     board.ServiceLimit(b),
 			Logger:          logger,

@@ -13,6 +13,7 @@ interface IProps {
   useLegacyTocNames?: boolean
   platforms?: string[]
   showUnconfirmedPlatforms?: boolean
+  hideTerminating?: boolean
 }
 
 export default function FullBoard({
@@ -21,10 +22,17 @@ export default function FullBoard({
   useLegacyTocNames = false,
   platforms,
   showUnconfirmedPlatforms = false,
+  hideTerminating = false,
 }: IProps) {
   const boardRef = useRef<HTMLDivElement>(null)
 
-  const { services, overrides, stationName } = useServiceInformation(station, platforms ?? null, !!useLegacyTocNames, showUnconfirmedPlatforms)
+  const { services, overrides, stationName } = useServiceInformation(
+    station,
+    platforms ?? null,
+    !!useLegacyTocNames,
+    showUnconfirmedPlatforms,
+    hideTerminating,
+  )
 
   const warning = noticeKind(overrides)
 

@@ -69,6 +69,9 @@ sudo /opt/departure-board/board -crs BTN -board daktronics -worldline -colour wh
 A config file isn't required; without one the board runs on its defaults and flags, but `crs` must be set
 somewhere. Unknown keys in the file are an error, so a typo doesn't go unnoticed.
 
+Enable **Hide terminating trains** in the web settings, set `hide_terminating = true` in the config, or pass
+`-hide-terminating` to exclude trains ending their journey at this station. The default shows terminating trains.
+
 To try a board without the live feed, set `fixture` to one of the built-in examples, such as `busy-board`,
 `cancelled`, `dividing-service`, `stand-clear` or `first-departs`; run the board with `-h` for the full list. The
 board then shows that example instead of connecting, and `crs` isn't needed. An example that changes, such as a

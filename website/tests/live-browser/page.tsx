@@ -45,15 +45,15 @@ export async function verify() {
   const root = createRoot(document.body.appendChild(document.createElement('div')))
   let renders = 0
   let latest: ReturnType<typeof useServiceInformation> | undefined
-  function Probe({ parent }: { parent: number }) {
-    latest = useServiceInformation('TST', ['2'], false)
+  function Probe({ parent, hideTerminating }: { parent: number; hideTerminating: boolean }) {
+    latest = useServiceInformation('TST', ['2'], false, false, hideTerminating)
     renders++
     return <span>{parent}</span>
   }
-  const render = (parent: number) =>
+  const render = (parent: number, hideTerminating = false) =>
     root.render(
       <DataSourceProvider>
-        <Probe parent={parent} />
+        <Probe parent={parent} hideTerminating={hideTerminating} />
       </DataSourceProvider>,
     )
   try {
@@ -73,6 +73,27 @@ export async function verify() {
     await settle()
     check(latest.services === services, 'parent render reconstructed unchanged services')
     check(FakeSocket.sockets.length === 1, 'fresh platform array reopened the connection')
+
+    const terminating = {
+      ...initial.movements[0],
+      id: 'terminating',
+      arrival: initial.movements[0].departure,
+      departure: { planned: null, estimated: null, actual: null, unknown_delay: false },
+      portions: [],
+    }
+    socket.receive({ ...initial, movements: [terminating, ...initial.movements], ordering: [terminating.id, ...initial.ordering] })
+    await settle()
+    check(latest.services?.[0].terminatesHere, 'terminating service was not shown by default')
+    render(2, true)
+    await settle()
+    check(
+      latest.services?.length === services.length && latest.services.every(service => !service.terminatesHere),
+      'filter did not apply to live services',
+    )
+    render(3, false)
+    await settle()
+    check(latest.services?.[0].terminatesHere, 'disabling the filter did not restore the terminating service')
+    check(FakeSocket.sockets.length === 1, 'terminating filter reopened the feed')
 
     const now = Date.now()
     initial.overrides = [

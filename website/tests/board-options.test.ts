@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { applyOptions, defaults, formationIconTypes, isRailAnnouncementsEmbed, readOptions } from '../src/components/BoardOptions/settings'
+import {
+  applyOptions,
+  defaults,
+  displayTypes,
+  formationIconTypes,
+  isRailAnnouncementsEmbed,
+  readOptions,
+} from '../src/components/BoardOptions/settings'
 
 const infotec = 'infotec-landscape-dmi'
 test('Daktronics service count accepts 1–6 and round-trips independently of Infotec options', () => {
@@ -63,7 +70,20 @@ test('shared URLs round-trip independently of recipient preferences', () => {
 test('display-specific options do not leak between formats', () => {
   const params = new URLSearchParams('platformBox=1&serviceCount=6&color=white&smallScrollingText=1')
   applyOptions(params, 'blackbox-landscape-lcd', defaults)
-  assert.deepEqual([...params.keys()].sort(), ['showUnconfirmedPlatforms', 'useLegacyTocNames'])
+  assert.deepEqual([...params.keys()].sort(), ['hideTerminating', 'showUnconfirmedPlatforms', 'useLegacyTocNames'])
+})
+
+test('terminating trains stay visible by default and the filter persists for every station display', () => {
+  for (const { value: type } of displayTypes) {
+    assert.equal(readOptions(type, {}, new URLSearchParams()).hideTerminating, false)
+    for (const hideTerminating of [true, false]) {
+      assert.equal(readOptions(type, { hideTerminating }, new URLSearchParams()).hideTerminating, hideTerminating)
+      const query = new URLSearchParams()
+      applyOptions(query, type, { ...defaults, hideTerminating })
+      assert.equal(query.get('hideTerminating'), hideTerminating ? '1' : '0')
+      assert.equal(readOptions(type, { hideTerminating: !hideTerminating }, query).hideTerminating, hideTerminating)
+    }
+  }
 })
 
 test('small scrolling text defaults off and shared links override saved preferences', () => {

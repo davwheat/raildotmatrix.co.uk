@@ -15,6 +15,8 @@ type Options struct {
 	Platforms []string
 	// ShowUnconfirmed keeps trains whose platform is unpublished or suppressed.
 	ShowUnconfirmed bool
+	// HideTerminating excludes services that end their journey at this station.
+	HideTerminating bool
 	// LegacyTOCNames prefers the operator names of the boards' era over the feed's.
 	LegacyTOCNames bool
 	// MaxServices bounds projection work to the rows the renderer can show. Non-positive means unlimited.
@@ -55,6 +57,9 @@ func visitServices(state *State, opts Options, now time.Time, visit func(*Moveme
 	for _, id := range state.Ordering {
 		movement, held := state.Movements[id]
 		if !held || !isPassengerCall(movement) {
+			continue
+		}
+		if opts.HideTerminating && terminatesHere(movement) {
 			continue
 		}
 		platform := platformNumber(movement)
@@ -173,7 +178,7 @@ func nextBoundary(state *State, opts Options, now time.Time, visible []model.Ser
 		}
 	} else {
 		for _, movement := range state.Movements {
-			if movement.Arrival.Actual != nil && isPassengerCall(movement) {
+			if movement.Arrival.Actual != nil && isPassengerCall(movement) && !(opts.HideTerminating && terminatesHere(movement)) {
 				consider(*movement.Arrival.Actual)
 			}
 		}

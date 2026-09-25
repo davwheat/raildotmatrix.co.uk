@@ -1,5 +1,35 @@
 import { loadLedBoard } from '../../src/components/displays/LedBoard/loadLedBoard'
 
+export async function verifyHideTerminating(feed: string) {
+  const api = await loadLedBoard()
+  for (const board of ['infotec', 'daktronics'] as const) {
+    for (const serviceCount of [1, 3]) {
+      const options = { board, serviceCount, crs: 'ECR', width: 256, height: 64 }
+      const filtered = api.create({ ...options, url: `${feed}/terminating`, hideTerminating: true })
+      const reference = api.create({ ...options, url: `${feed}/terminating-departures-only` })
+      if (filtered instanceof Error || reference instanceof Error) throw new Error('Could not create terminating filter boards')
+      try {
+        let updates = 0
+        filtered.onUpdate = reference.onUpdate = () => updates++
+        for (let tries = 0; updates < 2 && tries < 100; tries++) await new Promise(resolve => setTimeout(resolve, 20))
+        if (updates < 2) throw new Error('Terminating test boards did not receive their feeds')
+        const start = Date.parse('2026-09-13T18:40:00Z')
+        for (let elapsed = 0; elapsed < 5000; elapsed += 20) {
+          filtered.tick(start + elapsed)
+          reference.tick(start + elapsed)
+          if (filtered.pixels.some((value, i) => value !== reference.pixels[i])) {
+            throw new Error(`${board}/${serviceCount}: hiding terminating trains differs from departures-only feed at ${elapsed} ms`)
+          }
+        }
+      } finally {
+        filtered.close()
+        reference.close()
+      }
+    }
+  }
+  return 'Terminating train filtering matches departures-only frames for both WASM boards.'
+}
+
 export async function verifyProjection(feed: string) {
   const api = await loadLedBoard()
   const results = []

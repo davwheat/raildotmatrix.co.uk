@@ -13,6 +13,7 @@ export interface LedBoardOptions {
   url: string
   platforms?: string[]
   showUnconfirmedPlatforms?: boolean
+  hideTerminating?: boolean
   legacyTocNames?: boolean
   worldline?: boolean
   /** The single prefix before each train's time: an ordinal or its platform number. */

@@ -62,6 +62,9 @@ func TestDefaults(t *testing.T) {
 	if cfg.SmallScrollingText {
 		t.Error("scrolling text must use the normal font by default")
 	}
+	if cfg.HideTerminating {
+		t.Error("terminating trains must be shown by default")
+	}
 	if cfg.LED.Options != *matrix.Default() {
 		t.Errorf("led = %+v, want %+v", cfg.LED.Options, *matrix.Default())
 	}
@@ -237,7 +240,7 @@ func TestKeys(t *testing.T) {
 		led.gpio_mapping led.limit_refresh led.multiplexing led.no_busy_waiting led.no_drop_privs led.no_hardware_pulse led.parallel
 		led.pwm_bits led.pwm_dither_bits led.pwm_lsb_nanoseconds led.rgb_sequence led.row_addr_type led.rows
 		led.scan_mode led.show_refresh led.slowdown_gpio align_platform_rows compact_lower_row loading_brightness formation_count clock_style ordinal_format service_count platform_box row_prefix platforms png_dir scale scroll_speed
-		show_unconfirmed_platforms small_scrolling_text url verbose warning_platform worldline`)
+		show_unconfirmed_platforms hide_terminating small_scrolling_text url verbose warning_platform worldline`)
 	slices.Sort(keys)
 	slices.Sort(want)
 	if !slices.Equal(keys, want) {
@@ -254,8 +257,36 @@ func TestSettingsCoverEveryKey(t *testing.T) {
 	if _, ok := settings(v)["led.limit_refresh"]; !ok {
 		t.Error("a key without a default must still be watched")
 	}
-	if got := len(v.AllKeys()); got != 47 {
-		t.Errorf("%d keys, want 47", got)
+	if got := len(v.AllKeys()); got != 48 {
+		t.Errorf("%d keys, want 48", got)
+	}
+}
+
+func TestHideTerminatingConfig(t *testing.T) {
+	for _, tc := range []struct {
+		name, file, env string
+		flags           []string
+		want            bool
+	}{
+		{name: "file", file: "hide_terminating = true", want: true},
+		{name: "environment", file: "hide_terminating = false", env: "true", want: true},
+		{name: "flag", file: "hide_terminating = false", flags: []string{"-hide-terminating"}, want: true},
+		{name: "explicit false", file: "hide_terminating = true", env: "true", flags: []string{"-hide-terminating=false"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("BOARD_HIDE_TERMINATING", tc.env)
+			v, err := configure(parse(t, tc.flags...), writeConfig(t, tc.file))
+			if err != nil {
+				t.Fatal(err)
+			}
+			cfg, err := load(v)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if cfg.HideTerminating != tc.want {
+				t.Errorf("HideTerminating = %v, want %v", cfg.HideTerminating, tc.want)
+			}
+		})
 	}
 }
 

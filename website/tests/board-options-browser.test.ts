@@ -109,6 +109,10 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
       `[...document.querySelectorAll('label')].find(x => x.textContent.includes('Use smaller scrolling text')).querySelector('input').click()`,
     )
     await wait(`JSON.parse(localStorage.getItem('newGtrBoardSettings')).smallScrollingText === true`)
+    const terminatingInput = `[...document.querySelectorAll('label')].find(x => x.textContent.includes('Hide terminating trains')).querySelector('input')`
+    assert.equal(await evaluate(`${terminatingInput}.checked`), false)
+    await evaluate(`${terminatingInput}.click()`)
+    await wait(`JSON.parse(localStorage.getItem('newGtrBoardSettings')).hideTerminating === true`)
     const labels = await evaluate(`[...document.querySelectorAll('fieldset:not(.platform-picker) label')].map(x => x.textContent.trim())`)
     await select('Display type', 'daktronics-data-display-dmi')
     await wait(`document.body.textContent.includes('Casing colour')`)
@@ -143,6 +147,7 @@ test('setup options, shared links, and the RailAnnouncements dialog', { timeout:
     assert.equal(boardQuery.get('color'), 'white')
     assert.equal(boardQuery.get('serviceCount'), '5')
     assert.equal(boardQuery.get('smallScrollingText'), '1')
+    assert.equal(boardQuery.get('hideTerminating'), '1')
     assert.equal(boardQuery.get('formationIcons'), 'accessibility,cycles,food,first-class')
     assert.equal(boardQuery.get('warningPlatform'), '0')
     assert.deepEqual(boardQuery.getAll('platform'), ['2', '4'])

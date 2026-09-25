@@ -326,6 +326,54 @@ test('a portion that joins another service here is left to the train it becomes'
   assert.equal(displayServices(reduceCIS(null, initial)!, null, false, true).services.length, 3)
 })
 
+test('hiding terminating trains preserves departures, platform filters and warnings', () => {
+  const initial = snapshot()
+  const departure = initial.movements[0]
+  const terminating = {
+    ...departure,
+    id: 'terminating',
+    arrival: { ...departure.departure, actual: '2026-09-13T10:00:30Z' },
+    departure: { planned: null, estimated: null, actual: null, unknown_delay: false },
+    portions: [],
+  }
+  const cancelled = { ...terminating, id: 'cancelled-terminating', cancelled: true }
+  initial.movements = [terminating, cancelled, departure]
+  initial.ordering = initial.movements.map(movement => movement.id)
+  const state = reduceCIS(null, initial)!
+  const now = Date.parse(initial.window.from)
+  assert.equal(displayServices(state, null, false, false, now).services.length, 3)
+  assert.deepEqual(
+    displayServices(state, null, false, false, now, true).services.map(service => service.id),
+    [departure.id],
+  )
+  assert.deepEqual(displayServices(state, ['3'], false, true, now, true).services, [])
+
+  const onlyTerminating = reduceCIS(null, { ...initial, ordering: [terminating.id, cancelled.id] })!
+  assert.deepEqual(displayServices(onlyTerminating, null, false, false, now, true).services, [])
+  assert.equal(nextDisplayBoundary(state, null, now), Date.parse(terminating.arrival.actual))
+  assert.equal(nextDisplayBoundary(state, null, now, true), null)
+
+  const moved = { ...terminating, platform: { ...terminating.platform, number: '3' } }
+  const next = reduceCIS(state, update({ upserts: [moved] }))!
+  assert.deepEqual(platformAlterations(state, next, ['2']), [terminating.id])
+  assert.deepEqual(platformAlterations(state, next, ['2'], true), [])
+
+  state.overrides.set('warning', {
+    id: 'warning',
+    kind: 'stand_clear',
+    station: initial.station,
+    platform: '2',
+    movement_id: terminating.id,
+    activates_at: initial.window.from,
+    expires_at: initial.window.to,
+    reason: 'TD',
+    source: 'TD',
+  })
+  const warned = displayServices(state, null, false, false, now, true)
+  assert.equal(warned.overrides.length, 1)
+  assert.deepEqual(warned.services, [])
+})
+
 test('a train crossing the platforms a board watches is an alteration, either way', () => {
   const initial = snapshot()
   const here = reduceCIS(null, initial)!

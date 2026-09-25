@@ -13,6 +13,7 @@ export default function BlackboxLandscapeLcd({ station }: { station: string }) {
         platforms={platforms}
         useLegacyTocNames={options.useLegacyTocNames}
         showUnconfirmedPlatforms={options.showUnconfirmedPlatforms}
+        hideTerminating={options.hideTerminating}
       />
     </ZoomDiv>
   )

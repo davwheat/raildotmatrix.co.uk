@@ -26,6 +26,7 @@ type Config struct {
 	// Platforms lists the platforms the board watches. Empty means the whole station.
 	Platforms       []string
 	ShowUnconfirmed bool
+	HideTerminating bool
 	LegacyTOCNames  bool
 	// MaxServices limits the projected view, leaving the protocol state and platform alterations intact.
 	MaxServices int
@@ -79,7 +80,7 @@ func run(ctx context.Context, cfg Config, t timings, emit func(model.View)) erro
 	b := &board{
 		log:      cfg.Logger.With("crs", cfg.CRS),
 		emit:     emit,
-		opts:     Options{Platforms: cfg.Platforms, ShowUnconfirmed: cfg.ShowUnconfirmed, LegacyTOCNames: cfg.LegacyTOCNames, MaxServices: cfg.MaxServices},
+		opts:     Options{Platforms: cfg.Platforms, ShowUnconfirmed: cfg.ShowUnconfirmed, HideTerminating: cfg.HideTerminating, LegacyTOCNames: cfg.LegacyTOCNames, MaxServices: cfg.MaxServices},
 		timings:  t,
 		boundary: time.NewTimer(time.Hour),
 	}
@@ -351,6 +352,12 @@ func (b *board) publish(alterations []string) {
 	}
 	now := time.Now()
 	view, changed := b.projection.display(b.state, b.opts, now)
+	if b.opts.HideTerminating {
+		alterations = slices.DeleteFunc(alterations, func(id string) bool {
+			movement := b.state.Movements[id]
+			return movement != nil && terminatesHere(movement)
+		})
+	}
 	view.Alterations = alterations
 	if next := nextBoundary(b.state, b.opts, now, view.Services); !next.IsZero() {
 		b.boundary.Reset(next.Sub(now))

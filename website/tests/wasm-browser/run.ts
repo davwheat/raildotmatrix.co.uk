@@ -31,6 +31,17 @@ FIXTURES['projection-final'] = {
   snapshot: { ...snapshot, movements: [updates[6].upserts[0], ...movements.slice(1)] },
 }
 
+const terminating = FIXTURES['terminating'].snapshot!
+const departures = terminating.movements.filter(movement => movement.departure.planned)
+FIXTURES['terminating-departures-only'] = {
+  description: 'reference board with terminating trains removed',
+  snapshot: {
+    ...terminating,
+    movements: departures,
+    ordering: terminating.ordering.filter(id => departures.some(movement => movement.id === id)),
+  },
+}
+
 const server = await serveStatic(resolve('out'))
 const feed = await serveFeed()
 const browser = process.argv.includes('--firefox') ? await Firefox.launch() : await Browser.launch()
@@ -56,6 +67,7 @@ try {
     await new Promise(resolve => setTimeout(resolve, 20))
   }
   await inject(await readFile(process.argv[2], 'utf8'))
+  console.log(await evaluate(`wasmTests.verifyHideTerminating('ws://127.0.0.1:${feed.port}')`))
   console.log(await evaluate(`wasmTests.verify('ws://127.0.0.1:${feed.port}')`))
   console.log(await evaluate(`wasmTests.verifyProjection('ws://127.0.0.1:${feed.port}')`))
 } finally {

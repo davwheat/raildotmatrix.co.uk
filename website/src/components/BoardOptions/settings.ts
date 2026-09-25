@@ -28,6 +28,7 @@ export const defaults = {
   worldlinePowered: false,
   withBackground: false,
   showUnconfirmedPlatforms: false,
+  hideTerminating: false,
   useLegacyTocNames: false,
 }
 export type DisplayOptions = typeof defaults
@@ -40,7 +41,7 @@ export const storageKeys: Record<DisplayType, string> = {
   'class-700': 'class700LcdBoardSettings',
 }
 
-const common: OptionKey[] = ['showUnconfirmedPlatforms', 'useLegacyTocNames']
+const common: OptionKey[] = ['showUnconfirmedPlatforms', 'hideTerminating', 'useLegacyTocNames']
 const led: OptionKey[] = ['rowPrefix', 'ordinalFormat', 'warningPlatform', 'serviceCount']
 export function optionKeys(type: DisplayType): OptionKey[] {
   switch (type) {

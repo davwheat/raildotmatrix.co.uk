@@ -7,7 +7,13 @@ import { displayServices, nextDisplayBoundary, platformAlterations } from '../li
 import { useDataSource } from '../live/source'
 import type { CISState } from '../live/types'
 
-export function useServiceInformation(station: string, platforms: string[] | null, legacyNames: boolean, showUnconfirmed = false) {
+export function useServiceInformation(
+  station: string,
+  platforms: string[] | null,
+  legacyNames: boolean,
+  showUnconfirmed = false,
+  hideTerminating = false,
+) {
   const { mode, baseUrl } = useDataSource()
   // Sorted and joined so a caller passing a fresh array of the same platforms
   // every render does not tear the stream down and rebuild it.
@@ -87,8 +93,8 @@ export function useServiceInformation(station: string, platforms: string[] | nul
     compared.current = state
     if (!state) return
     const watched = platformKey ? platformKey.split(',') : null
-    if (platformAlterations(previous, state, watched).length > 0) setAlterations(count => count + 1)
-  }, [data, key, platformKey])
+    if (platformAlterations(previous, state, watched, hideTerminating).length > 0) setAlterations(count => count + 1)
+  }, [data, key, platformKey, hideTerminating])
 
   const current = data?.key === key ? data : null
   const watched = useMemo(() => (platformKey ? platformKey.split(',') : null), [platformKey])
@@ -96,19 +102,19 @@ export function useServiceInformation(station: string, platforms: string[] | nul
   // conversion of every calling point; only an actual time boundary can change this projection.
   const projection = useMemo(() => {
     const now = Date.now()
-    const view = current?.cis ? displayServices(current.cis, watched, legacyNames, showUnconfirmed, now) : null
+    const view = current?.cis ? displayServices(current.cis, watched, legacyNames, showUnconfirmed, now, hideTerminating) : null
     return {
       services:
         view?.services ??
         (current?.legacy
           ? processServices(current.legacy.trainServices || [], watched, legacyNames, station, showUnconfirmed).filter(
-              service => !service.hasDeparted,
+              service => !service.hasDeparted && !(hideTerminating && service.terminatesHere),
             )
           : null),
       overrides: view?.overrides || [],
-      boundary: current?.cis ? nextDisplayBoundary(current.cis, watched, now) : null,
+      boundary: current?.cis ? nextDisplayBoundary(current.cis, watched, now, hideTerminating) : null,
     }
-  }, [current, watched, legacyNames, showUnconfirmed, station, boundaryVersion])
+  }, [current, watched, legacyNames, showUnconfirmed, hideTerminating, station, boundaryVersion])
 
   useEffect(() => {
     if (!current?.cis) return

@@ -88,6 +88,7 @@ const labels = {
   service_count: "Services to show (1–6)",
   row_prefix: "Row prefix",
   show_unconfirmed_platforms: "Show unconfirmed platforms",
+  hide_terminating: "Hide terminating trains",
   warning_platform: "Name platforms in warnings",
   align_platform_rows: "Align lower service rows with platform box",
   compact_lower_row: "Show lower service row beside clock",
@@ -149,7 +150,7 @@ const groups = [
   [
     "Display options",
     "",
-    "show_unconfirmed_platforms warning_platform platform_box compact_lower_row align_platform_rows small_scrolling_text worldline legacy_toc_names",
+    "show_unconfirmed_platforms hide_terminating warning_platform platform_box compact_lower_row align_platform_rows small_scrolling_text worldline legacy_toc_names",
   ],
   [
     "LED panels",

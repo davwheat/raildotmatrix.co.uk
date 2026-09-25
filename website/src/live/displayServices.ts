@@ -121,8 +121,9 @@ function joinsHere(movement: Movement): boolean {
 }
 
 /** A movement a departure board can list at all, before any platform filtering or override is considered. */
-function isPassengerCall(movement: Movement): boolean {
+function isPassengerCall(movement: Movement, hideTerminating = false): boolean {
   if (movement.suppressed || !movement.passenger || movement.operational) return false
+  if (hideTerminating && terminatesHere(movement)) return false
   // A terminating service is shown like any other, timed by its arrival. A train that only passes through is not a
   // call at all: it is announced, if at all, by a platform override.
   if (!movement.departure.planned && (!movement.arrival.planned || movement.kind === 'passing')) return false
@@ -137,7 +138,7 @@ const selectedPlatforms = (platforms: string[] | null) => (platforms?.length ? n
  * the watched platforms changes nothing they can see, and a board watching the whole station never loses a train
  * to one. A platform being published for the first time, or withdrawn, is an announcement rather than a move.
  */
-export function platformAlterations(previous: CISState | null, next: CISState, platforms: string[] | null): string[] {
+export function platformAlterations(previous: CISState | null, next: CISState, platforms: string[] | null, hideTerminating = false): string[] {
   const selected = selectedPlatforms(platforms)
   if (!previous || !selected) return []
   const watched = (platform: string) => selected.has(platform.toUpperCase())
@@ -145,7 +146,7 @@ export function platformAlterations(previous: CISState | null, next: CISState, p
   return [...next.movements.values()].flatMap(movement => {
     const was = previous.movements.get(movement.id)?.platform.number
     const now = movement.platform.number
-    if (!was || !now || was === now || !isPassengerCall(movement)) return []
+    if (!was || !now || was === now || !isPassengerCall(movement, hideTerminating)) return []
     return watched(was) === watched(now) ? [] : [movement.id]
   })
 }
@@ -161,6 +162,7 @@ export function displayServices(
   legacyNames: boolean,
   showUnconfirmed: boolean,
   now = Date.now(),
+  hideTerminating = false,
 ): DisplayView {
   const selected = selectedPlatforms(platforms)
   const overrides = [...state.overrides.values()].filter(
@@ -174,7 +176,7 @@ export function displayServices(
   // Keep the server's ordering: TrainOrder takes priority within each platform.
   const services = state.ordering.flatMap(id => {
     const movement = state.movements.get(id)
-    if (!movement || !isPassengerCall(movement)) return []
+    if (!movement || !isPassengerCall(movement, hideTerminating)) return []
     const platform = movement.platform.number?.toUpperCase()
     if (platform && overridden.has(platform)) return []
     // Darwin confirmation is separate from permission to display a platform.
@@ -188,7 +190,7 @@ export function displayServices(
 }
 
 /** The next change that needs no server message: a warning starting/ending, or a reported arrival arriving. */
-export function nextDisplayBoundary(state: CISState, platforms: string[] | null, now: number): number | null {
+export function nextDisplayBoundary(state: CISState, platforms: string[] | null, now: number, hideTerminating = false): number | null {
   const selected = selectedPlatforms(platforms)
   let next = Infinity
   const consider = (time: string | null) => {
@@ -202,7 +204,7 @@ export function nextDisplayBoundary(state: CISState, platforms: string[] | null,
     consider(override.expires_at)
   }
   for (const movement of state.movements.values()) {
-    if (isPassengerCall(movement)) consider(movement.arrival.actual)
+    if (isPassengerCall(movement, hideTerminating)) consider(movement.arrival.actual)
   }
   return Number.isFinite(next) ? next : null
 }

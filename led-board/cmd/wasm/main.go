@@ -9,6 +9,7 @@
 //	  url: 'wss://darwinbrowser.com',   // the default; /v1/cis/live is appended
 //	  platforms: ['1', '2'],            // optional; the whole station by default
 //	  showUnconfirmedPlatforms: false,
+//	  hideTerminating: false,
 //	  legacyTocNames: false,
 //	  worldline: false,                 // Daktronics only
 //	  rowPrefix: 'ordinals',            // or 'platforms' ("Pl 1")
@@ -153,6 +154,7 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 		CRS:             crs,
 		Platforms:       platforms,
 		ShowUnconfirmed: o.bool("showUnconfirmedPlatforms"),
+		HideTerminating: o.bool("hideTerminating"),
 		LegacyTOCNames:  o.bool("legacyTocNames"),
 		MaxServices:     board.ServiceLimit(b),
 		Logger:          slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})),

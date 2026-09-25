@@ -46,6 +46,7 @@ type config struct {
 	URL                      string
 	Platforms                []string
 	ShowUnconfirmedPlatforms bool `mapstructure:"show_unconfirmed_platforms"`
+	HideTerminating          bool `mapstructure:"hide_terminating"`
 	LegacyTOCNames           bool `mapstructure:"legacy_toc_names"`
 	Display                  string
 	PNGDir                   string `mapstructure:"png_dir"`
@@ -71,6 +72,7 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.String("url", "wss://darwinbrowser.com", "Darwin Browser base URL; /v1/cis/live is appended")
 	fs.Var(&platformList{}, "platform", "platform to show; repeat for several (default: all)")
 	fs.Bool("show-unconfirmed-platforms", false, "show trains whose platform isn't published yet")
+	fs.Bool("hide-terminating", false, "hide trains that end their journey at this station")
 	fs.Bool("legacy-toc-names", false, "use historic operator names")
 	fs.String("board", "daktronics", "board format: daktronics or infotec")
 	fs.String("colour", "amber", "text colour: amber or white")

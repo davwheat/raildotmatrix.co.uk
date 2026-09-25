@@ -192,6 +192,9 @@ export default function BoardOptions() {
       )}
       <fieldset>
         <legend>Train information</legend>
+        <Check name="hideTerminating" hint="Hide services that end their journey at this station.">
+          Hide terminating trains
+        </Check>
         <Check name="showUnconfirmedPlatforms" hint="Include services whose platform has not been published.">
           Show unconfirmed platforms
         </Check>

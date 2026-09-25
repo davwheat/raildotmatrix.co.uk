@@ -55,6 +55,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
             url={baseUrl}
             platforms={platforms}
             showUnconfirmedPlatforms={settings.showUnconfirmedPlatforms}
+            hideTerminating={settings.hideTerminating}
             legacyTocNames={settings.useLegacyTocNames}
             colour={BoardColors[settings.color]}
             rowPrefix={settings.rowPrefix}

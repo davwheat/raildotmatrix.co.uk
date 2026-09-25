@@ -32,6 +32,9 @@ display options so another browser's preferences do not change the shared displa
 
 Settings changes sync live between open tabs of the same display type on the same site. Each tab keeps its station and platform filters.
 
+Enable **Hide terminating trains** under **Train information** to exclude services ending at the selected station. Terminating trains are shown
+by default. The option is saved per display type and can also be set with `hideTerminating=1` in a board URL.
+
 `yarn test:settings` checks preference migration, URL handling and embed detection. After building the site, `yarn test:settings --browser` also
 checks the setup flow, mobile layout, shared controls, cross-tab synchronization and dialog keyboard behaviour in headless Chrome.
 

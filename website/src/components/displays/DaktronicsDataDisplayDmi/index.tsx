@@ -109,6 +109,7 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
             url={baseUrl}
             platforms={platforms}
             showUnconfirmedPlatforms={customBoardSettings.showUnconfirmedPlatforms}
+            hideTerminating={customBoardSettings.hideTerminating}
             legacyTocNames={customBoardSettings.useLegacyTocNames}
             worldline={customBoardSettings.worldlinePowered}
             rowPrefix={customBoardSettings.rowPrefix}

@@ -22,6 +22,9 @@ colour = "amber"
 platforms = []
 show_unconfirmed_platforms = false
 
+# Hide trains that end their journey at this station.
+hide_terminating = false
+
 # The single prefix before each train's time: "ordinals" ("1st") or "platforms" ("Pl 1").
 # Platform prefixes have room for a three-character platform such as "10A", and stay blank when unpublished.
 row_prefix = "ordinals"
