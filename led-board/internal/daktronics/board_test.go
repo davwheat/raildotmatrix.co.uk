@@ -216,22 +216,3 @@ func TestInfoPagesForDividingTrain(t *testing.T) {
 		}
 	}
 }
-
-func BenchmarkTickScrolling(b *testing.B) {
-	board := New(Config{Width: testW, Height: testH})
-	f := frame.New(testW, testH)
-	board.Update(fixtures.Steps("busy-board")[0])
-	// Six seconds in, the information row is scrolling; at 48 dots/s nearly every 20 ms tick moves it a dot.
-	now := fixtures.Clock.Add(6 * time.Second)
-	board.Tick(now, f)
-	b.ReportAllocs()
-	b.ResetTimer()
-	redraws := 0
-	for range b.N {
-		now = now.Add(tick)
-		if board.Tick(now, f) {
-			redraws++
-		}
-	}
-	b.ReportMetric(float64(redraws)/float64(b.N), "redraws/tick")
-}

@@ -43,13 +43,19 @@ func (f *Frame) Clear() {
 
 // FillRect paints a rectangle, clipped to the frame.
 func (f *Frame) FillRect(x, y, w, h int, c RGB) {
-	for yy := max(y, 0); yy < min(y+h, f.H); yy++ {
-		for xx := max(x, 0); xx < min(x+w, f.W); xx++ {
-			i := (yy*f.W + xx) * 3
-			f.Pix[i] = c.R
-			f.Pix[i+1] = c.G
-			f.Pix[i+2] = c.B
-		}
+	x0, y0, x1, y1 := max(x, 0), max(y, 0), min(x+w, f.W), min(y+h, f.H)
+	if x0 >= x1 || y0 >= y1 {
+		return
+	}
+	stride, width := f.W*3, (x1-x0)*3
+	start := y0*stride + x0*3
+	row := f.Pix[start : start+width]
+	for i := 0; i < len(row); i += 3 {
+		row[i], row[i+1], row[i+2] = c.R, c.G, c.B
+	}
+	for yy := y0 + 1; yy < y1; yy++ {
+		start += stride
+		copy(f.Pix[start:start+width], row)
 	}
 }
 

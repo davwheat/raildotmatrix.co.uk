@@ -25,6 +25,25 @@ const terminatesHereName = "Terminates here"
 
 // Display reduces a state to the view a board shows at the given moment. Alterations are left for the caller.
 func Display(state *State, opts Options, now time.Time) model.View {
+	capacity := len(state.Ordering)
+	if opts.MaxServices > 0 {
+		capacity = min(capacity, opts.MaxServices)
+	}
+	services := make([]model.Service, 0, capacity)
+
+	n, platform := visitServices(state, opts, now, func(movement *Movement, platform string) {
+		s := service(movement, opts.LegacyTOCNames, now)
+		if movement.Platform.Suppressed == nil || !*movement.Platform.Suppressed {
+			s.Platform = platform
+		}
+		services = append(services, s)
+	})
+	return model.View{Connected: true, Services: services, Notice: n, NoticePlatform: platform}
+}
+
+// visitServices applies one filtering policy for pure and cached projections.
+// The visitor runs only for the selected services, in their display order.
+func visitServices(state *State, opts Options, now time.Time, visit func(*Movement, string)) (model.Notice, string) {
 	selected := selectedPlatforms(opts.Platforms)
 	overrides := activeOverrides(state, selected, now)
 	overridden := make(map[string]bool, len(overrides))
@@ -32,11 +51,7 @@ func Display(state *State, opts Options, now time.Time) model.View {
 		overridden[strings.ToUpper(override.Platform)] = true
 	}
 
-	capacity := len(state.Ordering)
-	if opts.MaxServices > 0 {
-		capacity = min(capacity, opts.MaxServices)
-	}
-	services := make([]model.Service, 0, capacity)
+	count := 0
 	for _, id := range state.Ordering {
 		movement, held := state.Movements[id]
 		if !held || !isPassengerCall(movement) {
@@ -55,17 +70,13 @@ func Display(state *State, opts Options, now time.Time) model.View {
 		if selected != nil && (platform == "" || !selected[platform]) && !(unconfirmed && opts.ShowUnconfirmed) {
 			continue
 		}
-		s := service(movement, opts.LegacyTOCNames, now)
-		if movement.Platform.Suppressed == nil || !*movement.Platform.Suppressed {
-			s.Platform = platform
-		}
-		services = append(services, s)
-		if opts.MaxServices > 0 && len(services) == opts.MaxServices {
+		visit(movement, platform)
+		count++
+		if opts.MaxServices > 0 && count == opts.MaxServices {
 			break
 		}
 	}
-	n, platform := notice(overrides)
-	return model.View{Connected: true, Services: services, Notice: n, NoticePlatform: platform}
+	return notice(overrides)
 }
 
 // PlatformAlterations lists the trains that have moved between a platform this board watches and one it doesn't.
@@ -81,7 +92,8 @@ func PlatformAlterations(previous, next *State, platforms []string) []string {
 	var altered []string
 	for id, movement := range next.Movements {
 		before, seen := previous.Movements[id]
-		if !seen {
+		// Shared movements are immutable, so their platform cannot have changed.
+		if !seen || before == movement {
 			continue
 		}
 		was, now := platformNumber(before), platformNumber(movement)
@@ -96,9 +108,49 @@ func PlatformAlterations(previous, next *State, platforms []string) []string {
 	return altered
 }
 
+// Delta messages can only change platforms through their upserts. The final state identifies the last occurrence of
+// a repeated upsert ID, exactly as Reduce does; removals alone are not moves.
+func deltaPlatformAlterations(previous, next *State, platforms []string, message Message) []string {
+	update, delta := message.(*Update)
+	if !delta {
+		return PlatformAlterations(previous, next, platforms)
+	}
+	if previous == nil || next == nil || len(update.Upserts) == 0 || len(platforms) == 0 {
+		return nil
+	}
+	selected := selectedPlatforms(platforms)
+	var altered []string
+	for i := range update.Upserts {
+		movement := &update.Upserts[i]
+		if next.Movements[movement.ID] != movement {
+			continue
+		}
+		before, seen := previous.Movements[movement.ID]
+		if !seen || before == movement {
+			continue
+		}
+		was, now := platformNumber(before), platformNumber(movement)
+		if was == "" || now == "" || was == now || !isPassengerCall(movement) {
+			continue
+		}
+		if selected[was] != selected[now] {
+			altered = append(altered, movement.ID)
+		}
+	}
+	slices.Sort(altered)
+	return altered
+}
+
 // NextBoundary is the next moment at which the view changes without a message: an override activating or
 // expiring on a watched platform, or a train's reported arrival time arriving. The zero time means never.
 func NextBoundary(state *State, opts Options, now time.Time) time.Time {
+	return nextBoundary(state, opts, now, nil)
+}
+
+// A projected view can only change when one of its services arrives or an
+// override starts/expires. Hidden services are re-evaluated on the next feed or
+// override change. Nil retains NextBoundary's conservative whole-state scan.
+func nextBoundary(state *State, opts Options, now time.Time, visible []model.Service) time.Time {
 	selected := selectedPlatforms(opts.Platforms)
 	var next time.Time
 	consider := func(t time.Time) {
@@ -113,9 +165,17 @@ func NextBoundary(state *State, opts Options, now time.Time) time.Time {
 		consider(override.ActivatesAt)
 		consider(override.ExpiresAt)
 	}
-	for _, movement := range state.Movements {
-		if movement.Arrival.Actual != nil && isPassengerCall(movement) {
-			consider(*movement.Arrival.Actual)
+	if visible != nil {
+		for _, service := range visible {
+			if movement := state.Movements[service.ID]; movement != nil && movement.Arrival.Actual != nil {
+				consider(*movement.Arrival.Actual)
+			}
+		}
+	} else {
+		for _, movement := range state.Movements {
+			if movement.Arrival.Actual != nil && isPassengerCall(movement) {
+				consider(*movement.Arrival.Actual)
+			}
 		}
 	}
 	return next

@@ -159,7 +159,7 @@ func TestLoadingFillAndCoachBorders(t *testing.T) {
 	contents := b.formationContents([]model.Coach{{Loading: 50}, {Loading: 100}, {Loading: -1}, {Loading: 0}}, 0)
 	drawFormation(f, 0, 0, 100, 11, 4, board.White)
 	before := append([]byte(nil), f.Pix...)
-	drawFormationContents(f, 0, 0, 100, 11, 4, contents, board.White, 50)
+	drawFormationContents(f, 0, 0, 100, 11, 4, &contents, board.White, 50)
 	dim := board.Scale(board.White, 1, 2)
 	counts := [4]int{}
 	for y := 0; y < 11; y++ {
@@ -225,7 +225,7 @@ func TestLoadingBrightnessPreservesFillArea(t *testing.T) {
 	for _, brightness := range []int{50, 100} {
 		f := frame.New(40, 11)
 		contents := b.formationContents([]model.Coach{{Loading: 50}}, 0)
-		drawFormationContents(f, 0, 0, 40, 11, 1, contents, board.White, brightness)
+		drawFormationContents(f, 0, 0, 40, 11, 1, &contents, board.White, brightness)
 		expected := board.Scale(board.White, brightness, 100)
 		lit := 0
 		for y := 0; y < f.H; y++ {

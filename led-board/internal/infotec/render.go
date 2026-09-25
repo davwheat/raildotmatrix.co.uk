@@ -31,7 +31,7 @@ type scene struct {
 	first          rowScene
 	info           scrollScene
 	formation      int
-	coachContents  [128]coachContent
+	coachContents  *[128]coachContent
 	// lower holds services 2–6, which share one band and slide past each other when they swap.
 	lower [5]rowScene
 
@@ -39,7 +39,7 @@ type scene struct {
 }
 
 func (b *Board) compose(now time.Time) scene {
-	s := scene{platform: b.platformBox(), mode: b.mode, warning: b.content.warning, level: b.level(now), clock: clockDigits(now, b.cfg.Zone)}
+	s := scene{platform: b.platformBox(), mode: b.mode, warning: b.content.warning, level: b.level(now), clock: clockDigits(now, b.cfg.Zone), coachContents: &emptyFormation}
 	s.steadyPlatform = !b.cfg.ServicePlatformBox || b.outgoing.platform == s.platform
 	if b.mode == modeTrains {
 		b.composeTrains(now, &s)
@@ -69,7 +69,7 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 	}
 	s.first = b.rowScene(&b.content.rows[0], now)
 	s.formation = s.first.length
-	s.coachContents = b.formationContents(b.content.rows[0].coaches, now.Sub(b.steadyStart))
+	s.coachContents = b.cachedFormation(b.content.rows[0].coaches, now.Sub(b.steadyStart))
 	if len(b.content.pages) > 0 {
 		s.info = b.info.scene(now)
 	}
@@ -139,6 +139,30 @@ func (b *Board) render(f *frame.Frame, s *scene) {
 		b.renderTrains(f, s, colour)
 	}
 	b.drawClock(f, s.clock)
+}
+
+// Scrolling usually changes only the information band. Preserve the rest of
+// the frame when its scene is identical and no other element overlaps the band.
+// Short/custom layouts keep the full renderer if their bands overlap.
+func (b *Board) renderInfoChange(f *frame.Frame, s, previous *scene) bool {
+	if s.mode != modeTrains {
+		return false
+	}
+	still := *s
+	still.info = previous.info
+	if still != *previous {
+		return false
+	}
+	g := &b.geo
+	c := g.infoBand()
+	if c.Y0 < g.firstY+font.PISTall.Height || c.Y1 > min(g.sepY, g.secondY, g.clockY) || s.formation > 0 && c.Y1 > g.formationY {
+		return false
+	}
+	f.FillRect(c.X0, c.Y0, c.X1-c.X0, c.Y1-c.Y0, frame.Black)
+	if s.info.on {
+		b.drawInfo(f, &s.info, board.Scale(b.cfg.Colour, s.level, fadeLevels))
+	}
+	return true
 }
 
 func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
@@ -221,7 +245,7 @@ func (b *Board) drawInfo(f *frame.Frame, sc *scrollScene, base frame.RGB) {
 	y := g.infoY + sc.dy
 	colour := board.Scale(base, fadeSteps-sc.faded, fadeSteps)
 	board.DrawText(f, g.infoFace(), g.infoX, y, sc.prefix, colour, c)
-	board.DrawText(f, g.infoFace(), sc.x, y, sc.text, colour, c.Intersect(board.Clip{X0: sc.clipX, X1: g.w, Y1: g.h}))
+	b.infoText.Draw(f, g.infoFace(), sc.x, y, sc.text, colour, c.Intersect(board.Clip{X0: sc.clipX, X1: g.w, Y1: g.h}))
 }
 
 func (b *Board) drawLines(f *frame.Frame, lines [3]string, colour frame.RGB) {

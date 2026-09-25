@@ -71,8 +71,33 @@ type Board struct {
 
 func (*Board) Update(model.View) {}
 func (*Board) RefreshHz() int    { return 60 }
+
+// Keep the existing status poll and page/scroll deadlines while letting the
+// panel refresh independently between changes to the setup instructions.
+func (b *Board) NextTick(now time.Time) time.Time {
+	if !b.drawn {
+		return time.Time{}
+	}
+	next := b.readAt.Add(time.Second)
+	perPage := max(1, b.h/(font.Text.Height+3))
+	if len(b.lines) > perPage {
+		if page := time.Unix((now.Unix()/7+1)*7, 0); page.Before(next) {
+			next = page
+		}
+	}
+	for i := b.page; i < min(b.page+perPage, len(b.lines)); i++ {
+		if b.widths[i] > b.w {
+			if scroll := time.UnixMilli((now.UnixMilli()/55 + 1) * 55); scroll.Before(next) {
+				next = scroll
+			}
+			break
+		}
+	}
+	return next
+}
+
 func (b *Board) Tick(now time.Time, f *frame.Frame) bool {
-	if now.Sub(b.readAt) >= time.Second {
+	if now.Before(b.readAt) || now.Sub(b.readAt) >= time.Second {
 		if data, err := os.ReadFile(b.Path); err == nil {
 			var s Status
 			if json.Unmarshal(data, &s) == nil {

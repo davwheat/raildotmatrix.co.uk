@@ -100,39 +100,44 @@ func TestShaderMatchesDotDraws(t *testing.T) {
 	}
 }
 
-// Readback flushes queued GPU work each iteration, so this measures completed renders rather than growing a
-// command queue. Both paths pay the same readback cost, which a real window does not incur.
-func BenchmarkRender(b *testing.B) {
-	for _, mode := range []string{"per-dot", "shader"} {
-		b.Run(mode, func(b *testing.B) {
-			const scale = 5
-			r, err := newDotRenderer(Options{Width: 256, Height: 64, Scale: scale})
-			if err != nil {
-				b.Fatal(err)
-			}
-			defer r.dispose()
-			f := patternedFrame(256, 64)
-			// About one in five LEDs is lit on a typical text board.
-			for y := range f.H {
-				for x := range f.W {
-					if (x+y)%5 != 0 {
-						f.Set(x, y, frame.Black)
-					}
+func TestWindowRetainsAndReplacesFrames(t *testing.T) {
+	r, err := newDotRenderer(Options{Width: 16, Height: 8, Scale: 3})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.dispose()
+	f := patternedFrame(16, 8)
+	g := &game{renderer: r}
+	want := make([]byte, 48*24*4)
+	got := make([]byte, len(want))
+	for range 2 { // Replacing the screen image must repaint even if the frame is unchanged.
+		screen := ebiten.NewImage(48, 24)
+		r.render(f)
+		g.Draw(screen)
+		r.canvas.ReadPixels(want)
+		for range 3 {
+			g.Draw(screen)
+			screen.ReadPixels(got)
+			for i := range want {
+				if got[i] != want[i] {
+					t.Fatalf("retained channel %d: got %d, want %d", i, got[i], want[i])
 				}
 			}
-			pixels := make([]byte, f.W*f.H*scale*scale*4)
-			r.render(f)
-			r.canvas.ReadPixels(pixels)
-			b.ReportAllocs()
-			b.ResetTimer()
-			for b.Loop() {
-				if mode == "per-dot" {
-					renderReference(r.canvas, r.dot, f, scale)
-				} else {
-					r.render(f)
-				}
-				r.canvas.ReadPixels(pixels)
+		}
+		f.Clear()
+		r.render(f)
+		g.redraw = true
+		g.Draw(screen)
+		screen.ReadPixels(got)
+		for i, value := range got {
+			want := byte(0)
+			if i%4 == 3 {
+				want = 255
 			}
-		})
+			if value != want {
+				t.Fatalf("blank channel %d = %d, want %d", i, value, want)
+			}
+		}
+		screen.Deallocate()
 	}
 }

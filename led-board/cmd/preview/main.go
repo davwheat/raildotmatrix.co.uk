@@ -108,7 +108,7 @@ func main() {
 
 type shot struct {
 	t   float64
-	img *image.RGBA
+	img image.Image
 }
 
 func contactSheet(shots []shot, columns, scale int) *image.RGBA {

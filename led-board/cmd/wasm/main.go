@@ -30,6 +30,8 @@
 //	// On failure, create returns an Error instead.
 //	board.tick(Date.now())  // advances the board; true when board.pixels changed
 //	board.pixels            // Uint8Array of packed RGB, width × height × 3
+//	board.nextTick          // earliest time-driven change; 0 for refresh pacing or after a feed update
+//	board.onUpdate = () => requestAnimationFrame(draw) // optional notification when live data changes
 //	board.close()           // stops the live stream
 //
 // If the page defines globalThis.ledDepartureBoardReady before starting the module, it's called with the
@@ -42,21 +44,27 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"runtime/debug"
 	"strings"
+	"sync"
 	"syscall/js"
 	"time"
-	// Browsers have no zoneinfo files for time.LoadLocation to read.
-	_ "time/tzdata"
 
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/formats"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/live"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/london"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 func main() {
-	zone, err := time.LoadLocation("Europe/London")
+	// Desktop-browser burst measurements favour fewer collections, at a small
+	// increase in linear memory. Keep an explicit runtime environment override.
+	if os.Getenv("GOGC") == "" {
+		debug.SetGCPercent(200)
+	}
+	zone, err := london.Load()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "led departure board: loading the time zone:", err)
 		return
@@ -155,11 +163,12 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	b.Update(model.View{})
-	go live.Run(ctx, cfg, b.Update)
-	return newHandle(b, w, h, cancel), nil
+	handle, update := newHandle(b, w, h, cancel)
+	go live.Run(ctx, cfg, update)
+	return handle, nil
 }
 
-func newHandle(b board.Board, w, h int, cancel context.CancelFunc) js.Value {
+func newHandle(b board.Board, w, h int, cancel context.CancelFunc) (js.Value, func(model.View)) {
 	f := frame.New(w, h)
 	pixels := js.Global().Get("Uint8Array").New(len(f.Pix))
 	obj := js.Global().Get("Object").New()
@@ -167,20 +176,48 @@ func newHandle(b board.Board, w, h int, cancel context.CancelFunc) js.Value {
 	obj.Set("height", h)
 	obj.Set("refreshHz", b.RefreshHz())
 	obj.Set("pixels", pixels)
+	obj.Set("nextTick", 0)
+	obj.Set("onUpdate", js.Null())
+	var nextDeadline func(time.Time) time.Time
+	if pixels, ok := b.(board.PixelTicker); ok {
+		nextDeadline = pixels.NextPixelTick
+	} else if deadlines, ok := b.(board.NextTicker); ok {
+		nextDeadline = deadlines.NextTick
+	}
+	var mu sync.Mutex
+	var nextTick int64
+	setDeadline := func(value int64) {
+		if value != nextTick {
+			nextTick = value
+			obj.Set("nextTick", float64(value))
+		}
+	}
 
 	var tick, closeFn js.Func
 	tick = js.FuncOf(func(_ js.Value, args []js.Value) any {
+		mu.Lock()
+		defer mu.Unlock()
 		now := time.Now()
 		if len(args) > 0 && args[0].Type() == js.TypeNumber {
 			now = time.UnixMilli(int64(args[0].Float()))
 		}
-		if !b.Tick(now, f) {
+		changed := b.Tick(now, f)
+		if nextDeadline != nil {
+			deadline := nextDeadline(now)
+			if deadline.IsZero() {
+				setDeadline(0)
+			} else {
+				setDeadline(deadline.UnixMilli())
+			}
+		}
+		if !changed {
 			return false
 		}
 		js.CopyBytesToJS(pixels, f.Pix)
 		return true
 	})
 	closeFn = js.FuncOf(func(js.Value, []js.Value) any {
+		obj.Set("onUpdate", js.Null())
 		cancel()
 		tick.Release()
 		closeFn.Release()
@@ -188,7 +225,19 @@ func newHandle(b board.Board, w, h int, cancel context.CancelFunc) js.Value {
 	})
 	obj.Set("tick", tick)
 	obj.Set("close", closeFn)
-	return obj
+	return obj, func(v model.View) {
+		// Publish the new data and clear its deadline together, so a tick
+		// cannot accidentally postpone a concurrently arriving update.
+		mu.Lock()
+		b.Update(v)
+		setDeadline(0)
+		mu.Unlock()
+		// Notification handlers may call tick synchronously, so release the
+		// board lock first. Closing the handle clears this callback.
+		if notify := obj.Get("onUpdate"); notify.Type() == js.TypeFunction {
+			notify.Invoke()
+		}
+	}
 }
 
 // options reads create's options object, where a missing or mistyped key means its default.

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 
 import clsx from 'clsx'
+import { observeScrollContent } from '../observeScrollContent'
 
 interface IProps {
   children: React.ReactNode
@@ -14,97 +15,54 @@ function SlideyScrollText({ children, className, classNameInner, pauseWhenDone =
   const outerRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLSpanElement>(null)
 
-  const pauseAtEnds = 1000
-
-  const previousElContent = useRef<string>('')
-
-  const animationStep = useRef<'pause-left' | 'scrolling-right' | 'pause-right'>('pause-left')
-
   useEffect(() => {
-    const { current: outer } = outerRef
-    const { current: inner } = innerRef
-
-    let outerStyles!: CSSStyleDeclaration
-    let innerStyles!: CSSStyleDeclaration
-
-    let outerWidth!: number
-    let innerWidth!: number
-
-    function updateSizes() {
-      outerStyles = getComputedStyle(outer!)
-      innerStyles = getComputedStyle(inner!)
-
-      outerWidth = parseFloat(outerStyles.width)
-      innerWidth = parseFloat(innerStyles.width)
+    const outer = outerRef.current!
+    const inner = innerRef.current!
+    let widths = { outer: 0, inner: 0, prefix: 0 }
+    let step: 'pause-left' | 'scrolling' | 'pause-right' = 'pause-left'
+    let timer: number | undefined
+    const schedule = (callback: () => void, delay: number) => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(callback, delay)
     }
-
-    updateSizes()
-
-    let currentTimeout = -1
-
-    inner!.style.removeProperty('--trans-x')
-    inner!.style.removeProperty('--transition-time')
-
-    function updateScrollDuration() {
-      updateSizes()
-
-      const scrollDuration = `${(innerWidth + outerWidth) / scrollSpeed}s`
-      inner!.style.setProperty('--transition-time', scrollDuration)
+    const startScroll = () => {
+      step = 'scrolling'
+      inner.style.setProperty('--transition-time', `${(widths.inner + widths.outer) / scrollSpeed}s`)
+      inner.style.setProperty('--trans-x', `-${widths.inner}px`)
     }
-
-    function transitionEndHandler() {
-      if (animationStep.current === 'pause-left') {
-        currentTimeout = setTimeout(() => {
-          animationStep.current = 'scrolling-right'
-          updateScrollDuration()
-          inner!.style.setProperty('--trans-x', `-${innerWidth}px`)
-        }, pauseWhenDone || 0) as any
-      } else if (animationStep.current === 'scrolling-right') {
-        animationStep.current = 'pause-right'
-
-        currentTimeout = setTimeout(() => {
-          animationStep.current = 'pause-left'
-
-          inner!.style.setProperty('--transition-time', '0.001ms')
-          inner!.style.setProperty('--trans-x', `${outerWidth}px`)
-        }, pauseAtEnds || 0) as any
+    const transitionEnd = (event: TransitionEvent) => {
+      if (event.target !== inner || event.propertyName !== 'transform') return
+      if (step === 'pause-left') {
+        schedule(startScroll, pauseWhenDone || 0)
+      } else if (step === 'scrolling') {
+        step = 'pause-right'
+        schedule(() => {
+          step = 'pause-left'
+          inner.style.setProperty('--transition-time', '0.001ms')
+          inner.style.setProperty('--trans-x', `${widths.outer}px`)
+        }, 1000)
       }
     }
-
-    if (previousElContent.current !== inner!.innerHTML) {
-      previousElContent.current = inner!.innerHTML
-
-      inner!.style.removeProperty('--trans-x')
-      inner!.style.removeProperty('--transition-time')
-
-      animationStep.current = 'pause-left'
-    }
-
-    if (innerWidth > outerWidth) {
-      inner!.style.setProperty('--trans-x', `${outerWidth}px`)
-      inner!.style.removeProperty('--transition-time')
-
-      animationStep.current = 'pause-left'
-
-      currentTimeout = setTimeout(() => {
-        animationStep.current = 'scrolling-right'
-
-        updateScrollDuration()
-
-        inner!.style.setProperty('--trans-x', `-${innerWidth}px`)
-      }, pauseAtEnds || 0) as any
-
-      inner?.addEventListener('transitionend', transitionEndHandler)
-    } else {
-      inner!.style.removeProperty('--transition-time')
-      inner!.style.setProperty('--trans-x', '0')
-    }
-
+    const stopObserving = observeScrollContent(outer, inner, null, measured => {
+      widths = measured
+      window.clearTimeout(timer)
+      inner.removeEventListener('transitionend', transitionEnd)
+      inner.style.removeProperty('--transition-time')
+      step = 'pause-left'
+      if (widths.inner > widths.outer) {
+        inner.style.setProperty('--trans-x', `${widths.outer}px`)
+        schedule(startScroll, 1000)
+        inner.addEventListener('transitionend', transitionEnd)
+      } else {
+        inner.style.setProperty('--trans-x', '0')
+      }
+    })
     return () => {
-      clearTimeout(currentTimeout)
-      inner?.removeEventListener('transitionend', transitionEndHandler)
+      stopObserving()
+      window.clearTimeout(timer)
+      inner.removeEventListener('transitionend', transitionEnd)
     }
-  })
+  }, [pauseWhenDone, scrollSpeed])
 
   return (
     <div className={clsx('slidey-scroll-text', className)} ref={outerRef}>

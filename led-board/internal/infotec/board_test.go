@@ -438,22 +438,3 @@ func TestGeometry(t *testing.T) {
 		t.Fatalf("geometry\n got %+v\nwant %+v", g, want)
 	}
 }
-
-func BenchmarkTickScrolling(b *testing.B) {
-	board := New(Config{Width: testW, Height: testH})
-	f := frame.New(testW, testH)
-	board.Update(fixtures.Steps("busy-board")[0])
-	// Ten seconds in, the calling points are scrolling; at 60 dots/s every 20 ms tick moves them a dot or two.
-	now := fixtures.Clock.Add(10 * time.Second)
-	board.Tick(now, f)
-	b.ReportAllocs()
-	b.ResetTimer()
-	redraws := 0
-	for range b.N {
-		now = now.Add(tick)
-		if board.Tick(now, f) {
-			redraws++
-		}
-	}
-	b.ReportMetric(float64(redraws)/float64(b.N), "redraws/tick")
-}

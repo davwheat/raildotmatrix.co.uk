@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 
 import dayjs from 'dayjs'
 
@@ -10,14 +10,10 @@ dayjs.extend(dayjsTz)
 
 dayjs.tz.setDefault('Europe/London')
 
-import useInterval from '../../../../hooks/useInterval'
+import useClock from '../../../../hooks/useClock'
 
 export default function SmallClock() {
-  const [currentTime, setCurrentTime] = useState<Date>(new Date())
-
-  useInterval(() => {
-    setCurrentTime(new Date())
-  }, 1000)
+  const currentTime = useClock(60000)
 
   return (
     <div className="clock">

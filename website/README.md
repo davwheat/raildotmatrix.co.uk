@@ -17,8 +17,7 @@ and applies a cached dot mask. Canvas 2D remains the fallback. The renderer rest
 releases GPU resources when a board closes.
 
 `yarn test:renderer` compares both renderers in GPU-enabled headless Chrome and checks resizing, transparency, context recovery and fallback.
-`yarn test:renderer --benchmark` also measures main-thread paint submission time at 1920- and 3840-pixel widths; it does not measure GPU time or
-overall frame rate. These checks need hardware WebGL and do not require a site build.
+These checks need hardware WebGL and do not require a site build.
 
 `yarn build` and `yarn dev` build the WebAssembly bundle into `public/led-board` first, so they need Go 1.21 or later (Go fetches the version
 `led-board/go.mod` asks for) and [Just](https://just.systems). `yarn board` rebuilds just the bundle. To change how either board looks or

@@ -28,6 +28,10 @@ export interface CaptureRequest {
 }
 
 export class Browser {
+  get processId() {
+    return this.process.pid!
+  }
+
   private constructor(
     private readonly process: ChildProcess,
     private readonly socket: WebSocket,
@@ -36,6 +40,7 @@ export class Browser {
 
   private nextId = 0
   private closed = false
+  private exitDetails = () => ''
   private readonly pending = new Map<number, { resolve: (result: any) => void; reject: (error: Error) => void }>()
 
   static async launch({ gpu = false }: { gpu?: boolean } = {}): Promise<Browser> {
@@ -101,6 +106,7 @@ export class Browser {
     })
 
     const browser = new Browser(child, socket, profile)
+    browser.exitDetails = () => [exit, complaints.trim()].filter(Boolean).join('\n')
     socket.onmessage = event => browser.receive(String(event.data))
     // A crashed browser must fail the calls waiting on it; otherwise the run hangs with no output at all.
     child.on('exit', () => browser.abandon('Chrome exited'))
@@ -119,12 +125,13 @@ export class Browser {
 
   private abandon(reason: string) {
     this.closed = true
-    for (const waiter of this.pending.values()) waiter.reject(new Error(reason))
+    const detail = [reason, this.exitDetails()].filter(Boolean).join('\n')
+    for (const waiter of this.pending.values()) waiter.reject(new Error(detail))
     this.pending.clear()
   }
 
   send(method: string, params: Record<string, unknown> = {}, sessionId?: string): Promise<any> {
-    if (this.closed) return Promise.reject(new Error('Chrome is no longer running'))
+    if (this.closed) return Promise.reject(new Error(['Chrome is no longer running', this.exitDetails()].filter(Boolean).join('\n')))
 
     const id = ++this.nextId
     return new Promise((resolve, reject) => {

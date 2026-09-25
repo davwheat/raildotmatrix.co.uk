@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
+import useClock from '../../../hooks/useClock'
 
 import dayjs from 'dayjs'
 
@@ -21,17 +22,7 @@ export default function BoardHeader({ platformNumber, stationName }: { platformN
 }
 
 function Clock() {
-  const [currentTime, setCurrentTime] = useState<Date>(new Date())
-
-  useEffect(() => {
-    const key = window.setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-
-    return () => {
-      clearInterval(key)
-    }
-  })
+  const currentTime = useClock(1000)
 
   return <div className="clock tab-nums">{dayjs.tz(currentTime).format('HH:mm:ss')}</div>
 }

@@ -59,8 +59,10 @@
     "clean": "rm -rf .next out",
     "test:settings": "node scripts/test-settings.mjs",
     "test:live": "node scripts/test-live.mjs",
+    "test:management": "node scripts/test-management.mjs",
     "test:visual": "node scripts/test-visual.mjs",
-    "test:renderer": "node scripts/test-renderer.mjs"
+    "test:renderer": "node scripts/test-renderer.mjs",
+    "test:wasm": "node scripts/test-wasm.mjs"
   },
   "packageManager": "yarn@4.18.0"
 }

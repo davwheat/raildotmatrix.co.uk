@@ -107,3 +107,31 @@ func TestDisplayChangesWhenClientsJoinAndLeave(t *testing.T) {
 		t.Fatal("invalid status replaced the last good display")
 	}
 }
+
+func TestDeadlinesPreservePollingPagingAndScrolling(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "network.json")
+	for _, size := range [][2]int{{128, 16}, {256, 32}, {512, 64}} {
+		regular := Board{Path: path, Colour: frame.RGB{R: 230, G: 150}}
+		scheduled := regular
+		want, got := frame.New(size[0], size[1]), frame.New(size[0], size[1])
+		var next time.Time
+		for tick := range 6000 {
+			now := time.Unix(100, 0).Add(time.Duration(tick) * 7 * time.Millisecond)
+			if tick%1000 == 0 {
+				status := Status{Mode: "hotspot", Clients: tick / 1000 % 2, IPs: []string{"192.168.4.1", "10.0.0.1"}}
+				data, _ := json.Marshal(status)
+				if err := os.WriteFile(path, data, 0644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			regular.Tick(now, want)
+			if next.IsZero() || !now.Before(next) {
+				scheduled.Tick(now, got)
+				next = scheduled.NextTick(now)
+			}
+			if !got.Equal(want) {
+				t.Fatalf("size %v, tick %d: deadline missed an update", size, tick)
+			}
+		}
+	}
+}

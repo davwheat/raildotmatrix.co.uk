@@ -49,6 +49,41 @@ type coachContent struct {
 	loading int
 }
 
+var emptyFormation [128]coachContent
+
+// derive owns each coach slice and never changes it. A different backing array
+// therefore invalidates the page even when an update arrives at the same time.
+// Two buffers keep the previous scene immutable until Tick has compared it with
+// the new scene, without allocating a page on every five-second transition.
+type formationCache struct {
+	coaches []model.Coach
+	slot    time.Duration
+	current *[128]coachContent
+	pages   [2][128]coachContent
+}
+
+func (b *Board) cachedFormation(coaches []model.Coach, elapsed time.Duration) *[128]coachContent {
+	if len(coaches) == 0 {
+		b.formation.coaches = nil
+		return &emptyFormation
+	}
+	c := &b.formation
+	slot := max(0, elapsed) / (5 * time.Second)
+	if len(c.coaches) == len(coaches) && &c.coaches[0] == &coaches[0] && c.slot == slot {
+		return c.current
+	}
+	next := &c.pages[0]
+	if next == c.current {
+		next = &c.pages[1]
+	}
+	*next = b.formationContents(coaches, elapsed)
+	if c.current == nil || *next != *c.current {
+		c.current = next
+	}
+	c.coaches, c.slot = coaches, slot
+	return c.current
+}
+
 // Shared five-second slots show identifiers, loading, then facilities. Extra
 // facility slots repeat accessibility first, then cycles, toilets, food and first class.
 func (b *Board) formationContents(coaches []model.Coach, elapsed time.Duration) (out [128]coachContent) {
@@ -56,7 +91,8 @@ func (b *Board) formationContents(coaches []model.Coach, elapsed time.Duration) 
 	for _, c := range coaches {
 		labels = labels || c.Label != ""
 		loads = loads || c.Loading >= 0
-		facilities = max(facilities, len(b.coachFacilities(c)))
+		_, count := b.coachFacilities(c)
+		facilities = max(facilities, count)
 	}
 	slots := facilities
 	if labels {
@@ -89,36 +125,44 @@ func (b *Board) formationContents(coaches []model.Coach, elapsed time.Duration) 
 			}
 			page--
 		}
-		options := b.coachFacilities(c)
-		if len(options) != 0 {
-			out[i].text = options[max(0, page-(facilities-len(options)))]
+		options, count := b.coachFacilities(c)
+		if count != 0 {
+			out[i].text = options[max(0, page-(facilities-count))]
 		}
 	}
 	return
 }
 
-func (b *Board) coachFacilities(c model.Coach) []string {
-	var options []string
+// There are at most five facility types. Keep their short list on the stack;
+// formationContents examines it when selecting a new five-second page.
+func (b *Board) coachFacilities(c model.Coach) (options [5]string, count int) {
+	add := func(icon string) {
+		options[count] = icon
+		count++
+	}
 	accessible := c.Accessible && slices.Contains(b.cfg.FormationIcons, "accessibility")
 	if accessible {
-		options = append(options, "§")
+		add("§")
 	}
 	if c.Cycles && slices.Contains(b.cfg.FormationIcons, "cycles") {
-		options = append(options, "#")
+		add("#")
 	}
 	if c.Toilet && !accessible && slices.Contains(b.cfg.FormationIcons, "toilets") {
-		options = append(options, "±")
+		add("±")
 	}
 	if c.Food && slices.Contains(b.cfg.FormationIcons, "food") {
-		options = append(options, "€")
+		add("€")
 	}
 	if c.FirstClass && slices.Contains(b.cfg.FormationIcons, "first-class") {
-		options = append(options, "1st")
+		add("1st")
 	}
-	return options
+	return
 }
 
-func drawFormationContents(f *frame.Frame, x, y, width, height, length int, contents [128]coachContent, colour frame.RGB, brightness int) {
+func drawFormationContents(f *frame.Frame, x, y, width, height, length int, contents *[128]coachContent, colour frame.RGB, brightness int) {
+	if contents == nil {
+		return
+	}
 	cab, coachW, w := formationDimensions(width, height, length)
 	if w == 0 {
 		return

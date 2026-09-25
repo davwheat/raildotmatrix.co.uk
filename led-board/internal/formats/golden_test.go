@@ -180,12 +180,12 @@ func render(t *testing.T, c goldenCase) *frame.Frame {
 	return f
 }
 
-func samePixels(a image.Image, b *image.RGBA) bool {
+func samePixels(a, b image.Image) bool {
 	if a.Bounds() != b.Bounds() {
 		return false
 	}
-	for y := b.Rect.Min.Y; y < b.Rect.Max.Y; y++ {
-		for x := b.Rect.Min.X; x < b.Rect.Max.X; x++ {
+	for y := b.Bounds().Min.Y; y < b.Bounds().Max.Y; y++ {
+		for x := b.Bounds().Min.X; x < b.Bounds().Max.X; x++ {
 			r1, g1, b1, a1 := a.At(x, y).RGBA()
 			r2, g2, b2, a2 := b.At(x, y).RGBA()
 			if r1 != r2 || g1 != g2 || b1 != b2 || a1 != a2 {

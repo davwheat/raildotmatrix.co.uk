@@ -62,10 +62,10 @@ export default function NextTrain({ nextTrain }: { nextTrain: IMyTrainService })
         .flat(1)
         .filter((a): a is IAssociation<AssociationCategory.Divide> => a.type === AssociationCategory.Divide)
         .map(a => a.service),
-    [JSON.stringify(nextTrain.passengerCallPoints.map(p => p.associations))],
+    [nextTrain.passengerCallPoints],
   )
 
-  // Memoise to prevent early animation end
+  // Feed projections replace these arrays when their contents change.
   const callingPointText: string = React.useMemo(() => {
     // A terminating service has nowhere left to call, so where it came from is the useful thing to say.
     if (nextTrain.terminatesHere) return `This is the service from ${pluralise(nextTrain.origins.map(origin => origin.name))}.`
@@ -101,12 +101,7 @@ export default function NextTrain({ nextTrain }: { nextTrain: IMyTrainService })
       const ogLengthEnd = nextTrain.passengerCallPoints.at(-1)!!.length
       return [`Join the front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches for ${pluralise(ogServicePoints)}.`, ...assocServices].join(' ')
     }
-  }, [
-    nextTrain.terminatesHere,
-    JSON.stringify(nextTrain.origins),
-    JSON.stringify(nextTrain.passengerCallPoints),
-    JSON.stringify(associatedServices.map(a => a.passengerCallPoints)),
-  ])
+  }, [nextTrain.terminatesHere, nextTrain.origins, nextTrain.passengerCallPoints, associatedServices])
 
   return (
     <div className="nextTrain">

@@ -273,6 +273,9 @@ func (g *geometry) secondBand() board.Clip {
 type Board struct {
 	cfg Config
 	geo geometry
+	// Layout changes only with formation visibility or the platform box text.
+	geoDetails  bool
+	geoPlatform string
 	// dim is the separator's colour: the text colour at the separator's 0.5 opacity.
 	dim frame.RGB
 
@@ -294,6 +297,8 @@ type Board struct {
 	steadyStart time.Time
 	info        scroller
 	infoPage    int
+	infoText    board.TextRun
+	formation   formationCache
 	// swapIndex selects the 2nd or 3rd train in the lower row; swapFrom is the one it slid away from and
 	// swapStart when it did.
 	swapIndex, swapFrom int
@@ -332,6 +337,7 @@ func New(cfg Config) *Board {
 	c := cfg.Colour
 	b := &Board{cfg: cfg, dim: board.Scale(c, 1, 2)}
 	b.geo = b.geometry(false)
+	b.geoPlatform = b.platformBox()
 	b.info.speed = cfg.ScrollSpeed
 	return b
 }
@@ -340,6 +346,25 @@ func New(cfg Config) *Board {
 func (b *Board) RefreshHz() int { return board.RefreshFor(b.cfg.ScrollSpeed) }
 
 func (b *Board) ServiceLimit() int { return b.cfg.ServiceCount }
+
+func (b *Board) NextTick(now time.Time) time.Time {
+	return b.nextTick(now, false)
+}
+
+func (b *Board) NextPixelTick(now time.Time) time.Time {
+	return b.nextTick(now, true)
+}
+
+func (b *Board) nextTick(now time.Time, pixels bool) time.Time {
+	if !b.drawn || !b.fadeInStart.IsZero() && now.Sub(b.fadeInStart) < arriveFade*time.Millisecond {
+		return time.Time{}
+	}
+	next := now.Truncate(time.Second).Add(time.Second)
+	if b.mode != modeTrains {
+		return next
+	}
+	return b.nextStillTick(now, next, pixels)
+}
 
 // Update replaces the view. It takes effect on the next Tick, so it is safe to call from another goroutine.
 func (b *Board) Update(v model.View) {
@@ -366,7 +391,11 @@ func (b *Board) Tick(now time.Time, f *frame.Frame) bool {
 		length = b.content.rows[0].length
 	}
 	previousGeo := b.geo
-	b.geo = b.geometry(length > 0)
+	details, platform := length > 0, b.platformBox()
+	if details != b.geoDetails || platform != b.geoPlatform {
+		b.geo = b.geometry(details)
+		b.geoDetails, b.geoPlatform = details, platform
+	}
 	digits := clockDigits(now, b.cfg.Zone)
 	face := b.geo.clockFace(false)
 	glyph := board.GlyphOf(face, rune(digits[0]))
@@ -379,9 +408,10 @@ func (b *Board) Tick(now time.Time, f *frame.Frame) bool {
 	if b.drawn && s == b.last {
 		return false
 	}
-	b.last = s
-	b.drawn = true
-	b.render(f, &s)
+	if !b.drawn || !b.renderInfoChange(f, &s, &b.last) {
+		b.render(f, &s)
+	}
+	b.last, b.drawn = s, true
 	return true
 }
 

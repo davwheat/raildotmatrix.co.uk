@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 
 import { createDotPainter } from './DotPainter'
+import { animateBoard } from './animation'
 import { loadLedBoard, type LedBoardHandle, type LedBoardOptions } from './loadLedBoard'
 
 type Props = Omit<LedBoardOptions, 'width' | 'height'> & {
@@ -77,22 +78,13 @@ export default function LedBoard({
     surface.appendChild(painter.canvas)
     const observer = observeDevicePixelSize(surface, (width, height) => painter.resize(width, height))
     let handle: LedBoardHandle | undefined
-    let frame = 0
+    let stopAnimation: (() => void) | undefined
     let stopped = false
 
     function fail(error: unknown) {
       if (stopped) return
       console.error('The departure board failed', error)
       setStatus('failed')
-    }
-
-    function draw() {
-      try {
-        if (handle!.tick(Date.now())) painter.paint(handle!.pixels)
-        frame = requestAnimationFrame(draw)
-      } catch (error) {
-        fail(error)
-      }
     }
 
     setStatus('loading')
@@ -103,13 +95,13 @@ export default function LedBoard({
         if (created instanceof Error) throw created
         handle = created
         setStatus('running')
-        draw()
+        stopAnimation = animateBoard(handle, pixels => painter.paint(pixels), fail, surface)
       })
       .catch(fail)
 
     return () => {
       stopped = true
-      cancelAnimationFrame(frame)
+      stopAnimation?.()
       observer.disconnect()
       handle?.close()
       painter.dispose()

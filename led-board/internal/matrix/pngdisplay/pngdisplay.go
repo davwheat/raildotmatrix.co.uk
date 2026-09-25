@@ -14,8 +14,8 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 )
 
-// PNG's compression workspace is much larger than a board frame. Reuse it across images and writers while
-// retaining the default compression level and allowing concurrent snapshot exports.
+// PNG's compression workspace is much larger than a board frame. Reuse it across
+// images and allow concurrent exports, with separate pools for each compression level.
 type encoderBuffers struct{ sync.Pool }
 
 func (p *encoderBuffers) Get() *png.EncoderBuffer {
@@ -26,6 +26,10 @@ func (p *encoderBuffers) Get() *png.EncoderBuffer {
 func (p *encoderBuffers) Put(b *png.EncoderBuffer) { p.Pool.Put(b) }
 
 var encoder = png.Encoder{BufferPool: &encoderBuffers{}}
+
+// Continuous frame output favours throughput. Keep a separate workspace so
+// compact one-off exports do not repeatedly reinitialise the compression level.
+var streamEncoder = png.Encoder{CompressionLevel: png.BestSpeed, BufferPool: &encoderBuffers{}}
 
 // Options configures a PNG-writing display.
 type Options struct {
@@ -41,11 +45,13 @@ type Options struct {
 	Width, Height int
 }
 
-// Writer is a frame.Display that saves each frame as a PNG.
+// Writer is a frame.Display that saves each frame as a lossless PNG. It favours
+// encoding speed over file size; Encode uses compact encoding for one-off exports.
 type Writer struct {
-	opts  Options
-	count int
-	img   *image.RGBA
+	opts    Options
+	count   int
+	img     *image.RGBA
+	indexed paletteFrame
 }
 
 // New creates the output directory and returns a Writer of the given size.
@@ -61,7 +67,6 @@ func New(opts Options) (*Writer, error) {
 	}
 	return &Writer{
 		opts: opts,
-		img:  image.NewRGBA(image.Rect(0, 0, opts.Width*opts.Scale, opts.Height*opts.Scale)),
 	}, nil
 }
 
@@ -72,7 +77,16 @@ func (w *Writer) Swap(f *frame.Frame) error {
 	if f.W != w.opts.Width || f.H != w.opts.Height {
 		return fmt.Errorf("pngdisplay: frame is %dx%d, display is %dx%d", f.W, f.H, w.opts.Width, w.opts.Height)
 	}
-	scaleInto(w.img, f, w.opts.Scale)
+	var img image.Image
+	if indexed := w.indexed.scaleForStream(f, w.opts.Scale); indexed != nil {
+		img = indexed
+	} else {
+		if w.img == nil {
+			w.img = image.NewRGBA(image.Rect(0, 0, f.W*w.opts.Scale, f.H*w.opts.Scale))
+		}
+		scaleInto(w.img, f, w.opts.Scale)
+		img = w.img
+	}
 
 	w.count++
 	name := filepath.Join(w.opts.Dir, fmt.Sprintf("frame-%06d.png", w.count))
@@ -80,7 +94,7 @@ func (w *Writer) Swap(f *frame.Frame) error {
 	if err != nil {
 		return fmt.Errorf("pngdisplay: %w", err)
 	}
-	if err := encoder.Encode(out, w.img); err != nil {
+	if err := streamEncoder.Encode(out, img); err != nil {
 		out.Close()
 		return fmt.Errorf("pngdisplay: %w", err)
 	}
@@ -98,6 +112,10 @@ func (w *Writer) Count() int { return w.count }
 func Encode(path string, f *frame.Frame, scale int) error {
 	if scale < 1 {
 		scale = 1
+	}
+	var indexed paletteFrame
+	if img := indexed.scale(f, scale); img != nil {
+		return EncodeImage(path, img)
 	}
 	img := image.NewRGBA(image.Rect(0, 0, f.W*scale, f.H*scale))
 	scaleInto(img, f, scale)
@@ -135,9 +153,9 @@ func scaleInto(img *image.RGBA, f *frame.Frame, scale int) {
 	}
 }
 
-// Dots enlarges a frame, drawing each lit dot as a disc when the scale allows so the result resembles an LED
-// panel.
-func Dots(f *frame.Frame, scale int) *image.RGBA {
+// dotsRGBA is the exact-colour fallback for frames whose dots and black
+// background cannot be represented by a PNG palette.
+func dotsRGBA(f *frame.Frame, scale int) *image.RGBA {
 	img := image.NewRGBA(image.Rect(0, 0, f.W*scale, f.H*scale))
 	for i := 3; i < len(img.Pix); i += 4 {
 		img.Pix[i] = 255

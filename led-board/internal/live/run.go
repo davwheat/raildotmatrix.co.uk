@@ -63,6 +63,7 @@ const maxFrameBytes = 5_000_000
 // activates or expires or a reported arrival time passes, and when the connection is lost or a revision gap
 // opens, both of which show as Connected false with no services. Alterations are set only on the view emitted
 // for the update that caused them.
+// Emitted views and their nested data must be treated as immutable.
 func Run(ctx context.Context, cfg Config, emit func(model.View)) error {
 	return run(ctx, cfg, defaultTimings, emit)
 }
@@ -145,7 +146,8 @@ func StreamURL(cfg Config) (*url.URL, error) {
 	return target, nil
 }
 
-// board owns the state and the emitted view. Everything in it runs on Run's goroutine.
+// board owns its state maps on Run's goroutine. Entities and published views
+// remain immutable, so consumers can retain earlier views independently.
 type board struct {
 	log     *slog.Logger
 	emit    func(model.View)
@@ -154,7 +156,9 @@ type board struct {
 
 	state *State
 	// connected is whether the last emitted view was connected, so that a loss is announced once.
-	connected bool
+	connected      bool
+	projection     projector
+	hadAlterations bool
 	// boundary fires when an override window or a reported arrival time changes the view without a message.
 	boundary *time.Timer
 }
@@ -308,13 +312,17 @@ func (b *board) read(ctx context.Context, conn *websocket.Conn, frames chan<- in
 
 func (b *board) apply(message Message) {
 	previous := b.state
-	b.state = Reduce(previous, message)
+	if _, snapshot := message.(*Snapshot); snapshot {
+		b.projection.invalidate()
+	}
+	var alterations []string
+	b.state, alterations = reduceOwned(previous, message, b.opts.Platforms)
 	if b.state == nil {
 		b.log.Warn("revision gap, board cleared until the snapshot arrives")
 		b.publish(nil)
 		return
 	}
-	b.publish(PlatformAlterations(previous, b.state, b.opts.Platforms))
+	b.publish(alterations)
 }
 
 // reset discards the state when a connection ends. A lost connection clears the board until a fresh snapshot
@@ -333,6 +341,8 @@ func (b *board) publish(alterations []string) {
 	default:
 	}
 	if b.state == nil {
+		b.projection = projector{}
+		b.hadAlterations = false
 		if b.connected {
 			b.connected = false
 			b.emit(model.View{})
@@ -340,12 +350,16 @@ func (b *board) publish(alterations []string) {
 		return
 	}
 	now := time.Now()
-	view := Display(b.state, b.opts, now)
+	view, changed := b.projection.display(b.state, b.opts, now)
 	view.Alterations = alterations
-	if next := NextBoundary(b.state, b.opts, now); !next.IsZero() {
+	if next := nextBoundary(b.state, b.opts, now, view.Services); !next.IsZero() {
 		b.boundary.Reset(next.Sub(now))
 	}
+	if b.connected && !changed && len(alterations) == 0 && !b.hadAlterations {
+		return
+	}
 	b.connected = true
+	b.hadAlterations = len(alterations) > 0
 	b.log.Debug("view", "revision", b.state.Revision, "services", len(view.Services), "notice", view.Notice, "alterations", len(alterations))
 	b.emit(view)
 }

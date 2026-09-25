@@ -44,18 +44,7 @@ func DrawText(dst *frame.Frame, f *font.Face, x, y int, s string, colour frame.R
 
 // DrawGlyph renders g with its top-left dot at (x, y), dropping dots outside c.
 func DrawGlyph(dst *frame.Frame, g font.Glyph, x, y int, colour frame.RGB, c Clip) {
-	for row, bits := range g.Rows {
-		py := y + row
-		if py < c.Y0 || py >= c.Y1 {
-			continue
-		}
-		for col := 0; bits != 0; col, bits = col+1, bits>>1 {
-			px := x + col
-			if bits&1 != 0 && px >= c.X0 && px < c.X1 {
-				dst.Set(px, py, colour)
-			}
-		}
-	}
+	g.Draw(dst, x, y, colour, c.X0, c.Y0, c.X1, c.Y1)
 }
 
 // DrawCells renders each rune of s centred in a cell of the given width, as the web boards do for digits, and

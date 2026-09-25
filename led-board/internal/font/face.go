@@ -2,12 +2,37 @@
 // See generate.go for the faces imported from the font builder's JSON export.
 package font
 
-import "github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
+import (
+	"math/bits"
+
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
+)
 
 // Glyph is one character's dots. Rows holds one row per line of the face, top first; bit 0 is the leftmost dot.
 type Glyph struct {
 	Width int
 	Rows  []uint16
+}
+
+// Draw paints only the lit dots inside the half-open clip rectangle and frame.
+// Clip rows and mask columns once instead of checking coordinates at every dot.
+func (g Glyph) Draw(dst *frame.Frame, x, y int, c frame.RGB, x0, y0, x1, y1 int) {
+	left := max(0, max(x0, 0)-x)
+	right := min(16, min(x1, dst.W)-x)
+	top := max(0, max(y0, 0)-y)
+	bottom := min(len(g.Rows), min(y1, dst.H)-y)
+	if left >= right || top >= bottom {
+		return
+	}
+	mask := uint16((uint32(1)<<right)-1) & (^uint16(0) << left)
+	for row := top; row < bottom; row++ {
+		base := ((y+row)*dst.W + x) * 3
+		for lit := g.Rows[row] & mask; lit != 0; lit &= lit - 1 {
+			i := base + bits.TrailingZeros16(lit)*3
+			pixel := dst.Pix[i : i+3]
+			pixel[0], pixel[1], pixel[2] = c.R, c.G, c.B
+		}
+	}
 }
 
 // Face is a fixed-height dot font. Advance between glyphs is the glyph width plus Spacing.
@@ -52,13 +77,7 @@ func (f *Face) Draw(dst *frame.Frame, x, y int, s string, c frame.RGB) int {
 	for _, r := range s {
 		g := f.glyph(r)
 		if x+g.Width > 0 && x < dst.W {
-			for row, bits := range g.Rows {
-				for col := 0; bits != 0; col, bits = col+1, bits>>1 {
-					if bits&1 != 0 {
-						dst.Set(x+col, y+row, c)
-					}
-				}
-			}
+			g.Draw(dst, x, y, c, 0, 0, dst.W, dst.H)
 		}
 		x += g.Width + f.Spacing
 	}
@@ -70,14 +89,7 @@ func (f *Face) DrawClipped(dst *frame.Frame, x, y int, s string, c frame.RGB, cl
 	for _, r := range s {
 		g := f.glyph(r)
 		if x+g.Width > clipX && x < clipX+clipW {
-			for row, bits := range g.Rows {
-				for col := 0; bits != 0; col, bits = col+1, bits>>1 {
-					px := x + col
-					if bits&1 != 0 && px >= clipX && px < clipX+clipW {
-						dst.Set(px, y+row, c)
-					}
-				}
-			}
+			g.Draw(dst, x, y, c, clipX, 0, clipX+clipW, dst.H)
 		}
 		x += g.Width + f.Spacing
 	}

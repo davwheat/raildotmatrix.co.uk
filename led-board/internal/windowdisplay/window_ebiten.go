@@ -54,6 +54,8 @@ func Run(opts Options, app func(d frame.Display)) error {
 	ebiten.SetWindowTitle(opts.Title)
 	ebiten.SetWindowSize(opts.Width*opts.Scale, opts.Height*opts.Scale)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	// Preserve unchanged screens so Ebitengine can skip their GPU presentation.
+	ebiten.SetScreenClearedEveryFrame(false)
 
 	go func() {
 		defer close(d.appDone)
@@ -136,11 +138,13 @@ func (d *display) take(f *frame.Frame) bool {
 }
 
 // game implements ebiten.Game. The panel is rendered into canvas only when a
-// new frame arrives; Draw then blits the canvas at every window refresh.
+// new frame arrives; Draw presents it once and retains it between changes.
 type game struct {
 	d        *display
 	renderer *dotRenderer
 	last     *frame.Frame
+	screen   *ebiten.Image
+	redraw   bool
 }
 
 func (g *game) Update() error {
@@ -157,12 +161,17 @@ func (g *game) Update() error {
 	}
 	if g.d.take(g.last) {
 		g.renderer.render(g.last)
+		g.redraw = true
 	}
 	return nil
 }
 
 func (g *game) Draw(screen *ebiten.Image) {
+	if !g.redraw && g.screen == screen {
+		return
+	}
 	screen.DrawImage(g.renderer.canvas, nil)
+	g.screen, g.redraw = screen, false
 }
 
 func (g *game) Layout(int, int) (int, int) {

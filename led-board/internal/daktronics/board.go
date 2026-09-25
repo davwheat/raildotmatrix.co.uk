@@ -154,6 +154,7 @@ type Board struct {
 	steadyStart time.Time
 	info        scroller
 	infoPage    int
+	infoText    board.TextRun
 	// swapIndex selects a later train for the third row; swapStart is when it last changed and
 	// rowSlideStart when the third row last slid up.
 	swapIndex     int
@@ -192,6 +193,25 @@ func (b *Board) RefreshHz() int { return board.RefreshFor(b.cfg.ScrollSpeed) }
 
 func (b *Board) ServiceLimit() int { return b.cfg.ServiceCount }
 
+func (b *Board) NextTick(now time.Time) time.Time {
+	return b.nextTick(now, false)
+}
+
+func (b *Board) NextPixelTick(now time.Time) time.Time {
+	return b.nextTick(now, true)
+}
+
+func (b *Board) nextTick(now time.Time, pixels bool) time.Time {
+	if !b.drawn || b.mode == modeAlteration {
+		return time.Time{}
+	}
+	next := b.clock.nextTick(now)
+	if b.mode != modeTrains {
+		return next
+	}
+	return b.nextStillTick(now, next, pixels)
+}
+
 // Update replaces the view. It takes effect on the next Tick, so it is safe to call from another goroutine.
 func (b *Board) Update(v model.View) {
 	b.mu.Lock()
@@ -216,9 +236,10 @@ func (b *Board) Tick(now time.Time, f *frame.Frame) bool {
 	if b.drawn && s == b.last {
 		return false
 	}
-	b.last = s
-	b.drawn = true
-	b.render(f, &s)
+	if !b.drawn || !b.renderChange(f, &s, &b.last) {
+		b.render(f, &s)
+	}
+	b.last, b.drawn = s, true
 	return true
 }
 

@@ -2,6 +2,7 @@ package live
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -212,6 +213,43 @@ func TestCoachCountUpdatesReachTheBoard(t *testing.T) {
 			t.Errorf("updated coach count = %d, want %d", got, want)
 		}
 	}
+}
+
+func TestHiddenUpdatesAdvanceTheStreamWithoutWakingLimitedBoard(t *testing.T) {
+	service := newFakeService(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	views := make(chan model.View, 32)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		_ = run(ctx, Config{BaseURL: service.server.URL, CRS: "TST", MaxServices: 3}, testTimings, func(v model.View) { views <- v })
+	}()
+	t.Cleanup(func() { cancel(); <-done })
+	conn := service.accept(t)
+	var movements []*pb.Movement
+	var order []string
+	for i := range 50 {
+		m := movementFrame(fmt.Sprint("train-", i), "2", time.Now().Add(time.Hour))
+		movements = append(movements, m)
+		order = append(order, m.Id)
+	}
+	service.send(t, conn, snapshotFrame(1, movements, nil))
+	expectView(t, views, true, 3)
+	for revision := uint64(2); revision <= 10; revision++ {
+		update := updateFrame(revision-1, revision, order)
+		movements[49].CoachCount = ptr(int32(revision))
+		update.GetUpdate().Upserts = []*pb.Movement{movements[49]}
+		service.send(t, conn, update)
+	}
+	expectNoView(t, views, 40*time.Millisecond)
+	update := updateFrame(10, 11, order)
+	movements[0].CoachCount = ptr(int32(12))
+	update.GetUpdate().Upserts = []*pb.Movement{movements[0]}
+	service.send(t, conn, update)
+	if got := expectView(t, views, true, 3).Services[0].Length; got != 12 {
+		t.Fatalf("visible update lost: %d", got)
+	}
+	service.expectNoResync(t, 20*time.Millisecond)
 }
 
 func TestClientResyncsOnGapAndDigestThenReplacesAnUnansweredConnection(t *testing.T) {

@@ -44,6 +44,11 @@ manager:
 panel-test: lib
     {{ go_build }} -o build/panel-test ./cmd/panel-test
 
+# Compares cropped uploads against full-frame native bitplanes. The resulting
+# Pi executable disables GPIO and can run alongside the normal board service.
+verify-upload: lib
+    {{ cxx }} {{ lib_cflags }} -std=c++11 -fno-exceptions internal/matrix/testdata/verify_rect.cc {{ lib }} -Wl,--no-gc-sections -lpthread -lm -lrt -s -o build/verify-upload
+
 # Compiles the LED matrix library into build/lib/librgbmatrix.a, recompiling only changed sources, in parallel.
 lib:
     #!/usr/bin/env bash
@@ -96,6 +101,7 @@ run-panel-test:
 [doc("Builds the boards for a web page and bundles them into WEB_DIR, the website's public directory by default.")]
 web:
     mkdir -p build/wasm
+    go generate ./internal/london
     GOOS=js GOARCH=wasm go build -trimpath -ldflags="-s -w" -o build/wasm/board.wasm ./cmd/wasm
     go run ./cmd/webbundle -wasm build/wasm/board.wasm -exec "$(go env GOROOT)/lib/wasm/wasm_exec.js" -out {{ WEB_DIR }} -iterations {{ ZOPFLI_ITERATIONS }}
 

@@ -9,6 +9,7 @@ package matrix
 #include <stdlib.h>
 #include <string.h>
 #include "led-matrix-c.h"
+#include "upload.h"
 */
 import "C"
 
@@ -96,7 +97,7 @@ func Open(o *Options) (frame.Display, error) {
 
 func (d *display) Size() (w, h int) { return d.w, d.h }
 
-// Swap copies changed row spans into the off-screen canvas and blocks until
+// Swap copies changed rectangles into the off-screen canvas and blocks until
 // the refresh thread has picked it up. frame.Frame.Pix is packed RGB, which is
 // exactly the layout of an array of struct Color, so no conversion is needed.
 func (d *display) Swap(f *frame.Frame) error {
@@ -106,9 +107,14 @@ func (d *display) Swap(f *frame.Frame) error {
 	if len(f.Pix) < f.W*f.H*3 {
 		return fmt.Errorf("matrix: frame buffer has %d bytes, need %d", len(f.Pix), f.W*f.H*3)
 	}
-	d.canvasPixels.upload(f, func(y, height int) {
-		C.led_canvas_set_pixels(d.canvas, 0, C.int(y), C.int(d.w), C.int(height),
-			(*C.struct_Color)(unsafe.Pointer(&f.Pix[y*d.w*3])))
+	d.canvasPixels.upload(f, func(x, y, width, height int) {
+		offset := (y*d.w + x) * 3
+		var previous *C.struct_Color
+		if d.canvasPixels.valid {
+			previous = (*C.struct_Color)(unsafe.Pointer(&d.canvasPixels.pixels[offset]))
+		}
+		C.set_changed_rect(d.canvas, C.int(x), C.int(y), C.int(width), C.int(height), C.int(d.w),
+			(*C.struct_Color)(unsafe.Pointer(&f.Pix[offset])), previous)
 	})
 	d.onscreen = d.canvas
 	d.canvas = C.led_matrix_swap_on_vsync(d.m, d.canvas)

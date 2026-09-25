@@ -311,17 +311,14 @@ dot texture at every LED. The resulting image is cached until the board changes.
 once and copies its repeats, and snapshot exports share a reusable compression workspace. Contact sheets copy whole
 image regions without converting each pixel through `color.Color`.
 
-To check and measure these paths:
+To check these paths:
 
 ```sh
 go test ./...
-go test ./internal/matrix/pngdisplay -run '^$' -bench . -benchmem
-go test -tags renderertest ./internal/windowdisplay -bench BenchmarkRender -benchmem
+go test -tags renderertest ./internal/windowdisplay
 ```
 
 The last command needs a macOS or Windows desktop session and briefly opens a test window. It compares GPU output
-with the previous per-LED drawing algorithm at several board sizes and scales. Its benchmark includes a GPU readback
-after each frame to wait for rendering to finish; that readback is test overhead and is not part of the live window.
+with the previous per-LED drawing algorithm at several board sizes and scales.
 
-See [performance measurements](performance.md) for Pi Zero 2 results, the changed-row panel upload strategy,
-refresh sleep settings, configured service limits and reproducible benchmark commands.
+See [rendering performance](performance.md) for the retained optimisations, Pi Zero 2 results and refresh sleep settings.

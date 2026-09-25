@@ -18,7 +18,7 @@ export interface LedBoardOptions {
   /** The single prefix before each train's time: an ordinal or its platform number. */
   rowPrefix?: RowPrefix
   ordinalFormat?: OrdinalFormat
-  /** Infotec service limit, 1–6; defaults to 3. */
+  /** Service limit for either board, 1–6; defaults to 3. */
   serviceCount?: number
   loadingBrightness?: 50 | 100
   /** TOC codes whose Infotec coach letters are shown; an empty list hides all letters. */
@@ -50,6 +50,10 @@ export interface LedBoardHandle {
   readonly height: number
   /** Packed RGB, `width` × `height` × 3. */
   readonly pixels: Uint8Array
+  /** Earliest time-driven change; zero for refresh pacing or after a feed update. Older bundles omit it. */
+  readonly nextTick?: number
+  /** Feed-change notification. Older bundles omit this property and require RAF polling. */
+  onUpdate?: (() => void) | null
   /** Advances the board to `now`, in milliseconds since the epoch, and reports whether `pixels` changed. */
   tick(now: number): boolean
   close(): void

@@ -7,6 +7,7 @@ let snapshot,
   dirty = false,
   switching = false,
   countryLoaded = false,
+  statusRequests = 0,
   poll;
 async function api(path, method = "GET", body) {
   const response = await fetch("/api/" + path, {
@@ -45,7 +46,7 @@ async function signedIn() {
     await loadConfig();
     await status();
     clearInterval(poll);
-    poll = setInterval(status, 5000);
+    poll = setInterval(pollStatus, 5000);
     if (!$("developer-page").hidden) await loadSSHKeys();
   } catch (error) {
     notice(error.message, "error");
@@ -423,7 +424,19 @@ $("ssh-form").addEventListener("submit", async (event) => {
     sshControls(false);
   }
 });
+// A background settings tab needs no service-status subprocesses. Slow requests
+// also must not accumulate while a network change is in progress. Explicit
+// refreshes after user actions still request fresh status independently.
+function pollStatus() {
+  if (!document.hidden && !$("app").hidden && statusRequests === 0) {
+    void status();
+  }
+}
+document.addEventListener("visibilitychange", pollStatus);
+window.addEventListener("pageshow", pollStatus);
+
 async function status() {
+  statusRequests++;
   try {
     const data = await api("status"),
       n = data.network;
@@ -488,6 +501,8 @@ async function status() {
           "The board is changing networks. Join your chosen Wi-Fi, then open http://departureboard.local. If connection fails, reconnect to DepartureBoard and open http://192.168.4.1.",
         );
     }
+  } finally {
+    statusRequests--;
   }
 }
 async function scan() {

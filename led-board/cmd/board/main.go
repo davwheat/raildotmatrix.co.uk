@@ -214,6 +214,7 @@ type app struct {
 	// it between frames. Only the latest value matters, so a newer one
 	// replaces an unread one.
 	brightness chan int
+	wake       chan struct{}
 	logger     *slog.Logger
 }
 
@@ -230,19 +231,28 @@ func (a app) setBrightness(percent int) {
 func (a app) run(ctx context.Context, display frame.Display) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	a.wake = make(chan struct{}, 1)
 
 	a.board.Update(model.View{})
 
 	if a.fixture != nil {
-		go playFixture(ctx, a.fixture, fixtureStep, fixtureRepeat, a.board.Update)
+		go playFixture(ctx, a.fixture, fixtureStep, fixtureRepeat, a.update)
 	} else if !a.setup {
-		go live.Run(ctx, a.live, a.board.Update)
+		go live.Run(ctx, a.live, a.update)
 	}
 
 	a.loop(ctx, display, a.board)
 
 	w, h := display.Size()
 	display.Swap(frame.New(w, h))
+}
+
+func (a app) update(v model.View) {
+	a.board.Update(v)
+	select {
+	case a.wake <- struct{}{}:
+	default:
+	}
 }
 
 // loop redraws once per display refresh, or at the tick rate on a display
@@ -255,6 +265,11 @@ func (a app) loop(ctx context.Context, display frame.Display, b board.Board) {
 	f := frame.New(w, h)
 
 	vsync, _ := display.(frame.VSyncer)
+	deadlines, _ := b.(board.NextTicker)
+	idle := time.NewTimer(time.Hour)
+	idle.Stop()
+	defer idle.Stop()
+	var nextTick time.Time
 	var ticker *time.Ticker
 	if vsync == nil {
 		ticker = time.NewTicker(time.Second / time.Duration(a.fps))
@@ -262,6 +277,19 @@ func (a app) loop(ctx context.Context, display frame.Display, b board.Board) {
 	}
 
 	for {
+		forceSwap := false
+		if !nextTick.IsZero() && a.wake != nil {
+			idle.Reset(time.Until(nextTick))
+			select {
+			case <-ctx.Done():
+				return
+			case <-a.wake:
+			case percent := <-a.brightness:
+				forceSwap = a.dim(display, percent)
+			case <-idle.C:
+			}
+			idle.Stop()
+		}
 		if ticker != nil {
 			select {
 			case <-ctx.Done():
@@ -272,7 +300,16 @@ func (a app) loop(ctx context.Context, display frame.Display, b board.Board) {
 			return
 		}
 
-		changed := b.Tick(time.Now(), f)
+		now := time.Now()
+		changed := b.Tick(now, f) || forceSwap
+		if deadlines != nil {
+			nextTick = deadlines.NextTick(now)
+			if !nextTick.IsZero() {
+				// Calendar boundaries may lack a monotonic reading. Preserve
+				// this tick's clock so a wall-clock correction cannot extend the wait.
+				nextTick = now.Add(nextTick.Sub(now))
+			}
+		}
 		select {
 		case percent := <-a.brightness:
 			changed = a.dim(display, percent) || changed
@@ -283,7 +320,7 @@ func (a app) loop(ctx context.Context, display frame.Display, b board.Board) {
 		switch {
 		case changed:
 			err = display.Swap(f)
-		case vsync != nil:
+		case vsync != nil && (nextTick.IsZero() || a.wake == nil):
 			err = vsync.WaitVSync()
 		}
 		if err != nil {

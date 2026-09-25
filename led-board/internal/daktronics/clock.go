@@ -32,6 +32,26 @@ type digitScene struct {
 
 type clockScene [8]digitScene
 
+func (c *clock) nextTick(now time.Time) time.Time {
+	next := now.Truncate(time.Second).Add(time.Second)
+	if colon := c.second.Add(clockColonOff * time.Millisecond); colon.After(now) && colon.Before(next) {
+		next = colon
+	}
+	for i, changed := range c.changed {
+		if c.digits[i] == ':' {
+			continue
+		}
+		elapsed := now.Sub(changed)
+		if elapsed >= 0 && elapsed < 2*clockFlipHalf*time.Millisecond {
+			step := clockFlipStep * time.Millisecond
+			if flip := changed.Add((elapsed/step + 1) * step); flip.Before(next) {
+				next = flip
+			}
+		}
+	}
+	return next
+}
+
 // update notes which characters changed at now. On the first call every digit rolls in from the number
 // before it, as the browser does on load.
 func (c *clock) update(now time.Time, digits [8]byte) {

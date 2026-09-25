@@ -122,6 +122,33 @@ func (b *Board) render(f *frame.Frame, s *scene) {
 	b.drawClock(f, &s.clock)
 }
 
+// Information scrolling occupies its own clipped row. When every other scene
+// field is unchanged, only that row needs clearing and drawing again.
+func (b *Board) renderChange(f *frame.Frame, s, previous *scene) bool {
+	still := *s
+	still.clock = previous.clock
+	if still == *previous {
+		y := b.geo.rowTop(3)
+		f.FillRect(0, y, f.W, f.H-y, frame.Black)
+		b.drawClock(f, &s.clock)
+		return true
+	}
+	if s.mode != modeTrains || b.phase != phaseSteady {
+		return false
+	}
+	still = *s
+	still.info = previous.info
+	if still != *previous {
+		return false
+	}
+	c := b.geo.band(s.infoRow)
+	f.FillRect(c.X0, c.Y0, c.X1-c.X0, c.Y1-c.Y0, frame.Black)
+	if s.info.on {
+		b.drawInfo(f, &s.info, s.infoRow)
+	}
+	return true
+}
+
 func (b *Board) renderTrains(f *frame.Frame, s *scene) {
 	g := &b.geo
 	if s.first.on {
@@ -184,7 +211,7 @@ func (b *Board) drawInfo(f *frame.Frame, sc *scrollScene, rowIndex int) {
 	if sc.prefix == "" {
 		x = sc.x
 	}
-	board.DrawText(f, font.Text, x, y, sc.text, b.cfg.Colour, c)
+	b.infoText.Draw(f, font.Text, x, y, sc.text, b.cfg.Colour, c)
 }
 
 func (b *Board) drawCentred(f *frame.Frame, rowIndex int, s string) {

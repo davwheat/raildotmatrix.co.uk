@@ -2,6 +2,7 @@ import { CanvasDotPainter } from '../../src/components/displays/LedBoard/CanvasD
 import { createDotPainter } from '../../src/components/displays/LedBoard/DotPainter'
 import { createCanvas } from '../../src/components/displays/LedBoard/dotMask'
 import { WebGLDotPainter } from '../../src/components/displays/LedBoard/WebGLDotPainter'
+import { verifyAnimation } from './animation'
 
 function check(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message)
@@ -87,8 +88,123 @@ function verifyNearest(canvas: HTMLCanvasElement, pixels: Uint8Array, columns: n
 
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
 
-export async function verify() {
+function verifyChangedBands() {
   let cases = 0
+  for (const [columns, rows] of [
+    [193, 36],
+    [272, 70],
+    [5, 3],
+  ]) {
+    const gpu = createDotPainter(columns, rows)
+    check(gpu instanceof WebGLDotPainter, 'Hardware WebGL required')
+    const cpu = new CanvasDotPainter(createCanvas(columns, rows), columns, rows)
+    try {
+      for (const width of [columns * 5, 1001, 2401, 1001]) {
+        const height = Math.round((width * rows) / columns)
+        gpu.resize(width, height)
+        cpu.resize(width, height)
+        let pixels = pattern(columns, rows)
+        for (let i = 0; i < 10; i++) {
+          if (i === 3) {
+            const unaligned = new Uint8Array(pixels.length + 1).subarray(1)
+            unaligned.set(pixels)
+            pixels = unaligned
+          }
+          const from = i % 3 === 0 ? 0 : i % 3 === 1 ? (rows - 1) * columns * 3 : Math.floor(rows / 2) * columns * 3
+          pixels.fill(i % 2 ? 0 : 230, from, Math.min(pixels.length, from + columns * 3))
+          pixels[pixels.length - 1] = i % 2 ? 230 : 0
+          cpu.paint(pixels)
+          gpu.paint(pixels)
+          compare(cpu.canvas, gpu.canvas, `${columns}x${rows}/${width} changed band ${i}`)
+          gpu.paint(pixels)
+          compare(cpu.canvas, gpu.canvas, 'unchanged frame remains intact')
+          cases += 2
+        }
+      }
+    } finally {
+      cpu.dispose()
+      gpu.dispose()
+    }
+  }
+  return cases
+}
+
+function verifyChangedColumns() {
+  let count = 0
+  for (const [columns, rows] of [
+    [5, 3],
+    [193, 36],
+    [272, 70],
+  ]) {
+    const gpu = createDotPainter(columns, rows),
+      cpu = new CanvasDotPainter(createCanvas(columns, rows), columns, rows)
+    try {
+      gpu.resize(2401, Math.round((2401 * rows) / columns))
+      cpu.resize(gpu.canvas.width, gpu.canvas.height)
+      for (const offset of [0, 1]) {
+        const pixels = new Uint8Array(columns * rows * 3 + offset).subarray(offset)
+        gpu.paint(pixels)
+        cpu.paint(pixels)
+        for (const at of [0, columns - 1, Math.floor((columns * rows) / 2), columns * (rows - 1), columns * rows - 1]) {
+          for (const value of [210, 0]) {
+            pixels[at * 3] = value
+            pixels[at * 3 + 1] = value / 2
+            pixels[at * 3 + 2] = value / 3
+            gpu.paint(pixels)
+            cpu.paint(pixels)
+            compare(cpu.canvas, gpu.canvas, 'single-cell column crop ' + at)
+            count++
+          }
+        }
+      }
+    } finally {
+      gpu.dispose()
+      cpu.dispose()
+    }
+  }
+  return count
+}
+
+function verifyDisjointBands() {
+  const columns = 193,
+    rows = 37
+  const gpu = createDotPainter(columns, rows)
+  const cpu = new CanvasDotPainter(createCanvas(columns, rows), columns, rows)
+  let count = 0
+  try {
+    gpu.resize(2401, Math.round((2401 * rows) / columns))
+    cpu.resize(gpu.canvas.width, gpu.canvas.height)
+    for (const offset of [0, 1]) {
+      const pixels = new Uint8Array(columns * rows * 3 + offset).subarray(offset)
+      for (const bands of [1, 8, 9, 18]) {
+        pixels.fill(0)
+        gpu.paint(pixels)
+        cpu.paint(pixels)
+        for (const value of [211, 0]) {
+          for (let row = 0; row < bands * 2; row += 2) {
+            // Vary each band's column bounds, away from density-sample points.
+            const at = (row * columns + 5 + row) * 3
+            pixels.set([value, value >> 1, value >> 2], at)
+          }
+          gpu.paint(pixels)
+          cpu.paint(pixels)
+          compare(cpu.canvas, gpu.canvas, `${bands} separate bands, offset ${offset}, value ${value}`)
+          gpu.paint(pixels)
+          compare(cpu.canvas, gpu.canvas, 'retained disjoint bands')
+          count += 2
+        }
+      }
+    }
+  } finally {
+    gpu.dispose()
+    cpu.dispose()
+  }
+  return count
+}
+
+export async function verify() {
+  const scheduling = verifyAnimation()
+  let cases = verifyChangedBands() + verifyChangedColumns() + verifyDisjointBands()
   for (const [columns, rows] of [
     [193, 36],
     [272, 70],
@@ -130,6 +246,11 @@ export async function verify() {
       gpu.resize(1001, 259)
       compare(cpu.canvas, gpu.canvas, 'resize repaints without a new frame')
 
+      cpu.resize(2401, 701)
+      gpu.resize(2401, 701)
+      compare(cpu.canvas, gpu.canvas, 'large drawing buffer before context loss')
+      cases++
+
       const gl = gpu.canvas.getContext('webgl')!
       const extension = gl.getExtension('WEBGL_lose_context')!
       check(extension, 'Context loss extension unavailable')
@@ -141,8 +262,8 @@ export async function verify() {
       pixels.set([230, 150, 0], (columns + 1) * 3)
       cpu.paint(pixels)
       gpu.paint(pixels)
-      cpu.resize(997, 251)
-      gpu.resize(997, 251)
+      cpu.resize(2399, 699)
+      gpu.resize(2399, 699)
       const restored = new Promise(resolve => gpu.canvas.addEventListener('webglcontextrestored', resolve, { once: true }))
       extension.restoreContext()
       await restored
@@ -180,43 +301,5 @@ export async function verify() {
       HTMLCanvasElement.prototype.getContext = original
     }
   }
-  return `${cases} renderer checks passed: visual parity, retained frames, resize, context recovery, and Canvas 2D fallback.`
-}
-
-export async function benchmark() {
-  const columns = 272
-  const rows = 70
-  const results = []
-  for (const width of [1920, 3840]) {
-    const gpu = createDotPainter(columns, rows)
-    check(gpu instanceof WebGLDotPainter, 'Benchmark requires hardware WebGL')
-    const cpu = new CanvasDotPainter(createCanvas(columns, rows), columns, rows)
-    const pixels = pattern(columns, rows)
-    const timings: Record<string, number> = {}
-    try {
-      for (const [name, painter] of [
-        ['Canvas 2D', cpu],
-        ['WebGL', gpu],
-      ] as const) {
-        painter.resize(width, Math.round((width * rows) / columns))
-        document.body.appendChild(painter.canvas)
-        const samples = []
-        // One draw per browser frame, without readback in the timed path; measure main-thread submission time.
-        for (let i = 0; i < 150; i++) {
-          await nextFrame()
-          pixels[0] = i % 2 ? 230 : 0
-          const start = performance.now()
-          painter.paint(pixels)
-          if (i >= 30) samples.push(performance.now() - start)
-        }
-        timings[name] = Number((samples.reduce((a, b) => a + b, 0) / samples.length).toFixed(3))
-        painter.canvas.remove()
-      }
-      results.push({ width, 'mean paint time (ms)': timings })
-    } finally {
-      gpu.dispose()
-      cpu.dispose()
-    }
-  }
-  return results
+  return `${cases} renderer checks passed: visual parity, retained frames, resize, context recovery, and Canvas 2D fallback. ${scheduling}`
 }

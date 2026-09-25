@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import CallingPointsBigScreen, { getCallingPoints } from './BigScreen/CallingPoints'
 import CoachInfoBigScreen from './BigScreen/CoachInfo'
 import DestinationBigScreen, { getDestination } from './BigScreen/Destination'
@@ -64,7 +64,7 @@ export default function ScreenBase({}) {
   )
   const shouldScrollStages = getUrlParam('scrollStages') === 'true'
 
-  function scrollToNextScreen() {
+  const scrollToNextScreen = useCallback(() => {
     let nextStage = getNextScreen(screenStage)
 
     if (isNextStopDestination()) {
@@ -74,7 +74,7 @@ export default function ScreenBase({}) {
     }
 
     setScreenStage(nextStage)
-  }
+  }, [screenStage])
 
   // TODO: use callback to switch after scroll complete for calling points
   useEffect(() => {
@@ -87,8 +87,6 @@ export default function ScreenBase({}) {
       to !== null && clearTimeout(to)
     }
   }, [scrollToNextScreen, shouldScrollStages, screenStage, setScreenStage])
-
-  console.log(screenStage)
 
   const { big: BigScreen, small: SmallScreen } = getScreens(screenStage)
 

@@ -5,6 +5,9 @@ import { DataSourceProvider } from '../../src/live/source'
 import type { ServerMessage, Snapshot } from '../../src/live/types'
 import { encodeServerMessage } from '../encode'
 import fixture from '../snapshot.json'
+import { verifyClock } from './clock'
+import { verifyScroll } from './scroll'
+import { verifyLCDUpdates } from './lcd'
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 const settle = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
@@ -32,6 +35,9 @@ class FakeSocket {
 }
 
 export async function verify() {
+  await verifyClock()
+  const scrolling = await verifyScroll()
+  await verifyLCDUpdates()
   const originalSocket = window.WebSocket
   const originalNow = Date.now
   window.WebSocket = FakeSocket as unknown as typeof WebSocket
@@ -101,7 +107,11 @@ export async function verify() {
     window.dispatchEvent(new Event('pageshow'))
     await settle()
     check(latest.services?.[0].hasArrived, 'resumed page retained stale time-dependent data')
-    return 'Live hook: quiet feed has zero periodic renders; stable service identity; warning, arrival and resume checks passed.'
+    return {
+      scrolling,
+      result:
+        'Clock cadence/visibility/cleanup and live hook checks passed: quiet feed, stable services, warning/arrival boundaries and resume.',
+    }
   } finally {
     root.unmount()
     window.WebSocket = originalSocket

@@ -1,6 +1,7 @@
 package live
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -8,6 +9,31 @@ import (
 
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/live/pb"
 )
+
+func TestDecodedListsOwnTheirStorage(t *testing.T) {
+	raw, err := os.ReadFile("testdata/fixtures/stopping_snapshot.pb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, err := Decode(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected, err := json.Marshal(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := Decode(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second.(*Snapshot).Ordering[0] = "changed"
+	clear(raw)
+	actual, err := json.Marshal(first)
+	if err != nil || string(actual) != string(expected) {
+		t.Fatal("another decode or reusing the input buffer changed a previous message")
+	}
+}
 
 func TestNRCCMessagesReplaceOnEveryFrame(t *testing.T) {
 	var state, initial *State

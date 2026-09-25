@@ -5,6 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+# Fewer GC cycles during large feed updates, with about 2 MiB extra peak memory on Pi Zero 2.
+Environment=GOGC=150
 ExecStart=/opt/departure-board/board -config /etc/departure-board.toml
 Restart=always
 RestartSec=5

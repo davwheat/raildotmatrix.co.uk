@@ -24,6 +24,21 @@ type Board interface {
 	RefreshHz() int
 }
 
+// NextTicker can postpone ticks on a static screen. NextTick is called after
+// Tick, on the same goroutine, and returns the earliest possible time-driven
+// change, or zero to retain normal refresh pacing. Feed updates must wake the
+// caller independently; the deadline does not cover changes supplied by Update.
+type NextTicker interface {
+	NextTick(now time.Time) time.Time
+}
+
+// PixelTicker refines deadlines inside quantized animations. Frontends already
+// paced by animation callbacks can skip ticks between pixel steps. Native panel
+// loops use NextTicker instead, preserving synchronization with hardware VSync.
+type PixelTicker interface {
+	NextPixelTick(now time.Time) time.Time
+}
+
 // ServiceLimit is how many services a format can show. Formats without a limit receive the whole view.
 func ServiceLimit(b Board) int {
 	if limited, ok := b.(interface{ ServiceLimit() int }); ok {

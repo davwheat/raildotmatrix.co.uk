@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 
-// const DEBUG_DELAY = 10_000;
-const DEBUG_DELAY = 0
+import { observeScrollContent } from '../observeScrollContent'
 
 interface IProps {
   children: React.ReactNode
@@ -57,174 +56,76 @@ function SlideyScrollText({
   const innerRef = useRef<HTMLSpanElement>(null)
   const slideDownRef = useRef<HTMLSpanElement>(null)
 
-  const pauseAtEnds = 1000
-
-  const previousElContent = useRef<string>('')
-
-  const animationStep = useRef<'pause-left' | 'scrolling' | 'pause-right' | 'slide-down'>('pause-left')
-
-  console.log('[SCROLL] Rendering SlideyScrollText')
+  const callbacks = useRef({ onStart, onComplete })
+  useEffect(() => {
+    callbacks.current = { onStart, onComplete }
+  })
 
   useEffect(() => {
-    const { current: outer } = outerRef
-    const { current: inner } = innerRef
-    const { current: slideDown } = slideDownRef
-
-    let outerStyles!: CSSStyleDeclaration
-    let innerStyles!: CSSStyleDeclaration
-    let slideDownStyles: CSSStyleDeclaration | null
-
-    let outerWidth!: number
-    let innerWidth!: number
-    let slideDownWidth: number = 0
-
-    function updateSizes() {
-      outerStyles = getComputedStyle(outer!)
-      innerStyles = getComputedStyle(inner!)
-      slideDownStyles = slideDown && getComputedStyle(slideDown)
-
-      outerWidth = parseFloat(outerStyles.width)
-      innerWidth = parseFloat(innerStyles.width)
-      slideDownWidth = slideDown && slideDownStyles ? parseFloat(slideDownStyles.width) : 0
+    const outer = outerRef.current!
+    const inner = innerRef.current!
+    const slideDown = slideDownRef.current
+    let widths = { outer: 0, inner: 0, prefix: 0 }
+    let step: 'pause-left' | 'scrolling' | 'pause-right' | 'slide-down' = 'pause-left'
+    let timer: number | undefined
+    const schedule = (callback: () => void, delay: number) => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(callback, delay)
     }
-
-    updateSizes()
-
-    let currentTimeout = -1
-    let completeIfNotScrollTimeout = -1
-
-    inner!.style.removeProperty('--trans-y')
-    inner!.style.removeProperty('--trans-x')
-    inner!.style.removeProperty('--transition-time')
-
-    function startScroll() {
-      animationStep.current = 'scrolling'
-      updateScrollDuration()
-      inner!.style.setProperty('--trans-x', `-${innerWidth}px`)
+    const startScroll = () => {
+      step = 'scrolling'
+      inner.style.setProperty('--transition-time', `${(widths.inner + widths.outer - widths.prefix) / scrollSpeed}s`)
+      inner.style.setProperty('--trans-x', `-${widths.inner}px`)
     }
-
-    function startScrollOrSlideDown() {
-      if (slideDown) {
-        startSlideDown()
+    const startScrollOrSlideDown = () => {
+      if (!slideDown) return startScroll()
+      step = 'slide-down'
+      schedule(() => {
+        inner.style.setProperty('--trans-y', '0')
+        inner.style.setProperty('--transition-time', `${slideDownTime}ms`)
+      }, 0)
+    }
+    const transitionEnd = (event: TransitionEvent) => {
+      if (event.target !== inner || event.propertyName !== 'transform') return
+      if (step === 'pause-left') {
+        if (!(callbacks.current.onComplete?.() ?? false)) schedule(startScrollOrSlideDown, pauseWhenDone || 0)
+      } else if (step === 'scrolling') {
+        step = 'pause-right'
+        schedule(() => {
+          step = 'pause-left'
+          inner.style.setProperty('--transition-time', '0.001ms')
+          inner.style.setProperty('--trans-x', `${widths.outer}px`)
+        }, 1000)
+      } else if (step === 'slide-down') {
+        step = 'pause-right'
+        schedule(startScroll, slideDownPause)
+      }
+    }
+    const stopObserving = observeScrollContent(outer, inner, slideDown, measured => {
+      widths = measured
+      window.clearTimeout(timer)
+      inner.removeEventListener('transitionend', transitionEnd)
+      inner.style.removeProperty('--trans-y')
+      inner.style.removeProperty('--transition-time')
+      step = 'pause-left'
+      const scrolling = alwaysScroll || widths.inner > widths.outer
+      if (scrolling) {
+        inner.style.setProperty('--trans-x', `${widths.outer - widths.prefix}px`)
+        if (slideDown) inner.style.setProperty('--trans-y', '-100%')
+        schedule(startScrollOrSlideDown, 1000)
+        inner.addEventListener('transitionend', transitionEnd)
       } else {
-        startScroll()
+        inner.style.setProperty('--trans-x', '0')
+        schedule(() => callbacks.current.onComplete?.(), callCompleteIfNotScrolling)
       }
-    }
-
-    function setUpSlideDown() {
-      if (!slideDown) return
-
-      console.log('[SCROLL] Sliding down setup')
-      inner!.style.setProperty('--trans-y', '-100%')
-      inner!.style.setProperty('--trans-x', `${outerWidth - slideDownWidth}px`)
-      inner!.style.setProperty('--transition-time', '0.0001ms')
-      inner!.style.setProperty('--opacity', '1')
-    }
-
-    function startSlideDown() {
-      console.log('[SCROLL] Starting slide down')
-
-      animationStep.current = 'slide-down'
-      ;() => {
-        // Force reflow
-        const _ = slideDown?.offsetLeft
-      }
-
-      setTimeout(() => {
-        console.log('[SCROLL] Sliding down')
-        inner!.style.setProperty('--trans-y', '0')
-        inner!.style.setProperty('--transition-time', `${slideDownTime}ms`)
-      }, DEBUG_DELAY)
-    }
-
-    function updateScrollDuration() {
-      updateSizes()
-      const scrollDuration = `${(innerWidth + outerWidth - slideDownWidth) / scrollSpeed}s`
-      inner!.style.setProperty('--transition-time', scrollDuration)
-    }
-
-    function transitionEndHandler() {
-      console.log('[SCROLL] ** transitionEndHandler')
-
-      if (animationStep.current === 'pause-left') {
-        console.log('[SCROLL] Pause left complete')
-
-        if (onComplete?.() ?? false) {
-          console.log('[SCROLL] onComplete returned true - Finished')
-          return
-        } else {
-          currentTimeout = window.setTimeout(startScrollOrSlideDown, (pauseWhenDone || 0) + DEBUG_DELAY)
-        }
-      } else if (animationStep.current === 'scrolling') {
-        console.log('[SCROLL] Scrolling complete')
-
-        animationStep.current = 'pause-right'
-
-        currentTimeout = window.setTimeout(
-          () => {
-            animationStep.current = 'pause-left'
-
-            inner!.style.setProperty('--transition-time', '0.001ms')
-            inner!.style.setProperty('--trans-x', `${outerWidth}px`)
-          },
-          (pauseAtEnds || 0) + DEBUG_DELAY,
-        )
-      } else if (animationStep.current === 'slide-down') {
-        console.log('[SCROLL] Slide down complete')
-
-        currentTimeout = window.setTimeout(startScroll, (slideDownPause || 0) + DEBUG_DELAY)
-      }
-    }
-
-    console.log('[SCROLL] SlideyScrollText effect')
-
-    if (previousElContent.current !== inner!.innerHTML) {
-      previousElContent.current = inner!.innerHTML
-
-      inner!.style.removeProperty('--trans-x')
-      inner!.style.removeProperty('--transition-time')
-
-      animationStep.current = 'pause-left'
-    }
-
-    if (alwaysScroll || innerWidth > outerWidth) {
-      console.log('[SCROLL] Starting first scroll')
-
-      inner!.style.setProperty('--trans-x', `${outerWidth}px`)
-      setUpSlideDown()
-
-      inner!.style.removeProperty('--transition-time')
-
-      animationStep.current = 'pause-left'
-      currentTimeout = window.setTimeout(startScrollOrSlideDown, (pauseAtEnds || 0) + DEBUG_DELAY)
-
-      inner?.addEventListener('transitionend', transitionEndHandler)
-    } else {
-      inner!.style.removeProperty('--transition-time')
-      inner!.style.setProperty('--trans-x', '0')
-
-      completeIfNotScrollTimeout = window.setTimeout(() => onComplete?.(), (callCompleteIfNotScrolling || 0) + DEBUG_DELAY)
-    }
-
-    onStart?.(alwaysScroll || innerWidth > outerWidth)
-
+      callbacks.current.onStart?.(scrolling)
+    })
     return () => {
-      clearTimeout(currentTimeout)
-      clearTimeout(completeIfNotScrollTimeout)
-      inner?.removeEventListener('transitionend', transitionEndHandler)
+      stopObserving()
+      window.clearTimeout(timer)
+      inner.removeEventListener('transitionend', transitionEnd)
     }
-  }, [
-    callCompleteIfNotScrolling,
-    onStart,
-    onComplete,
-    previousElContent,
-    pauseAtEnds,
-    pauseWhenDone,
-    scrollSpeed,
-    alwaysScroll,
-    slideDownText,
-    slideDownPause,
-  ])
+  }, [callCompleteIfNotScrolling, pauseWhenDone, scrollSpeed, alwaysScroll, slideDownText, slideDownPause, slideDownTime])
 
   return (
     <div

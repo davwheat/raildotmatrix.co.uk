@@ -206,9 +206,14 @@ func optionalInstant(value *timestamppb.Timestamp) *time.Time {
 	return &t
 }
 
-// stringList copies a repeated field so that an absent list is a known-empty one, never nil.
+// stringList preserves known-empty lists without copying populated ones. Decode
+// owns a fresh protobuf message on every call and does not retain or reuse it, so
+// its string slices can transfer to the returned model just like optional fields.
 func stringList(values []string) []string {
-	return append([]string{}, values...)
+	if values == nil {
+		return []string{}
+	}
+	return values
 }
 
 func location(value *pb.Location) Location {

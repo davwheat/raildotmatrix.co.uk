@@ -12,7 +12,6 @@ try {
   }
   await evaluate(await readFile(process.argv[2], 'utf8'))
   console.log(await evaluate('rendererTests.verify()'))
-  if (process.argv.includes('--benchmark')) console.log(await evaluate('rendererTests.benchmark()'))
 } finally {
   await browser.close()
 }
