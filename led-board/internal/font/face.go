@@ -1,5 +1,5 @@
 // Package font draws the Data Display and Infotec dot fonts using embedded glyph bitmaps.
-// See generate.go for the faces imported from the font builder's JSON export.
+// The editable sources are the YAFF files in fonts/; see yaff.go.
 package font
 
 import (

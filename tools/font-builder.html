@@ -262,7 +262,7 @@ dialog::backdrop { background: rgb(0 0 0 / 0.5); }
 <div class="wrap">
   <header>
     <h1>Dot Matrix Font Builder</h1>
-    <p>Drag across the board to select a line of text, type the characters it shows, and add them to a font. Export the font as JSON, C, or plain text.</p>
+    <p>Drag across the board to select a line of text, type the characters it shows, and add them to a font. Import and export YAFF fonts, or export C and plain text.</p>
   </header>
 
   <div class="board-card">
@@ -326,17 +326,19 @@ dialog::backdrop { background: rgb(0 0 0 / 0.5); }
     <h2 id="expHead">Export</h2>
     <div class="row">
       <div class="tabs" role="tablist" id="formatTabs">
-        <button type="button" role="tab" data-format="json" aria-selected="true">JSON</button>
+        <button type="button" role="tab" data-format="yaff" aria-selected="true">YAFF</button>
         <button type="button" role="tab" data-format="c" aria-selected="false">C header</button>
         <button type="button" role="tab" data-format="text" aria-selected="false">Text</button>
       </div>
-      <label class="checks"><label><input id="exportAll" type="checkbox" checked> All fonts</label></label>
+      <label class="checks"><label><input id="exportAll" type="checkbox" checked> All fonts (C / text)</label></label>
       <span class="spacer" style="flex:1"></span>
       <button type="button" id="copyBtn">Copy</button>
       <button type="button" id="downloadBtn">Download</button>
-      <button type="button" id="importBtn">Import JSON</button>
-      <input id="importFile" type="file" accept=".json,application/json" hidden>
+      <button type="button" id="importBtn">Import fonts</button>
+      <input id="importFile" type="file" accept=".yaff,.json,text/plain,application/json" multiple hidden>
     </div>
+    <p class="hint">YAFF exports the selected font as one file. Import multiple .yaff files to load several fonts. Older JSON exports can also be imported.</p>
+    <p class="status" id="importStatus" role="status"></p>
     <textarea id="exportText" readonly spellcheck="false" aria-label="Export output"></textarea>
   </section>
 
@@ -390,6 +392,8 @@ dialog::backdrop { background: rgb(0 0 0 / 0.5); }
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="yaff.js"></script>
+<script src="font-builder-yaff.js"></script>
 <script>
 const SAMPLE_BOARD = `1111111111111111111111111111000100000000000000000000010000000000000000001000100000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111000000000000000000000000000
 1000000000000000000000000001000100000000000000000000010000000000000000001000100000000100000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000100000000000010000000000000
@@ -733,7 +737,7 @@ $("addBtn").addEventListener("click", () => {
     const prev = font.glyphs[g.ch];
     if (prev && prev.rows.join() === g.rows.join()) { same++; prev.src = g.src; continue; }
     if (prev) replaced++; else added++;
-    font.glyphs[g.ch] = { rows: g.rows, src: g.src };
+    font.glyphs[g.ch] = { ...prev, rows: g.rows, src: g.src };
   }
   state.fontIndex = fontIdx;
   const parts = [];
@@ -771,6 +775,8 @@ function renderGlyphs() {
     ? `${chars.length} glyph${chars.length === 1 ? "" : "s"}. Height: ${[...heights].sort((a, b) => a - b).join(", ")} rows.` +
       (heights.size > 1 ? " Glyphs have different heights, so check that each was captured with the same line height." : "")
     : "";
+  if (font.extraGlyphs?.length) $("fontSummary").textContent += ` ${font.extraGlyphs.length} additional glyph(s) are preserved in YAFF exports; the grid edits single Unicode characters.`;
+
   if (!chars.length) {
     const p = document.createElement("p");
     p.className = "empty";
@@ -1032,8 +1038,9 @@ $("editSave").addEventListener("click", () => {
     $("editStatus").textContent = `${font.name} already has a glyph for ${ch}. Edit that glyph instead, or choose another character.`;
     return;
   }
+  const previous = font.glyphs[edit.original];
   if (edit.original !== null) delete font.glyphs[edit.original];
-  font.glyphs[ch] = { rows: edit.rows.map((r) => r.join("")), src: edit.src };
+  font.glyphs[ch] = { ...previous, rows: edit.rows.map((r) => r.join("")), src: edit.src };
   editor.close();
   save();
   renderAll();
@@ -1051,23 +1058,10 @@ $("editDelete").addEventListener("click", (e) => {
   toast(`Deleted ${edit.original}.`);
 });
 
-let format = "json";
+let format = "yaff";
 
 function exportFonts() {
-  return $("exportAll").checked ? state.fonts : [currentFont()];
-}
-
-function toJSON(fonts) {
-  const out = {
-    fonts: fonts.map((f) => ({
-      name: f.name,
-      glyphs: Object.fromEntries(sortedChars(f.glyphs).map((ch) => {
-        const g = f.glyphs[ch];
-        return [ch, { width: g.rows[0]?.length ?? 0, height: g.rows.length, rows: g.rows }];
-      })),
-    })),
-  };
-  return JSON.stringify(out, null, 2);
+  return format !== "yaff" && $("exportAll").checked ? state.fonts : [currentFont()];
 }
 
 function cIdent(name) {
@@ -1127,7 +1121,8 @@ function toText(fonts) {
 
 function renderExport() {
   const fonts = exportFonts();
-  $("exportText").value = format === "json" ? toJSON(fonts) : format === "c" ? toC(fonts) : toText(fonts);
+  $("exportAll").disabled = format === "yaff";
+  $("exportText").value = format === "yaff" ? FontBuilderYAFF.toYAFF(fonts[0]) : format === "c" ? toC(fonts) : toText(fonts);
 }
 
 $("formatTabs").addEventListener("click", (e) => {
@@ -1152,7 +1147,7 @@ $("copyBtn").addEventListener("click", async () => {
 });
 
 $("downloadBtn").addEventListener("click", () => {
-  const ext = { json: "json", c: "h", text: "txt" }[format];
+  const ext = { yaff: "yaff", c: "h", text: "txt" }[format];
   const fonts = exportFonts();
   const base = fonts.length === 1 ? cIdent(fonts[0].name) : "dotmatrix_fonts";
   const blob = new Blob([$("exportText").value], { type: "text/plain" });
@@ -1165,28 +1160,33 @@ $("downloadBtn").addEventListener("click", () => {
 
 $("importBtn").addEventListener("click", () => $("importFile").click());
 $("importFile").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
+  const files = [...e.target.files];
   e.target.value = "";
-  if (!file) return;
+  if (!files.length) return;
+  const imported = [];
+  let filename = "";
   try {
-    const data = JSON.parse(await file.text());
-    if (!Array.isArray(data.fonts)) throw new Error("no fonts array");
+    // Parse every file before changing state, so a failed import leaves work intact.
+    for (const file of files) {
+      filename = file.name;
+      if (/\.json$/i.test(file.name)) imported.push(...FontBuilderYAFF.fromJSON(await file.text()));
+      else imported.push(FontBuilderYAFF.fromYAFF(new Uint8Array(await file.arrayBuffer()), file.name));
+    }
     let count = 0;
-    for (const f of data.fonts) {
-      if (!f || typeof f.name !== "string" || typeof f.glyphs !== "object") continue;
-      let target = state.fonts.find((x) => x.name === f.name);
-      if (!target) { target = { name: f.name, glyphs: {} }; state.fonts.push(target); }
-      for (const [ch, g] of Object.entries(f.glyphs)) {
-        if (!Array.isArray(g.rows) || g.rows.some((r) => typeof r !== "string" || /[^01]/.test(r))) continue;
-        target.glyphs[ch] = { rows: g.rows, src: g.src };
-        count++;
-      }
+    for (const font of imported) {
+      const existing = state.fonts.findIndex((f) => f.name === font.name);
+      if (existing >= 0) state.fonts[existing] = font;
+      else state.fonts.push(font);
+      state.fontIndex = existing >= 0 ? existing : state.fonts.length - 1;
+      count += Object.keys(font.glyphs).length;
     }
     save();
     renderAll();
-    toast(`Imported ${count} glyph${count === 1 ? "" : "s"}.`);
+    $("importStatus").textContent = `Imported ${imported.length} font(s), ${count} editable glyph(s).`;
+    $("importStatus").className = "status ok";
   } catch (err) {
-    toast(`${file.name} isn't a font file from this tool. Export JSON from here, then import that file.`);
+    $("importStatus").textContent = `${filename}: ${err.message}`;
+    $("importStatus").className = "status warn";
   }
 });
 

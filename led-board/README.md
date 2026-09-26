@@ -111,9 +111,8 @@ or no filter, it follows the first service, retaining the outgoing service's pla
 The box stays fully lit when consecutive services use the same platform. An unknown or suppressed platform leaves the number blank. The website offers the same option in Infotec
 settings. The lower train row uses the selected `row_prefix`.
 
-The platform number uses the "Large Platform Number" face from `../tools/font.json`. Regenerate its native
-dot patterns with `python3 scripts/import-platform-font.py ../tools/font.json internal/font/infotec_platform_gen.go`.
-The import removes the one shared blank row above the glyphs so the six-dot label gap stays exact.
+The platform number uses the "Large Platform Number" face in `internal/font/fonts/infotec-platform.yaff`.
+Its native patterns omit the shared blank top row of the original capture so the six-dot label gap stays exact.
 The label and number are vertically centred together inside the platform box at every box height.
 Three-character platforms use one-dot character spacing and three blank dots of horizontal padding on
 each side; other platforms use two-dot character spacing and four blank dots of padding.
@@ -127,8 +126,8 @@ and Pi management UI expose the same toggle; the CLI flag is `-align-platform-ro
 `compact_lower_row` (default `true`) places the lower service row beside a small clock when the platform
 box is enabled, with the row and clock vertically centred between the separator and the bottom edge.
 Disable it to put the main clock beneath the row. Both clocks use the corresponding
-"Clock" and "Small Clock" faces in `tools/font.json`; the compact service text uses "Small main row".
-Run `python3 scripts/import-clock-fonts.py ../tools/font.json internal/font/infotec_clocks_gen.go` to regenerate the clocks.
+"Clock" and "Small Clock" faces in `internal/font/fonts/infotec-clock.yaff` and
+`internal/font/fonts/infotec-small-clock.yaff`; the compact service text uses `infotec-small.yaff`.
 
 `clock_style` selects `normal`, `small-seconds`, or `small` (small everything). The small-seconds
 layout displays HH:MM followed by small seconds with a gap and no second colon. The compact service row
@@ -260,6 +259,17 @@ On GitHub, the board screenshots workflow rewrites them and commits any change t
 go install github.com/aperturerobotics/protobuf-go-lite/cmd/protoc-gen-go-lite@v0.19.0
 ```
 
-The dot fonts are embedded in `internal/font`. Run `go generate ./internal/font` to regenerate the
-platform, compact service, formation and clock faces from `../tools/font.json` (requires Python 3 and Go).
-The remaining glyph bitmaps are maintained directly in `internal/font/data_gen.go`.
+All ten native dot fonts are YAFF files in [`internal/font/fonts`](internal/font/fonts). Go embeds and
+parses them once at startup using `github.com/davwheat/yaff-go`; there is no font-generation step.
+Edit these files directly, or open `../tools/font-builder.html`, import a `.yaff` file, edit its glyphs,
+and download the selected font as YAFF. The editor preserves metadata, glyph metrics, comments and
+additional labels. It also accepts old JSON exports for migration.
+
+The board adapter supports monochrome, single-character glyphs up to 16 dots wide, with uniform
+spacing and a fixed line height. `ascent`, `line-height`, `shift-up`, `right-bearing` and
+`default-char` describe the existing rendering geometry. The parser itself
+supports the complete YAFF syntax, including codepages, graphemes, legacy syntax and greyscale.
+
+Run `go test ./internal/font ./internal/formats` after editing fonts, and
+`node --test ../tools/*.test.cjs` for editor persistence checks. Browser outline fonts and the
+upstream LED-matrix library's BDF samples retain their native formats.

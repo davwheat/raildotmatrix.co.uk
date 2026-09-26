@@ -5,6 +5,7 @@ go 1.27.1
 require (
 	github.com/aperturerobotics/protobuf-go-lite v0.19.0
 	github.com/coder/websocket v1.8.15
+	github.com/davwheat/yaff-go v0.1.0
 	github.com/foobaz/go-zopfli v0.0.0-20260611111302-2b73a4c8c2e9
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/go-viper/mapstructure/v2 v2.5.0
