@@ -104,6 +104,17 @@ export async function verifyScroll() {
         outer.style.width = '120px'
         await settle()
         check(Number(timers.size) === 1, `${name}: narrowing the display did not start scrolling`)
+
+        // The board reuses one instance when the next departure changes, so its destination text is swapped in place.
+        render('Penarth', 14)
+        await settle()
+        check(inner.style.getPropertyValue('--trans-x') === '0', `${name}: shorter replacement text kept scrolling`)
+        if (name === 'West Midlands') fire(5000)
+        else check(timers.size === 0, 'Class 700: shorter replacement text kept a timer')
+        render('Manchester Piccadilly via Shrewsbury', 15)
+        await settle()
+        fire(1000)
+        check(inner.style.getPropertyValue('--trans-x').startsWith('-'), `${name}: longer replacement text did not scroll`)
       } finally {
         root.unmount()
         element.remove()
