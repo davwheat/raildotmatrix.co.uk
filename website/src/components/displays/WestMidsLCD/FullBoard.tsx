@@ -9,7 +9,6 @@ import { noticeKind } from '../../../live/overrideNotice'
 
 interface IProps {
   station: string
-  platformNumber?: number | null
   useLegacyTocNames?: boolean
   platforms?: string[]
   showUnconfirmedPlatforms?: boolean
@@ -18,7 +17,6 @@ interface IProps {
 
 export default function FullBoard({
   station,
-  platformNumber = null,
   useLegacyTocNames = false,
   platforms,
   showUnconfirmedPlatforms = false,
@@ -39,7 +37,7 @@ export default function FullBoard({
   if (warning) {
     return (
       <article className="tfwm-board tfwm-board__notice" ref={boardRef}>
-        <BoardHeader platformNumber={platformNumber} stationName={stationName} />
+        <BoardHeader platforms={platforms ?? []} stationName={stationName} />
 
         <PlatformWarningMessage kind={warning} />
       </article>
@@ -49,7 +47,7 @@ export default function FullBoard({
   if (services === null || services.length === 0) {
     return (
       <article className="tfwm-board tfwm-board__notice" ref={boardRef}>
-        <BoardHeader platformNumber={platformNumber} stationName={station} />
+        <BoardHeader platforms={platforms ?? []} stationName={station} />
 
         <div className="fullscreenNotice">
           <p>Please listen for announcements or call National&nbsp;Rail&nbsp;Enquiries on 03457 48 49 50</p>
@@ -62,7 +60,7 @@ export default function FullBoard({
 
   return (
     <article className="tfwm-board" ref={boardRef}>
-      <BoardHeader platformNumber={platformNumber} stationName={stationName} />
+      <BoardHeader platforms={platforms ?? []} stationName={stationName} />
 
       {firstService && <NextTrain nextTrain={firstService} />}
 

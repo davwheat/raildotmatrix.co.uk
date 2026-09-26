@@ -8,6 +8,7 @@ import {
   isRailAnnouncementsEmbed,
   readOptions,
 } from '../src/components/BoardOptions/settings'
+import { platformHeading } from '../src/components/displays/WestMidsLCD/platformHeading'
 
 const infotec = 'infotec-landscape-dmi'
 test('Daktronics service count accepts 1–6 and round-trips independently of Infotec options', () => {
@@ -148,4 +149,12 @@ test('formation icons preserve defaults, subsets and empty lists in storage and 
     assert.deepEqual(readOptions(infotec, { formationIcons }, new URLSearchParams()).formationIcons, defaults.formationIcons)
   }
   assert.deepEqual(readOptions(infotec, { formationIcons: [] }, new URLSearchParams('formationIcons=invalid')).formationIcons, [])
+})
+
+test('Blackbox header names one or two watched platforms and otherwise shows the station', () => {
+  assert.equal(platformHeading([]), null)
+  assert.equal(platformHeading(['2']), 'Platform 2')
+  assert.equal(platformHeading(['10', '2']), 'Platforms 2 & 10')
+  assert.equal(platformHeading(['4a', ' 4A ', '1']), 'Platforms 1 & 4A')
+  assert.equal(platformHeading(['1', '2', '3']), null)
 })

@@ -1,5 +1,6 @@
 import React from 'react'
 import useClock from '../../../hooks/useClock'
+import { platformHeading } from './platformHeading'
 
 import dayjs from 'dayjs'
 
@@ -11,10 +12,10 @@ dayjs.extend(dayjsTz)
 
 dayjs.tz.setDefault('Europe/London')
 
-export default function BoardHeader({ platformNumber, stationName }: { platformNumber: number | null; stationName: string }) {
+export default function BoardHeader({ platforms, stationName }: { platforms: string[]; stationName: string }) {
   return (
     <header>
-      <span className="platform">{typeof platformNumber === 'number' ? `Platform ${platformNumber}` : stationName}</span>
+      <span className="platform">{platformHeading(platforms) ?? stationName}</span>
 
       <Clock />
     </header>
