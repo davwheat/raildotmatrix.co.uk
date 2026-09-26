@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 
-import { createDotPainter } from './DotPainter'
+import { createDotPainter, type DotPainter } from './DotPainter'
 import { animateBoard } from './animation'
+import { MIN_DOT_PITCH } from './dotMask'
 import { loadLedBoard, type LedBoardHandle, type LedBoardOptions } from './loadLedBoard'
 
 type Props = Omit<LedBoardOptions, 'width' | 'height'> & {
@@ -78,7 +79,9 @@ export default function LedBoard({
     const surface = surfaceRef.current!
     const painter = createDotPainter(columns, rows)
     surface.appendChild(painter.canvas)
-    const observer = observeDevicePixelSize(surface, (width, height) => painter.resize(width, height))
+    const observer = observeDevicePixelSize(surface, (width, height, cssPerDevicePixel) =>
+      fitCanvas(painter, columns, rows, width, height, cssPerDevicePixel),
+    )
     let handle: LedBoardHandle | undefined
     let stopAnimation: (() => void) | undefined
     let stopped = false
@@ -119,7 +122,8 @@ export default function LedBoard({
           width: '100%',
           aspectRatio: `${columns} / ${rows}`,
           background: 'var(--led-board-background, #000)',
-          '& canvas': { display: 'block', width: '100%', height: '100%' },
+          position: 'relative',
+          '& canvas': { display: 'block', position: 'absolute' },
         }}
       />
       {status === 'failed' && (
@@ -144,13 +148,42 @@ export default function LedBoard({
   )
 }
 
-function observeDevicePixelSize(element: HTMLElement, onResize: (width: number, height: number) => void): ResizeObserver {
+/**
+ * Sizes the canvas to a whole number of device pixels per dot, centred in the surface. A fractional pitch would make
+ * some cells a pixel wider than others, which shows as a wider gap between dots at a regular interval.
+ */
+function fitCanvas(painter: DotPainter, columns: number, rows: number, width: number, height: number, cssPerDevicePixel: number) {
+  const pitch = Math.floor(Math.min(width / columns, height / rows))
+  // Below this pitch the board is drawn as square pixels, so snapping would only shrink it.
+  const snap = pitch >= MIN_DOT_PITCH
+  const canvasWidth = snap ? columns * pitch : width
+  const canvasHeight = snap ? rows * pitch : height
+  // Whole device-pixel offsets keep the canvas on the device grid, where it isn't resampled.
+  const left = Math.floor((width - canvasWidth) / 2)
+  const top = Math.floor((height - canvasHeight) / 2)
+
+  const { style } = painter.canvas
+  style.left = `${left * cssPerDevicePixel}px`
+  style.top = `${top * cssPerDevicePixel}px`
+  style.width = `${canvasWidth * cssPerDevicePixel}px`
+  style.height = `${canvasHeight * cssPerDevicePixel}px`
+  painter.resize(canvasWidth, canvasHeight)
+}
+
+function observeDevicePixelSize(
+  element: HTMLElement,
+  onResize: (width: number, height: number, cssPerDevicePixel: number) => void,
+): ResizeObserver {
   const observer = new ResizeObserver(([entry]) => {
     const device = entry.devicePixelContentBoxSize?.[0]
-    if (device) {
-      onResize(device.inlineSize, device.blockSize)
+    if (device && device.inlineSize > 0) {
+      onResize(device.inlineSize, device.blockSize, entry.contentRect.width / device.inlineSize)
     } else {
-      onResize(Math.round(entry.contentRect.width * devicePixelRatio), Math.round(entry.contentRect.height * devicePixelRatio))
+      onResize(
+        Math.round(entry.contentRect.width * devicePixelRatio),
+        Math.round(entry.contentRect.height * devicePixelRatio),
+        1 / devicePixelRatio,
+      )
     }
   })
 
