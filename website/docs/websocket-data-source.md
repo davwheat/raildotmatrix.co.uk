@@ -3,7 +3,7 @@
 Choose **Live WebSocket feed** in **Train data source**, on the board settings page or above any station board. **Original** remains the default.
 The selection and service URL are saved on the device. Switching closes the previous connection or aborts the outstanding original API request.
 
-The **Train data source** and **Service URL** controls are a development tool: they render only under `yarn develop`, and a built site leaves
+The **Train data source** and **Service URL** controls are a development tool: they render only under `pnpm develop`, and a built site leaves
 them out. To select the WebSocket source on a built site, use the query parameters below.
 
 The Infotec landscape DMI and Daktronics (Data Display) DMI boards always use the WebSocket feed. They come from the WebAssembly build of
@@ -11,7 +11,7 @@ The Infotec landscape DMI and Daktronics (Data Display) DMI boards always use th
 `dataSource=original`. The Go port follows the display rules that this page describes.
 
 In development, the default service is `ws://localhost:8080`. Run Darwin Browser locally with its movement backfill complete, then run this site
-with `yarn develop`. The URL is a base URL: the client adds `/v1/cis/live?crs=...`.
+with `pnpm develop`. The URL is a base URL: the client adds `/v1/cis/live?crs=...`.
 
 A direct link can override saved settings:
 
@@ -77,8 +77,8 @@ alive.
 Keep the plugin version in `buf.gen.yaml` no newer than the `@bufbuild/protobuf` version in `package.json`. The `.pb` fixtures are frames written
 by the service's own encoder, and the tests check that this decoder reads each one as the JSON beside it.
 
-Run `yarn test:live` for reducer, digest, heartbeat, resync/reconnect, ordering, split, platform warning and platform alteration regressions. The
-runner uses Node's test runner and Wrangler's existing esbuild compiler. Build with `yarn build`.
+Run `pnpm test:live` for reducer, digest, heartbeat, resync/reconnect, ordering, split, platform warning and platform alteration regressions. The
+runner uses Node's test runner and Wrangler's existing esbuild compiler. Build with `pnpm build`.
 
-Run `yarn test:visual` to screenshot every board in every state, including both platform warnings and a platform alteration, and compare the
+Run `pnpm test:visual` to screenshot every board in every state, including both platform warnings and a platform alteration, and compare the
 results against committed baselines. See [Board screenshot tests](./board-visual-tests.md).

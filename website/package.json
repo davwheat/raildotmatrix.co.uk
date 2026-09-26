@@ -37,25 +37,19 @@
     "wrangler": "^4.136.3",
     "ws": "^8.21.3"
   },
-  "resolutions": {
-    "react": "^19",
-    "react-dom": "^19",
-    "@types/react": "^19",
-    "@types/react-dom": "^19"
-  },
   "license": "MIT",
   "scripts": {
     "board": "just --justfile ../led-board/justfile web",
     "board:quick": "just --justfile ../led-board/justfile ZOPFLI_ITERATIONS=1 web",
-    "build": "yarn board && cross-env STATIC_EXPORT=true next build --webpack",
-    "build:ci": "yarn board && cross-env STATIC_EXPORT=true next build --webpack",
-    "develop": "yarn board:quick && next dev --webpack",
-    "dev": "yarn board:quick && next dev --webpack",
+    "build": "pnpm board && cross-env STATIC_EXPORT=true next build --webpack",
+    "build:ci": "pnpm board && cross-env STATIC_EXPORT=true next build --webpack",
+    "develop": "pnpm board:quick && next dev --webpack",
+    "dev": "pnpm board:quick && next dev --webpack",
     "develop:workers": "wrangler pages dev --port 8787",
     "format": "prettier --write \"**/*.{js,jsx,json,md,ts,tsx,css,scss}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,json,md,ts,tsx,css,scss}\"",
-    "start": "yarn develop",
-    "serve": "yarn wrangler pages dev out/",
+    "start": "pnpm develop",
+    "serve": "wrangler pages dev out/",
     "clean": "rm -rf .next out",
     "test:settings": "node scripts/test-settings.mjs",
     "test:live": "node scripts/test-live.mjs",
@@ -64,5 +58,5 @@
     "test:renderer": "node scripts/test-renderer.mjs",
     "test:wasm": "node scripts/test-wasm.mjs"
   },
-  "packageManager": "yarn@4.18.0"
+  "packageManager": "pnpm@11.18.0"
 }

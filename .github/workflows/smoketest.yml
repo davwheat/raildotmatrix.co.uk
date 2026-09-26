@@ -63,12 +63,17 @@ jobs:
             </td></tr>
             </table>
 
+      - name: Use pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          package_json_file: website/package.json
+
       - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
-          cache-dependency-path: website/yarn.lock
+          cache: 'pnpm'
+          cache-dependency-path: website/pnpm-lock.yaml
 
       - name: Use Go
         uses: actions/setup-go@v7
@@ -81,10 +86,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          yarn install --immutable
+          pnpm install --frozen-lockfile
 
       - name: Verify formatting
-        run: yarn format:check
+        run: pnpm format:check
 
       - name: Test the LED board
         working-directory: led-board
@@ -105,12 +110,12 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ./website/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('website/yarn.lock') }}-${{ hashFiles('website/src/**/*.ts', 'website/src/**/*.tsx') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('website/pnpm-lock.yaml') }}-${{ hashFiles('website/src/**/*.ts', 'website/src/**/*.tsx') }}
           restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('website/yarn.lock') }}-
+            ${{ runner.os }}-nextjs-${{ hashFiles('website/pnpm-lock.yaml') }}-
 
       - name: Build site
-        run: yarn build:ci
+        run: pnpm build:ci
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 

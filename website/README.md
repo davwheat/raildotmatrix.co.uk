@@ -16,11 +16,11 @@ The browser uses WebGL when hardware acceleration is available: each changed fra
 and applies a cached dot mask. Canvas 2D remains the fallback. The renderer restores its textures and latest frame after a GPU context loss, and
 releases GPU resources when a board closes.
 
-`yarn test:renderer` compares both renderers in GPU-enabled headless Chrome and checks resizing, transparency, context recovery and fallback.
+`pnpm test:renderer` compares both renderers in GPU-enabled headless Chrome and checks resizing, transparency, context recovery and fallback.
 These checks need hardware WebGL and do not require a site build.
 
-`yarn build` and `yarn dev` build the WebAssembly bundle into `public/led-board` first, so they need Go 1.21 or later (Go fetches the version
-`led-board/go.mod` asks for) and [Just](https://just.systems). `yarn board` rebuilds just the bundle. To change how either board looks or
+`pnpm build` and `pnpm dev` build the WebAssembly bundle into `public/led-board` first, so they need Go 1.21 or later (Go fetches the version
+`led-board/go.mod` asks for) and [Just](https://just.systems). `pnpm board` rebuilds just the bundle. To change how either board looks or
 behaves, change the Go code in `led-board`; git ignores `public/led-board`.
 
 ## Board settings
@@ -35,7 +35,7 @@ Settings changes sync live between open tabs of the same display type on the sam
 Enable **Hide terminating trains** under **Train information** to exclude services ending at the selected station. Terminating trains are shown
 by default. The option is saved per display type and can also be set with `hideTerminating=1` in a board URL.
 
-`yarn test:settings` checks preference migration, URL handling and embed detection. After building the site, `yarn test:settings --browser` also
+`pnpm test:settings` checks preference migration, URL handling and embed detection. After building the site, `pnpm test:settings --browser` also
 checks the setup flow, mobile layout, shared controls, cross-tab synchronization and dialog keyboard behaviour in headless Chrome.
 
 ## Running locally
@@ -43,26 +43,26 @@ checks the setup flow, mobile layout, shared controls, cross-tab synchronization
 You'll need:
 
 - [Node.js](https://nodejs.org/en/download) 22 or later (not tested on earlier versions)
-- [Yarn package manager](https://yarnpkg.com/getting-started/install)
+- [pnpm](https://pnpm.io/installation)
 - [Go](https://go.dev/dl/) 1.21 or later and [Just](https://just.systems), which build the dot matrix boards
 - [Git](https://git-scm.com/downloads)
 
-When you have cloned the repository with Git, you should install all required dependencies with Yarn:
+When you have cloned the repository with Git, you should install all required dependencies with pnpm:
 
 ```bash
-yarn install
+pnpm install
 ```
 
 Then, you can run the Next.js development server with:
 
 ```bash
-yarn run start
+pnpm run start
 ```
 
 Finally, in a second terminal, start the backend worker to allow live data to be fetched from the Darwin API:
 
 ```bash
-yarn run develop:workers
+pnpm run develop:workers
 ```
 
 You can then access the site at [`http://localhost:3000`](http://localhost:3000). The dev server forwards `/api/*` to the worker on port 8787, so
@@ -75,5 +75,5 @@ Please feel free to contribute to this project! You can do so by forking the rep
 Please make sure you format your code before submitting a pull request. You can do this by running:
 
 ```bash
-yarn run format
+pnpm run format
 ```

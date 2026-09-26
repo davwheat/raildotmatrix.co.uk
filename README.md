@@ -9,13 +9,13 @@ Dot matrix departure boards for UK railway stations, on the web and on a real LE
 
 ## Getting started
 
-To work on the website, you need Node 24, Yarn, Go 1.21 or later, and [Just](https://just.systems), because the
+To work on the website, you need Node 24, pnpm, Go 1.21 or later, and [Just](https://just.systems), because the
 website's build compiles the LED boards:
 
 ```sh
 cd website
-yarn install
-yarn dev
+pnpm install
+pnpm dev
 ```
 
 To build the LED board for a Raspberry Pi, you also need the vendored LED matrix library and Zig. See

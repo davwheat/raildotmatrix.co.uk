@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
     },
   },
 
-  // `next dev` serves the site; the Pages Functions in functions/ are served by `yarn develop:workers` on 8787.
+  // `next dev` serves the site; the Pages Functions in functions/ are served by `pnpm develop:workers` on 8787.
   // The key is omitted entirely for an export, which warns about rewrites whether or not any are returned.
   ...(process.env.STATIC_EXPORT
     ? {}

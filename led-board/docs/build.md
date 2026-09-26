@@ -275,8 +275,8 @@ The page fetches `manifest.json` without caching, so the other two can be cached
 the module itself, so the host serves the file as it is, with no `Content-Encoding` header. The JavaScript API
 is described at the top of `cmd/wasm/main.go`.
 
-`WEB_DIR` defaults to the website's `public/led-board` directory, which git ignores. The website's `yarn build`
-runs `just web`, and `yarn dev` runs it with `ZOPFLI_ITERATIONS=1`, so you don't need to run it yourself.
+`WEB_DIR` defaults to the website's `public/led-board` directory, which git ignores. The website's `pnpm build`
+runs `just web`, and `pnpm dev` runs it with `ZOPFLI_ITERATIONS=1`, so you don't need to run it yourself.
 
 ## Running on a desktop
 

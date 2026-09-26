@@ -1,6 +1,6 @@
 # Board screenshot tests
 
-`yarn test:visual` renders every departure board in every state it can reach and compares each one against a committed baseline image. It catches
+`pnpm test:visual` renders every departure board in every state it can reach and compares each one against a committed baseline image. It catches
 changes no unit test sees: a row that stops appearing, text that overflows its board, a warning that loses its styling.
 
 ## Running the tests
@@ -8,8 +8,8 @@ changes no unit test sees: a row that stops appearing, text that overflows its b
 Build the site first, because the tests screenshot the built output rather than the dev server:
 
 ```
-yarn build
-yarn test:visual
+pnpm build
+pnpm test:visual
 ```
 
 The run reports one line per case and exits non-zero if any case differs from its baseline:
@@ -21,7 +21,7 @@ The run reports one line per case and exits non-zero if any case differs from it
 
 A failure writes the new screenshot and a highlighted diff to `tests/visual/failures/`. Open the diff: changed pixels are magenta over a faded
 copy of the baseline. Decide whether the change is a regression or an improvement, then either fix the board or accept the new rendering with
-`yarn test:visual --update`.
+`pnpm test:visual --update`.
 
 | Flag              | Effect                                                                                         |
 | ----------------- | ---------------------------------------------------------------------------------------------- |

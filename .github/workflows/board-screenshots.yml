@@ -32,12 +32,17 @@ jobs:
           # Check out the branch itself rather than the merge commit, so the baselines can be pushed back to it.
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
 
+      - name: Use pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          package_json_file: website/package.json
+
       - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
-          cache-dependency-path: website/yarn.lock
+          cache: 'pnpm'
+          cache-dependency-path: website/pnpm-lock.yaml
 
       - name: Install Chrome
         uses: browser-actions/setup-chrome@v2
@@ -55,17 +60,17 @@ jobs:
         uses: extractions/setup-just@v4
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
 
       - name: Build site
-        run: yarn build
+        run: pnpm build
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Regenerate baselines
         # Two captures per case, so a board caught mid-animation fails the job instead of being committed as the
         # baseline every later run is compared against.
-        run: yarn test:visual --update --repeat 2
+        run: pnpm test:visual --update --repeat 2
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
 
