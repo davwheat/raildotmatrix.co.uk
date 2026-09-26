@@ -4,9 +4,11 @@
  * its whole colour from one pixel. Every disc is the same whole number of device pixels across, which keeps them
  * identical where the pitch isn't a whole number; the spacing absorbs the difference instead.
  */
+export const MIN_DOT_PITCH = 3
+
 export function dotMask(width: number, height: number, columns: number, rows: number): HTMLCanvasElement | null {
   const pitch = Math.min(width / columns, height / rows)
-  if (pitch < 3) return null
+  if (pitch < MIN_DOT_PITCH) return null
 
   // The gap matches the desktop preview window's dots in the Go repository.
   const size = Math.floor(pitch - Math.max(1, pitch / 5))
