@@ -1,0 +1,23 @@
+[Unit]
+Description=Departure board web management and Wi-Fi setup
+After=NetworkManager.service departure-board-init.service
+Wants=NetworkManager.service avahi-daemon.service
+RequiresMountsFor=/boot/firmware/departure-board.toml
+
+[Service]
+ExecStart=/opt/departure-board/manage
+Restart=always
+RestartSec=5
+RuntimeDirectory=departure-board
+RuntimeDirectoryMode=0755
+StateDirectory=departure-board
+StateDirectoryMode=0700
+# Expose only root's SSH directory inside otherwise hidden home directories.
+ProtectHome=tmpfs
+BindPaths=/root/.ssh
+ProtectSystem=strict
+ReadWritePaths=/boot/firmware /etc/NetworkManager/system-connections
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

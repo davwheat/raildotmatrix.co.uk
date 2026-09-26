@@ -1,0 +1,115 @@
+# Cross-compiles the board for a 64-bit Raspberry Pi and deploys it over SSH. See docs/build.md.
+
+# Settings for your own Pi go in local.env, which git ignores, so that they take precedence over the defaults below
+# without being committed. Environment variables, and `just NAME=value recipe`, override them too.
+set dotenv-load
+set dotenv-filename := "local.env"
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+ZIG_TARGET := env("ZIG_TARGET", "aarch64-linux-gnu.2.41")
+PI_HOST := env("PI_HOST", "pi@raspberrypi.local")
+SSH_OPTS := env("SSH_OPTS", "")
+# The deploy recipes write to system directories. Leave SUDO empty when PI_HOST logs in as root.
+SUDO := env("SUDO", "sudo")
+BIN_DIR := env("BIN_DIR", "/opt/departure-board")
+PANEL_TEST_FLAGS := env("PANEL_TEST_FLAGS", "")
+WEB_DIR := env("WEB_DIR", "../website/public/led-board")
+# Fewer Zopfli iterations build the web bundle faster, and slightly larger.
+ZOPFLI_ITERATIONS := env("ZOPFLI_ITERATIONS", "15")
+
+cc := "zig cc -target " + ZIG_TARGET
+cxx := "zig c++ -target " + ZIG_TARGET
+ssh := "ssh " + SSH_OPTS + " " + PI_HOST
+
+lib_src := "third_party/rpi-rgb-led-matrix/lib"
+lib := "build/lib/librgbmatrix.a"
+# Mirrors OBJECTS in the library's own Makefile. The archive is linked statically, so objects the Go binding never
+# references cost nothing at link time.
+lib_objects := "gpio led-matrix options-initialize framebuffer thread bdf-font graphics led-matrix-c hardware-mapping pixel-mapper multiplex-mappers frame-sequence content-streamer content-streamer-c frame-sequence-c rp1/rp1_pio_backend rp1/rp1_pio_support rp1/rp1_rio_backend"
+lib_cflags := "-W -Wall -Wextra -Wno-unused-parameter -O3 -Ithird_party/rpi-rgb-led-matrix/include -I" + lib_src + "/rp1/rp1_pio_vendor/piolib/include -I" + lib_src + "/rp1/rp1_pio_vendor/include"
+
+# -extldflags=-s makes the external (zig) linker strip too; without it the binary keeps libc++ debug info and is
+# nearly four times larger.
+go_build := 'CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC="' + cc + '" CXX="' + cxx + '" go build -trimpath -ldflags="-s -w -extldflags=-s"'
+
+# Cross-compiles the board into build/board.
+board: lib
+    {{ go_build }} -o build/board ./cmd/board
+
+# Builds the self-contained web management server; it needs no C libraries.
+manager:
+    CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o build/manage ./cmd/manage
+
+# Cross-compiles the panel test pattern into build/panel-test.
+panel-test: lib
+    {{ go_build }} -o build/panel-test ./cmd/panel-test
+
+# Compares cropped uploads against full-frame native bitplanes. The resulting
+# Pi executable disables GPIO and can run alongside the normal board service.
+verify-upload: lib
+    {{ cxx }} {{ lib_cflags }} -std=c++11 -fno-exceptions internal/matrix/testdata/verify_rect.cc {{ lib }} -Wl,--no-gc-sections -lpthread -lm -lrt -s -o build/verify-upload
+
+# Compiles the LED matrix library into build/lib/librgbmatrix.a, recompiling only changed sources, in parallel.
+lib:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    jobs=()
+    for name in {{ lib_objects }}; do
+        obj="build/obj/$name.o"
+        if [[ -f "{{ lib_src }}/$name.cc" ]]; then
+            src="{{ lib_src }}/$name.cc"
+            compile=({{ cxx }} {{ lib_cflags }} -DDEFAULT_HARDWARE='"regular"' -fno-exceptions -std=c++11)
+        else
+            src="{{ lib_src }}/$name.c"
+            compile=({{ cc }} {{ lib_cflags }} -DDEFAULT_HARDWARE='"regular"')
+        fi
+        if [[ ! -f "$obj" || "$src" -nt "$obj" ]]; then
+            mkdir -p "$(dirname "$obj")"
+            echo "compiling $src"
+            "${compile[@]}" -c -o "$obj" "$src" &
+            jobs+=($!)
+        fi
+    done
+    for job in ${jobs[@]+"${jobs[@]}"}; do wait "$job"; done
+    objects=()
+    for name in {{ lib_objects }}; do objects+=("build/obj/$name.o"); done
+    if [[ ! -f "{{ lib }}" || ${#jobs[@]} -gt 0 ]]; then
+        mkdir -p "$(dirname "{{ lib }}")"
+        rm -f "{{ lib }}"
+        zig ar rcs "{{ lib }}" "${objects[@]}"
+    fi
+
+# Builds the board, installs it on the Pi, and restarts the service if it's running.
+deploy: board (push "build/board" (BIN_DIR / "board"))
+    {{ ssh }} '{{ SUDO }} systemctl try-restart departure-board'
+
+# The config file is installed only if there isn't one, so the Pi's own settings survive.
+[doc('Installs the systemd unit and starts or restarts the service.')]
+install-service:
+    sed 's|/opt/departure-board|{{ BIN_DIR }}|' deploy/departure-board.service | {{ ssh }} '{{ SUDO }} sh -c "cat > /etc/systemd/system/departure-board.service"'
+    {{ ssh }} '{{ SUDO }} sh -c "test -e /etc/departure-board.toml || { cat > /etc/departure-board.toml && chmod 644 /etc/departure-board.toml; }"' < deploy/departure-board.toml
+    {{ ssh }} '{{ SUDO }} systemctl daemon-reload && {{ SUDO }} systemctl enable departure-board && {{ SUDO }} systemctl restart departure-board'
+
+# Builds the panel test pattern and installs it on the Pi.
+deploy-panel-test: panel-test (push "build/panel-test" (BIN_DIR / "panel-test"))
+
+# The board service is paused meanwhile, because two processes driving the panel at once fight over the GPIO.
+[doc('Runs the installed panel test for five seconds and samples CPU use while it draws.')]
+run-panel-test:
+    {{ ssh }} 'was=$(systemctl is-active departure-board 2>/dev/null); {{ SUDO }} systemctl stop departure-board 2>/dev/null; {{ SUDO }} timeout 10 {{ BIN_DIR }}/panel-test -seconds 5 {{ PANEL_TEST_FLAGS }} & sleep 2.5; top -bn1 | head -15; wait; [ "$was" != active ] || {{ SUDO }} systemctl start departure-board'
+
+[doc("Builds the boards for a web page and bundles them into WEB_DIR, the website's public directory by default.")]
+web:
+    mkdir -p build/wasm
+    go generate ./internal/london
+    GOOS=js GOARCH=wasm go build -trimpath -ldflags="-s -w" -o build/wasm/board.wasm ./cmd/wasm
+    go run ./cmd/webbundle -wasm build/wasm/board.wasm -exec "$(go env GOROOT)/lib/wasm/wasm_exec.js" -out {{ WEB_DIR }} -iterations {{ ZOPFLI_ITERATIONS }}
+
+# Deletes the build directory.
+clean:
+    rm -rf build
+
+# Minimal images can lack scp and sftp-server, so files are streamed through a plain ssh session instead.
+[private]
+push src dest:
+    {{ ssh }} '{{ SUDO }} sh -c "mkdir -p $(dirname {{ dest }}) && cat > {{ dest }}.tmp && chmod 755 {{ dest }}.tmp && mv -f {{ dest }}.tmp {{ dest }}"' < {{ src }}

@@ -1,0 +1,540 @@
+// Package infotec is the Infotec landscape DMI implementation of board.Board: it turns the live view into
+// frames, replaying the web board's layout and animations on a small LED matrix. Everything is integer dot
+// arithmetic driven by a fixed-rate Tick, and a tick that changes nothing on screen costs no drawing.
+package infotec
+
+import (
+	"sync"
+	"time"
+
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
+)
+
+// Config sizes the board and sets what it shows.
+type Config struct {
+	// CoachLetterTOCs lists operators whose coach letters are shown. Nil uses the defaults; empty hides all letters.
+	CoachLetterTOCs []string
+	// FormationIcons enables facility icon types. Nil enables all; empty hides all facility icons.
+	FormationIcons []string
+	// FormationCount selects none, number, coaches or carriages beside the graphic.
+	// The coaches-no-brackets and carriages-no-brackets variants omit brackets around wording.
+	FormationCount    string
+	LoadingBrightness int
+	ClockStyle        string
+	OrdinalFormat     board.OrdinalFormat
+	ServiceCount      int
+	// CompactLowerRow places a smaller lower service row beside the clock.
+	CompactLowerRow *bool
+	Width, Height   int
+	// Zone is the time zone of the clock and the timetable; nil means UTC.
+	Zone *time.Location
+	// Colour is the text colour; the zero value means board.Amber.
+	Colour frame.RGB
+	// ScrollSpeed is how fast text scrolls, in dots per second; 0 means DefaultScrollSpeed.
+	ScrollSpeed int
+	// SmallScrollingText uses the compact font for calling points and service information.
+	SmallScrollingText bool
+	// RowPrefix selects ordinals or platform numbers before each train's time.
+	RowPrefix board.RowPrefix
+	// PlatformBox is the single requested platform to show in a box beside the first train, or empty.
+	PlatformBox string
+	// ServicePlatformBox shows the platform of the first service instead of a fixed platform.
+	ServicePlatformBox bool
+	// AlignPlatformRows aligns lower service columns with the platform box; nil defaults to true.
+	AlignPlatformRows *bool
+	// WarningPlatform names the platform in a warning, in place of "this station", when the warning is for one
+	// platform.
+	WarningPlatform bool
+}
+
+// Durations of the animations in board.scss, TrainService.tsx and SwapBetween.tsx, in milliseconds.
+const (
+	// slideOutDelay is the animation-delay before the outgoing first row starts moving.
+	slideOutDelay = 150
+	// slideOutTravel is the 28.57% keyframe of the 1400 ms slide-out-to-right animation, when the row has
+	// crossed the whole board.
+	slideOutTravel = 400
+	slideOutTotal  = slideOutDelay + 1400
+	// arriveFade is the fade-in of the list, or the no-services message, that follows a slide-out.
+	arriveFade   = 500
+	swapInterval = 12000
+	swapSlide    = 250
+	// destinationPage is how long each destination page of a row is shown.
+	destinationPage = 3000
+	// A cancelled ETD's flash keyframes, which the web plays linearly: it fades out by 50%, back in by 75%, and
+	// stays lit for the rest of the cycle.
+	flashPeriod = 1500
+	flashOut    = 750
+	flashIn     = 1125
+)
+
+type mode uint8
+
+const (
+	modeNoServices mode = iota
+	modeWarning
+	modeTrains
+)
+
+type trainsPhase uint8
+
+const (
+	phaseSlideOut trainsPhase = iota
+	phaseSteady
+)
+
+// fadeLevels is how many brightness steps a fade takes: one per refresh of the half-second arrival fade at the board's
+// default 60 Hz.
+const fadeLevels = 30
+
+// geometry is the board's layout in dots. Columns follow the CSS grid in trainService.scss with 1ch equal to
+// the advance of a digit; rows keep the dot positions measured from the web board, with the clock
+// bottom-aligned so it absorbs the shorter panel.
+type geometry struct {
+	smallScrollingText bool
+	clockStyle         string
+	compact            bool
+	w, h               int
+	ch                 int
+	// prefixW reserves one column for either ordinals or platform numbers.
+	prefixW int
+	// boxW reserves the first train's platform box; infoX is the information row's left edge.
+	boxW, infoX, infoDestX int
+	formationY, formationH int
+	// stdX is the scheduled-time column, and timeW the width of a time drawn in digit cells with a
+	// colonCell-wide colon.
+	stdX, colonCell, timeW int
+	destX, destW           int
+	// exptW is the width of the "Expt " label and its spacing, drawn before an expected time.
+	exptW int
+	// firstY, infoY, sepY and secondY are the cap tops of the rows and the separator's dot row.
+	firstY, infoY, sepY, secondY int
+	// infoSlide and swapTravel are the 110% and 105% of a row that the information page and the swapped rows
+	// travel through.
+	infoSlide, swapTravel int
+	// lineY holds the cap tops of the three-line message screens.
+	lineY                            [3]int
+	clockX, clockY, clockCell, colon int
+	clockInset                       int
+	full                             board.Clip
+}
+
+func newGeometry(w, h int, prefix board.RowPrefix) geometry {
+	text := font.PISTall
+	ch := text.Advance('0')
+	// The grid gap is 36 px at 7.17 px per dot.
+	gap := 5
+	g := geometry{w: w, h: h, ch: ch, full: board.Clip{X1: w, Y1: h}}
+	x := 0
+	column := func(width int) int {
+		at := x
+		x += width + gap
+		return at
+	}
+	g.prefixW = 3 * ch
+	if prefix == board.PrefixPlatforms {
+		g.prefixW = board.PlatformWidth(text)
+	}
+	column(g.prefixW)
+	g.stdX = column(9 * ch / 2)
+	g.colonCell = ch / 2
+	g.timeW = 4*ch + g.colonCell
+	g.destX = x
+	g.infoDestX = g.destX
+	g.destW = w - g.destX - gap - 19*ch/2
+	g.exptW = text.Width("Expt ") + text.Spacing
+
+	// The web's rows have cap tops at dot rows 0, 17 and 38 with the separator at 33; the panel keeps those
+	// and drops the slack above the clock.
+	g.firstY = 0
+	g.infoY = g.firstY + text.Height + 5
+	g.sepY = g.infoY + text.Height + 4
+	g.secondY = g.sepY + 5
+	g.infoSlide = (text.Height*110 + 50) / 100
+	g.swapTravel = (text.Height*105 + 50) / 100
+
+	g.clockY = h - font.InfotecClock.Height
+	g.clockCell = font.InfotecClock.Advance('0')
+	g.colon = font.InfotecClock.Advance(':')
+	g.clockX = (w - 6*g.clockCell - 2*g.colon) / 2
+
+	// The message screens share the space above the clock (less the 24 px gap) equally between three rows and
+	// centre a line of text in each.
+	band := g.clockY - 3
+	for i := range g.lineY {
+		g.lineY[i] = (2*band*i + band - 3*text.Height + 3) / 6
+	}
+	return g
+}
+
+func (b *Board) geometry(details bool) geometry {
+	g := newGeometry(b.cfg.Width, b.cfg.Height, b.cfg.RowPrefix)
+	g.smallScrollingText = b.cfg.SmallScrollingText
+	g.clockStyle = b.cfg.ClockStyle
+	if g.clockStyle == "" {
+		g.clockStyle = "normal"
+	}
+	g.clockY = g.h - g.clockFace(false).Height
+	g.clockX = (g.w - g.clockWidth()) / 2
+	if b.cfg.PlatformBox != "" || b.cfg.ServicePlatformBox {
+		platform := b.platformBox()
+		text, padding := platformBoxStyle(platform)
+		// Include the blank padding and the one-dot border on each side.
+		g.boxW = max(font.PISTall.Width("Plat"), text.Width(platform)) + 2*(padding+1)
+		g.infoX = g.boxW + 2
+		g.infoDestX = g.infoX + g.timeW + 5
+		g.prefixW = g.boxW
+		g.stdX = g.infoX
+		g.destW += g.destX - g.infoDestX
+		g.destX = g.infoDestX
+		details = true
+	}
+	if details {
+		// Use the slack between the rows for a formation without taking space from the clock.
+		g.secondY = g.clockY - font.PISTall.Height - 1
+		g.sepY = g.secondY - 2
+		// On the 64-row panel, remove the extra gaps above and below the info
+		// row rather than shortening the cab for the main clock.
+		g.infoY = max(font.PISTall.Height, min(g.infoY, g.sepY-font.PISTall.Height-12))
+		g.formationY = min(g.infoY+font.PISTall.Height+1, g.sepY-12)
+		g.formationH = min(11, g.sepY-g.formationY-1)
+	}
+	if g.boxW > 0 && (b.cfg.CompactLowerRow == nil || *b.cfg.CompactLowerRow) {
+		g.compact = true
+		if b.cfg.ClockStyle == "" {
+			g.clockStyle = "small"
+		}
+		g.clockY = g.h - max(font.InfotecSmall.Height, g.clockFace(false).Height)
+		g.clockCell = g.clockFace(false).Advance('0')
+		g.colon = g.clockFace(false).Advance(':')
+		g.clockX = g.w - g.clockWidth()
+		g.secondY = g.h - font.InfotecSmall.Height
+		g.sepY = g.clockY - 2
+		g.infoY = font.PISTall.Height + 5
+		g.swapTravel = font.InfotecSmall.Height + 1
+		if details {
+			g.formationY, g.formationH = g.sepY-12, 11
+		}
+	}
+	if g.smallScrollingText && details {
+		// Share the space above the lower row between the information, formation
+		// and separator. The main font already reserves descender space, so give
+		// its following gap one fewer dot before distributing the remainder.
+		firstEnd, lowerTop := g.firstY+font.PISTall.Height, g.secondY
+		if g.compact {
+			lowerTop = min(lowerTop, g.clockY)
+		}
+		spare := max(0, lowerTop-firstEnd-g.infoFace().Height-g.formationH-1)
+		firstGap := max(0, spare/4-1)
+		formationGap := (spare - firstGap) / 3
+		separatorGap := (spare - firstGap - formationGap) / 2
+		g.infoY = firstEnd + firstGap
+		g.formationY = g.infoY + g.infoFace().Height + formationGap
+		g.sepY = g.formationY + g.formationH + separatorGap
+	} else {
+		g.infoY += (font.PISTall.Height - g.infoFace().Height) / 2
+	}
+	if g.compact {
+		// Centre the service text and its clock in the band below the final separator.
+		top := g.sepY + 1
+		g.secondY = top + (g.h-top-font.InfotecSmall.Height)/2
+		g.clockY = top + (g.h-top-g.clockFace(false).Height)/2
+	}
+	g.infoSlide = (g.infoFace().Height*110 + 50) / 100
+	return g
+}
+
+func (g *geometry) infoFace() *font.Face {
+	if g.smallScrollingText {
+		return font.InfotecSmall
+	}
+	return font.PISTall
+}
+
+// infoBand is the area the information row is clipped to (clip-path: inset(0) in the web).
+func (g *geometry) infoBand() board.Clip {
+	return board.Clip{X0: g.infoX, Y0: g.infoY, X1: g.w, Y1: g.infoY + g.infoFace().Height}
+}
+
+// secondBand is the SwapBetween's 1em overflow box that the upcoming service rows slide through.
+func (g *geometry) secondBand() board.Clip {
+	width := g.w
+	if g.compact {
+		width = g.clockX + g.clockInset - 4
+	}
+	return board.Clip{X0: 0, Y0: g.secondY, X1: width, Y1: g.secondY + g.lowerFace().Height}
+}
+
+// Board is the departure board state machine and renderer. Update may be called from any goroutine; Tick must
+// be called from one goroutine only.
+type Board struct {
+	cfg Config
+	geo geometry
+	// Layout changes only with formation visibility or the platform box text.
+	geoDetails  bool
+	geoPlatform string
+	// dim is the separator's colour: the text colour at the separator's 0.5 opacity.
+	dim frame.RGB
+
+	mu      sync.Mutex
+	pending *model.View
+
+	view    model.View
+	content content
+	mode    mode
+
+	phase      trainsPhase
+	phaseStart time.Time
+	// outgoing is the first row sliding off to the right.
+	outgoing row
+	// fadeInStart is when the current list or message began fading in after a slide-out, or zero when it
+	// appeared at once.
+	fadeInStart time.Time
+	// steadyStart is when the rows appeared, which times the destination pages and the cancelled flash.
+	steadyStart time.Time
+	info        scroller
+	infoPage    int
+	infoText    board.TextRun
+	formation   formationCache
+	// swapIndex selects the 2nd or 3rd train in the lower row; swapFrom is the one it slid away from and
+	// swapStart when it did.
+	swapIndex, swapFrom int
+	swapStart           time.Time
+
+	last  scene
+	drawn bool
+}
+
+var _ board.Board = (*Board)(nil)
+
+// New returns a board that shows the "listen for announcements" message until it is updated.
+func New(cfg Config) *Board {
+	if cfg.Zone == nil {
+		cfg.Zone = time.UTC
+	}
+	if cfg.Colour == (frame.RGB{}) {
+		cfg.Colour = board.Amber
+	}
+	if cfg.ScrollSpeed <= 0 {
+		cfg.ScrollSpeed = DefaultScrollSpeed
+	}
+	if cfg.ServiceCount == 0 {
+		cfg.ServiceCount = 3
+	}
+	cfg.ServiceCount = min(6, max(1, cfg.ServiceCount))
+	if cfg.LoadingBrightness == 0 {
+		cfg.LoadingBrightness = 50
+	}
+	if cfg.CoachLetterTOCs == nil {
+		cfg.CoachLetterTOCs = DefaultCoachLetterTOCs()
+	}
+	if cfg.FormationIcons == nil {
+		cfg.FormationIcons = DefaultFormationIcons()
+	}
+	c := cfg.Colour
+	b := &Board{cfg: cfg, dim: board.Scale(c, 1, 2)}
+	b.geo = b.geometry(false)
+	b.geoPlatform = b.platformBox()
+	b.info.speed = cfg.ScrollSpeed
+	return b
+}
+
+// RefreshHz returns the refresh rate at which every scroll step lasts a whole number of refreshes.
+func (b *Board) RefreshHz() int { return board.RefreshFor(b.cfg.ScrollSpeed) }
+
+func (b *Board) ServiceLimit() int { return b.cfg.ServiceCount }
+
+func (b *Board) NextTick(now time.Time) time.Time {
+	return b.nextTick(now, false)
+}
+
+func (b *Board) NextPixelTick(now time.Time) time.Time {
+	return b.nextTick(now, true)
+}
+
+func (b *Board) nextTick(now time.Time, pixels bool) time.Time {
+	if !b.drawn || !b.fadeInStart.IsZero() && now.Sub(b.fadeInStart) < arriveFade*time.Millisecond {
+		return time.Time{}
+	}
+	next := now.Truncate(time.Second).Add(time.Second)
+	if b.mode != modeTrains {
+		return next
+	}
+	return b.nextStillTick(now, next, pixels)
+}
+
+// Update replaces the view. It takes effect on the next Tick, so it is safe to call from another goroutine.
+func (b *Board) Update(v model.View) {
+	b.mu.Lock()
+	b.pending = &v
+	b.mu.Unlock()
+}
+
+// Tick advances the board to now and, when the picture changed, redraws it into f. It reports whether f
+// changed; a caller can skip the panel swap otherwise.
+func (b *Board) Tick(now time.Time, f *frame.Frame) bool {
+	b.mu.Lock()
+	pending := b.pending
+	b.pending = nil
+	b.mu.Unlock()
+	if pending != nil {
+		b.apply(*pending, now)
+	}
+	b.advance(now)
+	length := 0
+	if b.phase == phaseSlideOut {
+		length = b.outgoing.length
+	} else if len(b.content.rows) > 0 {
+		length = b.content.rows[0].length
+	}
+	previousGeo := b.geo
+	details, platform := length > 0, b.platformBox()
+	if details != b.geoDetails || platform != b.geoPlatform {
+		b.geo = b.geometry(details)
+		b.geoDetails, b.geoPlatform = details, platform
+	}
+	digits := clockDigits(now, b.cfg.Zone)
+	face := b.geo.clockFace(false)
+	glyph := board.GlyphOf(face, rune(digits[0]))
+	b.geo.clockInset = (face.Advance('0') - glyph.Width) / 2
+	if b.geo.infoX != previousGeo.infoX || b.geo.infoDestX != previousGeo.infoDestX {
+		b.selectPage(b.infoPage, now)
+	}
+
+	s := b.compose(now)
+	if b.drawn && s == b.last {
+		return false
+	}
+	if !b.drawn || !b.renderInfoChange(f, &s, &b.last) {
+		b.render(f, &s)
+	}
+	b.last, b.drawn = s, true
+	return true
+}
+
+func (b *Board) apply(v model.View, now time.Time) {
+	previous := b.content
+	b.view = v
+	b.content = b.derive(v)
+	b.show(b.target(), now, previous)
+}
+
+// target is what the view calls for, as FullBoard.tsx picks it.
+func (b *Board) target() mode {
+	switch {
+	case !b.view.Connected:
+		return modeNoServices
+	case b.view.Notice != model.NoNotice:
+		return modeWarning
+	case len(b.view.Services) == 0:
+		return modeNoServices
+	default:
+		return modeTrains
+	}
+}
+
+func (b *Board) show(m mode, now time.Time, previous content) {
+	// The last train leaving slides out like any other change of first train, and the no-services message fades
+	// in once it has gone. Losing the connection blanks the board at once, as the web does.
+	if m == modeNoServices && b.mode == modeTrains && b.view.Connected && len(previous.rows) > 0 {
+		b.slideOut(previous.rows[0], now)
+		return
+	}
+	if m != modeTrains {
+		b.mode, b.fadeInStart = m, time.Time{}
+		return
+	}
+	// A train arriving on an empty board, or after a warning, appears without an entrance animation.
+	if b.mode != modeTrains {
+		b.mode, b.fadeInStart = modeTrains, time.Time{}
+		b.settle(now)
+		return
+	}
+	if len(previous.rows) > 0 && previous.rows[0].id != b.content.rows[0].id {
+		b.slideOut(previous.rows[0], now)
+		return
+	}
+	if b.phase != phaseSteady {
+		return
+	}
+	if !samePages(previous.pages, b.content.pages) {
+		b.selectPage(0, now)
+	}
+	if len(previous.rows) != len(b.content.rows) {
+		b.swapIndex, b.swapFrom, b.swapStart = 0, 0, now
+	}
+}
+
+func samePages(a, b []page) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// hasSwap reports whether the lower row rotates through upcoming trains.
+func hasSwap(c content) bool { return len(c.rows) >= 3 }
+
+// slideOut starts the outgoing first row's slide unless one is already running, in which case whatever
+// follows it is decided when it ends.
+func (b *Board) slideOut(outgoing row, now time.Time) {
+	if b.phase == phaseSlideOut {
+		return
+	}
+	b.outgoing = outgoing
+	b.phase, b.phaseStart = phaseSlideOut, now
+}
+
+// settle shows the current rows afresh: every page cycle and swap interval restarts, as the web's components
+// remount.
+func (b *Board) settle(now time.Time) {
+	b.phase, b.phaseStart = phaseSteady, now
+	b.steadyStart = now
+	b.selectPage(0, now)
+	b.swapIndex, b.swapFrom, b.swapStart = 0, 0, now
+}
+
+func (b *Board) selectPage(i int, now time.Time) {
+	b.infoPage = i
+	if i < len(b.content.pages) {
+		b.info.reset(b.content.pages[i], &b.geo, now)
+	}
+}
+
+func (b *Board) advance(now time.Time) {
+	if b.mode != modeTrains {
+		return
+	}
+	if b.phase == phaseSlideOut {
+		if now.Sub(b.phaseStart).Milliseconds() < slideOutTotal {
+			return
+		}
+		end := b.phaseStart.Add(slideOutTotal * time.Millisecond)
+		b.fadeInStart = end
+		if len(b.content.rows) == 0 {
+			b.mode = modeNoServices
+			return
+		}
+		b.settle(end)
+	}
+	// A completed page hands over to the next at the instant it finished, so the cycle never drifts. With a
+	// single page the web parks a scrolled text off screen for good; restarting it is the deliberate departure.
+	if len(b.content.pages) > 0 && b.info.advance(now) {
+		b.selectPage((b.infoPage+1)%len(b.content.pages), b.info.start)
+		b.info.advance(now)
+	}
+	if hasSwap(b.content) && now.Sub(b.swapStart).Milliseconds() >= swapInterval {
+		steps := int(now.Sub(b.swapStart).Milliseconds() / swapInterval)
+		count := len(b.content.rows) - 1
+		b.swapFrom, b.swapIndex = (b.swapIndex+steps-1)%count, (b.swapIndex+steps)%count
+		b.swapStart = b.swapStart.Add(time.Duration(steps) * swapInterval * time.Millisecond)
+	}
+}

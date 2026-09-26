@@ -1,0 +1,160 @@
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+import {
+  applyOptions,
+  defaults,
+  displayTypes,
+  formationIconTypes,
+  isRailAnnouncementsEmbed,
+  readOptions,
+} from '../src/components/BoardOptions/settings'
+import { platformHeading } from '../src/components/displays/WestMidsLCD/platformHeading'
+
+const infotec = 'infotec-landscape-dmi'
+test('Daktronics service count accepts 1–6 and round-trips independently of Infotec options', () => {
+  const type = 'daktronics-data-display-dmi'
+  assert.equal(readOptions(type, {}, new URLSearchParams()).serviceCount, 3)
+  for (let serviceCount = 1; serviceCount <= 6; serviceCount++) {
+    assert.equal(readOptions(type, { serviceCount }, new URLSearchParams()).serviceCount, serviceCount)
+    const query = new URLSearchParams()
+    applyOptions(query, type, { ...defaults, serviceCount })
+    assert.equal(query.get('serviceCount'), String(serviceCount))
+    assert.equal(query.has('compactLowerRow'), false)
+    assert.equal(readOptions(type, { serviceCount: 3 }, query).serviceCount, serviceCount)
+  }
+  for (const invalid of ['0', '7', '1.5', 'invalid']) {
+    assert.equal(readOptions(type, {}, new URLSearchParams({ serviceCount: invalid })).serviceCount, 3)
+  }
+})
+test('old preferences merge with new defaults and migrate platform labels', () => {
+  const result = readOptions(infotec, { color: 'white', platformPosition: 'after' }, new URLSearchParams())
+  assert.equal(result.color, 'white')
+  assert.equal(result.rowPrefix, 'platforms')
+  assert.equal(result.compactLowerRow, true)
+  assert.equal(result.serviceCount, 3)
+})
+test('URL values override storage, including explicitly disabled booleans', () => {
+  const result = readOptions(
+    infotec,
+    { color: 'orange', platformBox: true, compactLowerRow: true },
+    new URLSearchParams('color=white&platformBox=0&compactLowerRow=false&serviceCount=6'),
+  )
+  assert.equal(result.color, 'white')
+  assert.equal(result.platformBox, false)
+  assert.equal(result.compactLowerRow, false)
+  assert.equal(result.serviceCount, 6)
+})
+test('invalid preferences and unknown URL values fall back safely', () => {
+  const result = readOptions(
+    infotec,
+    { color: 'pink', serviceCount: -5, platformBox: 'yes' },
+    new URLSearchParams('color=purple&serviceCount=100'),
+  )
+  const stationDefaults = { ...defaults, warningPlatform: true }
+  assert.deepEqual(result, stationDefaults)
+  assert.deepEqual(readOptions(infotec, null, new URLSearchParams()), stationDefaults)
+})
+test('shared URLs round-trip independently of recipient preferences', () => {
+  const params = new URLSearchParams(
+    'station=ECR&platform=2&platform=4&dataSource=websocket&liveServiceUrl=ws://localhost:8080&hideSettings=1&boardStyle=Blue',
+  )
+  const wanted = { ...defaults, color: 'white' as const, serviceCount: 5, platformBox: true }
+  applyOptions(params, infotec, wanted)
+  assert.equal(params.get('station'), 'ECR')
+  assert.deepEqual(params.getAll('platform'), ['2', '4'])
+  assert.equal(params.get('dataSource'), 'websocket')
+  assert.equal(params.get('liveServiceUrl'), 'ws://localhost:8080')
+  assert.equal(params.has('boardStyle'), false)
+  assert.equal(params.has('hideSettings'), false)
+  assert.deepEqual(readOptions(infotec, { color: 'orange', warningPlatform: true, compactLowerRow: false }, params), wanted)
+})
+test('display-specific options do not leak between formats', () => {
+  const params = new URLSearchParams('platformBox=1&serviceCount=6&color=white&smallScrollingText=1')
+  applyOptions(params, 'blackbox-landscape-lcd', defaults)
+  assert.deepEqual([...params.keys()].sort(), ['hideTerminating', 'showUnconfirmedPlatforms', 'useLegacyTocNames'])
+})
+
+test('terminating trains stay visible by default and the filter persists for every station display', () => {
+  for (const { value: type } of displayTypes) {
+    assert.equal(readOptions(type, {}, new URLSearchParams()).hideTerminating, false)
+    for (const hideTerminating of [true, false]) {
+      assert.equal(readOptions(type, { hideTerminating }, new URLSearchParams()).hideTerminating, hideTerminating)
+      const query = new URLSearchParams()
+      applyOptions(query, type, { ...defaults, hideTerminating })
+      assert.equal(query.get('hideTerminating'), hideTerminating ? '1' : '0')
+      assert.equal(readOptions(type, { hideTerminating: !hideTerminating }, query).hideTerminating, hideTerminating)
+    }
+  }
+})
+
+test('small scrolling text defaults off and shared links override saved preferences', () => {
+  assert.equal(readOptions(infotec, {}, new URLSearchParams()).smallScrollingText, false)
+  assert.equal(readOptions(infotec, { smallScrollingText: true }, new URLSearchParams()).smallScrollingText, true)
+  for (const smallScrollingText of [true, false]) {
+    const query = new URLSearchParams()
+    applyOptions(query, infotec, { ...defaults, smallScrollingText })
+    assert.equal(readOptions(infotec, { smallScrollingText: !smallScrollingText }, query).smallScrollingText, smallScrollingText)
+  }
+})
+test('RailAnnouncements modal requires an iframe and a matching marker or referrer', () => {
+  const marker = new URLSearchParams('from-railannouncements.co.uk=1')
+  assert.equal(isRailAnnouncementsEmbed(false, marker, ''), false)
+  assert.equal(isRailAnnouncementsEmbed(true, marker, ''), true)
+  assert.equal(isRailAnnouncementsEmbed(true, new URLSearchParams(), 'https://railannouncements.co.uk/'), true)
+  assert.equal(isRailAnnouncementsEmbed(true, new URLSearchParams(), 'https://www.railannouncements.co.uk/'), true)
+  assert.equal(isRailAnnouncementsEmbed(true, new URLSearchParams(), 'https://railannouncements.co.uk.example.org/'), false)
+  assert.equal(isRailAnnouncementsEmbed(true, new URLSearchParams(), ''), false)
+})
+
+test('loading brightness accepts only 50 or 100 and round-trips in shared links', () => {
+  assert.equal(readOptions(infotec, {}, new URLSearchParams()).loadingBrightness, 50)
+  assert.equal(readOptions(infotec, { loadingBrightness: 100 }, new URLSearchParams()).loadingBrightness, 100)
+  assert.equal(readOptions(infotec, {}, new URLSearchParams('loadingBrightness=100')).loadingBrightness, 100)
+  assert.equal(readOptions(infotec, {}, new URLSearchParams('loadingBrightness=75')).loadingBrightness, 50)
+  const query = new URLSearchParams()
+  applyOptions(query, infotec, { ...defaults, loadingBrightness: 100 })
+  assert.equal(readOptions(infotec, {}, query).loadingBrightness, 100)
+})
+
+test('formation count validates all six choices and round-trips in shared links', () => {
+  assert.equal(readOptions(infotec, {}, new URLSearchParams()).formationCount, 'none')
+  for (const formationCount of ['none', 'number', 'coaches', 'coaches-no-brackets', 'carriages', 'carriages-no-brackets'] as const) {
+    assert.equal(readOptions(infotec, { formationCount }, new URLSearchParams()).formationCount, formationCount)
+    const query = new URLSearchParams()
+    applyOptions(query, infotec, { ...defaults, formationCount })
+    assert.equal(query.get('formationCount'), formationCount)
+    assert.equal(readOptions(infotec, { formationCount: 'coaches' }, query).formationCount, formationCount)
+  }
+  assert.equal(readOptions(infotec, { formationCount: 'invalid' }, new URLSearchParams()).formationCount, 'none')
+  assert.equal(readOptions(infotec, {}, new URLSearchParams('formationCount=invalid')).formationCount, 'none')
+  assert.equal(readOptions(infotec, {}, new URLSearchParams('formationCount=number-no-brackets')).formationCount, 'none')
+  assert.equal(readOptions(infotec, { formationCount: 'coaches' }, new URLSearchParams('formationCount=invalid')).formationCount, 'coaches')
+})
+
+test('formation icons preserve defaults, subsets and empty lists in storage and shared links', () => {
+  assert.deepEqual(readOptions(infotec, {}, new URLSearchParams()).formationIcons, formationIconTypes)
+  for (const formationIcons of [defaults.formationIcons, defaults.formationIcons.filter(icon => icon !== 'toilets'), [], ['toilets'] as const]) {
+    const options = { ...defaults, formationIcons: [...formationIcons] }
+    assert.deepEqual(readOptions(infotec, options, new URLSearchParams()).formationIcons, formationIcons)
+    const query = new URLSearchParams()
+    applyOptions(query, infotec, options)
+    assert.equal(query.get('formationIcons'), formationIcons.join(','))
+    assert.deepEqual(readOptions(infotec, defaults, query).formationIcons, formationIcons)
+  }
+  assert.deepEqual(readOptions(infotec, {}, new URLSearchParams('formationIcons=FOOD, accessibility,food')).formationIcons, [
+    'accessibility',
+    'food',
+  ])
+  for (const formationIcons of [['unknown'], [true], false, {}, 'toilet']) {
+    assert.deepEqual(readOptions(infotec, { formationIcons }, new URLSearchParams()).formationIcons, defaults.formationIcons)
+  }
+  assert.deepEqual(readOptions(infotec, { formationIcons: [] }, new URLSearchParams('formationIcons=invalid')).formationIcons, [])
+})
+
+test('Blackbox header names one or two watched platforms and otherwise shows the station', () => {
+  assert.equal(platformHeading([]), null)
+  assert.equal(platformHeading(['2']), 'Platform 2')
+  assert.equal(platformHeading(['10', '2']), 'Platforms 2 & 10')
+  assert.equal(platformHeading(['4a', ' 4A ', '1']), 'Platforms 1 & 4A')
+  assert.equal(platformHeading(['1', '2', '3']), null)
+})
