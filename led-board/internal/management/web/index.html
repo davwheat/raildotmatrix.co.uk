@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f4f4f4" />
+    <title>Departure board settings</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/">Departure board</a>
+      <div class="header-status"><span id="header-status">Settings</span></div>
+    </header>
+    <main>
+      <section id="login" class="login card">
+        <h1>Sign in</h1>
+        <p>Manage Wi-Fi and display settings.</p>
+        <form id="login-form">
+          <label for="login-password">Board password</label
+          ><input
+            id="login-password"
+            type="password"
+            autocomplete="current-password"
+            required
+          /><small
+            >The default board password is <strong>DotMatrix</strong>.</small
+          ><button type="submit">Sign in</button>
+          <p id="login-error" role="alert"></p>
+        </form>
+      </section>
+      <div id="app" hidden>
+        <div class="page-heading">
+          <div><h1>Settings</h1></div>
+          <button class="quiet" id="logout">Sign out</button>
+        </div>
+        <section class="connection-strip" aria-label="Connection status">
+          <div>
+            <span class="caption">Connection</span
+            ><strong id="network-state">Checking connection…</strong
+            ><span id="network-detail"></span>
+          </div>
+          <div>
+            <span class="caption">Web address</span
+            ><a href="http://departureboard.local">departureboard.local</a
+            ><span id="addresses"></span>
+          </div>
+          <div>
+            <span class="caption">Display</span
+            ><strong id="board-state">Checking…</strong
+            ><span id="demo-label"></span>
+          </div>
+        </section>
+        <div id="notice" class="notice" role="status" hidden></div>
+        <nav aria-label="Board management">
+          <button data-tab="board" class="selected" aria-current="page">
+            Board settings</button
+          ><button data-tab="network">Wi-Fi & connection</button
+          ><button data-tab="device">Device</button
+          ><button data-tab="developer">Developer</button>
+        </nav>
+        <section id="board-page" class="tab-page">
+          <div class="section-heading">
+            <div><h2>Board settings</h2></div>
+            <button id="reload" class="quiet">Reload settings</button>
+          </div>
+          <form id="config-form">
+            <div id="config-fields"></div>
+            <div class="save-bar">
+              <span id="save-status">No unsaved changes.</span
+              ><button type="submit" id="save">Save and restart display</button>
+            </div>
+          </form>
+        </section>
+        <section id="network-page" class="tab-page" hidden>
+          <div class="section-heading">
+            <div><h2>Wi-Fi</h2></div>
+          </div>
+          <div class="network-grid">
+            <section class="card">
+              <div class="card-title">
+                <h3>Nearby networks</h3>
+                <button id="scan" class="quiet">Scan again</button>
+              </div>
+              <div id="network-list">
+                <p class="muted">Scan to find nearby Wi-Fi networks.</p>
+              </div>
+              <p class="small muted">
+                You can also enter a network name manually. Some adapters cannot
+                scan while the hotspot is active.
+              </p>
+            </section>
+            <section class="card">
+              <h3>Connect to Wi-Fi</h3>
+              <form id="wifi-form">
+                <label for="ssid">Network name</label
+                ><input
+                  id="ssid"
+                  name="ssid"
+                  maxlength="32"
+                  autocomplete="off"
+                  required
+                  placeholder="Network name"
+                /><label for="wifi-password">Wi-Fi password</label>
+                <div class="password-input">
+                  <input
+                    id="wifi-password"
+                    type="password"
+                    autocomplete="new-password"
+                    minlength="8"
+                    maxlength="63"
+                  /><button
+                    type="button"
+                    id="show-wifi-password"
+                    class="quiet"
+                    aria-label="Show Wi-Fi password"
+                  >
+                    Show
+                  </button>
+                </div>
+                <div class="checks">
+                  <label
+                    ><input type="checkbox" id="open-network" /> This is an open
+                    network</label
+                  ><label
+                    ><input type="checkbox" id="hidden-network" /> This is a
+                    hidden network</label
+                  >
+                </div>
+                <label for="country">Wi-Fi country code</label
+                ><input
+                  id="country"
+                  value="GB"
+                  minlength="2"
+                  maxlength="2"
+                  pattern="[A-Za-z]{2}"
+                  required
+                /><small
+                  >Use your country's two-letter code, such as GB, US or
+                  DE.</small
+                >
+                <div class="hint">
+                  The hotspot will disconnect while the board joins your
+                  network. Join the same Wi-Fi on this device, then open
+                  <strong>departureboard.local</strong>. If it cannot connect,
+                  the hotspot returns.
+                </div>
+                <button type="submit" id="connect">Connect</button>
+              </form>
+            </section>
+          </div>
+          <section class="card compact">
+            <div>
+              <h3>Return to setup hotspot</h3>
+              <p>
+                Forget the saved Wi-Fi network and start DepartureBoard again.
+              </p>
+            </div>
+            <button class="secondary" id="hotspot">Use setup hotspot</button>
+          </section>
+        </section>
+        <section id="device-page" class="tab-page" hidden>
+          <div class="section-heading">
+            <div><h2>Device</h2></div>
+          </div>
+          <div class="network-grid">
+            <section class="card">
+              <h3>Change the board password</h3>
+              <p>
+                Required to change settings. The setup hotspot password remains
+                DotMatrix.
+              </p>
+              <form id="password-form">
+                <label for="new-password">New board password</label
+                ><input
+                  type="password"
+                  id="new-password"
+                  autocomplete="new-password"
+                  minlength="8"
+                  maxlength="128"
+                  required
+                /><label for="confirm-password">Confirm password</label
+                ><input
+                  type="password"
+                  id="confirm-password"
+                  autocomplete="new-password"
+                  minlength="8"
+                  maxlength="128"
+                  required
+                /><button type="submit">Update password</button>
+              </form>
+            </section>
+            <section class="card">
+              <h3>Restart the display</h3>
+              <p>
+                Reconnect the live feed and restart the LED display. Saved
+                settings are kept.
+              </p>
+              <button id="restart" class="secondary">Restart display</button>
+              <hr />
+              <h3>Find this board</h3>
+              <p>
+                On your network:
+                <a href="http://departureboard.local"
+                  >http://departureboard.local</a
+                >
+              </p>
+              <p>
+                On the setup hotspot:
+                <a href="http://192.168.4.1">http://192.168.4.1</a>
+              </p>
+            </section>
+          </div>
+        </section>
+        <section id="developer-page" class="tab-page" hidden>
+          <div class="section-heading">
+            <div><h2>Developer</h2></div>
+            <button id="ssh-reload" class="quiet">Reload SSH keys</button>
+          </div>
+          <section class="card">
+            <h3>Root SSH access</h3>
+            <p>
+              Add public keys to connect to your Pi as root. Each key grants
+              full control of the Pi to whoever holds its matching private key.
+            </p>
+            <p>
+              Connect from a terminal:
+              <code>ssh root@departureboard.local</code>
+            </p>
+            <form id="ssh-form">
+              <label for="ssh-keys">SSH public keys</label>
+              <textarea
+                id="ssh-keys"
+                rows="9"
+                maxlength="32768"
+                spellcheck="false"
+                autocapitalize="off"
+                autocomplete="off"
+                aria-describedby="ssh-help"
+                placeholder="ssh-ed25519 AAAA… your-name@computer"
+                disabled
+              ></textarea>
+              <small id="ssh-help">
+                Paste the contents of your .pub files, one complete key per
+                line. Keep private keys on your computer. To revoke a key,
+                remove its line and save. Clearing this field removes all saved
+                keys. Changes apply to new connections immediately.
+              </small>
+              <div class="save-bar">
+                <span id="ssh-save-status" role="status"
+                  >Loading SSH keys…</span
+                >
+                <button type="submit" id="ssh-save" disabled>
+                  Save SSH keys
+                </button>
+              </div>
+            </form>
+          </section>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

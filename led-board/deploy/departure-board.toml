@@ -1,0 +1,88 @@
+# Settings for the departure board. Manual installs use /etc/departure-board.toml; the DietPi image uses
+# /boot/firmware/departure-board.toml. Keep it readable by everyone: the board drops to user daemon once the panel is
+# running and rereads this file when it changes.
+#
+# BOARD_* environment variables (BOARD_CRS, BOARD_LED_BRIGHTNESS, ...) override this file, and flags of the
+# same names (-crs, -led-brightness, ...) override both. Leave a setting out to use its default.
+
+# Station to show.
+crs = "BTN"
+
+# A built-in example to show instead of the live feed, such as "busy-board" or "first-departs"; run the board with
+# -h for the full list.
+# fixture = "busy-board"
+
+# Board format: "daktronics" or "infotec".
+board = "daktronics"
+
+# Text colour: "amber" or "white".
+colour = "amber"
+
+# Platforms to show; empty shows the whole station.
+platforms = []
+show_unconfirmed_platforms = false
+
+# Hide trains that end their journey at this station.
+hide_terminating = false
+
+# The single prefix before each train's time: "ordinals" ("1st") or "platforms" ("Pl 1").
+# Platform prefixes have room for a three-character platform such as "10A", and stay blank when unpublished.
+row_prefix = "ordinals"
+ordinal_format = "suffix"
+# Both board formats: rotate services 2 through this limit (1–6) on the lower service row.
+service_count = 3
+# Clock: normal, small-seconds (HH:MM ss), or small.
+clock_style = "normal"
+# Coach loading fill brightness: 50 or 100 percent.
+loading_brightness = 50
+# Count beside the formation: none, number, coaches, coaches-no-brackets, carriages or carriages-no-brackets.
+# Wording falls back to a bracketed number if needed.
+formation_count = "none"
+# Show coach letters only for these TOC codes; [] hides letters for every operator.
+coach_letter_tocs = ["VT", "GR", "GW", "LD", "LF", "GC", "HT", "SR", "AW", "EM"]
+# Enabled facility icons; remove "toilets" to hide standard toilet icons, or use [] to hide all.
+formation_icons = ["accessibility", "cycles", "toilets", "food", "first-class"]
+
+# Name the platform in a stand clear or not-for-public-use warning, such as "to call at platform 2" in place of
+# "to call at this station". A warning for trains at several platforms at once keeps the general wording.
+warning_platform = false
+
+# Infotec only: show the requested platform, or the first service's platform when watching several.
+platform_box = false
+# Smaller lower service text beside the clock, freeing room for the main service.
+compact_lower_row = true
+# Align lower service columns and centre their prefix beneath the platform box.
+align_platform_rows = true
+
+# Historic operator names, such as "London Midland".
+legacy_toc_names = false
+
+# Daktronics only: the Worldline-driven variant with one scrolling information line.
+worldline = false
+
+# Scroll speed in dots per second; 0 uses the board's default (48 Daktronics, 60 Infotec).
+scroll_speed = 0
+# Infotec only: use the compact font for calling points and service information.
+small_scrolling_text = false
+
+url = "wss://darwinbrowser.com"
+verbose = false
+
+[led]
+# Brightness in percent. A change here applies straight away, without a restart.
+brightness = 60
+
+# The panel refresh rate and PWM bit depth follow the board unless set here. The refresh is the lowest whole
+# multiple of the scroll speed that's at least 60 Hz, so that every step lasts the same number of refreshes,
+# and the depth is the most the panel manages at that rate. At the default scroll speeds, that's 96 Hz and
+# 8 bits for Daktronics, and 60 Hz and 11 bits for Infotec.
+# limit_refresh = 60
+# pwm_bits = 11
+
+rows = 64
+cols = 128
+chain = 2
+# "BGR" if red and blue come out swapped.
+rgb_sequence = "RGB"
+gpio_mapping = "regular"
+slowdown_gpio = 2

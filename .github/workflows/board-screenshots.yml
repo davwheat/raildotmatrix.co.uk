@@ -5,11 +5,20 @@ on:
     branches:
       - main
   pull_request:
+    # A closed pull request's diff images are deleted.
+    types: [opened, synchronize, reopened, closed]
   workflow_dispatch:
 
-# Baselines are regenerated and committed back to the branch under test.
+# Baselines are regenerated and committed back to the branch under test, and a pull request's diff images are pushed
+# to a branch of their own for its comment to show.
 permissions:
   contents: write
+  pull-requests: write
+
+# Each run replaces the diff images and comment of the run before it, so an older run must not finish last.
+concurrency:
+  group: board-screenshots-${{ github.event.pull_request.number || github.ref_name }}
+  cancel-in-progress: true
 
 env:
   NODE_VERSION: 24.x
@@ -17,10 +26,15 @@ env:
 jobs:
   screenshots:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
     name: Regenerate board screenshots
 
     # A pull request from a fork cannot be pushed to, so there is nothing to commit the result of.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository)
 
     steps:
       - name: Checkout code
@@ -28,12 +42,20 @@ jobs:
         with:
           # Check out the branch itself rather than the merge commit, so the baselines can be pushed back to it.
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
+          # The diff report compares against the commit the pull request branched from.
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+
+      - name: Use pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          package_json_file: website/package.json
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
+          cache: 'pnpm'
+          cache-dependency-path: website/pnpm-lock.yaml
 
       - name: Install Chrome
         uses: browser-actions/setup-chrome@v2
@@ -41,28 +63,44 @@ jobs:
         with:
           chrome-version: stable
 
+      - name: Use Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: led-board/go.mod
+          cache-dependency-path: led-board/go.sum
+
+      - name: Use Just
+        uses: extractions/setup-just@v4
+
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
 
       - name: Build site
-        run: yarn build
+        run: pnpm build
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Regenerate baselines
         # Two captures per case, so a board caught mid-animation fails the job instead of being committed as the
         # baseline every later run is compared against.
-        run: yarn test:visual --update --repeat 2
+        run: pnpm test:visual --update --repeat 2
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+
+      - name: Regenerate LED board goldens
+        # The Daktronics and Infotec boards are drawn by the Go program, which renders every fixture and option into
+        # images of its own without a browser.
+        working-directory: led-board
+        run: go test ./internal/formats -run TestGolden -update
 
       - name: Commit any changes
         run: |
           # Staged first: a board whose baseline has never been recorded produces an untracked file, which an
           # unstaged diff cannot see, so a new case would otherwise be reported as unchanged and never committed.
-          git add tests/visual/baselines
+          # Staging the directories also stages the deletion of an image whose case was removed.
+          git add tests/visual/baselines ../led-board/internal/formats/testdata/golden
 
-          if git diff --cached --quiet -- tests/visual/baselines; then
+          if git diff --cached --quiet -- tests/visual/baselines ../led-board/internal/formats/testdata/golden; then
             echo "Board screenshots are unchanged." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
@@ -70,7 +108,7 @@ jobs:
           {
             echo "Board screenshots updated:"
             echo
-            git diff --cached --name-status -- tests/visual/baselines | sed 's/^/    /'
+            git diff --cached --name-status -- tests/visual/baselines ../led-board/internal/formats/testdata/golden | sed 's/^/    /'
           } >> "$GITHUB_STEP_SUMMARY"
 
           git config user.name 'github-actions[bot]'
@@ -78,10 +116,75 @@ jobs:
           git commit -m 'chore: update board screenshots'
           git push
 
+      - name: Draw the differences from the base branch
+        id: visreg
+        if: github.event_name == 'pull_request'
+        working-directory: .
+        env:
+          REPOSITORY: ${{ github.repository }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BRANCH: visreg/pr-${{ github.event.pull_request.number }}
+        run: |
+          head=$(git rev-parse HEAD)
+          base=$(git merge-base "origin/$BASE_REF" "$head")
+          out=$RUNNER_TEMP/visreg
+          (cd led-board && go build -o "$RUNNER_TEMP/imagediff" ./cmd/imagediff)
+
+          total=$(IMAGEDIFF=$RUNNER_TEMP/imagediff \
+            IMAGE_URL="https://raw.githubusercontent.com/$REPOSITORY/refs/heads/$BRANCH/$head" \
+            .github/scripts/visreg-report.sh "$base" "$head" "$out")
+          echo "total=$total" >> "$GITHUB_OUTPUT"
+
+          if [ -z "$(find "$out/images" -type f -print -quit)" ]; then
+            git push origin --delete "$BRANCH" 2>/dev/null || true
+            exit 0
+          fi
+
+          # The images are committed from a separate index so that the checkout's own branch and working tree stay
+          # untouched. The branch holds only the latest run, under the commit's SHA, so that a cached image from an
+          # earlier run is never shown.
+          mkdir -p "$RUNNER_TEMP/visreg-tree"
+          mv "$out/images" "$RUNNER_TEMP/visreg-tree/$head"
+          export GIT_INDEX_FILE=$RUNNER_TEMP/visreg-index
+          git --work-tree="$RUNNER_TEMP/visreg-tree" add --all
+          commit=$(git commit-tree "$(git write-tree)" -m "Board screenshot differences for $head")
+          git push --force origin "$commit:refs/heads/$BRANCH"
+
+      - name: Find the diff comment
+        id: find_visreg_comment
+        if: steps.visreg.outcome == 'success'
+        uses: peter-evans/find-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '<!-- visreg-report -->'
+
+      - name: Post the differences
+        # A pull request that never changed a screenshot gets no comment; one that did has it updated to say so.
+        if: steps.visreg.outcome == 'success' && (steps.visreg.outputs.total != '0' || steps.find_visreg_comment.outputs.comment-id != '')
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find_visreg_comment.outputs.comment-id }}
+          edit-mode: replace
+          body-path: ${{ runner.temp }}/visreg/comment.md
+
       - name: Upload failures
         if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: board-screenshot-failures
-          path: tests/visual/failures
+          path: website/tests/visual/failures
           if-no-files-found: ignore
+
+  cleanup:
+    name: Delete diff images
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Delete the pull request's diff image branch
+        run: git push origin --delete "visreg/pr-${{ github.event.pull_request.number }}" || true

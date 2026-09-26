@@ -1,46 +1,26 @@
 # UK Railway Dot Matrix
 
-Displays a dot matrix station display board for any UK railway station.
+Dot matrix departure boards for UK railway stations, on the web and on a real LED panel.
 
-Uses the National Rail API via [my own personal instance of Huxley2](https://github.com/davwheat/Huxley2).
+| Directory                | What's in it                                                                                                                                    |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`website`](website)     | The [raildotmatrix.davwheat.dev](https://raildotmatrix.davwheat.dev/) website: a Next.js site with every board, hosted on Cloudflare Pages.     |
+| [`led-board`](led-board) | The Daktronics Data Display and Infotec boards in Go. They drive a HUB75 LED panel on a Raspberry Pi, and the website runs them as WebAssembly. |
 
-See it live at [raildotmatrix.davwheat.dev](https://raildotmatrix.davwheat.dev/)!
+## Getting started
 
-## Running locally
+To work on the website, you need Node 24, pnpm, Go 1.21 or later, and [Just](https://just.systems), because the
+website's build compiles the LED boards:
 
-You'll need:
-
-- [Node.js](https://nodejs.org/en/download) 22 or later (not tested on earlier versions)
-- [Yarn package manager](https://yarnpkg.com/getting-started/install)
-- [Git](https://git-scm.com/downloads)
-
-When you have cloned the repository with Git, you should install all required dependencies with Yarn:
-
-```bash
-yarn install
+```sh
+cd website
+pnpm install
+pnpm dev
 ```
 
-Then, you can run the Next.js development server with:
+To build the LED board for a Raspberry Pi, you also need the vendored LED matrix library and Zig. See
+[`led-board/README.md`](led-board/README.md):
 
-```bash
-yarn run start
-```
-
-Finally, in a second terminal, start the backend worker to allow live data to be fetched from the Darwin API:
-
-```bash
-yarn run develop:workers
-```
-
-You can then access the site at [`http://localhost:3000`](http://localhost:3000). The dev server forwards `/api/*` to the worker on port 8787, so
-both need to be running for live departures.
-
-## Contributing
-
-Please feel free to contribute to this project! You can do so by forking the repository and creating a pull request.
-
-Please make sure you format your code before submitting a pull request. You can do this by running:
-
-```bash
-yarn run format
+```sh
+git submodule update --init led-board/third_party/rpi-rgb-led-matrix
 ```

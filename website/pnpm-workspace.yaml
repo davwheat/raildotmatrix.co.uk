@@ -1,0 +1,6 @@
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+  workerd: true
+
+minimumReleaseAge: 14
