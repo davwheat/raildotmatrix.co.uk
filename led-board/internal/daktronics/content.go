@@ -25,8 +25,11 @@ type row struct {
 }
 
 // page is one screen of the information row: a prefix that drops in at the right edge, then the text that
-// scrolls behind it.
-type page struct{ prefix, text string }
+// scrolls behind it. A page that holds stays still at the left edge when its text fits the row.
+type page struct {
+	prefix, text string
+	hold         bool
+}
 
 // content is everything derived from a view that the renderer reads.
 type content struct {
@@ -58,6 +61,9 @@ func (b *Board) derive(v model.View) content {
 
 func destinationPages(s *model.Service, upper bool) []string {
 	pages := make([]string, 0, len(s.Destinations))
+	if s.TerminatesHere && !upper {
+		return []string{"TERMINATES"}
+	}
 	for i, d := range s.Destinations {
 		name := stationName(d.CRS, d.Name)
 		if upper {
@@ -98,6 +104,9 @@ func (b *Board) infoPages(s *model.Service) []page {
 	if b.cfg.WorldlinePowered {
 		return []page{{text: worldlineInfo(s)}}
 	}
+	if s.TerminatesHere {
+		return []page{{text: b.arrivalInfo(s), hold: true}}
+	}
 	pages := []page{{prefix: infoPrefix(s), text: serviceInfo(s)}}
 	for _, cp := range callingPointPages(s) {
 		pages = append(pages, page{prefix: cp.prefix + ":", text: " " + joinCalls(cp.points, false)})
@@ -112,14 +121,21 @@ func infoPrefix(s *model.Service) string {
 	return s.TOC
 }
 
+// arrivalInfo is the real board's message for a terminating train, which names neither the operator nor the
+// coaches.
+func (b *Board) arrivalInfo(s *model.Service) string {
+	text := "This is the " + s.Scheduled.In(b.cfg.Zone).Format("15:04") + " from " + board.CombineNames(s.Origins) + "."
+	if reason := reasonText(s); reason != "" {
+		text += " " + reason
+	}
+	return text
+}
+
 // serviceInfo mirrors getServiceInfo in TrainServiceAdditionalInfo.tsx: the operator name is supplied by the
 // prefix, so the text opens mid-sentence.
 func serviceInfo(s *model.Service) string {
 	parts := []string{" service."}
-	switch {
-	case s.TerminatesHere:
-		parts = append(parts, "This is the service from "+board.CombineNames(s.Origins)+".")
-	case s.Length > 0:
+	if s.Length > 0 {
 		parts = append(parts, "Formed of "+strconv.Itoa(s.Length)+" coaches.")
 	}
 	if reason := reasonText(s); reason != "" {

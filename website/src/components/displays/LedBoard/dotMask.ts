@@ -4,14 +4,20 @@
  * its whole colour from one pixel. Every disc is the same whole number of device pixels across, which keeps them
  * identical where the pitch isn't a whole number; the spacing absorbs the difference instead.
  */
-export const MIN_DOT_PITCH = 3
+const MIN_DOT_PITCH = 3
+// Below this pitch a two-pixel gap would leave dots too small to stay bright.
+const MIN_WIDE_GAP_PITCH = 5
 
 export function dotMask(width: number, height: number, columns: number, rows: number): HTMLCanvasElement | null {
   const pitch = Math.min(width / columns, height / rows)
   if (pitch < MIN_DOT_PITCH) return null
 
-  // The gap matches the desktop preview window's dots in the Go repository.
-  const size = Math.floor(pitch - Math.max(1, pitch / 5))
+  // Where the pitch isn't whole, some cells are a pixel wider than others. Against a one-pixel gap that doubles the
+  // gap at a regular interval, which reads as a grid of lines; against two pixels it is barely visible.
+  const uneven = !Number.isInteger(width / columns) || !Number.isInteger(height / rows)
+  const minGap = uneven && pitch >= MIN_WIDE_GAP_PITCH ? 2 : 1
+  // The gap otherwise matches the desktop preview window's dots in the Go repository.
+  const size = Math.min(Math.floor(pitch - Math.max(1, pitch / 5)), Math.floor(pitch) - minGap)
   const dot = createCanvas(size, size)
   const dotContext = dot.getContext('2d')!
   // A disc two pixels across is all antialiased edge, which dims it; a square that size still reads as a dot.
