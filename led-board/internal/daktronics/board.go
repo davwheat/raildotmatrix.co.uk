@@ -83,12 +83,14 @@ type geometry struct {
 	// prefixW reserves one column for either ordinals or platform numbers.
 	prefixW int
 	stdX    int
-	destX   int
-	destW   int
-	etdW    int
-	ch      int
-	clockX  int
-	cell    int
+	// stdRight is the right edge of the scheduled time's last digit, which the time's cells centre.
+	stdRight int
+	destX    int
+	destW    int
+	etdW     int
+	ch       int
+	clockX   int
+	cell     int
 }
 
 func newGeometry(w, h int, prefix board.RowPrefix) geometry {
@@ -110,6 +112,8 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 	}
 	column(g.prefixW)
 	g.stdX = column(stdW)
+	digitW := board.GlyphOf(font.Text, '0').Width
+	g.stdRight = g.stdX + 3*ch + (ch-digitW)/2 + digitW
 	g.destX = x
 	g.etdW = (41*ch + 2) / 5
 	g.destW = w - g.destX - gap - g.etdW

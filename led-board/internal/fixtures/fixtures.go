@@ -85,6 +85,14 @@ func Steps(name string) []model.View {
 		s := berwick()
 		s.Estimated = nil
 		return snapshot(s, bedford())
+	case "three-way-split":
+		s := dividing()
+		s.ID = "three-way"
+		bognorLoc := model.Location{Name: "Bognor Regis", CRS: "BOG"}
+		divide := &s.CallPoints[len(s.CallPoints)-1]
+		divide.Divides = append(divide.Divides, model.Portion{Length: 2, CallPoints: []model.CallPoint{call(horshamLoc, 1500, 2), call(bognorLoc, 2700, 2)}})
+		s.Destinations = append(s.Destinations, bognorLoc)
+		return snapshot(s, bedford())
 	case "single-call":
 		s := victoria()
 		s.CallPoints = s.CallPoints[1:]

@@ -1,6 +1,7 @@
 package daktronics
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -303,5 +304,16 @@ func TestWorldlineSingleCallingPointSaysOnly(t *testing.T) {
 	c = newTestBoard(t, false).derive(v)
 	if got := c.pages[len(c.pages)-1].text; got != " LONDON VICTORIA." {
 		t.Fatalf("standard board calling text = %q, want without \"only\"", got)
+	}
+}
+
+func TestWorldlineSplitNamesTwoDestinations(t *testing.T) {
+	c := newTestBoard(t, true).derive(fixtures.Steps("three-way-split")[0])
+	first := c.rows[0]
+	if first.line1 != "HORSHAM" || first.line2Lead != "and" || first.line2 != "LITTLEHAMPTON" {
+		t.Errorf("destination = %q / %q %q, want HORSHAM / and LITTLEHAMPTON", first.line1, first.line2Lead, first.line2)
+	}
+	if len(c.pages) != 1 || strings.Contains(c.pages[0].text, "Bognor") || !strings.Contains(c.pages[0].text, "Littlehampton") {
+		t.Errorf("info = %+v, want the first two portions' calling points only", c.pages)
 	}
 }

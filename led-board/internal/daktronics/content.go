@@ -19,9 +19,9 @@ type row struct {
 	// its ", " or " & " suffix, as TrainService.tsx builds them.
 	pages []string
 	// line1 and line2 are the first train's destinations as one wrapped text; line2 is empty unless the text
-	// needs the "triple line" layout.
-	line1, line2 string
-	etd          string
+	// needs the "triple line" layout. line2Lead is drawn in the scheduled-time column beside line2.
+	line1, line2, line2Lead string
+	etd                     string
 }
 
 // page is one screen of the information row: a prefix that drops in at the right edge, then the text that
@@ -51,7 +51,11 @@ func (b *Board) derive(v model.View) content {
 			pages:  destinationPages(s, b.cfg.WorldlinePowered),
 		}
 		if i == 0 {
-			r.line1, r.line2 = b.wrapDestination(strings.Join(r.pages, ""), r.etd)
+			if b.cfg.WorldlinePowered && len(r.pages) == 2 {
+				r.line1, r.line2Lead, r.line2 = r.pages[0], "and", strings.TrimPrefix(r.pages[1], "and ")
+			} else {
+				r.line1, r.line2 = b.wrapDestination(strings.Join(r.pages, ""), r.etd)
+			}
 			c.pages = b.infoPages(s)
 		}
 		c.rows = append(c.rows, r)
@@ -73,6 +77,9 @@ func destinationPages(s *model.Service, upper bool) []string {
 	if s.TerminatesHere && !upper {
 		return []string{"TERMINATES"}
 	}
+	if upper && len(s.Destinations) > 1 {
+		return worldlineSplitPages(s)
+	}
 	for i, d := range s.Destinations {
 		name := stationName(d.CRS, d.Name)
 		if upper {
@@ -87,6 +94,14 @@ func destinationPages(s *model.Service, upper bool) []string {
 		pages = append(pages, name)
 	}
 	return pages
+}
+
+// worldlineSplitPages names the first two destinations of a dividing train, the second after "and". The
+// Worldline board has room for no more, so a third portion's destination is left out.
+func worldlineSplitPages(s *model.Service) []string {
+	first := strings.ToUpper(stationName(s.Destinations[0].CRS, s.Destinations[0].Name))
+	second := strings.ToUpper(stationName(s.Destinations[1].CRS, s.Destinations[1].Name))
+	return []string{first, "and " + second}
 }
 
 // wrapDestination splits the first train's destination text the way the browser wraps it: the first line is
@@ -198,7 +213,12 @@ func worldlineInfo(s *model.Service) string {
 	if reason := reasonText(s); reason != "" {
 		parts = append(parts, reason)
 	}
-	for _, cp := range callingPointPages(s) {
+	calling := callingPointPages(s)
+	// Like the destinations, a third portion's calling points are left out.
+	if len(calling) > 2 {
+		calling = calling[:2]
+	}
+	for _, cp := range calling {
 		parts = append(parts, cp.prefix+" "+joinCalls(cp.points, true))
 	}
 	return strings.Join(parts, " ")

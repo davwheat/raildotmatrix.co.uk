@@ -89,7 +89,7 @@ func goldenCases() []goldenCase {
 		}
 	}
 	for _, size := range []goldenSize{panel, webSizes["daktronics"]} {
-		for _, fixture := range []string{"busy-board", "dividing-service", "terminating"} {
+		for _, fixture := range []string{"busy-board", "dividing-service", "terminating", "three-way-split"} {
 			add("daktronics", fixture, "worldline", size, Config{Worldline: true}, settled["daktronics"])
 		}
 		// The single calling point's "only" reaches the board 10.6 seconds in, after the line scrolls in.
