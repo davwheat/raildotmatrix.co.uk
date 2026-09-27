@@ -258,3 +258,30 @@ func TestReplacementBus(t *testing.T) {
 		t.Fatalf("pages = %+v, want %+v", c.pages, want)
 	}
 }
+
+func TestWarningClearsDown(t *testing.T) {
+	b := newTestBoard(t, false)
+	f := frame.New(testW, testH)
+	v := fixtures.Steps("single-departure")[0]
+	b.Update(v)
+	start := fixtures.Clock
+	for now := start; now.Before(start.Add(5 * time.Second)); now = now.Add(tick) {
+		b.Tick(now, f)
+	}
+	warned := v
+	warned.Notice = model.StandClear
+	b.Update(warned)
+	warnedAt := start.Add(5 * time.Second)
+	sawSpinner := false
+	for now := warnedAt; now.Before(warnedAt.Add(clearDownTotal * time.Millisecond)); now = now.Add(tick) {
+		b.Tick(now, f)
+		if b.mode != modeTrains || b.phase != phaseClearDown {
+			t.Fatalf("at %v mode %v phase %v, want the trains clearing down", now.Sub(warnedAt), b.mode, b.phase)
+		}
+		sawSpinner = sawSpinner || b.last.spinner
+	}
+	b.Tick(warnedAt.Add(clearDownTotal*time.Millisecond), f)
+	if !sawSpinner || b.mode != modeWarning {
+		t.Fatalf("spinner shown %v, then mode %v; want the spinner and then the warning", sawSpinner, b.mode)
+	}
+}

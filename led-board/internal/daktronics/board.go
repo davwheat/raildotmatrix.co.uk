@@ -285,9 +285,10 @@ func (b *Board) target() mode {
 }
 
 func (b *Board) show(m mode, now time.Time, previous content) {
-	// The last train leaving clears down like any other change of first train; the no-services message
-	// waits until the wipe has finished. Losing the connection blanks the board at once, as the web does.
-	if m == modeNoServices && b.mode == modeTrains && b.view.Connected && len(previous.rows) > 0 {
+	// The last train leaving or a platform warning clears down like any other change of first train, and the
+	// next screen waits until the wipe has finished. Losing the connection blanks the board at once, as the web
+	// does.
+	if m != modeTrains && b.mode == modeTrains && b.view.Connected && len(previous.rows) > 0 {
 		b.clearDown(previous.rows[0], now)
 		return
 	}
@@ -373,8 +374,8 @@ func (b *Board) advance(now time.Time) {
 	case phaseClearDown:
 		if now.Sub(b.phaseStart).Milliseconds() >= clearDownTotal {
 			end := b.phaseStart.Add(clearDownTotal * time.Millisecond)
-			if len(b.content.rows) == 0 {
-				b.mode, b.modeStart = modeNoServices, end
+			if m := b.target(); m != modeTrains {
+				b.mode, b.modeStart = m, end
 				return
 			}
 			b.enter(end)
