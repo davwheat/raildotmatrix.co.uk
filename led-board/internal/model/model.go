@@ -52,9 +52,11 @@ type Service struct {
 	Destinations   []Location
 	Origins        []Location
 	TerminatesHere bool
-	Cancelled      bool
-	CancelReason   string
-	DelayReason    string
+	// Bus is true when a road vehicle runs the service, as for a rail replacement bus.
+	Bus          bool
+	Cancelled    bool
+	CancelReason string
+	DelayReason  string
 	// Scheduled is the time the board counts down to: departure, or arrival for a terminating service.
 	Scheduled time.Time
 	// Estimated is the forecast for Scheduled. Nil means the delay is unknown.

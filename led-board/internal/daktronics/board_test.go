@@ -236,3 +236,25 @@ func TestTerminatingTrainHoldsArrivalInfo(t *testing.T) {
 		}
 	})
 }
+
+func TestReplacementBus(t *testing.T) {
+	b := newTestBoard(t, false)
+	v := fixtures.Steps("single-departure")[0]
+	v.Services[0].Bus = true
+	c := b.derive(v)
+	if r := c.rows[0]; r.std != "BUS" || r.etd != "1943" {
+		t.Errorf("std, etd = %q, %q, want BUS, 1943", r.std, r.etd)
+	}
+	want := []page{{prefix: "A replacement bus will be calling at:", text: " Clapham Junction, LONDON VICTORIA."}}
+	if len(c.pages) != len(want) || c.pages[0] != want[0] {
+		t.Fatalf("pages = %+v, want %+v", c.pages, want)
+	}
+
+	v = fixtures.Steps("delayed")[0]
+	v.Services[0].Bus = true
+	c = b.derive(v)
+	want = append([]page{{text: "This is due to a speed restriction over defective track"}}, want...)
+	if len(c.pages) != len(want) || c.pages[0] != want[0] || c.pages[1] != want[1] {
+		t.Fatalf("pages = %+v, want %+v", c.pages, want)
+	}
+}

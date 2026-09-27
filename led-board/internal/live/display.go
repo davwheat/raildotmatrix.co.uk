@@ -295,6 +295,7 @@ func service(movement *Movement, legacyNames bool, now time.Time) model.Service 
 		ID:             movement.ID,
 		Origins:        locations(movement.Origins),
 		TerminatesHere: terminatesHere(movement),
+		Bus:            movement.Mode == ModeBus,
 		Cancelled:      movement.Cancelled,
 		CancelReason:   deref(movement.CancelReason.Text),
 		DelayReason:    deref(movement.DelayReason.Text),

@@ -46,7 +46,7 @@ func (b *Board) derive(v model.View) content {
 		r := row{
 			id:     s.ID,
 			prefix: b.cfg.RowPrefix.Text(i, s.Platform, b.cfg.OrdinalFormat),
-			std:    s.STD(b.cfg.Zone),
+			std:    b.std(s),
 			etd:    s.ETD(b.cfg.Zone),
 			pages:  destinationPages(s, b.cfg.WorldlinePowered),
 		}
@@ -57,6 +57,15 @@ func (b *Board) derive(v model.View) content {
 		c.rows = append(c.rows, r)
 	}
 	return c
+}
+
+// std is the scheduled-time column, which the real board fills with "BUS" for a replacement bus and leaves the
+// time to the expected-time column.
+func (b *Board) std(s *model.Service) string {
+	if s.Bus && !b.cfg.WorldlinePowered {
+		return "BUS"
+	}
+	return s.STD(b.cfg.Zone)
 }
 
 func destinationPages(s *model.Service, upper bool) []string {
@@ -107,11 +116,27 @@ func (b *Board) infoPages(s *model.Service) []page {
 	if s.TerminatesHere {
 		return []page{{text: b.arrivalInfo(s), hold: true}}
 	}
+	if s.Bus {
+		return busInfo(s)
+	}
 	pages := []page{{prefix: infoPrefix(s), text: serviceInfo(s)}}
 	for _, cp := range callingPointPages(s) {
 		pages = append(pages, page{prefix: cp.prefix + ":", text: " " + joinCalls(cp.points, false)})
 	}
 	return pages
+}
+
+// busInfo is the real board's message for a replacement bus, which names neither the operator nor the coaches.
+func busInfo(s *model.Service) []page {
+	var pages []page
+	if reason := reasonText(s); reason != "" {
+		pages = append(pages, page{text: reason})
+	}
+	calls := make([]string, len(s.CallPoints))
+	for i, cp := range s.CallPoints {
+		calls[i] = cp.Name
+	}
+	return append(pages, page{prefix: "A replacement bus will be calling at:", text: " " + joinCalls(calls, false)})
 }
 
 func infoPrefix(s *model.Service) string {
