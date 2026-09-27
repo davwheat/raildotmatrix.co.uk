@@ -79,6 +79,12 @@ func Steps(name string) []model.View {
 		after := snapshot(bedford())
 		after[0].Alterations = []string{"victoria"}
 		return append(before, after...)
+	case "long-destination":
+		return snapshot(berwick(), bedford())
+	case "hyphenated-destination":
+		s := berwick()
+		s.Estimated = nil
+		return snapshot(s, bedford())
 	case "triple-line":
 		s := dividing()
 		s.ID = "triple"
@@ -114,6 +120,7 @@ var (
 	stPancrasLoc     = model.Location{Name: "St Pancras International", CRS: "STP"}
 	horshamLoc       = model.Location{Name: "Horsham", CRS: "HRH"}
 	littlehamptonLoc = model.Location{Name: "Littlehampton", CRS: "LIT"}
+	berwickLoc       = model.Location{Name: "Berwick-upon-Tweed", CRS: "BWK"}
 )
 
 func service(id, toc, platform string, departure int, length int, dest model.Location, calls ...model.CallPoint) model.Service {
@@ -140,6 +147,10 @@ func victoria() model.Service {
 
 func bedford() model.Service {
 	return service("bedford", "Thameslink", "10A", 420, 12, bedfordLoc, call(londonBridgeLoc, 900, 8), call(stPancrasLoc, 1440, 8), call(bedfordLoc, 3600, 8))
+}
+
+func berwick() model.Service {
+	return service("berwick", "LNER", "4", 180, 9, berwickLoc, call(berwickLoc, 3600, 9))
 }
 
 func gatwick() model.Service {

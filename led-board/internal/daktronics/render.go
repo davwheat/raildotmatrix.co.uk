@@ -180,7 +180,7 @@ func (b *Board) drawRow(f *frame.Frame, r *rowScene, rowIndex int, c board.Clip)
 	y := g.textY(rowIndex) + r.dy
 	board.DrawText(f, font.Text, 0, y, r.prefix, b.cfg.Colour, c.Intersect(board.Clip{X1: g.prefixW, Y1: g.h}))
 	board.DrawCells(f, font.Text, g.stdX, y, r.std, g.ch, b.cfg.Colour, c)
-	board.DrawText(f, font.Text, g.destX, y, r.dest, b.cfg.Colour, c.Intersect(board.Clip{X0: g.destX, X1: g.destX + g.destW, Y1: g.h}))
+	board.DrawText(f, font.Text, g.destX, y, r.dest, b.cfg.Colour, c.Intersect(board.Clip{X0: g.destX, X1: g.destX + g.destWidth(r.etd), Y1: g.h}))
 	if isTime(r.etd) {
 		board.DrawCells(f, font.Text, g.w-4*g.ch, y, r.etd, g.ch, b.cfg.Colour, c)
 	} else {

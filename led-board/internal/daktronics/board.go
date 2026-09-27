@@ -122,6 +122,15 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 	return g
 }
 
+// destWidth is the room for a row's destination. The ETD column is wide enough for "Cancelled", so a time leaves
+// the rest of it to the destination.
+func (g *geometry) destWidth(etd string) int {
+	if isTime(etd) {
+		return g.destW + g.etdW - 4*g.ch
+	}
+	return g.destW
+}
+
 func (g *geometry) rowTop(i int) int { return i * g.rowH }
 
 func (g *geometry) textY(i int) int { return g.rowTop(i) + g.pad }

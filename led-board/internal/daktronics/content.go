@@ -51,7 +51,7 @@ func (b *Board) derive(v model.View) content {
 			pages:  destinationPages(s, b.cfg.WorldlinePowered),
 		}
 		if i == 0 {
-			r.line1, r.line2 = b.wrapDestination(strings.Join(r.pages, ""))
+			r.line1, r.line2 = b.wrapDestination(strings.Join(r.pages, ""), r.etd)
 			c.pages = b.infoPages(s)
 		}
 		c.rows = append(c.rows, r)
@@ -90,23 +90,36 @@ func destinationPages(s *model.Service, upper bool) []string {
 }
 
 // wrapDestination splits the first train's destination text the way the browser wraps it: the first line is
-// limited to the destination column, and a second line may run under the ETD column to the board's edge. A
-// word that fits no line is clipped where it stands rather than broken.
-func (b *Board) wrapDestination(text string) (line1, line2 string) {
-	g := &b.geo
-	if font.Text.Width(text) <= g.destW {
+// limited to the destination column, and a second line may run under the ETD column to the board's edge. Lines
+// break at spaces and after hyphens, and a word that fits no line is clipped where it stands rather than broken.
+func (b *Board) wrapDestination(text, etd string) (line1, line2 string) {
+	width := b.geo.destWidth(etd)
+	if font.Text.Width(text) <= width {
 		return text, ""
 	}
-	words := strings.Split(text, " ")
 	fit := 0
-	for i := range words {
-		candidate := strings.Join(words[:i+1], " ")
-		if font.Text.Width(candidate) > g.destW && i > 0 {
+	for _, end := range lineBreaks(text) {
+		if font.Text.Width(text[:end]) > width && fit > 0 {
 			break
 		}
-		fit = i + 1
+		fit = end
 	}
-	return strings.Join(words[:fit], " "), strings.Join(words[fit:], " ")
+	return text[:fit], strings.TrimPrefix(text[fit:], " ")
+}
+
+// lineBreaks lists the lengths of text that a line may end at: before each space, after each hyphen, and at the
+// end.
+func lineBreaks(text string) []int {
+	var ends []int
+	for i, r := range text {
+		switch r {
+		case ' ':
+			ends = append(ends, i)
+		case '-':
+			ends = append(ends, i+1)
+		}
+	}
+	return append(ends, len(text))
 }
 
 func (b *Board) infoPages(s *model.Service) []page {

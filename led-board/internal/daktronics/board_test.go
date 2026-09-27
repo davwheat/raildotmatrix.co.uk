@@ -191,7 +191,7 @@ func TestTripleLine(t *testing.T) {
 	b := newTestBoard(t, false)
 	run(t, b, "triple-line", 3*time.Second, nil)
 	first := b.content.rows[0]
-	if first.line1 != "Horsham, Littlehampton &" || first.line2 != "Bognor Regis" {
+	if first.line1 != "Horsham, Littlehampton & Bognor" || first.line2 != "Regis" {
 		t.Fatalf("wrapped as %q / %q", first.line1, first.line2)
 	}
 	if b.last.infoRow != 2 || b.last.third.on {
