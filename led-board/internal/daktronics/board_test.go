@@ -203,9 +203,9 @@ func TestInfoPagesForDividingTrain(t *testing.T) {
 	b := newTestBoard(t, false)
 	c := b.derive(fixtures.Steps("dividing-service")[0])
 	want := []page{
-		{"Southern", " service. Formed of 8 coaches."},
-		{"Front 4 coaches calling at:", " Gatwick Airport, HORSHAM."},
-		{"Rear 4 coaches calling at:", " Gatwick Airport, Horsham, LITTLEHAMPTON."},
+		{prefix: "Southern", text: " service. Formed of 8 coaches."},
+		{prefix: "Front 4 coaches calling at:", text: " Gatwick Airport, HORSHAM."},
+		{prefix: "Rear 4 coaches calling at:", text: " Gatwick Airport, Horsham, LITTLEHAMPTON."},
 	}
 	if len(c.pages) != len(want) {
 		t.Fatalf("pages = %+v", c.pages)
@@ -215,4 +215,24 @@ func TestInfoPagesForDividingTrain(t *testing.T) {
 			t.Errorf("page %d = %+v, want %+v", i, c.pages[i], want[i])
 		}
 	}
+}
+
+func TestTerminatingTrainHoldsArrivalInfo(t *testing.T) {
+	b := newTestBoard(t, false)
+	c := b.derive(fixtures.Steps("terminating")[0])
+	if got := c.rows[0].line1; got != "TERMINATES" {
+		t.Errorf("destination = %q, want TERMINATES", got)
+	}
+	want := page{text: "This is the 19:44 from Brighton.", hold: true}
+	if len(c.pages) != 1 || c.pages[0] != want {
+		t.Fatalf("pages = %+v, want [%+v]", c.pages, want)
+	}
+	run(t, b, "terminating", 20*time.Second, func(now time.Time, _ bool, _ *frame.Frame) {
+		if now.Sub(fixtures.Clock) < 3*time.Second {
+			return
+		}
+		if info := b.last.info; !info.on || info.x != 0 || info.dy != 0 || info.prefix != "" {
+			t.Fatalf("at %v info = %+v, want held at the left edge", now.Sub(fixtures.Clock), info)
+		}
+	})
 }
