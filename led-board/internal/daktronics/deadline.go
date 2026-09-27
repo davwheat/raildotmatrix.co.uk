@@ -25,7 +25,7 @@ func (b *Board) nextStillTick(now, next time.Time, pixels bool) time.Time {
 			consider(b.swapStart.Add(swapInterval * time.Millisecond))
 		}
 	}
-	if len(b.content.pages) > 0 {
+	if len(b.content.pages) > 0 && b.info.phase != scrollHeld {
 		if b.info.phase == scrollDropping || b.info.phase == scrollMoving && !pixels {
 			return time.Time{}
 		}

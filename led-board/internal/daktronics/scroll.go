@@ -30,12 +30,15 @@ const (
 	scrollMoving
 	// scrollGone is the pause after the line has gone, before the next page.
 	scrollGone
+	// scrollHeld is a line that fits the row standing still at its left edge until the page changes.
+	scrollHeld
 )
 
 // scroller is a port of SlideyScrollText: a prefix drops in at the right-hand edge, waits, and then the whole
 // line scrolls off to the left. Without a prefix the line simply scrolls in from the right.
 type scroller struct {
 	prefix, text string
+	hold         bool
 	prefixW      int
 	lineW        int
 	outerW       int
@@ -46,7 +49,7 @@ type scroller struct {
 }
 
 func (s *scroller) reset(p page, outerW int, now time.Time) {
-	s.prefix, s.text = p.prefix, p.text
+	s.prefix, s.text, s.hold = p.prefix, p.text, p.hold
 	s.prefixW = font.Text.Width(p.prefix)
 	s.lineW = font.Text.Width(p.prefix) + font.Text.Width(p.text)
 	if p.prefix != "" && p.text != "" {
@@ -75,7 +78,7 @@ func (s *scroller) duration() int64 {
 
 // advance moves through the phases that have elapsed by now and reports whether the page finished.
 func (s *scroller) advance(now time.Time) bool {
-	for {
+	for s.phase != scrollHeld {
 		d := s.duration()
 		if now.Sub(s.start).Milliseconds() < d {
 			return false
@@ -83,9 +86,12 @@ func (s *scroller) advance(now time.Time) bool {
 		s.start = s.start.Add(time.Duration(d) * time.Millisecond)
 		switch s.phase {
 		case scrollHidden:
-			if s.prefix == "" {
+			switch {
+			case s.hold && s.lineW <= s.outerW:
+				s.phase = scrollHeld
+			case s.prefix == "":
 				s.phase = scrollMoving
-			} else {
+			default:
 				s.phase = scrollDropping
 			}
 		case scrollDropping:
@@ -98,6 +104,7 @@ func (s *scroller) advance(now time.Time) bool {
 			return true
 		}
 	}
+	return false
 }
 
 // scrollScene is where the line is drawn this tick: x is its left edge and dy its vertical offset while the
@@ -124,6 +131,8 @@ func (s *scroller) scene(now time.Time, dropHeight int) scrollScene {
 		sc.prefixOnly = true
 	case scrollMoving:
 		sc.x = s.startX() - int(e*int64(s.speed)/1000)
+	case scrollHeld:
+		sc.x = 0
 	}
 	return sc
 }
