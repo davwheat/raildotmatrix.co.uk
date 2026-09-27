@@ -85,6 +85,11 @@ func Steps(name string) []model.View {
 		s := berwick()
 		s.Estimated = nil
 		return snapshot(s, bedford())
+	case "replacement-bus":
+		s := victoria()
+		s.ID = "bus"
+		s.Bus = true
+		return snapshot(s, bedford())
 	case "triple-line":
 		s := dividing()
 		s.ID = "triple"

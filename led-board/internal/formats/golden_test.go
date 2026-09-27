@@ -95,6 +95,8 @@ func goldenCases() []goldenCase {
 		for _, fixture := range []string{"long-destination", "hyphenated-destination"} {
 			add("daktronics", fixture, "", size, Config{}, settled["daktronics"])
 		}
+		// The bus's calling prefix rests at the right edge between 3 and 4.5 seconds, before the line scrolls.
+		add("daktronics", "replacement-bus", "", size, Config{}, 4*time.Second)
 	}
 	add("infotec", "busy-board", "white", panel, Config{Colour: board.White}, settled["infotec"])
 	for _, size := range []goldenSize{panel, webSizes["infotec"]} {
