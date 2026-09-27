@@ -261,7 +261,7 @@ func window(value *pb.Window) Window {
 func endpoints(values []*pb.Endpoint) []Endpoint {
 	out := make([]Endpoint, len(values))
 	for i, value := range values {
-		out[i] = Endpoint{Location: location(value.GetLocation()), AssocRID: value.AssocRid, AssocCat: value.AssocCat}
+		out[i] = Endpoint{Location: location(value.GetLocation()), AssocRID: value.AssocRid, AssocCat: value.AssocCat, PlannedDeparture: optionalInstant(value.GetPlannedDeparture())}
 		if via := value.GetVia(); via != nil {
 			out[i].Via = &Via{Text: via.GetText(), Locs: stringList(via.GetLocs())}
 		}

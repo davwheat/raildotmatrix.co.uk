@@ -19,9 +19,9 @@ type row struct {
 	// its ", " or " & " suffix, as TrainService.tsx builds them.
 	pages []string
 	// line1 and line2 are the first train's destinations as one wrapped text; line2 is empty unless the text
-	// needs the "triple line" layout.
-	line1, line2 string
-	etd          string
+	// needs the "triple line" layout. line2Lead is drawn in the scheduled-time column beside line2.
+	line1, line2, line2Lead string
+	etd                     string
 }
 
 // page is one screen of the information row: a prefix that drops in at the right edge, then the text that
@@ -46,12 +46,16 @@ func (b *Board) derive(v model.View) content {
 		r := row{
 			id:     s.ID,
 			prefix: b.cfg.RowPrefix.Text(i, s.Platform, b.cfg.OrdinalFormat),
-			std:    s.STD(b.cfg.Zone),
+			std:    b.std(s),
 			etd:    s.ETD(b.cfg.Zone),
 			pages:  destinationPages(s, b.cfg.WorldlinePowered),
 		}
 		if i == 0 {
-			r.line1, r.line2 = b.wrapDestination(strings.Join(r.pages, ""))
+			if b.cfg.WorldlinePowered && len(r.pages) == 2 {
+				r.line1, r.line2Lead, r.line2 = r.pages[0], "and", strings.TrimPrefix(r.pages[1], "and ")
+			} else {
+				r.line1, r.line2 = b.wrapDestination(strings.Join(r.pages, ""), r.etd)
+			}
 			c.pages = b.infoPages(s)
 		}
 		c.rows = append(c.rows, r)
@@ -59,10 +63,22 @@ func (b *Board) derive(v model.View) content {
 	return c
 }
 
+// std is the scheduled-time column, which the real board fills with "BUS" for a replacement bus and leaves the
+// time to the expected-time column.
+func (b *Board) std(s *model.Service) string {
+	if s.Bus && !b.cfg.WorldlinePowered {
+		return "BUS"
+	}
+	return s.STD(b.cfg.Zone)
+}
+
 func destinationPages(s *model.Service, upper bool) []string {
 	pages := make([]string, 0, len(s.Destinations))
 	if s.TerminatesHere && !upper {
 		return []string{"TERMINATES"}
+	}
+	if upper && len(s.Destinations) > 1 {
+		return worldlineSplitPages(s)
 	}
 	for i, d := range s.Destinations {
 		name := stationName(d.CRS, d.Name)
@@ -80,24 +96,45 @@ func destinationPages(s *model.Service, upper bool) []string {
 	return pages
 }
 
+// worldlineSplitPages names the first two destinations of a dividing train, the second after "and". The
+// Worldline board has room for no more, so a third portion's destination is left out.
+func worldlineSplitPages(s *model.Service) []string {
+	first := strings.ToUpper(stationName(s.Destinations[0].CRS, s.Destinations[0].Name))
+	second := strings.ToUpper(stationName(s.Destinations[1].CRS, s.Destinations[1].Name))
+	return []string{first, "and " + second}
+}
+
 // wrapDestination splits the first train's destination text the way the browser wraps it: the first line is
-// limited to the destination column, and a second line may run under the ETD column to the board's edge. A
-// word that fits no line is clipped where it stands rather than broken.
-func (b *Board) wrapDestination(text string) (line1, line2 string) {
-	g := &b.geo
-	if font.Text.Width(text) <= g.destW {
+// limited to the destination column, and a second line may run under the ETD column to the board's edge. Lines
+// break at spaces and after hyphens, and a word that fits no line is clipped where it stands rather than broken.
+func (b *Board) wrapDestination(text, etd string) (line1, line2 string) {
+	width := b.geo.destWidth(etd)
+	if font.Text.Width(text) <= width {
 		return text, ""
 	}
-	words := strings.Split(text, " ")
 	fit := 0
-	for i := range words {
-		candidate := strings.Join(words[:i+1], " ")
-		if font.Text.Width(candidate) > g.destW && i > 0 {
+	for _, end := range lineBreaks(text) {
+		if font.Text.Width(text[:end]) > width && fit > 0 {
 			break
 		}
-		fit = i + 1
+		fit = end
 	}
-	return strings.Join(words[:fit], " "), strings.Join(words[fit:], " ")
+	return text[:fit], strings.TrimPrefix(text[fit:], " ")
+}
+
+// lineBreaks lists the lengths of text that a line may end at: before each space, after each hyphen, and at the
+// end.
+func lineBreaks(text string) []int {
+	var ends []int
+	for i, r := range text {
+		switch r {
+		case ' ':
+			ends = append(ends, i)
+		case '-':
+			ends = append(ends, i+1)
+		}
+	}
+	return append(ends, len(text))
 }
 
 func (b *Board) infoPages(s *model.Service) []page {
@@ -107,11 +144,27 @@ func (b *Board) infoPages(s *model.Service) []page {
 	if s.TerminatesHere {
 		return []page{{text: b.arrivalInfo(s), hold: true}}
 	}
+	if s.Bus {
+		return busInfo(s)
+	}
 	pages := []page{{prefix: infoPrefix(s), text: serviceInfo(s)}}
 	for _, cp := range callingPointPages(s) {
 		pages = append(pages, page{prefix: cp.prefix + ":", text: " " + joinCalls(cp.points, false)})
 	}
 	return pages
+}
+
+// busInfo is the real board's message for a replacement bus, which names neither the operator nor the coaches.
+func busInfo(s *model.Service) []page {
+	var pages []page
+	if reason := reasonText(s); reason != "" {
+		pages = append(pages, page{text: reason})
+	}
+	calls := make([]string, len(s.CallPoints))
+	for i, cp := range s.CallPoints {
+		calls[i] = cp.Name
+	}
+	return append(pages, page{prefix: "A replacement bus will be calling at:", text: " " + joinCalls(calls, false)})
 }
 
 func infoPrefix(s *model.Service) string {
@@ -122,9 +175,12 @@ func infoPrefix(s *model.Service) string {
 }
 
 // arrivalInfo is the real board's message for a terminating train, which names neither the operator nor the
-// coaches.
+// coaches. The time is the train's departure from its origin.
 func (b *Board) arrivalInfo(s *model.Service) string {
-	text := "This is the " + s.Scheduled.In(b.cfg.Zone).Format("15:04") + " from " + board.CombineNames(s.Origins) + "."
+	text := "This is the service from " + board.CombineNames(s.Origins) + "."
+	if len(s.Origins) > 0 && s.Origins[0].Departs != nil {
+		text = "This is the " + s.Origins[0].Departs.In(b.cfg.Zone).Format("15:04") + " from " + board.CombineNames(s.Origins) + "."
+	}
 	if reason := reasonText(s); reason != "" {
 		text += " " + reason
 	}
@@ -157,7 +213,12 @@ func worldlineInfo(s *model.Service) string {
 	if reason := reasonText(s); reason != "" {
 		parts = append(parts, reason)
 	}
-	for _, cp := range callingPointPages(s) {
+	calling := callingPointPages(s)
+	// Like the destinations, a third portion's calling points are left out.
+	if len(calling) > 2 {
+		calling = calling[:2]
+	}
+	for _, cp := range calling {
 		parts = append(parts, cp.prefix+" "+joinCalls(cp.points, true))
 	}
 	return strings.Join(parts, " ")
@@ -225,8 +286,12 @@ func coaches(position string, length int) string {
 }
 
 // joinCalls formats calling points as CallingPoint in CallingPoints.tsx does: comma separated and ending in a
-// full stop, with the last one in capitals; the Worldline variant instead joins the last two with "and".
+// full stop, with the last one in capitals; the Worldline variant instead joins the last two with "and", and
+// says "only" after a single calling point.
 func joinCalls(points []string, worldline bool) string {
+	if worldline && len(points) == 1 {
+		return points[0] + " only."
+	}
 	var sb strings.Builder
 	for i, p := range points {
 		last := i == len(points)-1

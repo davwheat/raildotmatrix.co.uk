@@ -79,6 +79,29 @@ func Steps(name string) []model.View {
 		after := snapshot(bedford())
 		after[0].Alterations = []string{"victoria"}
 		return append(before, after...)
+	case "long-destination":
+		return snapshot(berwick(), bedford())
+	case "hyphenated-destination":
+		s := berwick()
+		s.Estimated = nil
+		return snapshot(s, bedford())
+	case "three-way-split":
+		s := dividing()
+		s.ID = "three-way"
+		bognorLoc := model.Location{Name: "Bognor Regis", CRS: "BOG"}
+		divide := &s.CallPoints[len(s.CallPoints)-1]
+		divide.Divides = append(divide.Divides, model.Portion{Length: 2, CallPoints: []model.CallPoint{call(horshamLoc, 1500, 2), call(bognorLoc, 2700, 2)}})
+		s.Destinations = append(s.Destinations, bognorLoc)
+		return snapshot(s, bedford())
+	case "single-call":
+		s := victoria()
+		s.CallPoints = s.CallPoints[1:]
+		return snapshot(s, bedford())
+	case "replacement-bus":
+		s := victoria()
+		s.ID = "bus"
+		s.Bus = true
+		return snapshot(s, bedford())
 	case "triple-line":
 		s := dividing()
 		s.ID = "triple"
@@ -114,6 +137,7 @@ var (
 	stPancrasLoc     = model.Location{Name: "St Pancras International", CRS: "STP"}
 	horshamLoc       = model.Location{Name: "Horsham", CRS: "HRH"}
 	littlehamptonLoc = model.Location{Name: "Littlehampton", CRS: "LIT"}
+	berwickLoc       = model.Location{Name: "Berwick-upon-Tweed", CRS: "BWK"}
 )
 
 func service(id, toc, platform string, departure int, length int, dest model.Location, calls ...model.CallPoint) model.Service {
@@ -142,6 +166,10 @@ func bedford() model.Service {
 	return service("bedford", "Thameslink", "10A", 420, 12, bedfordLoc, call(londonBridgeLoc, 900, 8), call(stPancrasLoc, 1440, 8), call(bedfordLoc, 3600, 8))
 }
 
+func berwick() model.Service {
+	return service("berwick", "LNER", "4", 180, 9, berwickLoc, call(berwickLoc, 3600, 9))
+}
+
 func gatwick() model.Service {
 	return service("gatwick", "Gatwick Express", "2", 660, 8, gatwickLoc, call(gatwickLoc, 1020, 8))
 }
@@ -159,6 +187,7 @@ func brighton() model.Service {
 func terminating() model.Service {
 	s := service("terminating", "Southern", "3", 240, 8, model.Location{Name: "Terminates here", CRS: "ECR"})
 	s.TerminatesHere = true
+	s.Origins = []model.Location{{Name: brightonLoc.Name, CRS: brightonLoc.CRS, Departs: at(-3600)}}
 	return s
 }
 

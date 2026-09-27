@@ -89,9 +89,16 @@ func goldenCases() []goldenCase {
 		}
 	}
 	for _, size := range []goldenSize{panel, webSizes["daktronics"]} {
-		for _, fixture := range []string{"busy-board", "dividing-service", "terminating"} {
+		for _, fixture := range []string{"busy-board", "dividing-service", "terminating", "three-way-split"} {
 			add("daktronics", fixture, "worldline", size, Config{Worldline: true}, settled["daktronics"])
 		}
+		// The single calling point's "only" reaches the board 10.6 seconds in, after the line scrolls in.
+		add("daktronics", "single-call", "worldline", size, Config{Worldline: true}, 11500*time.Millisecond)
+		for _, fixture := range []string{"long-destination", "hyphenated-destination"} {
+			add("daktronics", fixture, "", size, Config{}, settled["daktronics"])
+		}
+		// The bus's calling prefix rests at the right edge between 3 and 4.5 seconds, before the line scrolls.
+		add("daktronics", "replacement-bus", "", size, Config{}, 4*time.Second)
 	}
 	add("infotec", "busy-board", "white", panel, Config{Colour: board.White}, settled["infotec"])
 	for _, size := range []goldenSize{panel, webSizes["infotec"]} {

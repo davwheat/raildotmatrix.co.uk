@@ -1,6 +1,7 @@
 package daktronics
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -191,7 +192,7 @@ func TestTripleLine(t *testing.T) {
 	b := newTestBoard(t, false)
 	run(t, b, "triple-line", 3*time.Second, nil)
 	first := b.content.rows[0]
-	if first.line1 != "Horsham, Littlehampton &" || first.line2 != "Bognor Regis" {
+	if first.line1 != "Horsham, Littlehampton & Bognor" || first.line2 != "Regis" {
 		t.Fatalf("wrapped as %q / %q", first.line1, first.line2)
 	}
 	if b.last.infoRow != 2 || b.last.third.on {
@@ -223,9 +224,15 @@ func TestTerminatingTrainHoldsArrivalInfo(t *testing.T) {
 	if got := c.rows[0].line1; got != "TERMINATES" {
 		t.Errorf("destination = %q, want TERMINATES", got)
 	}
-	want := page{text: "This is the 19:44 from Brighton.", hold: true}
+	want := page{text: "This is the 18:40 from Brighton.", hold: true}
 	if len(c.pages) != 1 || c.pages[0] != want {
 		t.Fatalf("pages = %+v, want [%+v]", c.pages, want)
+	}
+	v := fixtures.Steps("terminating")[0]
+	v.Services[0].Origins[0].Departs = nil
+	want.text = "This is the service from Brighton."
+	if c := b.derive(v); c.pages[0] != want {
+		t.Fatalf("without a departure time: pages = %+v, want [%+v]", c.pages, want)
 	}
 	run(t, b, "terminating", 20*time.Second, func(now time.Time, _ bool, _ *frame.Frame) {
 		if now.Sub(fixtures.Clock) < 3*time.Second {
@@ -235,4 +242,78 @@ func TestTerminatingTrainHoldsArrivalInfo(t *testing.T) {
 			t.Fatalf("at %v info = %+v, want held at the left edge", now.Sub(fixtures.Clock), info)
 		}
 	})
+}
+
+func TestReplacementBus(t *testing.T) {
+	b := newTestBoard(t, false)
+	v := fixtures.Steps("single-departure")[0]
+	v.Services[0].Bus = true
+	c := b.derive(v)
+	if r := c.rows[0]; r.std != "BUS" || r.etd != "1943" {
+		t.Errorf("std, etd = %q, %q, want BUS, 1943", r.std, r.etd)
+	}
+	want := []page{{prefix: "A replacement bus will be calling at:", text: " Clapham Junction, LONDON VICTORIA."}}
+	if len(c.pages) != len(want) || c.pages[0] != want[0] {
+		t.Fatalf("pages = %+v, want %+v", c.pages, want)
+	}
+
+	v = fixtures.Steps("delayed")[0]
+	v.Services[0].Bus = true
+	c = b.derive(v)
+	want = append([]page{{text: "This is due to a speed restriction over defective track"}}, want...)
+	if len(c.pages) != len(want) || c.pages[0] != want[0] || c.pages[1] != want[1] {
+		t.Fatalf("pages = %+v, want %+v", c.pages, want)
+	}
+}
+
+func TestWarningClearsDown(t *testing.T) {
+	b := newTestBoard(t, false)
+	f := frame.New(testW, testH)
+	v := fixtures.Steps("single-departure")[0]
+	b.Update(v)
+	start := fixtures.Clock
+	for now := start; now.Before(start.Add(5 * time.Second)); now = now.Add(tick) {
+		b.Tick(now, f)
+	}
+	warned := v
+	warned.Notice = model.StandClear
+	b.Update(warned)
+	warnedAt := start.Add(5 * time.Second)
+	sawSpinner := false
+	for now := warnedAt; now.Before(warnedAt.Add(clearDownTotal * time.Millisecond)); now = now.Add(tick) {
+		b.Tick(now, f)
+		if b.mode != modeTrains || b.phase != phaseClearDown {
+			t.Fatalf("at %v mode %v phase %v, want the trains clearing down", now.Sub(warnedAt), b.mode, b.phase)
+		}
+		sawSpinner = sawSpinner || b.last.spinner
+	}
+	b.Tick(warnedAt.Add(clearDownTotal*time.Millisecond), f)
+	if !sawSpinner || b.mode != modeWarning {
+		t.Fatalf("spinner shown %v, then mode %v; want the spinner and then the warning", sawSpinner, b.mode)
+	}
+}
+
+func TestWorldlineSingleCallingPointSaysOnly(t *testing.T) {
+	v := fixtures.Steps("single-departure")[0]
+	v.Services[0].CallPoints = v.Services[0].CallPoints[1:]
+	c := newTestBoard(t, true).derive(v)
+	want := "A Southern service which has 8 coaches. Calling at London Victoria only."
+	if len(c.pages) != 1 || c.pages[0].text != want {
+		t.Fatalf("pages = %+v, want %q", c.pages, want)
+	}
+	c = newTestBoard(t, false).derive(v)
+	if got := c.pages[len(c.pages)-1].text; got != " LONDON VICTORIA." {
+		t.Fatalf("standard board calling text = %q, want without \"only\"", got)
+	}
+}
+
+func TestWorldlineSplitNamesTwoDestinations(t *testing.T) {
+	c := newTestBoard(t, true).derive(fixtures.Steps("three-way-split")[0])
+	first := c.rows[0]
+	if first.line1 != "HORSHAM" || first.line2Lead != "and" || first.line2 != "LITTLEHAMPTON" {
+		t.Errorf("destination = %q / %q %q, want HORSHAM / and LITTLEHAMPTON", first.line1, first.line2Lead, first.line2)
+	}
+	if len(c.pages) != 1 || strings.Contains(c.pages[0].text, "Bognor") || !strings.Contains(c.pages[0].text, "Littlehampton") {
+		t.Errorf("info = %+v, want the first two portions' calling points only", c.pages)
+	}
 }

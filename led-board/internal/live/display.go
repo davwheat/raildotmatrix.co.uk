@@ -295,6 +295,7 @@ func service(movement *Movement, legacyNames bool, now time.Time) model.Service 
 		ID:             movement.ID,
 		Origins:        locations(movement.Origins),
 		TerminatesHere: terminatesHere(movement),
+		Bus:            movement.Mode == ModeBus,
 		Cancelled:      movement.Cancelled,
 		CancelReason:   deref(movement.CancelReason.Text),
 		DelayReason:    deref(movement.DelayReason.Text),
@@ -346,7 +347,7 @@ func locations(endpoints []Endpoint) []model.Location {
 	out := make([]model.Location, len(endpoints))
 	for i := range endpoints {
 		endpoint := &endpoints[i]
-		out[i] = model.Location{Name: locationName(&endpoint.Location), CRS: deref(endpoint.CRS)}
+		out[i] = model.Location{Name: locationName(&endpoint.Location), CRS: deref(endpoint.CRS), Departs: endpoint.PlannedDeparture}
 		if endpoint.Via != nil {
 			out[i].Via = endpoint.Via.Text
 		}

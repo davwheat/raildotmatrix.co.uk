@@ -25,14 +25,15 @@ type scene struct {
 
 	first rowScene
 	// entering is set while the first row slides up through the three train rows.
-	entering bool
-	line2    string
-	spinnerX int
-	spinnerB bool
-	spinner  bool
-	info     scrollScene
-	infoRow  int
-	third    rowScene
+	entering  bool
+	line2     string
+	line2Lead string
+	spinnerX  int
+	spinnerB  bool
+	spinner   bool
+	info      scrollScene
+	infoRow   int
+	third     rowScene
 
 	clock clockScene
 }
@@ -78,7 +79,7 @@ func (b *Board) composeSteady(now time.Time, s *scene) {
 	g := &b.geo
 	first := &b.content.rows[0]
 	s.first = firstRowScene(first)
-	s.line2 = first.line2
+	s.line2, s.line2Lead = first.line2, first.line2Lead
 	s.infoRow = 1
 	if first.line2 != "" {
 		s.infoRow = 2
@@ -164,6 +165,7 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene) {
 		board.DrawGlyph(f, spinnerGlyph(s.spinnerB), s.spinnerX, g.textY(0), b.cfg.Colour, g.band(0))
 	}
 	if s.line2 != "" {
+		board.DrawText(f, font.Text, g.stdRight-font.Text.Width(s.line2Lead), g.textY(1), s.line2Lead, b.cfg.Colour, g.band(1))
 		board.DrawText(f, font.Text, g.destX, g.textY(1), s.line2, b.cfg.Colour, g.band(1))
 	}
 	if s.info.on {
@@ -180,7 +182,7 @@ func (b *Board) drawRow(f *frame.Frame, r *rowScene, rowIndex int, c board.Clip)
 	y := g.textY(rowIndex) + r.dy
 	board.DrawText(f, font.Text, 0, y, r.prefix, b.cfg.Colour, c.Intersect(board.Clip{X1: g.prefixW, Y1: g.h}))
 	board.DrawCells(f, font.Text, g.stdX, y, r.std, g.ch, b.cfg.Colour, c)
-	board.DrawText(f, font.Text, g.destX, y, r.dest, b.cfg.Colour, c.Intersect(board.Clip{X0: g.destX, X1: g.destX + g.destW, Y1: g.h}))
+	board.DrawText(f, font.Text, g.destX, y, r.dest, b.cfg.Colour, c.Intersect(board.Clip{X0: g.destX, X1: g.destX + g.destWidth(r.etd), Y1: g.h}))
 	if isTime(r.etd) {
 		board.DrawCells(f, font.Text, g.w-4*g.ch, y, r.etd, g.ch, b.cfg.Colour, c)
 	} else {

@@ -83,12 +83,14 @@ type geometry struct {
 	// prefixW reserves one column for either ordinals or platform numbers.
 	prefixW int
 	stdX    int
-	destX   int
-	destW   int
-	etdW    int
-	ch      int
-	clockX  int
-	cell    int
+	// stdRight is the right edge of the scheduled time's last digit, which the time's cells centre.
+	stdRight int
+	destX    int
+	destW    int
+	etdW     int
+	ch       int
+	clockX   int
+	cell     int
 }
 
 func newGeometry(w, h int, prefix board.RowPrefix) geometry {
@@ -110,6 +112,8 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 	}
 	column(g.prefixW)
 	g.stdX = column(stdW)
+	digitW := board.GlyphOf(font.Text, '0').Width
+	g.stdRight = g.stdX + 3*ch + (ch-digitW)/2 + digitW
 	g.destX = x
 	g.etdW = (41*ch + 2) / 5
 	g.destW = w - g.destX - gap - g.etdW
@@ -120,6 +124,15 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 	g.bandH = g.rowH - 2
 	g.clockX = (w - 8*g.cell) / 2
 	return g
+}
+
+// destWidth is the room for a row's destination. The ETD column is wide enough for "Cancelled", so a time leaves
+// the rest of it to the destination.
+func (g *geometry) destWidth(etd string) int {
+	if isTime(etd) {
+		return g.destW + g.etdW - 4*g.ch
+	}
+	return g.destW
 }
 
 func (g *geometry) rowTop(i int) int { return i * g.rowH }
@@ -276,9 +289,10 @@ func (b *Board) target() mode {
 }
 
 func (b *Board) show(m mode, now time.Time, previous content) {
-	// The last train leaving clears down like any other change of first train; the no-services message
-	// waits until the wipe has finished. Losing the connection blanks the board at once, as the web does.
-	if m == modeNoServices && b.mode == modeTrains && b.view.Connected && len(previous.rows) > 0 {
+	// The last train leaving or a platform warning clears down like any other change of first train, and the
+	// next screen waits until the wipe has finished. Losing the connection blanks the board at once, as the web
+	// does.
+	if m != modeTrains && b.mode == modeTrains && b.view.Connected && len(previous.rows) > 0 {
 		b.clearDown(previous.rows[0], now)
 		return
 	}
@@ -364,8 +378,8 @@ func (b *Board) advance(now time.Time) {
 	case phaseClearDown:
 		if now.Sub(b.phaseStart).Milliseconds() >= clearDownTotal {
 			end := b.phaseStart.Add(clearDownTotal * time.Millisecond)
-			if len(b.content.rows) == 0 {
-				b.mode, b.modeStart = modeNoServices, end
+			if m := b.target(); m != modeTrains {
+				b.mode, b.modeStart = m, end
 				return
 			}
 			b.enter(end)
