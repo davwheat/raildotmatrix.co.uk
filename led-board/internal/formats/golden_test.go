@@ -92,6 +92,8 @@ func goldenCases() []goldenCase {
 		for _, fixture := range []string{"busy-board", "dividing-service", "terminating"} {
 			add("daktronics", fixture, "worldline", size, Config{Worldline: true}, settled["daktronics"])
 		}
+		// The single calling point's "only" reaches the board 10.6 seconds in, after the line scrolls in.
+		add("daktronics", "single-call", "worldline", size, Config{Worldline: true}, 11500*time.Millisecond)
 		for _, fixture := range []string{"long-destination", "hyphenated-destination"} {
 			add("daktronics", fixture, "", size, Config{}, settled["daktronics"])
 		}

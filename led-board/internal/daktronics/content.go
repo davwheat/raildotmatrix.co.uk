@@ -266,8 +266,12 @@ func coaches(position string, length int) string {
 }
 
 // joinCalls formats calling points as CallingPoint in CallingPoints.tsx does: comma separated and ending in a
-// full stop, with the last one in capitals; the Worldline variant instead joins the last two with "and".
+// full stop, with the last one in capitals; the Worldline variant instead joins the last two with "and", and
+// says "only" after a single calling point.
 func joinCalls(points []string, worldline bool) string {
+	if worldline && len(points) == 1 {
+		return points[0] + " only."
+	}
 	var sb strings.Builder
 	for i, p := range points {
 		last := i == len(points)-1

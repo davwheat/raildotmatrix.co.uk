@@ -291,3 +291,17 @@ func TestWarningClearsDown(t *testing.T) {
 		t.Fatalf("spinner shown %v, then mode %v; want the spinner and then the warning", sawSpinner, b.mode)
 	}
 }
+
+func TestWorldlineSingleCallingPointSaysOnly(t *testing.T) {
+	v := fixtures.Steps("single-departure")[0]
+	v.Services[0].CallPoints = v.Services[0].CallPoints[1:]
+	c := newTestBoard(t, true).derive(v)
+	want := "A Southern service which has 8 coaches. Calling at London Victoria only."
+	if len(c.pages) != 1 || c.pages[0].text != want {
+		t.Fatalf("pages = %+v, want %q", c.pages, want)
+	}
+	c = newTestBoard(t, false).derive(v)
+	if got := c.pages[len(c.pages)-1].text; got != " LONDON VICTORIA." {
+		t.Fatalf("standard board calling text = %q, want without \"only\"", got)
+	}
+}
