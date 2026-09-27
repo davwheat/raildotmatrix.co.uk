@@ -51,6 +51,9 @@ type Endpoint struct {
 	Via      *Via    `json:"via"`
 	AssocRID *string `json:"assoc_rid"`
 	AssocCat *string `json:"assoc_cat"`
+	// PlannedDeparture is the scheduled departure from an origin. It's nil on a destination, and on an origin
+	// whose service's schedule the service doesn't know.
+	PlannedDeparture *time.Time `json:"planned_departure,omitempty"`
 }
 
 // Call is one location in a calling pattern.

@@ -81,7 +81,8 @@
           "name": "Origin from feed",
           "via": null,
           "assoc_rid": null,
-          "assoc_cat": null
+          "assoc_cat": null,
+          "planned_departure": "2026-09-13T09:30:00Z"
         }
       ],
       "destinations": [

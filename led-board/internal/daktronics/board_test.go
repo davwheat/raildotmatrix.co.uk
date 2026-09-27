@@ -223,9 +223,15 @@ func TestTerminatingTrainHoldsArrivalInfo(t *testing.T) {
 	if got := c.rows[0].line1; got != "TERMINATES" {
 		t.Errorf("destination = %q, want TERMINATES", got)
 	}
-	want := page{text: "This is the 19:44 from Brighton.", hold: true}
+	want := page{text: "This is the 18:40 from Brighton.", hold: true}
 	if len(c.pages) != 1 || c.pages[0] != want {
 		t.Fatalf("pages = %+v, want [%+v]", c.pages, want)
+	}
+	v := fixtures.Steps("terminating")[0]
+	v.Services[0].Origins[0].Departs = nil
+	want.text = "This is the service from Brighton."
+	if c := b.derive(v); c.pages[0] != want {
+		t.Fatalf("without a departure time: pages = %+v, want [%+v]", c.pages, want)
 	}
 	run(t, b, "terminating", 20*time.Second, func(now time.Time, _ bool, _ *frame.Frame) {
 		if now.Sub(fixtures.Clock) < 3*time.Second {

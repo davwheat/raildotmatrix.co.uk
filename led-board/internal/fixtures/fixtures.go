@@ -175,6 +175,7 @@ func brighton() model.Service {
 func terminating() model.Service {
 	s := service("terminating", "Southern", "3", 240, 8, model.Location{Name: "Terminates here", CRS: "ECR"})
 	s.TerminatesHere = true
+	s.Origins = []model.Location{{Name: brightonLoc.Name, CRS: brightonLoc.CRS, Departs: at(-3600)}}
 	return s
 }
 

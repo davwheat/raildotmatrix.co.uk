@@ -235,6 +235,9 @@ message Endpoint {
   Via via = 2;
   optional string assoc_rid = 3;
   optional string assoc_cat = 4;
+  // The scheduled departure from this origin. Unset on a destination, and on
+  // an origin whose service's schedule isn't known.
+  google.protobuf.Timestamp planned_departure = 5;
 }
 
 message Coach {

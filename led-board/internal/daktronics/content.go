@@ -160,9 +160,12 @@ func infoPrefix(s *model.Service) string {
 }
 
 // arrivalInfo is the real board's message for a terminating train, which names neither the operator nor the
-// coaches.
+// coaches. The time is the train's departure from its origin.
 func (b *Board) arrivalInfo(s *model.Service) string {
-	text := "This is the " + s.Scheduled.In(b.cfg.Zone).Format("15:04") + " from " + board.CombineNames(s.Origins) + "."
+	text := "This is the service from " + board.CombineNames(s.Origins) + "."
+	if len(s.Origins) > 0 && s.Origins[0].Departs != nil {
+		text = "This is the " + s.Origins[0].Departs.In(b.cfg.Zone).Format("15:04") + " from " + board.CombineNames(s.Origins) + "."
+	}
 	if reason := reasonText(s); reason != "" {
 		text += " " + reason
 	}

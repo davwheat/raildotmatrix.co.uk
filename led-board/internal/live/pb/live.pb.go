@@ -1448,6 +1448,9 @@ type Endpoint struct {
 	Via           *Via      `protobuf:"bytes,2,opt,name=via,proto3" json:"via,omitempty"`
 	AssocRid      *string   `protobuf:"bytes,3,opt,name=assoc_rid,json=assocRid,proto3,oneof" json:"assocRid,omitempty"`
 	AssocCat      *string   `protobuf:"bytes,4,opt,name=assoc_cat,json=assocCat,proto3,oneof" json:"assocCat,omitempty"`
+	// The scheduled departure from this origin. Unset on a destination, and on
+	// an origin whose service's schedule isn't known.
+	PlannedDeparture *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=planned_departure,json=plannedDeparture,proto3" json:"plannedDeparture,omitempty"`
 }
 
 func (x *Endpoint) Reset() {
@@ -1482,6 +1485,13 @@ func (x *Endpoint) GetAssocCat() string {
 		return *x.AssocCat
 	}
 	return ""
+}
+
+func (x *Endpoint) GetPlannedDeparture() *timestamppb.Timestamp {
+	if x != nil {
+		return x.PlannedDeparture
+	}
+	return nil
 }
 
 type Coach struct {
@@ -3841,6 +3851,16 @@ func (m *Endpoint) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.unknownFields != nil {
 		i = protobuf_go_lite.EncodeRawBytes(dAtA, i, m.unknownFields)
 	}
+	if m.PlannedDeparture != nil {
+		size, err := m.PlannedDeparture.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protobuf_go_lite.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x2a
+	}
 	if m.AssocCat != nil {
 		i = protobuf_go_lite.EncodeString(dAtA, i, *m.AssocCat)
 		i--
@@ -5322,6 +5342,10 @@ func (m *Endpoint) SizeVT() (n int) {
 	}
 	n += protobuf_go_lite.SizeStringPtr(1, m.AssocRid)
 	n += protobuf_go_lite.SizeStringPtr(1, m.AssocCat)
+	if m.PlannedDeparture != nil {
+		l = m.PlannedDeparture.SizeVT()
+		n += protobuf_go_lite.SizeMessage(1, l)
+	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -7716,6 +7740,21 @@ func (m *Endpoint) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			m.AssocCat = &v
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PlannedDeparture", wireType)
+			}
+			msgStart, postIndex, err := protobuf_go_lite.DecodeLengthDelimited(dAtA, iNdEx)
+			if err != nil {
+				return err
+			}
+			if m.PlannedDeparture == nil {
+				m.PlannedDeparture = &timestamppb.Timestamp{}
+			}
+			if err := m.PlannedDeparture.UnmarshalVT(dAtA[msgStart:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := protobuf_go_lite.Skip(dAtA[iNdEx:])
