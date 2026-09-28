@@ -296,6 +296,10 @@ message Portion {
   bool available = 11;
   optional int32 coach_count = 12;
   optional string position = 13;
+  // The associated service's calling points, carried only for a dividing
+  // portion (category VV) and for a rail replacement bus continuation
+  // (category NP or LK with mode BUS). Every other portion has none: a joining
+  // portion or next working is shown by its other fields.
   repeated Call calls = 14;
 }
 
