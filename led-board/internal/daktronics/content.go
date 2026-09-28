@@ -22,6 +22,8 @@ type row struct {
 	// needs the "triple line" layout. line2Lead is drawn in the scheduled-time column beside line2.
 	line1, line2, line2Lead string
 	etd                     string
+	// centred replaces the columns with one centred text: the warning's first line as the pinwheel wipes it.
+	centred string
 }
 
 // page is one screen of the information row: a prefix that drops in at the right edge, then the text that

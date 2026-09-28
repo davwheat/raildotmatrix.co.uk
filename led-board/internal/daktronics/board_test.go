@@ -266,7 +266,7 @@ func TestReplacementBus(t *testing.T) {
 	}
 }
 
-func TestWarningClearsDown(t *testing.T) {
+func TestWarningReplacesTrainsAndClearsDownToThem(t *testing.T) {
 	b := newTestBoard(t, false)
 	f := frame.New(testW, testH)
 	v := fixtures.Steps("single-departure")[0]
@@ -279,17 +279,27 @@ func TestWarningClearsDown(t *testing.T) {
 	warned.Notice = model.StandClear
 	b.Update(warned)
 	warnedAt := start.Add(5 * time.Second)
+	b.Tick(warnedAt, f)
+	if b.mode != modeWarning {
+		t.Fatalf("mode %v as the warning arrives, want the warning at once", b.mode)
+	}
+
+	b.Update(v)
+	clearedAt := warnedAt.Add(5 * time.Second)
 	sawSpinner := false
-	for now := warnedAt; now.Before(warnedAt.Add(clearDownTotal * time.Millisecond)); now = now.Add(tick) {
+	for now := clearedAt; now.Before(clearedAt.Add(clearDownTotal * time.Millisecond)); now = now.Add(tick) {
 		b.Tick(now, f)
 		if b.mode != modeTrains || b.phase != phaseClearDown {
-			t.Fatalf("at %v mode %v phase %v, want the trains clearing down", now.Sub(warnedAt), b.mode, b.phase)
+			t.Fatalf("at %v mode %v phase %v, want the warning clearing down", now.Sub(clearedAt), b.mode, b.phase)
+		}
+		if b.last.first.on && b.last.first.centred != "PLEASE STAND CLEAR" {
+			t.Fatalf("wiping %q, want the warning's first line", b.last.first.centred)
 		}
 		sawSpinner = sawSpinner || b.last.spinner
 	}
-	b.Tick(warnedAt.Add(clearDownTotal*time.Millisecond), f)
-	if !sawSpinner || b.mode != modeWarning {
-		t.Fatalf("spinner shown %v, then mode %v; want the spinner and then the warning", sawSpinner, b.mode)
+	b.Tick(clearedAt.Add(clearDownTotal*time.Millisecond), f)
+	if !sawSpinner || b.mode != modeTrains || b.phase != phaseSlideIn {
+		t.Fatalf("spinner shown %v, then mode %v phase %v; want the spinner and then the trains sliding in", sawSpinner, b.mode, b.phase)
 	}
 }
 
