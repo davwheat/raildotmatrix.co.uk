@@ -95,6 +95,12 @@ be readable by everyone.
 
 `worldline` applies to the Daktronics board only.
 
+On the Daktronics board, a later train is shown on the lower row only if its whole destination fits on one line, as
+on the real board. A long destination or a dividing train's combined destinations that don't fit leave that train
+out, along with every train after it. Set `page_destinations = true` to page through a dividing train's
+destinations every 3 seconds instead, clipping any that are still too long. The website offers the same **Page
+dividing trains' destinations** setting.
+
 `row_prefix` selects the single prefix before each train's scheduled time: `ordinals` (the default) shows
 `1st`, `2nd` or `3rd`, and `platforms` shows the platform number, such as `Pl 1`. The platform column is wide
 enough for a three-character platform such as `10A`. A platform that isn't published, or that Darwin
@@ -136,7 +142,7 @@ reserves four dots between its expected-time text and the clock.
 `ordinal_format` selects `suffix` (`1st`, `2nd`, `3rd`) or `dot` (`1.`, `2.`, `3.`), defaulting to `suffix`.
 `service_count` selects how many services either format shows, from 1 to 6 (default 3). The first stays on the main
 row while the lower service row rotates through services 2 to the selected limit. Daktronics rotates every 12
-seconds; dividing trains continue paging through their destinations within that row. Its lower service row is
+seconds. Its lower service row is
 hidden when the first service's destination needs a second line. These settings are also available
 in the website settings and Pi management UI.
 

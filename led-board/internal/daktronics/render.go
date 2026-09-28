@@ -87,7 +87,7 @@ func (b *Board) composeSteady(now time.Time, s *scene) {
 	if len(b.content.pages) > 0 {
 		s.info = b.info.scene(now, font.Text.Height)
 	}
-	if first.line2 != "" || thirdRowCount(b.content) == 0 {
+	if first.line2 != "" || b.content.lower == 0 {
 		return
 	}
 	r := &b.content.rows[1+b.swapIndex]

@@ -297,7 +297,7 @@ func TestWorldlineSingleCallingPointSaysOnly(t *testing.T) {
 	v := fixtures.Steps("single-departure")[0]
 	v.Services[0].CallPoints = v.Services[0].CallPoints[1:]
 	c := newTestBoard(t, true).derive(v)
-	want := "A Southern service which has 8 coaches. Calling at London Victoria only."
+	want := "Calling at London Victoria only. A Southern service which has 8 coaches."
 	if len(c.pages) != 1 || c.pages[0].text != want {
 		t.Fatalf("pages = %+v, want %q", c.pages, want)
 	}

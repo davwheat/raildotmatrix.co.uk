@@ -33,6 +33,9 @@ type Config struct {
 	// WarningPlatform names the platform in a warning, in place of "this station", when the warning is for one
 	// platform.
 	WarningPlatform bool
+	// PageDestinations lets the lower row page through a dividing train's destinations and clip a destination
+	// too long for the row. The real board instead leaves out a train whose destination doesn't fit on one line.
+	PageDestinations bool
 }
 
 // Durations of the animations in TrainServices.tsx, PlatformAlterationMessage.tsx and SwapBetween.tsx, in
@@ -316,7 +319,7 @@ func (b *Board) show(m mode, now time.Time, previous content) {
 		b.infoPage = 0
 		b.info.reset(b.content.pages[0], b.geo.w, now)
 	}
-	if thirdRowCount(previous) != thirdRowCount(b.content) {
+	if previous.lower != b.content.lower {
 		b.swapIndex, b.swapStart, b.rowSlideStart = 0, now, now
 	}
 }
@@ -331,12 +334,6 @@ func samePages(a, b []page) bool {
 		}
 	}
 	return true
-}
-
-// thirdRowCount is how many later services the third row cycles through. Dividing trains page through their
-// destinations while shown, without preventing later services from appearing.
-func thirdRowCount(c content) int {
-	return max(0, len(c.rows)-1)
 }
 
 // clearDown wipes the outgoing first row unless a wipe is already running, in which case whatever follows it
@@ -397,7 +394,7 @@ func (b *Board) advance(now time.Time) {
 		b.info.reset(b.content.pages[b.infoPage], b.geo.w, b.info.start)
 		b.info.advance(now)
 	}
-	if count := thirdRowCount(b.content); count > 1 && now.Sub(b.swapStart).Milliseconds() >= swapInterval {
+	if count := b.content.lower; count > 1 && now.Sub(b.swapStart).Milliseconds() >= swapInterval {
 		steps := now.Sub(b.swapStart).Milliseconds() / swapInterval
 		b.swapIndex = (b.swapIndex + int(steps%int64(count))) % count
 		b.swapStart = b.swapStart.Add(time.Duration(steps*swapInterval) * time.Millisecond)

@@ -161,9 +161,17 @@ export default function BoardOptions() {
             </>
           )}
           {daktronics && (
-            <Check name="worldlinePowered" hint="Capitalised station names and a single scrolling information line.">
-              Worldline display style
-            </Check>
+            <>
+              <Check name="worldlinePowered" hint="Capitalised station names and a single scrolling information line.">
+                Worldline display style
+              </Check>
+              <Check
+                name="pageDestinations"
+                hint="Page through each destination of a dividing train on the lower row. The real board leaves out a train whose destination doesn't fit."
+              >
+                Page dividing trains' destinations
+              </Check>
+            </>
           )}
           <Check name="warningPlatform">Name the platform in warnings</Check>
         </fieldset>

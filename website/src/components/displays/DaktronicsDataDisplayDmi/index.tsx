@@ -112,6 +112,7 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
             hideTerminating={customBoardSettings.hideTerminating}
             legacyTocNames={customBoardSettings.useLegacyTocNames}
             worldline={customBoardSettings.worldlinePowered}
+            pageDestinations={customBoardSettings.pageDestinations}
             rowPrefix={customBoardSettings.rowPrefix}
             ordinalFormat={customBoardSettings.ordinalFormat}
             serviceCount={customBoardSettings.serviceCount}

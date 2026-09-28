@@ -16,6 +16,8 @@ export interface LedBoardOptions {
   hideTerminating?: boolean
   legacyTocNames?: boolean
   worldline?: boolean
+  /** Daktronics only: page through a dividing train's destinations on the lower row, in place of leaving out a train whose destination doesn't fit. */
+  pageDestinations?: boolean
   /** The single prefix before each train's time: an ordinal or its platform number. */
   rowPrefix?: RowPrefix
   ordinalFormat?: OrdinalFormat

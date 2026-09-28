@@ -33,14 +33,19 @@ type page struct {
 
 // content is everything derived from a view that the renderer reads.
 type content struct {
-	rows    []row
-	pages   []page
+	rows  []row
+	pages []page
+	// lower is how many trains after the first the lower row cycles through.
+	lower   int
 	warning [3]string
 }
 
 func (b *Board) derive(v model.View) content {
 	var c content
 	c.warning = warningLines(v.Notice, b.warningPlatform(v))
+	// The real board shows later trains in order only while each destination fits on its one line, so a train
+	// that doesn't fit also hides every train after it.
+	lowerFits := true
 	for i := range min(len(v.Services), b.cfg.ServiceCount) {
 		s := &v.Services[i]
 		r := row{
@@ -57,10 +62,23 @@ func (b *Board) derive(v model.View) content {
 				r.line1, r.line2 = b.wrapDestination(strings.Join(r.pages, ""), r.etd)
 			}
 			c.pages = b.infoPages(s)
+		} else if !b.cfg.PageDestinations {
+			r.pages = []string{joinDestinations(r.pages, b.cfg.WorldlinePowered)}
+			lowerFits = lowerFits && font.Text.Width(r.pages[0]) <= b.geo.destWidth(r.etd)
+		}
+		if i > 0 && lowerFits {
+			c.lower++
 		}
 		c.rows = append(c.rows, r)
 	}
 	return c
+}
+
+func joinDestinations(pages []string, worldline bool) string {
+	if worldline {
+		return strings.Join(pages, " ")
+	}
+	return strings.Join(pages, "")
 }
 
 // std is the scheduled-time column, which the real board fills with "BUS" for a replacement bus and leaves the
@@ -202,6 +220,14 @@ func serviceInfo(s *model.Service) string {
 
 func worldlineInfo(s *model.Service) string {
 	var parts []string
+	calling := callingPointPages(s)
+	// Like the destinations, a third portion's calling points are left out.
+	if len(calling) > 2 {
+		calling = calling[:2]
+	}
+	for _, cp := range calling {
+		parts = append(parts, cp.prefix+" "+joinCalls(cp.points, true))
+	}
 	switch {
 	case s.TerminatesHere:
 		parts = append(parts, "A "+s.TOC+" service.", "This is the service from "+board.CombineNames(s.Origins)+".")
@@ -212,14 +238,6 @@ func worldlineInfo(s *model.Service) string {
 	}
 	if reason := reasonText(s); reason != "" {
 		parts = append(parts, reason)
-	}
-	calling := callingPointPages(s)
-	// Like the destinations, a third portion's calling points are left out.
-	if len(calling) > 2 {
-		calling = calling[:2]
-	}
-	for _, cp := range calling {
-		parts = append(parts, cp.prefix+" "+joinCalls(cp.points, true))
 	}
 	return strings.Join(parts, " ")
 }

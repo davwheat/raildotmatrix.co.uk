@@ -94,6 +94,7 @@ const labels = {
   compact_lower_row: "Show lower service row beside clock",
   platform_box: "Infotec platform box",
   worldline: "Worldline display style",
+  page_destinations: "Page dividing trains' destinations",
   legacy_toc_names: "Use historic operator names",
   scroll_speed: "Scroll speed (dots / second)",
   small_scrolling_text: "Use smaller scrolling text",
@@ -150,7 +151,7 @@ const groups = [
   [
     "Display options",
     "",
-    "show_unconfirmed_platforms hide_terminating warning_platform platform_box compact_lower_row align_platform_rows small_scrolling_text worldline legacy_toc_names",
+    "show_unconfirmed_platforms hide_terminating warning_platform platform_box compact_lower_row align_platform_rows small_scrolling_text worldline page_destinations legacy_toc_names",
   ],
   [
     "LED panels",
