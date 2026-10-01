@@ -36,6 +36,7 @@ type config struct {
 	Board                    string
 	Colour                   string
 	Worldline                bool
+	PageDestinations         bool   `mapstructure:"page_destinations"`
 	RowPrefix                string `mapstructure:"row_prefix"`
 	WarningPlatform          bool   `mapstructure:"warning_platform"`
 	AlignPlatformRows        bool   `mapstructure:"align_platform_rows"`
@@ -91,6 +92,7 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.Bool("compact-lower-row", true, "show smaller lower service text beside the clock (Infotec only)")
 	fs.Bool("platform-box", false, "show a platform box beside the first train (Infotec only)")
 	fs.Bool("worldline", false, "Worldline-driven Daktronics board: single scrolling info line, capitalised locations")
+	fs.Bool("page-destinations", false, "page through a dividing train's destinations on the lower row, in place of hiding a train whose destination doesn't fit (Daktronics only)")
 	fs.Int("scroll-speed", 0, "scroll speed in dots per second; 0 uses the board's default (48 daktronics, 60 infotec). The panel refresh and PWM depth follow it")
 	fs.Bool("small-scrolling-text", false, "use the smaller font for calling points and service information (Infotec only)")
 	fs.Int("fps", 50, "animation tick rate")

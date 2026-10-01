@@ -33,6 +33,9 @@ type Config struct {
 	Colour          frame.RGB
 	// Worldline selects the Daktronics variant with one scrolling information line. Other formats ignore it.
 	Worldline bool
+	// PageDestinations lets the Daktronics lower row page through a dividing train's destinations. Other formats
+	// ignore it.
+	PageDestinations bool
 	// ScrollSpeed is in dots per second.
 	ScrollSpeed int
 	// SmallScrollingText uses the compact Infotec information font.
@@ -70,6 +73,7 @@ func New(name string, c Config) (board.Board, error) {
 		return daktronics.New(daktronics.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, WorldlinePowered: c.Worldline,
 			ScrollSpeed: c.ScrollSpeed, RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform, ServiceCount: c.ServiceCount,
+			PageDestinations: c.PageDestinations,
 		}), nil
 	case "infotec":
 		platformBox := ""

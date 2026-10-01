@@ -11,9 +11,9 @@ import (
 // rowScene is one train row as drawn this tick. dy shifts it vertically while it slides; clipX hides
 // everything left of it during the clear-down wipe.
 type rowScene struct {
-	on                     bool
-	prefix, std, dest, etd string
-	dy, clipX              int
+	on                              bool
+	prefix, std, dest, etd, centred string
+	dy, clipX                       int
 }
 
 // scene is a complete description of one frame. Two ticks that compose equal scenes draw the same picture,
@@ -87,7 +87,7 @@ func (b *Board) composeSteady(now time.Time, s *scene) {
 	if len(b.content.pages) > 0 {
 		s.info = b.info.scene(now, font.Text.Height)
 	}
-	if first.line2 != "" || thirdRowCount(b.content) == 0 {
+	if first.line2 != "" || b.content.lower == 0 {
 		return
 	}
 	r := &b.content.rows[1+b.swapIndex]
@@ -101,7 +101,7 @@ func (b *Board) composeSteady(now time.Time, s *scene) {
 }
 
 func firstRowScene(r *row) rowScene {
-	return rowScene{on: true, prefix: r.prefix, std: r.std, dest: r.line1, etd: r.etd}
+	return rowScene{on: true, prefix: r.prefix, std: r.std, dest: r.line1, etd: r.etd, centred: r.centred}
 }
 
 func (b *Board) render(f *frame.Frame, s *scene) {
@@ -180,6 +180,10 @@ func (b *Board) drawRow(f *frame.Frame, r *rowScene, rowIndex int, c board.Clip)
 	g := &b.geo
 	c.X0 = max(c.X0, r.clipX)
 	y := g.textY(rowIndex) + r.dy
+	if r.centred != "" {
+		board.DrawText(f, font.Text, (g.w-font.Text.Width(r.centred))/2, y, r.centred, b.cfg.Colour, c)
+		return
+	}
 	board.DrawText(f, font.Text, 0, y, r.prefix, b.cfg.Colour, c.Intersect(board.Clip{X1: g.prefixW, Y1: g.h}))
 	board.DrawCells(f, font.Text, g.stdX, y, r.std, g.ch, b.cfg.Colour, c)
 	board.DrawText(f, font.Text, g.destX, y, r.dest, b.cfg.Colour, c.Intersect(board.Clip{X0: g.destX, X1: g.destX + g.destWidth(r.etd), Y1: g.h}))

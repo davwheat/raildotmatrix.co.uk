@@ -95,7 +95,9 @@ type Portion struct {
 	Available  bool     `json:"available"`
 	CoachCount *int32   `json:"coach_count"`
 	Position   *string  `json:"position"`
-	Calls      []Call   `json:"calls"`
+	// Calls are the associated service's calling points, sent only for a dividing portion ("VV") and for a
+	// rail replacement bus continuation ("NP" or "LK" with mode bus). Empty for every other portion.
+	Calls []Call `json:"calls"`
 }
 
 // Coach is one vehicle of a known formation.

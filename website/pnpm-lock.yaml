@@ -42,8 +42,8 @@ importers:
         specifier: ^5.0.2
         version: 5.0.2
       uk-railway-stations:
-        specifier: ^1.11.1
-        version: 1.11.1
+        specifier: ^1.12.0
+        version: 1.12.0
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^5.20260922.1
@@ -2014,8 +2014,8 @@ packages:
     engines: {node: '>=16.20.0'}
     hasBin: true
 
-  uk-railway-stations@1.11.1:
-    resolution: {integrity: sha512-aZE77jvchc40e94y3Q7M4+SUPw29n348Kw1WYqssNfU7Aj0YC9LruK45k4BF6qaUBQh9mTkpULsuG/gR4VEYsA==}
+  uk-railway-stations@1.12.0:
+    resolution: {integrity: sha512-1RKdC2tpSQnvqy0cBul2IYN7iXpBG2JrI28EEH+TwCSQ5oEPDIDpP3FLCg0O9zFxKf9XanTPHzYzb3+wPMmRoA==}
 
   undici-types@8.9.0:
     resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
@@ -4037,7 +4037,7 @@ snapshots:
       '@typescript/typescript-win32-arm64': 7.0.2
       '@typescript/typescript-win32-x64': 7.0.2
 
-  uk-railway-stations@1.11.1: {}
+  uk-railway-stations@1.12.0: {}
 
   undici-types@8.9.0: {}
 

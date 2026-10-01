@@ -114,7 +114,7 @@ func main() {
 	opts := &cfg.LED.Options
 	b, err := formats.New(cfg.Board, formats.Config{
 		Width: opts.Cols * opts.Chain, Height: opts.Rows * opts.Parallel,
-		Zone: zone, Colour: colour, Worldline: cfg.Worldline, ScrollSpeed: cfg.ScrollSpeed, RowPrefix: rowPrefix,
+		Zone: zone, Colour: colour, Worldline: cfg.Worldline, PageDestinations: cfg.PageDestinations, ScrollSpeed: cfg.ScrollSpeed, RowPrefix: rowPrefix,
 		OrdinalFormat: ordinalFormat, LoadingBrightness: cfg.LoadingBrightness, ClockStyle: cfg.ClockStyle, ServiceCount: cfg.ServiceCount, WarningPlatform: cfg.WarningPlatform,
 		FormationCount:     cfg.FormationCount,
 		CoachLetterTOCs:    cfg.CoachLetterTOCs,

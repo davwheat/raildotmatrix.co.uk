@@ -86,7 +86,7 @@ func TestServiceRotationUpToSix(t *testing.T) {
 }
 
 func TestDividingLowerServicesPageAndRotate(t *testing.T) {
-	b := New(Config{Width: testW, Height: testH, ServiceCount: 6})
+	b := New(Config{Width: testW, Height: testH, ServiceCount: 6, PageDestinations: true})
 	v := serviceCountView()
 	v.Services[1].Destinations = []model.Location{{Name: "First"}, {Name: "Second"}}
 	v.Services[2].Destinations = []model.Location{{Name: "Third"}, {Name: "Fourth"}}
@@ -108,5 +108,43 @@ func TestDividingLowerServicesPageAndRotate(t *testing.T) {
 		if b.last.third.prefix != tc.prefix || b.last.third.dest != tc.dest {
 			t.Errorf("at %v: got %q %q, want %q %q", tc.at, b.last.third.prefix, b.last.third.dest, tc.prefix, tc.dest)
 		}
+	}
+}
+
+func TestLowerServicesStopAtDestinationThatDoesNotFit(t *testing.T) {
+	long := []model.Location{{Name: "Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch"}}
+	dividing := []model.Location{{Name: "London Victoria"}, {Name: "Littlehampton"}, {Name: "Eastbourne"}}
+	for _, tc := range []struct {
+		name  string
+		train int
+		dests []model.Location
+		want  int
+	}{
+		{"second train long", 1, long, 0},
+		{"second train dividing", 1, dividing, 0},
+		{"third train long", 2, long, 1},
+		{"fourth train dividing", 3, dividing, 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			b := New(Config{Width: testW, Height: testH, ServiceCount: 6})
+			v := serviceCountView()
+			v.Services[tc.train].Destinations = tc.dests
+			if got := b.derive(v).lower; got != tc.want {
+				t.Errorf("lower row cycles through %d trains, want %d", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestLowerServiceShowsWholeDividingDestination(t *testing.T) {
+	b := New(Config{Width: testW, Height: testH})
+	v := serviceCountView()
+	v.Services[1].Destinations = []model.Location{{Name: "First"}, {Name: "Second"}}
+	c := b.derive(v)
+	if got := c.rows[1].pages; len(got) != 1 || got[0] != "First & Second" {
+		t.Fatalf("pages = %q, want the whole destination on one page", got)
+	}
+	if c.lower != 2 {
+		t.Fatalf("lower row cycles through %d trains, want 2", c.lower)
 	}
 }

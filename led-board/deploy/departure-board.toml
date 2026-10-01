@@ -59,6 +59,10 @@ legacy_toc_names = false
 
 # Daktronics only: the Worldline-driven variant with one scrolling information line.
 worldline = false
+# Daktronics only: page through a dividing train's destinations on the lower row, clipping any that are too
+# long. By default, as on the real board, a train whose destination doesn't fit on one line is left out, along
+# with every train after it.
+page_destinations = false
 
 # Scroll speed in dots per second; 0 uses the board's default (48 Daktronics, 60 Infotec).
 scroll_speed = 0

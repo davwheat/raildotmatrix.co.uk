@@ -15,7 +15,7 @@ func (b *Board) nextStillTick(now, next time.Time, pixels bool) time.Time {
 			next = at
 		}
 	}
-	if count := thirdRowCount(b.content); count > 0 {
+	if count := b.content.lower; count > 0 {
 		if now.Sub(b.rowSlideStart) < rowSlideDuration*time.Millisecond {
 			return time.Time{}
 		}
