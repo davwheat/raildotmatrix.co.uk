@@ -284,6 +284,63 @@ test('display policy keeps TrainOrder, feed names, null data and available split
   assert.equal(displayServices(state, null, false, false).services[1].passengerCallPoints[0].associations.length, 0)
 })
 
+test('a false destination replaces the destination, drops its via and ends the calls at the first visit', () => {
+  const initial = snapshot()
+  const movement = initial.movements[0]
+  const [junction, destination] = movement.calling_points
+  // A circular route: the train calls at the false destination twice on its way to the real one.
+  movement.calling_points = [junction, destination, { ...junction, id: 'again' }]
+  movement.destinations.push({ tpl: 'PORTION', crs: 'PTN', name: 'Portion destination', via: null, assoc_rid: 'R2', assoc_cat: 'VV' })
+  // The false destination names the station by another TIPLOC than the call does.
+  movement.false_destination = { tpl: 'JUNCTN2', crs: junction.crs, name: junction.name }
+  const service = displayServices(reduceCIS(null, initial)!, null, false, false).services[0]
+  assert.deepEqual(service.destinations, [
+    { name: 'Junction from feed', crs: 'JNC', via: null },
+    { name: 'Portion destination', crs: 'PTN', via: null },
+  ])
+  assert.deepEqual(
+    service.passengerCallPoints.map(call => call.name),
+    ['Junction from feed'],
+  )
+
+  // A false destination the train never calls at has no call to end the pattern on.
+  movement.false_destination = { tpl: 'ELSEWHERE', crs: 'ELS', name: 'Elsewhere' }
+  const elsewhere = displayServices(reduceCIS(null, initial)!, null, false, false).services[0]
+  assert.equal(elsewhere.destinations[0].name, 'Elsewhere')
+  assert.equal(elsewhere.passengerCallPoints.length, 3)
+})
+
+test('a dividing portion keeps its own destination when the main train has a false one', () => {
+  const initial = snapshot()
+  const movement = initial.movements[0]
+  movement.portions = [
+    {
+      rid: 'R2',
+      category: 'VV',
+      at: movement.calling_points[0],
+      available: true,
+      cancelled: false,
+      headcode: null,
+      mode: 'train',
+      operator_code: null,
+      operator_name: null,
+      origin: null,
+      destination: movement.destinations[0],
+      coach_count: 4,
+      position: 'rear',
+      calls: movement.calling_points,
+    },
+  ]
+  movement.false_destination = { tpl: 'JUNCTION', crs: 'JNC', name: 'Junction from feed' }
+  const service = displayServices(reduceCIS(null, initial)!, null, false, false).services[0]
+  const portion = service.passengerCallPoints[0].associations[0].service!
+  assert.deepEqual(
+    portion.destinations.map(destination => destination.name),
+    ['Destination from feed'],
+  )
+  assert.equal(portion.passengerCallPoints.length, 2)
+})
+
 test('a portion that joins another service here is left to the train it becomes', () => {
   const initial = snapshot()
   const main = initial.movements[0]
