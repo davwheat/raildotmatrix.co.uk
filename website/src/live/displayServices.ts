@@ -23,7 +23,7 @@ class LiveService extends Service {
     super({
       id: movement.id,
       boardStationCrs: movement.station.crs || '',
-      destinations: terminatesHere(movement) ? [TERMINATES_HERE] : movement.destinations.map(endpoint),
+      destinations: terminatesHere(movement) ? [TERMINATES_HERE] : advertisedDestinations(movement).map(endpoint),
       terminatesHere: terminatesHere(movement),
       origins: movement.origins.map(endpoint),
       cancelled: movement.cancelled,
@@ -43,7 +43,7 @@ class LiveService extends Service {
         movement.operator_name ||
         movement.operator_code ||
         '',
-      passengerCallPoints: passengerCalls(movement.calling_points).map(call => makeCall(call, movement, legacyNames, now)),
+      passengerCallPoints: passengerCalls(advertisedCalls(movement)).map(call => makeCall(call, movement, legacyNames, now)),
     })
   }
 
@@ -56,6 +56,33 @@ class LiveService extends Service {
   isDelayed() {
     return boardTimes(this.movement).unknown_delay || super.isDelayed()
   }
+}
+
+/** A false destination and a call can name one station by different TIPLOCs. */
+const sameStation = (a: Location, b: Location) => a.tpl === b.tpl || (!!a.crs && a.crs === b.crs)
+
+/**
+ * A false destination is the station Darwin tells a board to show in place of the service's own, as on a circular
+ * route. The feed's via caption describes the route to the real destination, so the false one has none. The
+ * destinations of portions are kept.
+ */
+function advertisedDestinations(movement: Movement): Endpoint[] {
+  if (!movement.false_destination) return movement.destinations
+  return [
+    { ...movement.false_destination, via: null, assoc_rid: null, assoc_cat: null },
+    ...movement.destinations.filter(destination => destination.assoc_rid),
+  ]
+}
+
+/**
+ * The calling pattern ends at a false destination. It ends at the first call there, because a train on a circular
+ * route calls there again on its way to the real destination.
+ */
+function advertisedCalls(movement: Movement): Call[] {
+  const falseDestination = movement.false_destination
+  if (!falseDestination) return movement.calling_points
+  const first = movement.calling_points.findIndex(call => sameStation(call, falseDestination))
+  return first === -1 ? movement.calling_points : movement.calling_points.slice(0, first + 1)
 }
 
 function passengerCalls(calls: Call[]): Call[] {
@@ -97,6 +124,8 @@ function portionService(portion: Portion, movement: Movement, legacyNames: boole
           ? [{ ...portion.destination, via: null, assoc_rid: null, assoc_cat: null }]
           : [],
       calling_points: portion.calls,
+      // The false destination belongs to the main train, not to the portion that leaves it.
+      false_destination: null,
       portions: [],
     },
     legacyNames,

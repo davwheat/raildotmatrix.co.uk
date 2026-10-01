@@ -306,7 +306,7 @@ func service(movement *Movement, legacyNames bool, now time.Time) model.Service 
 		Coaches:        formationCoaches(movement.Coaches),
 		TOC:            operatorName(movement, legacyNames),
 		TOCCode:        deref(movement.OperatorCode),
-		CallPoints:     callPoints(movement.CallingPoints, movement),
+		CallPoints:     callPoints(advertisedCalls(movement), movement),
 	}
 	if len(s.Coaches) > 0 {
 		s.Length = len(s.Coaches)
@@ -314,7 +314,7 @@ func service(movement *Movement, legacyNames bool, now time.Time) model.Service 
 	if s.TerminatesHere {
 		s.Destinations = []model.Location{{Name: terminatesHereName}}
 	} else {
-		s.Destinations = locations(movement.Destinations)
+		s.Destinations = locations(advertisedDestinations(movement))
 	}
 	if !times.UnknownDelay {
 		estimated := derefTime(times.Estimated)
@@ -329,6 +329,41 @@ func service(movement *Movement, legacyNames bool, now time.Time) model.Service 
 		}
 	}
 	return s
+}
+
+// advertisedDestinations names a false destination in place of the service's own: the station Darwin tells a
+// board to show instead of the real one, as on a circular route. The feed's via caption describes the route to the
+// real destination, so the false one has none. The destinations of portions are kept.
+func advertisedDestinations(movement *Movement) []Endpoint {
+	if movement.FalseDestination == nil {
+		return movement.Destinations
+	}
+	out := []Endpoint{{Location: *movement.FalseDestination}}
+	for i := range movement.Destinations {
+		if deref(movement.Destinations[i].AssocRID) != "" {
+			out = append(out, movement.Destinations[i])
+		}
+	}
+	return out
+}
+
+// advertisedCalls ends the calling pattern at a false destination. It ends at the first call there, because a
+// train on a circular route calls there again on its way to the real destination.
+func advertisedCalls(movement *Movement) []Call {
+	if movement.FalseDestination == nil {
+		return movement.CallingPoints
+	}
+	for i := range movement.CallingPoints {
+		if sameStation(&movement.CallingPoints[i].Location, movement.FalseDestination) {
+			return movement.CallingPoints[:i+1]
+		}
+	}
+	return movement.CallingPoints
+}
+
+// sameStation allows for a false destination and a call that name one station by different TIPLOCs.
+func sameStation(a, b *Location) bool {
+	return a.TPL == b.TPL || (deref(a.CRS) != "" && deref(a.CRS) == deref(b.CRS))
 }
 
 func operatorName(movement *Movement, legacyNames bool) string {

@@ -63,6 +63,10 @@ operator names remain a static client preference. Unavailable associated service
 only to join another service is left off the board: the train it becomes has its own row, carrying both portions' origins, so listing the portion
 as well shows one train twice — once as a service that terminates and strands its passengers.
 
+A movement's `false_destination` is shown in place of the service's own destination, as on a circular route. It has no via caption, because the
+feed's caption describes the route to the real destination, and the calling points end at the first call there. Portions keep their own
+destinations.
+
 ## Wire format
 
 The streams are Darwin Browser's protocol version 2: every frame is a protobuf message, defined in that repository's
