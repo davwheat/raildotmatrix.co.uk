@@ -291,6 +291,7 @@ func boardTimes(movement *Movement) *Times {
 func service(movement *Movement, legacyNames bool, now time.Time) model.Service {
 	times := boardTimes(movement)
 	stationCRS := deref(movement.Station.CRS)
+	advertised := advertisedJourney(movement)
 	s := model.Service{
 		ID:             movement.ID,
 		Origins:        locations(movement.Origins),
@@ -306,7 +307,10 @@ func service(movement *Movement, legacyNames bool, now time.Time) model.Service 
 		Coaches:        formationCoaches(movement.Coaches),
 		TOC:            operatorName(movement, legacyNames),
 		TOCCode:        deref(movement.OperatorCode),
-		CallPoints:     callPoints(advertisedCalls(movement), movement),
+		CallPoints:     callPoints(advertised.calls, movement.Portions, movement.Cancelled),
+	}
+	for _, linked := range advertised.linked {
+		s.CallPoints = append(s.CallPoints, callPoints(linked.calls, linked.portions, movement.Cancelled)...)
 	}
 	if len(s.Coaches) > 0 {
 		s.Length = len(s.Coaches)
@@ -314,7 +318,7 @@ func service(movement *Movement, legacyNames bool, now time.Time) model.Service 
 	if s.TerminatesHere {
 		s.Destinations = []model.Location{{Name: terminatesHereName}}
 	} else {
-		s.Destinations = locations(advertisedDestinations(movement))
+		s.Destinations = locations(advertisedDestinations(movement, advertised))
 	}
 	if !times.UnknownDelay {
 		estimated := derefTime(times.Estimated)
@@ -331,37 +335,181 @@ func service(movement *Movement, legacyNames bool, now time.Time) model.Service 
 	return s
 }
 
-// advertisedDestinations names a false destination in place of the service's own: the station Darwin tells a
-// board to show instead of the real one, as on a circular route. The feed's via caption describes the route to the
-// real destination, so the false one has none. The destinations of portions are kept.
-func advertisedDestinations(movement *Movement) []Endpoint {
-	if movement.FalseDestination == nil {
-		return movement.Destinations
+// journey is what the board advertises of a movement's journey.
+type journey struct {
+	// calls are the movement's own calls that the board lists.
+	calls []Call
+	// linked are the services linked on from the last of those, in order.
+	linked []leg
+	// linkedDestination is where the last linked service goes, or nil when nothing is linked.
+	linkedDestination *Location
+}
+
+// leg is the part of a journey that one linked service runs.
+type leg struct {
+	calls []Call
+	// portions are what the feed sends of that service's own associations. For a train that a portion joined,
+	// they include the portions that divide from it afterwards.
+	portions []Portion
+}
+
+// advertisedJourney shows a service linked to another where it ends as one through service: the calls of each
+// linked service follow its own, and the last one's destination replaces its own. Links carry on through as many
+// services as the feed sends, such as a train, a bus, and then a train. A portion that joins another train is
+// shown in the same way, as a through service to where that train goes.
+//
+// A false destination ends the calling pattern instead. It ends at the first call there, because a train on a
+// circular route calls there again on its way to the real destination. Darwin sets one to say what a board shows,
+// so no link is followed past it.
+func advertisedJourney(movement *Movement) journey {
+	if movement.FalseDestination != nil {
+		for i := range movement.CallingPoints {
+			if sameStation(&movement.CallingPoints[i].Location, movement.FalseDestination) {
+				return journey{calls: movement.CallingPoints[:i+1]}
+			}
+		}
+		return journey{calls: movement.CallingPoints}
 	}
-	out := []Endpoint{{Location: *movement.FalseDestination}}
+	link, from, calls := onwardLink(movement.Portions, movement.CallingPoints)
+	if link == nil {
+		return journey{calls: movement.CallingPoints}
+	}
+	j := journey{calls: movement.CallingPoints[:from+1]}
+	for link != nil {
+		j.linkedDestination = link.Destination
+		if j.linkedDestination == nil {
+			j.linkedDestination = &calls[len(calls)-1].Location
+		}
+		next, from, onward := onwardLink(link.Links, calls)
+		if next != nil {
+			calls = calls[:from+1]
+		}
+		j.linked = append(j.linked, leg{calls: calls, portions: link.Links})
+		link, calls = next, onward
+	}
+	return j
+}
+
+// onwardLink finds the portion that takes a service's passengers on from the call where it ends, the index of
+// that call, and the linked service's calls after it. Darwin links two services to make one journey of them, most
+// often a train and the rail replacement bus that finishes its route, and a bus recorded as a train's next working
+// means the same. A link anywhere else on the route is a change that the service runs on past, so it's left alone.
+// Main is false on the service the passengers came from.
+//
+// A portion that joins another train ends where it joins, and its passengers stay on board, so the train it joins
+// takes them on as well. There Main is false on the portion that joins, and the join can be a call that
+// passengers can't use.
+func onwardLink(portions []Portion, calls []Call) (*Portion, int, []Call) {
+	ends := len(calls) - 1
+	for ends >= 0 && calls[ends].Cancelled {
+		ends--
+	}
+	from := ends
+	for from >= 0 && !running(&calls[from]) {
+		from--
+	}
+	for i := range portions {
+		link := &portions[i]
+		if !link.Available || link.Cancelled {
+			continue
+		}
+		associated := link.Main != nil && !*link.Main
+		bus := link.Mode != nil && *link.Mode == ModeBus
+		from := from
+		switch {
+		case link.Category == "JJ" && (associated || link.Main == nil):
+			from = ends
+		case associated:
+			continue
+		case link.Category == "LK", link.Category == "NP" && bus:
+		default:
+			continue
+		}
+		if from < 0 || !sameStation(&link.At, &calls[from].Location) {
+			continue
+		}
+		joins := slices.IndexFunc(link.Calls, func(call Call) bool { return sameStation(&call.Location, &link.At) })
+		if joins == -1 {
+			continue
+		}
+		onward := link.Calls[joins+1:]
+		// A linked service that runs nowhere from here takes nobody on.
+		if slices.ContainsFunc(onward, func(call Call) bool { return running(&call) }) {
+			return link, from, onward
+		}
+	}
+	return nil, 0, nil
+}
+
+// running reports whether the service makes a call, as opposed to one that is cancelled or that passengers can't
+// use.
+func running(call *Call) bool {
+	return !call.Cancelled && !call.Operational
+}
+
+// advertisedDestinations names a false destination in place of the service's own: the station Darwin tells a
+// board to show instead of the real one, as on a circular route. A linked service's destination replaces it in
+// the same way. Either has no via caption, because the feed's caption describes the route to the service's own
+// destination. The destinations of portions are kept while a portion still divides off for them: the feed lists
+// one for as long as the division stands, which includes a portion that no longer runs anywhere.
+func advertisedDestinations(movement *Movement, advertised journey) []Endpoint {
+	shown := movement.FalseDestination
+	if shown == nil {
+		shown = advertised.linkedDestination
+	}
+	out := make([]Endpoint, 0, len(movement.Destinations))
+	if shown != nil {
+		out = append(out, Endpoint{Location: *shown})
+	}
 	for i := range movement.Destinations {
-		if deref(movement.Destinations[i].AssocRID) != "" {
-			out = append(out, movement.Destinations[i])
+		destination := &movement.Destinations[i]
+		if rid := deref(destination.AssocRID); rid != "" {
+			if dividesOff(movement, rid) {
+				out = append(out, *destination)
+			}
+		} else if shown == nil {
+			out = append(out, *destination)
+		}
+	}
+	// The feed lists the destinations of the movement's own portions. Those of a train that it joins come with
+	// that train.
+	for _, linked := range advertised.linked {
+		for i := range linked.portions {
+			portion := &linked.portions[i]
+			reached := slices.ContainsFunc(linked.calls, func(call Call) bool { return call.TPL == portion.At.TPL })
+			if portion.Category != "VV" || !reached {
+				continue
+			}
+			if calls := portionCalls(portion, movement.Cancelled); calls != nil {
+				destination := Endpoint{Location: portion.Calls[len(portion.Calls)-1].Location}
+				if portion.Destination != nil {
+					destination.Location = *portion.Destination
+				}
+				out = append(out, destination)
+			}
 		}
 	}
 	return out
 }
 
-// advertisedCalls ends the calling pattern at a false destination. It ends at the first call there, because a
-// train on a circular route calls there again on its way to the real destination.
-func advertisedCalls(movement *Movement) []Call {
-	if movement.FalseDestination == nil {
-		return movement.CallingPoints
-	}
-	for i := range movement.CallingPoints {
-		if sameStation(&movement.CallingPoints[i].Location, movement.FalseDestination) {
-			return movement.CallingPoints[:i+1]
+// dividesOff reports whether passengers can still travel in the portion that an associated destination belongs
+// to. An endpoint whose portion the feed didn't send is taken at its word.
+func dividesOff(movement *Movement, rid string) bool {
+	sent := false
+	for i := range movement.Portions {
+		portion := &movement.Portions[i]
+		if portion.RID != rid || portion.Category != "VV" {
+			continue
+		}
+		sent = true
+		if portionCalls(portion, movement.Cancelled) != nil {
+			return true
 		}
 	}
-	return movement.CallingPoints
+	return !sent
 }
 
-// sameStation allows for a false destination and a call that name one station by different TIPLOCs.
+// sameStation allows for a false destination or a link, and a call, that name one station by different TIPLOCs.
 func sameStation(a, b *Location) bool {
 	return a.TPL == b.TPL || (deref(a.CRS) != "" && deref(a.CRS) == deref(b.CRS))
 }
@@ -378,14 +526,20 @@ func operatorName(movement *Movement, legacyNames bool) string {
 	return deref(movement.OperatorCode)
 }
 
+// locations names each endpoint. The feed sends the endpoint of a portion it knows nothing about with no location,
+// which the board has no name to show for, so it's left out.
 func locations(endpoints []Endpoint) []model.Location {
-	out := make([]model.Location, len(endpoints))
+	out := make([]model.Location, 0, len(endpoints))
 	for i := range endpoints {
 		endpoint := &endpoints[i]
-		out[i] = model.Location{Name: locationName(&endpoint.Location), CRS: deref(endpoint.CRS), Departs: endpoint.PlannedDeparture}
-		if endpoint.Via != nil {
-			out[i].Via = endpoint.Via.Text
+		location := model.Location{Name: locationName(&endpoint.Location), CRS: deref(endpoint.CRS), Departs: endpoint.PlannedDeparture}
+		if location.Name == "" {
+			continue
 		}
+		if endpoint.Via != nil {
+			location.Via = endpoint.Via.Text
+		}
+		out = append(out, location)
 	}
 	return out
 }
@@ -400,28 +554,101 @@ func locationName(location *Location) string {
 	return location.TPL
 }
 
-// callPoints keeps the passenger calls of a calling pattern. A portion dividing at a call is listed against it
-// when the portion is available and has passenger calls of its own; movement is nil for a portion's own calls,
-// which never divide again.
-func callPoints(calls []Call, movement *Movement) []model.CallPoint {
+// callPoints keeps the passenger calls of a train's calling pattern. A portion dividing at a call is listed
+// against it when the portion is available and has passenger calls of its own, and so are coaches that the train
+// leaves behind there. portions are those of the service that makes the calls.
+//
+// A train can divide at a station where it sets nobody down, as a sleeper does. The division still has to be
+// listed against a call, so that call is kept, as it is by processServices in ProcessServices.ts.
+//
+// A call that the train no longer makes is left out, unless the train is cancelled here too: then cancelled says
+// so, and the board lists the journey that it would have made.
+func callPoints(calls []Call, portions []Portion, cancelled bool) []model.CallPoint {
+	return listCalls(calls, portions, cancelled, true)
+}
+
+// listCalls is callPoints for a train, which can divide, and for a portion that has divided off, which never
+// divides again.
+func listCalls(calls []Call, portions []Portion, cancelled, divides bool) []model.CallPoint {
 	out := make([]model.CallPoint, 0, len(calls))
+	// The feed names the end of a train as it arrives at a call. Each reversal on the way there swaps the ends,
+	// so that end is the other one as the train stands here.
+	turned := false
 	for i := range calls {
 		call := &calls[i]
-		if !isPassengerCallPoint(call) {
+		if call.Cancelled && !cancelled {
 			continue
 		}
-		point := model.CallPoint{
+		passenger := isPassengerCallPoint(call)
+		var leaving []model.Portion
+		if divides && deref(call.CRS) != "" {
+			leaving = divisions(portions, call, cancelled)
+			if len(leaving) == 0 && passenger {
+				leaving = leftBehind(call)
+			}
+			for j := range leaving {
+				if turned {
+					leaving[j].Position = otherEnd(leaving[j].Position)
+				}
+			}
+		}
+		if hasActivity(call.Activities, "RM") {
+			turned = !turned
+		}
+		if !passenger && len(leaving) == 0 {
+			continue
+		}
+		out = append(out, model.CallPoint{
 			Name:      locationName(&call.Location),
 			Cancelled: call.Cancelled,
 			Length:    int(derefInt(call.CoachCount)),
 			Arrival:   arrivalTime(call),
-		}
-		if movement != nil {
-			point.Divides = divisions(movement, call.TPL)
-		}
-		out = append(out, point)
+			Divides:   leaving,
+		})
 	}
 	return out
+}
+
+// leftBehind is the coaches that a train leaves at a call while it runs on as the same service. They go no
+// further, so they have no calls of their own.
+func leftBehind(call *Call) []model.Portion {
+	if call.FormationChange == nil || call.FormationChange.Detached == nil {
+		return nil
+	}
+	detached := call.FormationChange.Detached
+	return []model.Portion{{Length: int(derefInt(detached.Coaches)), Position: trainEnd(detached.Position)}}
+}
+
+// trainEnd is an end of a train that the board has a name for, or empty.
+func trainEnd(position *string) string {
+	switch end := deref(position); end {
+	case "front", "middle", "rear":
+		return end
+	}
+	return ""
+}
+
+func otherEnd(position string) string {
+	switch position {
+	case "front":
+		return "rear"
+	case "rear":
+		return "front"
+	}
+	return position
+}
+
+// hasActivity looks for one of Darwin's two-character activity codes, so that "R" doesn't match within "RM".
+func hasActivity(activities *string, code string) bool {
+	if activities == nil {
+		return false
+	}
+	for i := 0; i < len(*activities); i += 2 {
+		if strings.TrimSpace((*activities)[i:min(i+2, len(*activities))]) == code {
+			return true
+		}
+	}
+	return false
 }
 
 // arrivalTime mirrors CallPoint.displayedArrivalTime in ProcessServices.ts.
@@ -441,20 +668,45 @@ func isPassengerCallPoint(call *Call) bool {
 	return call.CRS != nil && *call.CRS != "" && !call.Operational
 }
 
-func divisions(movement *Movement, tpl string) []model.Portion {
+// divisions lists the portions that divide from a train at a call, each with the end of the train that it is at
+// as the train arrives. The feed works that out from the way the train leaves. Where it doesn't, Darwin says only
+// which end of the train stock detaches from, which can't tell two portions apart.
+func divisions(portions []Portion, call *Call, cancelled bool) []model.Portion {
 	var divides []model.Portion
-	for i := range movement.Portions {
-		portion := &movement.Portions[i]
-		if portion.At.TPL != tpl || portion.Category != "VV" || !portion.Available || portion.Cancelled {
+	for i := range portions {
+		portion := &portions[i]
+		if portion.At.TPL != call.TPL || portion.Category != "VV" {
 			continue
 		}
-		calls := callPoints(portion.Calls, nil)
-		if len(calls) == 0 {
-			continue
+		if calls := portionCalls(portion, cancelled); calls != nil {
+			divides = append(divides, model.Portion{Length: int(derefInt(portion.CoachCount)), Position: trainEnd(portion.Position), CallPoints: calls})
 		}
-		divides = append(divides, model.Portion{Length: int(derefInt(portion.CoachCount)), CallPoints: calls})
+	}
+	if len(divides) == 1 && divides[0].Position == "" && call.DetachFront != nil {
+		divides[0].Position = "rear"
+		if *call.DetachFront {
+			divides[0].Position = "front"
+		}
 	}
 	return divides
+}
+
+// portionCalls are the calls of a portion that divides off, from the division. They're nil for a portion that
+// passengers can't travel in: one that doesn't run, that the feed knows nothing about, or that has nowhere left
+// to call.
+func portionCalls(portion *Portion, cancelled bool) []model.CallPoint {
+	if !portion.Available || portion.Cancelled {
+		return nil
+	}
+	onward := portion.Calls
+	if from := slices.IndexFunc(onward, func(call Call) bool { return sameStation(&call.Location, &portion.At) }); from != -1 {
+		onward = onward[from:]
+	}
+	calls := listCalls(onward, nil, cancelled, false)
+	if len(calls) == 0 || (len(calls) == 1 && calls[0].Name == locationName(&portion.At)) {
+		return nil
+	}
+	return calls
 }
 
 func deref(value *string) string {

@@ -272,6 +272,33 @@ message Call {
   optional bool detach_front = 9;
   Location false_destination = 10;
   optional int32 coach_count = 11;
+  // The coaches that leave or join the train at this call. Unset when none
+  // do, or when nothing says.
+  FormationChange formation_change = 12;
+}
+
+// How a train's formation changes at a call while it stays one service:
+// coaches left behind there, or coaches coupled on. Darwin has no word for it,
+// so it's read from the units that Gemini allocates to the legs either side of
+// the call. A portion that divides off or joins as a service of its own is in
+// `portions` instead, and isn't repeated here.
+//
+// A train from London Victoria to Ore that leaves four of its eight coaches at
+// Eastbourne has `detached` on its call there, with four coaches.
+message FormationChange {
+  FormationPart detached = 1;
+  FormationPart attached = 2;
+}
+
+message FormationPart {
+  // How many passenger coaches. Unset when the allocation has none to count.
+  optional int32 coaches = 1;
+  // The end of the train, as it arrives, that coaches which leave are at:
+  // "front" or "rear". The order of the units in an allocation isn't to be
+  // trusted, so this follows from the way the train leaves: one that carries
+  // on leaves its rear coaches behind, and one that reverses out leaves the
+  // coaches that led it in. Unset for coaches that join, which nothing places.
+  optional string position = 2;
 }
 
 enum TransportMode {
@@ -295,12 +322,39 @@ message Portion {
   bool cancelled = 10;
   bool available = 11;
   optional int32 coach_count = 12;
+  // The end of the movement's train, as it arrives at the division, that a
+  // dividing portion is at: "front" or "rear". Darwin rarely says, so it
+  // follows from the way the train leaves: a train that carries on leaves its
+  // rear coaches behind, and one that reverses out leaves the coaches that led
+  // it in. Unset where that can't be told, as where two portions divide off at
+  // one station, and on every other portion.
   optional string position = 13;
   // The associated service's calling points, carried only for a dividing
-  // portion (category VV) and for a rail replacement bus continuation
-  // (category NP or LK with mode BUS). Every other portion has none: a joining
-  // portion or next working is shown by its other fields.
+  // portion (category VV), for the train that the movement's service joins
+  // (category JJ where `main` is false), for a link that passengers continue
+  // on (category LK, unless `main` is false) and for a bus next working
+  // (category NP with mode BUS). Every other portion has none: a portion that
+  // joins the movement's train or a next working is shown by its other fields.
   repeated Call calls = 14;
+  // Whether the service that holds this association is its main service, and
+  // this portion the associated one. The main service of a link (category LK)
+  // is the one that passengers leave, so true means that they continue on this
+  // portion, and false means that this portion's passengers continue on the
+  // service that holds it. The main service of a join (category JJ) is the
+  // train that is joined, and of a division (category VV) the train that
+  // divides, so false means that the movement's service is the portion that
+  // joins or divides off. Unset when Darwin hasn't said which end is which.
+  optional bool main = 15;
+  // The links (category LK) that this portion's own service is the main
+  // service of, so that a client can follow a chain of linked services: a
+  // train, then a bus, then a train. Each link's `at` is a call of this
+  // portion's service, and each carries its own `links` in turn, to a depth of
+  // four. Carried only on a link that carries `calls`.
+  //
+  // The train that the movement's service joins (category JJ) carries its
+  // links in the same way, with the portions that divide from it after the
+  // join (category VV) and any train that it joins in turn (category JJ).
+  repeated Portion links = 16;
 }
 
 enum MovementKind {
@@ -358,6 +412,8 @@ message Movement {
   google.protobuf.Timestamp passed_at = 36;
   TrainOrder train_order = 37;
   TdEvidence td = 38;
+  // The coaches that leave or join the train at this station.
+  FormationChange formation_change = 39;
 }
 
 // ---------------------------------------------------------------- TD evidence

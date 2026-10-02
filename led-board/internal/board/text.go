@@ -1,6 +1,7 @@
 package board
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
@@ -68,4 +69,45 @@ func CombineNames(locations []model.Location) string {
 		return strings.Join(names, "")
 	}
 	return strings.Join(names[:len(names)-1], ", ") + " and " + names[len(names)-1]
+}
+
+// PortionLabels names the part of a dividing train that each calling point page is for: the train's own, and
+// then each portion that divides off, given the end of the train that each leaves from ("front", "middle",
+// "rear", or "" when the feed doesn't say). The train's own part is the front unless a portion is known to be
+// there. A portion at an unknown end is taken to be behind the ones before it, as the real boards assume: the
+// last one is the rear and the others the middle.
+func PortionLabels(positions []string) (own string, portions []string) {
+	front, rear := slices.Contains(positions, "front"), slices.Contains(positions, "rear")
+	own = "Front"
+	switch {
+	case front && rear:
+		own = "Middle"
+	case front:
+		own = "Rear"
+	}
+	portions = make([]string, len(positions))
+	for i, position := range positions {
+		switch {
+		case position == "front":
+			portions[i] = "Front"
+		case position == "rear":
+			portions[i] = "Rear"
+		case position == "middle" || i < len(positions)-1 || rear || own == "Rear":
+			portions[i] = "Middle"
+		default:
+			portions[i] = "Rear"
+		}
+	}
+	return own, portions
+}
+
+// PortionRank orders the pages of a dividing train from the front of the train to the rear.
+func PortionRank(label string) int {
+	switch label {
+	case "Front":
+		return 0
+	case "Middle":
+		return 1
+	}
+	return 2
 }

@@ -12,6 +12,8 @@ import serviceSnapshot from './fixtures/snapshot.json'
 import serviceSnapshotFrame from './fixtures/snapshot.pb'
 import serviceStoppingSnapshot from './fixtures/stopping_snapshot.json'
 import serviceStoppingSnapshotFrame from './fixtures/stopping_snapshot.pb'
+import serviceLinkedSnapshot from './fixtures/linked_snapshot.json'
+import serviceLinkedSnapshotFrame from './fixtures/linked_snapshot.pb'
 import serviceUpdate from './fixtures/override_removal.json'
 import serviceUpdateFrame from './fixtures/override_removal.pb'
 import nrccSnapshot from './fixtures/nrcc_snapshot.json'
@@ -267,6 +269,8 @@ test('display policy keeps TrainOrder, feed names, null data and available split
       coach_count: 4,
       position: 'rear',
       calls: first.calling_points,
+      main: true,
+      links: [],
     },
   ]
   const later = { ...first, id: 'R3/call', departure: { ...first.departure, planned: '2026-09-13T10:20:00Z' } }
@@ -329,6 +333,8 @@ test('a dividing portion keeps its own destination when the main train has a fal
       coach_count: 4,
       position: 'rear',
       calls: movement.calling_points,
+      main: true,
+      links: [],
     },
   ]
   movement.false_destination = { tpl: 'JUNCTION', crs: 'JNC', name: 'Junction from feed' }
@@ -339,6 +345,94 @@ test('a dividing portion keeps its own destination when the main train has a fal
     ['Destination from feed'],
   )
   assert.equal(portion.passengerCallPoints.length, 2)
+})
+
+const linkedSnapshot = () => structuredClone(decodeServerMessage(serviceLinkedSnapshotFrame)) as Snapshot
+const advertised = (message: Snapshot) => {
+  const service = displayServices(reduceCIS(null, message)!, null, false, false).services[0]
+  return { to: service.destinations, calls: service.passengerCallPoints.map(call => call.name) }
+}
+
+test('a train linked to a bus that links to a train is shown as one service to the last destination', () => {
+  assert.deepEqual(advertised(linkedSnapshot()), {
+    to: [{ name: 'Weymouth', crs: 'WEY', via: null }],
+    calls: ['Eastleigh', 'Southampton Central', 'Brockenhurst', 'Bournemouth', 'Poole', 'Weymouth'],
+  })
+})
+
+test('a link is followed only where the service ends, and only while each linked service runs', () => {
+  const own = { to: [{ name: 'Southampton Central', crs: 'SOU', via: null }], calls: ['Eastleigh', 'Southampton Central'] }
+  const toBournemouth = {
+    to: [{ name: 'Bournemouth', crs: 'BMH', via: null }],
+    calls: ['Eastleigh', 'Southampton Central', 'Brockenhurst', 'Bournemouth'],
+  }
+  const change = (edit: (bus: Snapshot['movements'][number]['portions'][number], movement: Snapshot['movements'][number]) => void) => {
+    const message = linkedSnapshot()
+    edit(message.movements[0].portions[0], message.movements[0])
+    return advertised(message)
+  }
+
+  assert.deepEqual(
+    change(bus => (bus.cancelled = true)),
+    own,
+    'a cancelled link',
+  )
+  assert.deepEqual(
+    change(bus => (bus.available = false)),
+    own,
+    'a linked service the feed knows nothing about',
+  )
+  assert.deepEqual(
+    change(bus => (bus.main = false)),
+    own,
+    'the service these passengers came from',
+  )
+  assert.deepEqual(
+    change(bus => bus.calls.slice(1).forEach(call => (call.cancelled = true))),
+    own,
+    'a bus that runs nowhere',
+  )
+  assert.deepEqual(
+    change((bus, movement) => (bus.at = movement.calling_points[0])),
+    own,
+    'a link at a call the train runs on past',
+  )
+  assert.deepEqual(
+    change(bus => (bus.links[0].cancelled = true)),
+    toBournemouth,
+    'a cancelled onward link',
+  )
+  assert.deepEqual(
+    change(bus => (bus.links[0].available = false)),
+    toBournemouth,
+    'an onward service the feed knows nothing about',
+  )
+  assert.deepEqual(
+    change(bus => (bus.main = null)),
+    advertised(linkedSnapshot()),
+    'a link that Darwin gave no direction is read from where the services meet',
+  )
+  assert.deepEqual(
+    change((bus, movement) => (movement.false_destination = movement.calling_points[0])),
+    { to: [{ name: 'Eastleigh', crs: 'ESL', via: null }], calls: ['Eastleigh'] },
+    'a false destination',
+  )
+})
+
+test('a train cut short at the link has its cancelled calls replaced by the linked service', () => {
+  const message = linkedSnapshot()
+  const movement = message.movements[0]
+  const bus = movement.portions[0]
+  bus.links = []
+  // The train was booked through to Bournemouth, and the bus runs the part it no longer does.
+  movement.calling_points.push(...bus.calls.slice(1).map(call => ({ ...call, id: `own-${call.id}`, cancelled: true })))
+  movement.destinations = [{ ...bus.calls[2], via: { text: 'via Somewhere', locs: [] }, assoc_rid: null, assoc_cat: null }]
+  assert.deepEqual(advertised(message), {
+    to: [{ name: 'Bournemouth', crs: 'BMH', via: null }],
+    calls: ['Eastleigh', 'Southampton Central', 'Brockenhurst', 'Bournemouth'],
+  })
+  const service = displayServices(reduceCIS(null, message)!, null, false, false).services[0]
+  assert.ok(service.passengerCallPoints.every(call => !call.isCancelled))
 })
 
 test('a portion that joins another service here is left to the train it becomes', () => {
@@ -359,6 +453,8 @@ test('a portion that joins another service here is left to the train it becomes'
     coach_count: 5,
     position: null,
     calls: main.calling_points,
+    main: null,
+    links: [],
   }
   // The joining half terminates here; the service it joins departs with both portions' origins on it.
   const joining = {
@@ -381,6 +477,306 @@ test('a portion that joins another service here is left to the train it becomes'
   assert.equal(services[1].destinations[0].name, 'Terminates here')
   joining.portions = [{ ...portion, available: false }]
   assert.equal(displayServices(reduceCIS(null, initial)!, null, false, true).services.length, 3)
+})
+
+type FeedMovement = Snapshot['movements'][number]
+type FeedPortion = FeedMovement['portions'][number]
+type FeedCall = FeedMovement['calling_points'][number]
+
+const namedCall = (template: FeedCall, id: string, tpl: string, crs: string, name: string): FeedCall => ({
+  ...template,
+  id,
+  tpl,
+  crs,
+  name,
+  operational: false,
+  cancelled: false,
+})
+
+const feedPortion = (movement: FeedMovement, values: Partial<FeedPortion>): FeedPortion => ({
+  rid: 'OTHER',
+  category: 'VV',
+  at: movement.calling_points[0],
+  available: true,
+  cancelled: false,
+  headcode: null,
+  mode: 'train',
+  operator_code: null,
+  operator_name: null,
+  origin: null,
+  destination: null,
+  coach_count: 4,
+  position: null,
+  calls: [],
+  main: true,
+  links: [],
+  ...values,
+})
+
+/** What a board shows of the fixture's train: its destinations with their vias, and then its calling points. */
+const shownJourney = (message: Snapshot) => {
+  const service = displayServices(reduceCIS(null, message)!, null, false, false).services[0]
+  return [...service.destinations.map(d => [d.name, d.via].filter(Boolean).join(' ')), '|', ...service.passengerCallPoints.map(p => p.name)]
+}
+
+test('a portion that joins another train is shown as a through service of that train', () => {
+  const own = ['Destination from feed via Junction', '|', 'Junction from feed', 'Destination from feed']
+  const through = ['Through terminus', '|', 'Junction from feed', 'Destination from feed', 'After the join', 'Through terminus']
+  const joining = (edit: (movement: FeedMovement, main: FeedPortion) => void = () => {}) => {
+    const message = snapshot()
+    const movement = message.movements[0]
+    const join = movement.calling_points[1]
+    movement.portions = [
+      feedPortion(movement, {
+        rid: 'MAIN',
+        category: 'JJ',
+        at: join,
+        main: false,
+        destination: { tpl: 'THROUGH', crs: 'THR', name: 'Through terminus' },
+        calls: [
+          namedCall(join, 'm0', 'ELSEWHERE', 'ELS', 'Elsewhere'),
+          namedCall(join, 'm1', join.tpl, 'DST', 'Destination from feed'),
+          namedCall(join, 'm2', 'AFTER', 'AFT', 'After the join'),
+          namedCall(join, 'm3', 'THROUGH', 'THR', 'Through terminus'),
+        ],
+      }),
+    ]
+    edit(movement, movement.portions[0])
+    return shownJourney(message)
+  }
+
+  assert.deepEqual(joining(), through)
+  assert.deepEqual(
+    joining((_, main) => (main.main = null)),
+    through,
+    'a join that Darwin gave no direction',
+  )
+  assert.deepEqual(
+    joining(movement => (movement.calling_points[1].operational = true)),
+    ['Through terminus', '|', 'Junction from feed', 'After the join', 'Through terminus'],
+    "a join at a call that passengers can't use",
+  )
+  assert.deepEqual(
+    joining((_, main) => (main.main = true)),
+    own,
+    'the train that is joined',
+  )
+  assert.deepEqual(
+    joining((_, main) => (main.cancelled = true)),
+    own,
+    'a cancelled join',
+  )
+  assert.deepEqual(
+    joining((_, main) => (main.available = false)),
+    own,
+    'a train the feed knows nothing about',
+  )
+  assert.deepEqual(
+    joining((movement, main) => (main.at = movement.calling_points[0])),
+    own,
+    'a join at a call the train runs on past',
+  )
+  assert.deepEqual(
+    joining((_, main) => main.calls.slice(2).forEach(call => (call.cancelled = true))),
+    own,
+    'a train that runs nowhere from the join',
+  )
+})
+
+const dividing = (edit: (movement: FeedMovement, portion: FeedPortion) => void = () => {}) => {
+  const message = snapshot()
+  const movement = message.movements[0]
+  const divide = movement.calling_points[0]
+  movement.destinations.push({ tpl: 'BRANCH', crs: 'BRN', name: 'Branch terminus', via: null, assoc_rid: 'PORTION', assoc_cat: 'VV' })
+  movement.portions = [
+    feedPortion(movement, {
+      rid: 'PORTION',
+      calls: [
+        namedCall(divide, 'p0', divide.tpl, 'JNC', 'Junction from feed'),
+        namedCall(divide, 'p1', 'HALT', 'HLT', 'Branch halt'),
+        namedCall(divide, 'p2', 'BRANCH', 'BRN', 'Branch terminus'),
+      ],
+    }),
+  ]
+  edit(movement, movement.portions[0])
+  return displayServices(reduceCIS(null, message)!, null, false, false).services[0]
+}
+
+test('a division at a call nobody can use is still listed', () => {
+  const sleeper = (movement: FeedMovement, portion: FeedPortion) => {
+    movement.calling_points[0].operational = true
+    portion.calls[0].operational = true
+  }
+  const service = dividing(sleeper)
+  assert.deepEqual(
+    service.passengerCallPoints.map(point => point.name),
+    ['Junction from feed', 'Destination from feed'],
+  )
+  const portions = service.passengerCallPoints[0].associations
+  assert.equal(portions.length, 1)
+  assert.deepEqual(
+    portions[0].service!.passengerCallPoints.map(point => point.name),
+    ['Branch halt', 'Branch terminus'],
+  )
+  assert.equal(portions[0].service!.length, 4)
+
+  const undivided = dividing((movement, portion) => {
+    sleeper(movement, portion)
+    portion.cancelled = true
+  })
+  assert.deepEqual(
+    undivided.passengerCallPoints.map(point => point.name),
+    ['Destination from feed'],
+    'a call kept only for a division that no longer happens',
+  )
+})
+
+test('a call the train no longer makes is left out, unless the train is cancelled too', () => {
+  const message = snapshot()
+  message.movements[0].calling_points[0].cancelled = true
+  const names = () => displayServices(reduceCIS(null, message)!, null, false, false).services[0].passengerCallPoints.map(point => point.name)
+  assert.deepEqual(names(), ['Destination from feed'])
+  message.movements[0].cancelled = true
+  assert.deepEqual(names(), ['Junction from feed', 'Destination from feed'])
+})
+
+test('a portion that no longer runs is no destination, and an endpoint that names nowhere is left out', () => {
+  const own = ['Destination from feed']
+  const destinations = (edit?: (movement: FeedMovement, portion: FeedPortion) => void) => dividing(edit).destinations.map(d => d.name)
+  assert.deepEqual(destinations(), [...own, 'Branch terminus'])
+  assert.deepEqual(
+    destinations((_, portion) => portion.calls.slice(1).forEach(call => (call.cancelled = true))),
+    own,
+    'a portion whose calls are all cancelled',
+  )
+  assert.deepEqual(
+    destinations((_, portion) => (portion.cancelled = true)),
+    own,
+    'a cancelled division',
+  )
+  const unknown = dividing((movement, portion) => {
+    // The feed describes a portion it knows nothing about by no station at all.
+    Object.assign(portion, { available: false, calls: [] })
+    Object.assign(movement.destinations[1], { tpl: '', crs: null, name: null })
+    movement.origins.push({ tpl: '', crs: null, name: null, via: null, assoc_rid: 'JOINER', assoc_cat: 'JJ' })
+  })
+  assert.deepEqual(
+    unknown.destinations.map(d => d.name),
+    own,
+  )
+  assert.deepEqual(
+    unknown.origins.map(o => o.name),
+    ['Origin from feed'],
+  )
+  assert.equal(unknown.passengerCallPoints[0].associations.length, 0)
+})
+
+test('a portion is placed at the end the feed gives, as the train stands at the board', () => {
+  const position = (edit: (movement: FeedMovement, portion: FeedPortion) => void) =>
+    dividing(edit)
+      .passengerCallPoints.flatMap(point => point.associations)
+      .map(association => association.position)
+  assert.deepEqual(
+    position((_, portion) => (portion.position = 'front')),
+    ['front'],
+  )
+  assert.deepEqual(
+    position(movement => (movement.calling_points[0].detach_front = true)),
+    ['front'],
+    'only Darwin says',
+  )
+  assert.deepEqual(
+    position(movement => (movement.calling_points[0].detach_front = false)),
+    ['rear'],
+    "Darwin's default",
+  )
+  assert.deepEqual(
+    position(movement => (movement.calling_points[0].detach_front = null)),
+    [undefined],
+    'nothing says',
+  )
+  assert.deepEqual(
+    position((movement, portion) => {
+      portion.position = 'front'
+      movement.calling_points[0].activities = 'T RM'
+    }),
+    ['front'],
+    'a reversal at the division itself',
+  )
+  assert.deepEqual(
+    position((movement, portion) => {
+      portion.position = 'front'
+      movement.calling_points.unshift({ ...namedCall(movement.calling_points[0], 'turn', 'TURN', 'TRN', 'Turning point'), activities: 'T RM' })
+    }),
+    ['rear'],
+    'a reversal on the way to the division swaps the ends',
+  )
+})
+
+test('coaches left behind are a portion that goes no further', () => {
+  const message = snapshot()
+  const movement = message.movements[0]
+  movement.calling_points[0].formation_change = { detached: { coaches: 4, position: 'front' }, attached: null }
+  const service = displayServices(reduceCIS(null, message)!, null, false, false).services[0]
+  const [left] = service.passengerCallPoints[0].associations
+  assert.equal(left.position, 'front')
+  assert.equal(left.service!.length, 4)
+  assert.deepEqual(left.service!.passengerCallPoints, [])
+  assert.equal(service.destinations.length, 1)
+
+  // Coaches that join change nothing a passenger chooses a coach by.
+  movement.calling_points[0].formation_change = { detached: null, attached: { coaches: 4, position: null } }
+  assert.equal(displayServices(reduceCIS(null, message)!, null, false, false).services[0].passengerCallPoints[0].associations.length, 0)
+})
+
+test("a joined train's own divisions and links are followed", () => {
+  const message = snapshot()
+  const movement = message.movements[0]
+  const join = movement.calling_points[1]
+  const after = namedCall(join, 'm2', 'AFTER', 'AFT', 'After the join')
+  const terminus = namedCall(join, 'm3', 'THROUGH', 'THR', 'Through terminus')
+  movement.portions = [
+    feedPortion(movement, {
+      rid: 'MAIN',
+      category: 'JJ',
+      at: join,
+      main: false,
+      destination: { tpl: 'THROUGH', crs: 'THR', name: 'Through terminus' },
+      calls: [namedCall(join, 'm1', join.tpl, 'DST', 'Destination from feed'), after, terminus],
+      links: [
+        feedPortion(movement, {
+          rid: 'BRANCH',
+          at: after,
+          position: 'rear',
+          destination: { tpl: 'BRANCH', crs: 'BRN', name: 'Branch terminus' },
+          calls: [after, namedCall(join, 'b1', 'BRANCH', 'BRN', 'Branch terminus')],
+        }),
+        feedPortion(movement, {
+          rid: 'BUS',
+          category: 'LK',
+          mode: 'bus',
+          at: terminus,
+          destination: { tpl: 'BEYOND', crs: 'BYD', name: 'Beyond' },
+          calls: [terminus, namedCall(join, 'l1', 'BEYOND', 'BYD', 'Beyond')],
+        }),
+      ],
+    }),
+  ]
+  const service = displayServices(reduceCIS(null, message)!, null, false, false).services[0]
+  assert.deepEqual(
+    service.passengerCallPoints.map(point => point.name),
+    ['Junction from feed', 'Destination from feed', 'After the join', 'Through terminus', 'Beyond'],
+  )
+  assert.deepEqual(
+    service.destinations.map(destination => destination.name),
+    ['Beyond', 'Branch terminus'],
+  )
+  const [division] = service.passengerCallPoints[2].associations
+  assert.equal(division.position, 'rear')
+  assert.deepEqual(
+    division.service!.passengerCallPoints.map(point => point.name),
+    ['After the join', 'Branch terminus'],
+  )
 })
 
 test('hiding terminating trains preserves departures, platform filters and warnings', () => {
@@ -534,6 +930,7 @@ test('frames written by the service decode to the messages it encoded', () => {
   for (const [frame, message] of [
     [serviceSnapshotFrame, serviceSnapshot],
     [serviceStoppingSnapshotFrame, serviceStoppingSnapshot],
+    [serviceLinkedSnapshotFrame, serviceLinkedSnapshot],
     [serviceUpdateFrame, serviceUpdate],
     [nrccSnapshotFrame, nrccSnapshot],
     [nrccUpdateFrame, nrccUpdate],

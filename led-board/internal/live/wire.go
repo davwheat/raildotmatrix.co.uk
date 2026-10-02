@@ -284,9 +284,23 @@ func calls(values []*pb.Call) []Call {
 			DetachFront:      value.DetachFront,
 			FalseDestination: optionalLocation(value.GetFalseDestination()),
 			CoachCount:       value.CoachCount,
+			FormationChange:  formationChange(value.GetFormationChange()),
 		}
 	}
 	return out
+}
+
+func formationChange(value *pb.FormationChange) *FormationChange {
+	if value == nil {
+		return nil
+	}
+	part := func(value *pb.FormationPart) *FormationPart {
+		if value == nil {
+			return nil
+		}
+		return &FormationPart{Coaches: value.Coaches, Position: value.Position}
+	}
+	return &FormationChange{Detached: part(value.GetDetached()), Attached: part(value.GetAttached())}
 }
 
 func portions(values []*pb.Portion) []Portion {
@@ -306,6 +320,8 @@ func portions(values []*pb.Portion) []Portion {
 			CoachCount:   value.CoachCount,
 			Position:     value.Position,
 			Calls:        calls(value.GetCalls()),
+			Main:         value.Main,
+			Links:        portions(value.GetLinks()),
 		}
 		if mode, known := transportModes[value.GetMode()]; known {
 			out[i].Mode = &mode
@@ -407,6 +423,7 @@ func movement(value *pb.Movement) Movement {
 		DetachFront:      value.DetachFront,
 		Activities:       value.Activities,
 		FalseDestination: optionalLocation(value.GetFalseDestination()),
+		FormationChange:  formationChange(value.GetFormationChange()),
 		Origins:          endpoints(value.GetOrigins()),
 		Destinations:     endpoints(value.GetDestinations()),
 		CallingPoints:    calls(value.GetCallingPoints()),

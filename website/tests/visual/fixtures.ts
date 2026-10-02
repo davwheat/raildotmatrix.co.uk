@@ -216,6 +216,8 @@ function dividingService(): Movement {
     coach_count: 4,
     position: 'rear',
     calls: [divideCall, call(LITTLEHAMPTON, 2400, '1', 4)],
+    main: true,
+    links: [],
   }
 
   return movement({

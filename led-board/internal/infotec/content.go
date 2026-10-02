@@ -1,6 +1,7 @@
 package infotec
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -162,6 +163,8 @@ func article(toc string) string {
 type callingPage struct {
 	prefix   string
 	platform string
+	// position is the part of a dividing train that the page is for: "Front", "Middle" or "Rear".
+	position string
 	points   []string
 }
 
@@ -176,39 +179,36 @@ func (b *Board) callingPointPages(s *model.Service) []callingPage {
 		all[i] = b.callText(cp)
 	}
 	var pages []callingPage
-	var lengths []int
-	for _, cp := range s.CallPoints {
+	var portions []model.Portion
+	for i, cp := range s.CallPoints {
 		for _, p := range cp.Divides {
-			if len(p.CallPoints) == 0 {
-				continue
-			}
-			divide := 0
-			for i := range s.CallPoints {
-				if s.CallPoints[i].Name == p.CallPoints[0].Name {
-					divide = i + 1
-					break
+			points := append([]string{}, all[:i+1]...)
+			for j, pc := range p.CallPoints {
+				// A portion's calls can open with the call it divides at, which the train's own list already has.
+				if j == 0 && pc.Name == cp.Name {
+					continue
 				}
-			}
-			points := append([]string{}, all[:divide]...)
-			for _, pc := range p.CallPoints[1:] {
 				points = append(points, b.callText(pc))
 			}
 			pages = append(pages, callingPage{points: points})
-			lengths = append(lengths, p.Length)
+			portions = append(portions, p)
 		}
 	}
 	if len(pages) == 0 {
 		return []callingPage{{prefix: "Calling at:", points: all}}
 	}
-	for i := range pages {
-		position := "Middle"
-		if i == len(pages)-1 {
-			position = "Rear"
-		}
-		pages[i].prefix = coaches(position, lengths[i])
+	positions := make([]string, len(portions))
+	for i, p := range portions {
+		positions[i] = p.Position
 	}
-	front := callingPage{prefix: coaches("Front", s.CallPoints[len(s.CallPoints)-1].Length), points: all}
-	return append([]callingPage{front}, pages...)
+	own, labels := board.PortionLabels(positions)
+	for i := range pages {
+		pages[i].position, pages[i].prefix = labels[i], coaches(labels[i], portions[i].Length)
+	}
+	front := callingPage{position: own, prefix: coaches(own, s.CallPoints[len(s.CallPoints)-1].Length), points: all}
+	pages = append([]callingPage{front}, pages...)
+	slices.SortStableFunc(pages, func(a, b callingPage) int { return board.PortionRank(a.position) - board.PortionRank(b.position) })
+	return pages
 }
 
 func (b *Board) callText(cp model.CallPoint) string {
