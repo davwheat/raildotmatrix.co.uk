@@ -1606,6 +1606,9 @@ type Call struct {
 	DetachFront      *bool     `protobuf:"varint,9,opt,name=detach_front,json=detachFront,proto3,oneof" json:"detachFront,omitempty"`
 	FalseDestination *Location `protobuf:"bytes,10,opt,name=false_destination,json=falseDestination,proto3" json:"falseDestination,omitempty"`
 	CoachCount       *int32    `protobuf:"varint,11,opt,name=coach_count,json=coachCount,proto3,oneof" json:"coachCount,omitempty"`
+	// The coaches that leave or join the train at this call. Unset when none
+	// do, or when nothing says.
+	FormationChange *FormationChange `protobuf:"bytes,12,opt,name=formation_change,json=formationChange,proto3" json:"formationChange,omitempty"`
 }
 
 func (x *Call) Reset() {
@@ -1691,6 +1694,79 @@ func (x *Call) GetCoachCount() int32 {
 	return 0
 }
 
+func (x *Call) GetFormationChange() *FormationChange {
+	if x != nil {
+		return x.FormationChange
+	}
+	return nil
+}
+
+// How a train's formation changes at a call while it stays one service:
+// coaches left behind there, or coaches coupled on. Darwin has no word for it,
+// so it's read from the units that Gemini allocates to the legs either side of
+// the call. A portion that divides off or joins as a service of its own is in
+// `portions` instead, and isn't repeated here.
+//
+// A train from London Victoria to Ore that leaves four of its eight coaches at
+// Eastbourne has `detached` on its call there, with four coaches.
+type FormationChange struct {
+	unknownFields []byte
+	Detached      *FormationPart `protobuf:"bytes,1,opt,name=detached,proto3" json:"detached,omitempty"`
+	Attached      *FormationPart `protobuf:"bytes,2,opt,name=attached,proto3" json:"attached,omitempty"`
+}
+
+func (x *FormationChange) Reset() {
+	*x = FormationChange{}
+}
+
+func (*FormationChange) ProtoMessage() {}
+
+func (x *FormationChange) GetDetached() *FormationPart {
+	if x != nil {
+		return x.Detached
+	}
+	return nil
+}
+
+func (x *FormationChange) GetAttached() *FormationPart {
+	if x != nil {
+		return x.Attached
+	}
+	return nil
+}
+
+type FormationPart struct {
+	unknownFields []byte
+	// How many passenger coaches. Unset when the allocation has none to count.
+	Coaches *int32 `protobuf:"varint,1,opt,name=coaches,proto3,oneof" json:"coaches,omitempty"`
+	// The end of the train, as it arrives, that coaches which leave are at:
+	// "front" or "rear". The order of the units in an allocation isn't to be
+	// trusted, so this follows from the way the train leaves: one that carries
+	// on leaves its rear coaches behind, and one that reverses out leaves the
+	// coaches that led it in. Unset for coaches that join, which nothing places.
+	Position *string `protobuf:"bytes,2,opt,name=position,proto3,oneof" json:"position,omitempty"`
+}
+
+func (x *FormationPart) Reset() {
+	*x = FormationPart{}
+}
+
+func (*FormationPart) ProtoMessage() {}
+
+func (x *FormationPart) GetCoaches() int32 {
+	if x != nil && x.Coaches != nil {
+		return *x.Coaches
+	}
+	return 0
+}
+
+func (x *FormationPart) GetPosition() string {
+	if x != nil && x.Position != nil {
+		return *x.Position
+	}
+	return ""
+}
+
 type Portion struct {
 	unknownFields []byte
 	Headcode      *string `protobuf:"bytes,1,opt,name=headcode,proto3,oneof" json:"headcode,omitempty"`
@@ -1706,12 +1782,39 @@ type Portion struct {
 	Cancelled    bool          `protobuf:"varint,10,opt,name=cancelled,proto3" json:"cancelled,omitempty"`
 	Available    bool          `protobuf:"varint,11,opt,name=available,proto3" json:"available,omitempty"`
 	CoachCount   *int32        `protobuf:"varint,12,opt,name=coach_count,json=coachCount,proto3,oneof" json:"coachCount,omitempty"`
-	Position     *string       `protobuf:"bytes,13,opt,name=position,proto3,oneof" json:"position,omitempty"`
+	// The end of the movement's train, as it arrives at the division, that a
+	// dividing portion is at: "front" or "rear". Darwin rarely says, so it
+	// follows from the way the train leaves: a train that carries on leaves its
+	// rear coaches behind, and one that reverses out leaves the coaches that led
+	// it in. Unset where that can't be told, as where two portions divide off at
+	// one station, and on every other portion.
+	Position *string `protobuf:"bytes,13,opt,name=position,proto3,oneof" json:"position,omitempty"`
 	// The associated service's calling points, carried only for a dividing
-	// portion (category VV) and for a rail replacement bus continuation
-	// (category NP or LK with mode BUS). Every other portion has none: a joining
-	// portion or next working is shown by its other fields.
+	// portion (category VV), for the train that the movement's service joins
+	// (category JJ where `main` is false), for a link that passengers continue
+	// on (category LK, unless `main` is false) and for a bus next working
+	// (category NP with mode BUS). Every other portion has none: a portion that
+	// joins the movement's train or a next working is shown by its other fields.
 	Calls []*Call `protobuf:"bytes,14,rep,name=calls,proto3" json:"calls,omitempty"`
+	// Whether the service that holds this association is its main service, and
+	// this portion the associated one. The main service of a link (category LK)
+	// is the one that passengers leave, so true means that they continue on this
+	// portion, and false means that this portion's passengers continue on the
+	// service that holds it. The main service of a join (category JJ) is the
+	// train that is joined, and of a division (category VV) the train that
+	// divides, so false means that the movement's service is the portion that
+	// joins or divides off. Unset when Darwin hasn't said which end is which.
+	Main *bool `protobuf:"varint,15,opt,name=main,proto3,oneof" json:"main,omitempty"`
+	// The links (category LK) that this portion's own service is the main
+	// service of, so that a client can follow a chain of linked services: a
+	// train, then a bus, then a train. Each link's `at` is a call of this
+	// portion's service, and each carries its own `links` in turn, to a depth of
+	// four. Carried only on a link that carries `calls`.
+	//
+	// The train that the movement's service joins (category JJ) carries its
+	// links in the same way, with the portions that divide from it after the
+	// join (category VV) and any train that it joins in turn (category JJ).
+	Links []*Portion `protobuf:"bytes,16,rep,name=links,proto3" json:"links,omitempty"`
 }
 
 func (x *Portion) Reset() {
@@ -1818,6 +1921,20 @@ func (x *Portion) GetCalls() []*Call {
 	return nil
 }
 
+func (x *Portion) GetMain() bool {
+	if x != nil && x.Main != nil {
+		return *x.Main
+	}
+	return false
+}
+
+func (x *Portion) GetLinks() []*Portion {
+	if x != nil {
+		return x.Links
+	}
+	return nil
+}
+
 type TrainOrder struct {
 	unknownFields []byte
 	Position      int32                  `protobuf:"varint,1,opt,name=position,proto3" json:"position,omitempty"`
@@ -1892,6 +2009,8 @@ type Movement struct {
 	PassedAt         *timestamppb.Timestamp `protobuf:"bytes,36,opt,name=passed_at,json=passedAt,proto3" json:"passedAt,omitempty"`
 	TrainOrder       *TrainOrder            `protobuf:"bytes,37,opt,name=train_order,json=trainOrder,proto3" json:"trainOrder,omitempty"`
 	Td               *TdEvidence            `protobuf:"bytes,38,opt,name=td,proto3" json:"td,omitempty"`
+	// The coaches that leave or join the train at this station.
+	FormationChange *FormationChange `protobuf:"bytes,39,opt,name=formation_change,json=formationChange,proto3" json:"formationChange,omitempty"`
 }
 
 func (x *Movement) Reset() {
@@ -2162,6 +2281,13 @@ func (x *Movement) GetTrainOrder() *TrainOrder {
 func (x *Movement) GetTd() *TdEvidence {
 	if x != nil {
 		return x.Td
+	}
+	return nil
+}
+
+func (x *Movement) GetFormationChange() *FormationChange {
+	if x != nil {
+		return x.FormationChange
 	}
 	return nil
 }
@@ -4045,6 +4171,16 @@ func (m *Call) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.unknownFields != nil {
 		i = protobuf_go_lite.EncodeRawBytes(dAtA, i, m.unknownFields)
 	}
+	if m.FormationChange != nil {
+		size, err := m.FormationChange.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protobuf_go_lite.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x62
+	}
 	if m.CoachCount != nil {
 		i = protobuf_go_lite.EncodeVarint(dAtA, i, uint64(*m.CoachCount))
 		i--
@@ -4128,6 +4264,100 @@ func (m *Call) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *FormationChange) MarshalVT() (dAtA []byte, err error) {
+	if m == nil {
+		return nil, nil
+	}
+	size := m.SizeVT()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBufferVT(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FormationChange) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *FormationChange) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	if m == nil {
+		return 0, nil
+	}
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.unknownFields != nil {
+		i = protobuf_go_lite.EncodeRawBytes(dAtA, i, m.unknownFields)
+	}
+	if m.Attached != nil {
+		size, err := m.Attached.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protobuf_go_lite.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Detached != nil {
+		size, err := m.Detached.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protobuf_go_lite.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *FormationPart) MarshalVT() (dAtA []byte, err error) {
+	if m == nil {
+		return nil, nil
+	}
+	size := m.SizeVT()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBufferVT(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FormationPart) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *FormationPart) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	if m == nil {
+		return 0, nil
+	}
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.unknownFields != nil {
+		i = protobuf_go_lite.EncodeRawBytes(dAtA, i, m.unknownFields)
+	}
+	if m.Position != nil {
+		i = protobuf_go_lite.EncodeString(dAtA, i, *m.Position)
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Coaches != nil {
+		i = protobuf_go_lite.EncodeVarint(dAtA, i, uint64(*m.Coaches))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *Portion) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
@@ -4156,6 +4386,25 @@ func (m *Portion) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	_ = l
 	if m.unknownFields != nil {
 		i = protobuf_go_lite.EncodeRawBytes(dAtA, i, m.unknownFields)
+	}
+	if len(m.Links) > 0 {
+		for iNdEx := len(m.Links) - 1; iNdEx >= 0; iNdEx-- {
+			size, err := m.Links[iNdEx].MarshalToSizedBufferVT(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = protobuf_go_lite.EncodeVarint(dAtA, i, uint64(size))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0x82
+		}
+	}
+	if m.Main != nil {
+		i = protobuf_go_lite.EncodeBool(dAtA, i, *m.Main)
+		i--
+		dAtA[i] = 0x78
 	}
 	if len(m.Calls) > 0 {
 		for iNdEx := len(m.Calls) - 1; iNdEx >= 0; iNdEx-- {
@@ -4332,6 +4581,18 @@ func (m *Movement) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	_ = l
 	if m.unknownFields != nil {
 		i = protobuf_go_lite.EncodeRawBytes(dAtA, i, m.unknownFields)
+	}
+	if m.FormationChange != nil {
+		size, err := m.FormationChange.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protobuf_go_lite.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0xba
 	}
 	if m.Td != nil {
 		size, err := m.Td.MarshalToSizedBufferVT(dAtA[:i])
@@ -5420,6 +5681,40 @@ func (m *Call) SizeVT() (n int) {
 		n += protobuf_go_lite.SizeMessage(1, l)
 	}
 	n += protobuf_go_lite.SizeVarintPtr(1, m.CoachCount)
+	if m.FormationChange != nil {
+		l = m.FormationChange.SizeVT()
+		n += protobuf_go_lite.SizeMessage(1, l)
+	}
+	n += len(m.unknownFields)
+	return n
+}
+
+func (m *FormationChange) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Detached != nil {
+		l = m.Detached.SizeVT()
+		n += protobuf_go_lite.SizeMessage(1, l)
+	}
+	if m.Attached != nil {
+		l = m.Attached.SizeVT()
+		n += protobuf_go_lite.SizeMessage(1, l)
+	}
+	n += len(m.unknownFields)
+	return n
+}
+
+func (m *FormationPart) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += protobuf_go_lite.SizeVarintPtr(1, m.Coaches)
+	n += protobuf_go_lite.SizeStringPtr(1, m.Position)
 	n += len(m.unknownFields)
 	return n
 }
@@ -5455,6 +5750,11 @@ func (m *Portion) SizeVT() (n int) {
 	for _, e := range m.Calls {
 		l = e.SizeVT()
 		n += protobuf_go_lite.SizeMessage(1, l)
+	}
+	n += protobuf_go_lite.SizeBoolPtr(1, m.Main)
+	for _, e := range m.Links {
+		l = e.SizeVT()
+		n += protobuf_go_lite.SizeMessage(2, l)
 	}
 	n += len(m.unknownFields)
 	return n
@@ -5569,6 +5869,10 @@ func (m *Movement) SizeVT() (n int) {
 	}
 	if m.Td != nil {
 		l = m.Td.SizeVT()
+		n += protobuf_go_lite.SizeMessage(2, l)
+	}
+	if m.FormationChange != nil {
+		l = m.FormationChange.SizeVT()
 		n += protobuf_go_lite.SizeMessage(2, l)
 	}
 	n += len(m.unknownFields)
@@ -8119,6 +8423,155 @@ func (m *Call) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			m.CoachCount = &v
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FormationChange", wireType)
+			}
+			msgStart, postIndex, err := protobuf_go_lite.DecodeLengthDelimited(dAtA, iNdEx)
+			if err != nil {
+				return err
+			}
+			if m.FormationChange == nil {
+				m.FormationChange = &FormationChange{}
+			}
+			if err := m.FormationChange.UnmarshalVT(dAtA[msgStart:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := protobuf_go_lite.Skip(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return protobuf_go_lite.ErrInvalidLength
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.unknownFields = append(m.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FormationChange) UnmarshalVT(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	var err error
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		wire, iNdEx, err = protobuf_go_lite.DecodeVarint(dAtA, iNdEx)
+		if err != nil {
+			return err
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FormationChange: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FormationChange: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Detached", wireType)
+			}
+			msgStart, postIndex, err := protobuf_go_lite.DecodeLengthDelimited(dAtA, iNdEx)
+			if err != nil {
+				return err
+			}
+			if m.Detached == nil {
+				m.Detached = &FormationPart{}
+			}
+			if err := m.Detached.UnmarshalVT(dAtA[msgStart:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Attached", wireType)
+			}
+			msgStart, postIndex, err := protobuf_go_lite.DecodeLengthDelimited(dAtA, iNdEx)
+			if err != nil {
+				return err
+			}
+			if m.Attached == nil {
+				m.Attached = &FormationPart{}
+			}
+			if err := m.Attached.UnmarshalVT(dAtA[msgStart:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := protobuf_go_lite.Skip(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return protobuf_go_lite.ErrInvalidLength
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.unknownFields = append(m.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FormationPart) UnmarshalVT(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	var err error
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		wire, iNdEx, err = protobuf_go_lite.DecodeVarint(dAtA, iNdEx)
+		if err != nil {
+			return err
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FormationPart: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FormationPart: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coaches", wireType)
+			}
+			var v int32
+			v, iNdEx, err = protobuf_go_lite.DecodeVarintInt32(dAtA, iNdEx)
+			if err != nil {
+				return err
+			}
+			m.Coaches = &v
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Position", wireType)
+			}
+			var v string
+			v, iNdEx, err = protobuf_go_lite.DecodeString(dAtA, iNdEx)
+			if err != nil {
+				return err
+			}
+			m.Position = &v
 		default:
 			iNdEx = preIndex
 			skippy, err := protobuf_go_lite.Skip(dAtA[iNdEx:])
@@ -8317,6 +8770,30 @@ func (m *Portion) UnmarshalVT(dAtA []byte) error {
 			}
 			m.Calls = append(m.Calls, &Call{})
 			if err := m.Calls[len(m.Calls)-1].UnmarshalVT(dAtA[msgStart:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Main", wireType)
+			}
+			var v bool
+			v, iNdEx, err = protobuf_go_lite.DecodeVarintBool(dAtA, iNdEx)
+			if err != nil {
+				return err
+			}
+			b := bool(v)
+			m.Main = &b
+		case 16:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Links", wireType)
+			}
+			msgStart, postIndex, err := protobuf_go_lite.DecodeLengthDelimited(dAtA, iNdEx)
+			if err != nil {
+				return err
+			}
+			m.Links = append(m.Links, &Portion{})
+			if err := m.Links[len(m.Links)-1].UnmarshalVT(dAtA[msgStart:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -8896,6 +9373,21 @@ func (m *Movement) UnmarshalVT(dAtA []byte) error {
 				m.Td = &TdEvidence{}
 			}
 			if err := m.Td.UnmarshalVT(dAtA[msgStart:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 39:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FormationChange", wireType)
+			}
+			msgStart, postIndex, err := protobuf_go_lite.DecodeLengthDelimited(dAtA, iNdEx)
+			if err != nil {
+				return err
+			}
+			if m.FormationChange == nil {
+				m.FormationChange = &FormationChange{}
+			}
+			if err := m.FormationChange.UnmarshalVT(dAtA[msgStart:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

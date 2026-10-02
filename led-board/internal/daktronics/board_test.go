@@ -317,6 +317,24 @@ func TestWorldlineSingleCallingPointSaysOnly(t *testing.T) {
 	}
 }
 
+// A train that leaves its front coaches at a calling point runs on with the rear ones, so the pages run from the
+// front of the train to the rear, and the coaches left behind call nowhere further.
+func TestInfoPagesForCoachesLeftBehind(t *testing.T) {
+	b := newTestBoard(t, false)
+	view := fixtures.Steps("dividing-service")[0]
+	s := &view.Services[0]
+	s.CallPoints[0].Divides, s.CallPoints[1].Divides = []model.Portion{{Length: 4, Position: "front"}}, nil
+
+	pages := b.derive(view).pages
+	want := []page{
+		{prefix: "Front 4 coaches calling at:", text: " GATWICK AIRPORT."},
+		{prefix: "Rear 4 coaches calling at:", text: " Gatwick Airport, HORSHAM."},
+	}
+	if len(pages) != 3 || pages[1] != want[0] || pages[2] != want[1] {
+		t.Fatalf("pages = %+v, want the last two to be %+v", pages, want)
+	}
+}
+
 func TestWorldlineSplitNamesTwoDestinations(t *testing.T) {
 	c := newTestBoard(t, true).derive(fixtures.Steps("three-way-split")[0])
 	first := c.rows[0]

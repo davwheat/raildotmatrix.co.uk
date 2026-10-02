@@ -215,6 +215,11 @@ export interface IAssociation<Category extends AssociationCategory = Association
    * NOTE: All associations' calling point locations **will** contain the dividing point!
    */
   service: Category extends AssociationCategory.Divide ? IMyTrainService : undefined
+  /**
+   * The end of the train, as it stands at the board's station, that a dividing portion is at. Only the live feed
+   * says, and not always.
+   */
+  position?: 'front' | 'middle' | 'rear'
 }
 
 interface IPassengerCallPoint {

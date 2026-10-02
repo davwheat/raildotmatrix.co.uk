@@ -15,10 +15,14 @@ type Location struct {
 	Departs *time.Time
 }
 
-// Portion is part of a dividing train that goes its own way from a calling point.
+// Portion is part of a dividing train that goes its own way from a calling point, or that goes no further.
 type Portion struct {
 	// Length is the coach count, or 0 when unknown.
-	Length     int
+	Length int
+	// Position is the end of the train, as it stands at this station, that the portion is at: "front", "middle"
+	// or "rear", or empty when the feed doesn't say.
+	Position string
+	// CallPoints are the portion's own calls from the division. Coaches that the train leaves behind have none.
 	CallPoints []CallPoint
 }
 

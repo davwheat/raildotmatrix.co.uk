@@ -376,9 +376,14 @@ func TestDisplayCallPointArrival(t *testing.T) {
 		t.Errorf("estimated outranks planned: arrival = %v, want %v", got, estimated)
 	}
 	calls[1].Cancelled = true
-	if got := Display(Reduce(nil, initial), Options{}, initial.Window.From).Services[0].CallPoints[1].Arrival; got != nil {
-		t.Errorf("a cancelled call has no arrival, got %v", got)
+	if got := Display(Reduce(nil, initial), Options{}, initial.Window.From).Services[0].CallPoints; len(got) != 1 {
+		t.Errorf("a call the train no longer makes is still listed: %v", callNames(got))
 	}
+	initial.Movements[0].Cancelled = true
+	if got := Display(Reduce(nil, initial), Options{}, initial.Window.From).Services[0].CallPoints; len(got) != 2 || !got[1].Cancelled || got[1].Arrival != nil {
+		t.Errorf("a cancelled train lists the journey it would have made, with no arrival at a cancelled call: %+v", got)
+	}
+	initial.Movements[0].Cancelled = false
 	calls[0].Arrival = Times{}
 	if got := Display(Reduce(nil, initial), Options{}, initial.Window.From).Services[0].CallPoints[0].Arrival; got != nil {
 		t.Errorf("a call with no times has no arrival, got %v", got)

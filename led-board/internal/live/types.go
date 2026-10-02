@@ -69,6 +69,25 @@ type Call struct {
 	DetachFront      *bool     `json:"detach_front"`
 	FalseDestination *Location `json:"false_destination"`
 	CoachCount       *int32    `json:"coach_count"`
+	// FormationChange is the coaches that leave or join the train at this call. Nil when none do, or when
+	// nothing says.
+	FormationChange *FormationChange `json:"formation_change,omitempty"`
+}
+
+// FormationChange is how a train's formation changes at a call while it stays one service: coaches left behind
+// there, or coaches coupled on. A portion that divides off or joins as a service of its own is a Portion instead.
+type FormationChange struct {
+	Detached *FormationPart `json:"detached"`
+	Attached *FormationPart `json:"attached"`
+}
+
+// FormationPart is the coaches that leave or join a train.
+type FormationPart struct {
+	// Coaches is how many passenger coaches, or nil when unknown.
+	Coaches *int32 `json:"coaches"`
+	// Position is the end of the train, as it arrives, that coaches which leave are at: "front" or "rear". Nil
+	// for coaches that join.
+	Position *string `json:"position"`
 }
 
 type TransportMode string
@@ -79,7 +98,7 @@ const (
 	ModeFerry TransportMode = "ferry"
 )
 
-// Portion is a service that joins or divides from a movement's train.
+// Portion is a service associated with a movement's train: one that joins it, divides from it, or links to it.
 type Portion struct {
 	Headcode     *string        `json:"headcode"`
 	Mode         *TransportMode `json:"mode"`
@@ -88,16 +107,29 @@ type Portion struct {
 	Origin       *Location      `json:"origin"`
 	Destination  *Location      `json:"destination"`
 	RID          string         `json:"rid"`
-	// Category is Darwin's association category: "JJ" joins, "VV" divides.
+	// Category is Darwin's association category: "JJ" joins, "VV" divides, "LK" links, and "NP" is the next
+	// working.
 	Category   string   `json:"category"`
 	At         Location `json:"at"`
 	Cancelled  bool     `json:"cancelled"`
 	Available  bool     `json:"available"`
 	CoachCount *int32   `json:"coach_count"`
-	Position   *string  `json:"position"`
-	// Calls are the associated service's calling points, sent only for a dividing portion ("VV") and for a
-	// rail replacement bus continuation ("NP" or "LK" with mode bus). Empty for every other portion.
+	// Position is the end of the movement's train, as it arrives at the division, that a dividing portion is at:
+	// "front" or "rear". Nil where the service can't tell.
+	Position *string `json:"position"`
+	// Calls are the associated service's calling points, sent only for a dividing portion ("VV"), for the train
+	// that the movement's service joins ("JJ" where Main is false), for a link that passengers continue on ("LK",
+	// unless Main is false) and for a bus next working ("NP" with mode bus). Empty for every other portion.
 	Calls []Call `json:"calls"`
+	// Main is whether the service that holds this association is its main service. Passengers leave the main
+	// service of a link for the associated one, so true means that they continue on this portion. The main
+	// service of a join is the train that is joined, and of a division the train that divides, so false means
+	// that the movement's service is the portion that joins or divides off. Nil when Darwin hasn't said which
+	// end is which.
+	Main *bool `json:"main"`
+	// Links are the links this portion's own service hands its passengers to, each with its own in turn. Sent
+	// only on a link.
+	Links []Portion `json:"links"`
 }
 
 // Coach is one vehicle of a known formation.
@@ -188,10 +220,12 @@ type Movement struct {
 	DetachFront      *bool         `json:"detach_front"`
 	Activities       *string       `json:"activities"`
 	FalseDestination *Location     `json:"false_destination"`
-	Origins          []Endpoint    `json:"origins"`
-	Destinations     []Endpoint    `json:"destinations"`
-	CallingPoints    []Call        `json:"calling_points"`
-	Portions         []Portion     `json:"portions"`
+	// FormationChange is the coaches that leave or join the train at this station.
+	FormationChange *FormationChange `json:"formation_change,omitempty"`
+	Origins         []Endpoint       `json:"origins"`
+	Destinations    []Endpoint       `json:"destinations"`
+	CallingPoints   []Call           `json:"calling_points"`
+	Portions        []Portion        `json:"portions"`
 	// ArrivedAt is signalling evidence that the train is at the platform. It never becomes Arrival.Actual.
 	ArrivedAt  *time.Time  `json:"arrived_at"`
 	PassedAt   *time.Time  `json:"passed_at"`

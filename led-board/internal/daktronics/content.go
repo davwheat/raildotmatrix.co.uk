@@ -1,6 +1,7 @@
 package daktronics
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -256,7 +257,9 @@ func reasonText(s *model.Service) string {
 
 type callingPage struct {
 	prefix string
-	points []string
+	// position is the part of a dividing train that the page is for: "Front", "Middle" or "Rear".
+	position string
+	points   []string
 }
 
 // callingPointPages lists the calling points of each portion of a train, as the web board does: the whole
@@ -287,15 +290,18 @@ func callingPointPages(s *model.Service) []callingPage {
 	if len(pages) == 0 {
 		return []callingPage{{prefix: "Calling at", points: all}}
 	}
-	for i := range pages {
-		position := "Middle"
-		if i == len(pages)-1 {
-			position = "Rear"
-		}
-		pages[i].prefix = coaches(position, portions[i].Length)
+	positions := make([]string, len(portions))
+	for i, p := range portions {
+		positions[i] = p.Position
 	}
-	front := callingPage{prefix: coaches("Front", s.CallPoints[len(s.CallPoints)-1].Length), points: all}
-	return append([]callingPage{front}, pages...)
+	own, labels := board.PortionLabels(positions)
+	for i := range pages {
+		pages[i].position, pages[i].prefix = labels[i], coaches(labels[i], portions[i].Length)
+	}
+	front := callingPage{position: own, prefix: coaches(own, s.CallPoints[len(s.CallPoints)-1].Length), points: all}
+	pages = append([]callingPage{front}, pages...)
+	slices.SortStableFunc(pages, func(a, b callingPage) int { return board.PortionRank(a.position) - board.PortionRank(b.position) })
+	return pages
 }
 
 func coaches(position string, length int) string {

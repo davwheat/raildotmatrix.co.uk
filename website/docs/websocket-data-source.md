@@ -67,6 +67,36 @@ A movement's `false_destination` is shown in place of the service's own destinat
 feed's caption describes the route to the real destination, and the calling points end at the first call there. Portions keep their own
 destinations.
 
+A service that links to another where it ends is shown as one through service. Darwin links (`LK`) two services to make one journey of them, most
+often a train and the rail replacement bus that finishes its route. The board lists the linked service's calling points after the service's own
+and shows the linked service's destination, without a via caption. It follows the links of each linked service in turn, so a train that links to
+a bus that links to a train is one row to the last train's destination. Each linked service keeps its own row at the stations where it calls.
+
+The board follows a link only at the last call that the service makes, so a link elsewhere on the route changes nothing, and calls that the
+service has cancelled beyond the link give way to the linked service's. It stops at a link that is cancelled, whose service the feed doesn't
+have, or whose service makes no further calls. It doesn't follow a link from a service with a false destination, because that destination is what
+Darwin tells a board to show. A portion with `main` set to `false` is the service the passengers came from, and a bus recorded as a train's next
+working (`NP`) is read as a link.
+
+A portion that joins another train (`JJ`, with `main` set to `false`) is followed in the same way before it reaches the join: it's one row to the
+destination of the train it joins, with that train's calling points after its own. The join can be a call that passengers can't use.
+
+A train that divides lists each portion's calling points and destination while passengers can still travel in it. A portion that is cancelled,
+that the feed doesn't have, or that has no calls left to make isn't listed, and neither is its destination. A train can divide at a station where
+it sets nobody down, as a sleeper does: the board lists that station as a calling point, because the division has to be shown against one. A
+calling point that the train no longer makes is left out, unless the train is cancelled at this station as well. A train that a portion joins can
+go on to divide, or to link to another service: the board follows both, and lists those divisions and destinations too.
+
+Each part of a dividing train is labelled with the end of the train it's at. The feed gives a portion's `position` as the train arrives at the
+division, or else Darwin's `detach_front` does, and the board swaps the ends for each reversal (activity `RM`) that the train makes on the way
+there. The train's own part is the front unless a portion is known to be there. Where nothing says, the board assumes that each portion is behind
+the ones before it, as the real boards do.
+
+A train can also leave coaches behind while it runs on as the same service. The feed reports those on the call's `formation_change`, and the
+board lists them as a part of the train that calls no further than that station.
+
+A train that is cut short is shown to the last station that it still calls at. At that station it's an arrival that terminates there.
+
 ## Wire format
 
 The streams are Darwin Browser's protocol version 2: every frame is a protobuf message, defined in that repository's
@@ -81,8 +111,8 @@ alive.
 Keep the plugin version in `buf.gen.yaml` no newer than the `@bufbuild/protobuf` version in `package.json`. The `.pb` fixtures are frames written
 by the service's own encoder, and the tests check that this decoder reads each one as the JSON beside it.
 
-Run `pnpm test:live` for reducer, digest, heartbeat, resync/reconnect, ordering, split, platform warning and platform alteration regressions. The
-runner uses Node's test runner and Wrangler's existing esbuild compiler. Build with `pnpm build`.
+Run `pnpm test:live` for reducer, digest, heartbeat, resync/reconnect, ordering, split, link, platform warning and platform alteration
+regressions. The runner uses Node's test runner and Wrangler's existing esbuild compiler. Build with `pnpm build`.
 
 Run `pnpm test:visual` to screenshot every board in every state, including both platform warnings and a platform alteration, and compare the
 results against committed baselines. See [Board screenshot tests](./board-visual-tests.md).

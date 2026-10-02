@@ -250,6 +250,41 @@ func TestInfoPagesForDividingTrain(t *testing.T) {
 	}
 }
 
+// A portion's own calls needn't open with the station it divides at: a sleeper sets nobody down there, and a
+// station can be called at twice.
+func TestInfoPagesDivideAtTheCallThePortionIsListedAgainst(t *testing.T) {
+	b := newTestBoard(t)
+	view := fixtures.Steps("dividing-service")[0]
+	s := &view.Services[0]
+	gatwick := &s.CallPoints[0]
+	gatwick.Divides, s.CallPoints[1].Divides = s.CallPoints[1].Divides, nil
+	gatwick.Divides[0].CallPoints = gatwick.Divides[0].CallPoints[1:]
+
+	pages := b.derive(view).pages
+	want := page{"Rear 4 coaches:", "Gatwick Airport (19:56) and Littlehampton (20:20).", callingHold}
+	if len(pages) != 3 || pages[2] != want {
+		t.Fatalf("pages = %+v, want the last to be %+v", pages, want)
+	}
+}
+
+// A train that leaves its front coaches at a calling point runs on with the rear ones, so the pages run from the
+// front of the train to the rear, and the coaches left behind call nowhere further.
+func TestInfoPagesForCoachesLeftBehind(t *testing.T) {
+	b := newTestBoard(t)
+	view := fixtures.Steps("dividing-service")[0]
+	s := &view.Services[0]
+	s.CallPoints[0].Divides, s.CallPoints[1].Divides = []model.Portion{{Length: 4, Position: "front"}}, nil
+
+	pages := b.derive(view).pages
+	want := []page{
+		{"Front 4 coaches:", "Gatwick Airport (19:56) only.", callingHold},
+		{"Rear 4 coaches:", "Gatwick Airport (19:56) and Horsham (20:05).", callingHold},
+	}
+	if len(pages) != 3 || pages[1] != want[0] || pages[2] != want[1] {
+		t.Fatalf("pages = %+v, want the last two to be %+v", pages, want)
+	}
+}
+
 func TestPageCycleOrder(t *testing.T) {
 	b := newTestBoard(t)
 	var order []int

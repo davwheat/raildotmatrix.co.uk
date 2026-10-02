@@ -55,13 +55,14 @@ const NextTrainThirdRow = React.memo(({ callingPointText, extraText }: ThirdRowP
 })
 
 export default function NextTrain({ nextTrain }: { nextTrain: IMyTrainService }) {
+  // Each portion with the index of the calling point it divides at.
   const associatedServices = React.useMemo(
     () =>
-      nextTrain.passengerCallPoints
-        .map(s => s.associations)
-        .flat(1)
-        .filter((a): a is IAssociation<AssociationCategory.Divide> => a.type === AssociationCategory.Divide)
-        .map(a => a.service),
+      nextTrain.passengerCallPoints.flatMap((point, divideIndex) =>
+        point.associations
+          .filter((a): a is IAssociation<AssociationCategory.Divide> => a.type === AssociationCategory.Divide)
+          .map(a => ({ service: a.service, position: a.position, divideIndex })),
+      ),
     [nextTrain.passengerCallPoints],
   )
 
@@ -77,21 +78,39 @@ export default function NextTrain({ nextTrain }: { nextTrain: IMyTrainService })
 
     const assocCount = associatedServices.length
 
-    const assocServices = associatedServices.map((s, i): string => {
-      const [stop1, ...stops] = s.passengerCallPoints
+    // The train's own part is the front unless a portion is known to be there. A portion at an unknown end is
+    // taken to be behind the ones before it: the last one is the rear and the others the middle.
+    const takesFront = associatedServices.some(a => a.position === 'front')
+    const takesRear = associatedServices.some(a => a.position === 'rear')
+    const ownPart = takesFront && takesRear ? 'middle' : takesFront ? 'rear' : 'front'
+    const rank = (part: string) => ['front', 'middle', 'rear'].indexOf(part.toLowerCase())
 
-      const ogServiceDivideIndex = nextTrain.passengerCallPoints.findIndex(p => p.name === stop1.name)
-      const pointsToDivide = ogServicePoints.slice(0, ogServiceDivideIndex + 1)
+    const assocServices = associatedServices.map(({ service: s, position, divideIndex }, i) => {
+      // A portion's calls can open with the call it divides at, which the train's own list already has. They
+      // needn't: a sleeper sets nobody down there, and a station can be called at twice.
+      const dividesAt = nextTrain.passengerCallPoints[divideIndex].name
+      const stops = s.passengerCallPoints.filter((p, stop) => stop > 0 || p.name !== dividesAt)
+      const pointsToDivide = ogServicePoints.slice(0, divideIndex + 1)
 
-      const pos = i + 1 === assocCount ? 'Rear' : 'Middle'
+      const pos =
+        position === 'front'
+          ? 'Front'
+          : position === 'rear'
+            ? 'Rear'
+            : position === 'middle' || i + 1 < assocCount || takesRear || ownPart === 'rear'
+              ? 'Middle'
+              : 'Rear'
 
-      return `Join the ${pos} ${s.length ? `${s.length} ` : ''}coaches for ${pluralise([
-        ...pointsToDivide,
-        ...stops.map(p => {
-          const aTime = p.displayedArrivalTime()
-          return `${p.name}${aTime ? ` (${aTime})` : ''}`
-        }),
-      ])}.`
+      return {
+        part: pos,
+        text: `Join the ${pos} ${s.length ? `${s.length} ` : ''}coaches for ${pluralise([
+          ...pointsToDivide,
+          ...stops.map(p => {
+            const aTime = p.displayedArrivalTime()
+            return `${p.name}${aTime ? ` (${aTime})` : ''}`
+          }),
+        ])}.`,
+      }
     })
 
     if (assocServices.length === 0) {
@@ -99,7 +118,15 @@ export default function NextTrain({ nextTrain }: { nextTrain: IMyTrainService })
       return `Calling at ${pluralise(ogServicePoints)}.`
     } else {
       const ogLengthEnd = nextTrain.passengerCallPoints.at(-1)!!.length
-      return [`Join the front ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches for ${pluralise(ogServicePoints)}.`, ...assocServices].join(' ')
+      const own = {
+        part: ownPart,
+        text: `Join the ${ownPart} ${ogLengthEnd ? `${ogLengthEnd} ` : ''}coaches for ${pluralise(ogServicePoints)}.`,
+      }
+      // From the front of the train to the rear. The sort is stable, so parts at one place keep their order.
+      return [own, ...assocServices]
+        .sort((a, b) => rank(a.part) - rank(b.part))
+        .map(part => part.text)
+        .join(' ')
     }
   }, [nextTrain.terminatesHere, nextTrain.origins, nextTrain.passengerCallPoints, associatedServices])
 
