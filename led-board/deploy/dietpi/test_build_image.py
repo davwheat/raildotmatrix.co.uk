@@ -70,6 +70,7 @@ class ImageTest(unittest.TestCase):
         self.assertEqual(self.read_boot("raildotmatrix/install-image.sh"), (DEPLOY / "dietpi/install-image.sh").read_bytes())
         self.assertIn(b"ssid=DepartureBoard", self.read_boot("raildotmatrix/hotspot.nmconnection"))
         self.assertIn(b"psk=DotMatrix", self.read_boot("raildotmatrix/hotspot.nmconnection"))
+        self.assertIn(b"\npmf=1\n", self.read_boot("raildotmatrix/hotspot.nmconnection"))
         self.assertEqual(self.read_boot("dietpi-wifi.txt"), (self.root / "dietpi-wifi.txt").read_bytes())
         self.assertIn(b"departure-board.toml", self.read_boot("RAILDOTMATRIX-README.txt"))
         config = tomllib.loads(self.read_boot("departure-board.toml").decode())
