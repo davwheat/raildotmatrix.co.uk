@@ -1,9 +1,11 @@
 package management
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -114,6 +116,89 @@ func TestFailedSavedNetworkRestoresHotspot(t *testing.T) {
 	}
 	if !strings.Contains(strings.Join(commands, "\n"), "connection up uuid "+hotspotUUID) {
 		t.Fatal("hotspot was not reactivated")
+	}
+}
+
+func fakeNM(t *testing.T, device *string, up error) (*WiFi, *[]string) {
+	t.Helper()
+	var commands []string
+	w := NewWiFi(Options{Interface: "wlan0", StatusPath: filepath.Join(t.TempDir(), "network.json"), Run: func(_ context.Context, name string, args ...string) ([]byte, error) {
+		cmd := name + " " + strings.Join(args, " ")
+		switch {
+		case strings.Contains(cmd, "GENERAL.STATE,GENERAL.CON-UUID"):
+			return []byte(*device), nil
+		case strings.Contains(cmd, "connection up"):
+			commands = append(commands, cmd)
+			if up != nil {
+				return []byte("Error: Timeout expired (15 seconds)"), up
+			}
+		}
+		return nil, nil
+	}})
+	w.profile = filepath.Join(t.TempDir(), "missing.nmconnection")
+	return w, &commands
+}
+
+func TestPollLeavesActivatingHotspotAlone(t *testing.T) {
+	for _, tc := range []struct {
+		name, device, mode string
+		reactivated        bool
+	}{
+		{"activating", "70 (connecting (getting IP configuration))\n" + hotspotUUID + "\n", "starting", false},
+		{"activating on one line", "50 (connecting (configuring)):" + hotspotUUID + "\n", "starting", false},
+		{"activated", "100 (connected)\n" + hotspotUUID + "\n", "hotspot", false},
+		{"dropped", "30 (disconnected)\n\n", "hotspot", true},
+		{"failed", "120 (connection failed)\n" + hotspotUUID + "\n", "hotspot", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			w, commands := fakeNM(t, &tc.device, nil)
+			w.poll(context.Background())
+			if s := w.Status(); s.Mode != tc.mode {
+				t.Fatalf("got mode %q, want %q", s.Mode, tc.mode)
+			}
+			if reactivated := len(*commands) > 0; reactivated != tc.reactivated {
+				t.Fatalf("reactivated = %t, want %t: %q", reactivated, tc.reactivated, *commands)
+			}
+		})
+	}
+}
+
+func TestSlowHotspotIsStartingNotUnavailable(t *testing.T) {
+	var logged bytes.Buffer
+	log.SetOutput(&logged)
+	t.Cleanup(func() { log.SetOutput(os.Stderr) })
+	device := "70 (connecting (getting IP configuration))\n" + hotspotUUID + "\n"
+	w, _ := fakeNM(t, &device, errors.New("exit status 3"))
+	w.hotspot(context.Background(), "")
+	if s := w.Status(); s.Mode != "starting" {
+		t.Fatalf("got mode %q, want starting", s.Mode)
+	}
+	device = "30 (disconnected)\n\n"
+	w.hotspot(context.Background(), "")
+	w.hotspot(context.Background(), "")
+	if s := w.Status(); s.Mode != "unavailable" {
+		t.Fatalf("got mode %q, want unavailable", s.Mode)
+	}
+	if got := strings.Count(logged.String(), "start the setup hotspot: exit status 3: Error: Timeout expired (15 seconds)"); got != 1 {
+		t.Fatalf("logged the repeated failure %d times, want once:\n%s", got, logged.String())
+	}
+}
+
+func TestMissingAdapterLogsEachFailureOnce(t *testing.T) {
+	var logged bytes.Buffer
+	log.SetOutput(&logged)
+	t.Cleanup(func() { log.SetOutput(os.Stderr) })
+	w := NewWiFi(Options{Interface: "wlan0", StatusPath: filepath.Join(t.TempDir(), "network.json"), Run: func(context.Context, string, ...string) ([]byte, error) {
+		return []byte("Error: Device 'wlan0' not found."), errors.New("exit status 10")
+	}})
+	w.profile = filepath.Join(t.TempDir(), "missing.nmconnection")
+	for range 3 {
+		w.poll(context.Background())
+	}
+	for _, action := range []string{"read Wi-Fi state", "start the setup hotspot"} {
+		if got := strings.Count(logged.String(), action+":"); got != 1 {
+			t.Fatalf("logged %q %d times, want once:\n%s", action, got, logged.String())
+		}
 	}
 }
 
