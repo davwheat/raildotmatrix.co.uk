@@ -184,6 +184,52 @@ func TestSlowHotspotIsStartingNotUnavailable(t *testing.T) {
 	}
 }
 
+func TestSlowSavedNetworkKeepsConnecting(t *testing.T) {
+	var commands []string
+	device := "70 (connecting (getting IP configuration))\n" + clientUUID + "\n"
+	w := NewWiFi(Options{Interface: "wlan0", StatusPath: filepath.Join(t.TempDir(), "network.json"), Run: func(_ context.Context, name string, args ...string) ([]byte, error) {
+		cmd := name + " " + strings.Join(args, " ")
+		switch {
+		case strings.Contains(cmd, "GENERAL.STATE,GENERAL.CON-UUID"):
+			return []byte(device), nil
+		case strings.Contains(cmd, "802-11-wireless.ssid"):
+			return []byte("Home\n"), nil
+		case strings.Contains(cmd, "connection up uuid "+clientUUID):
+			commands = append(commands, cmd)
+			return []byte("Error: Timeout expired (30 seconds)"), errors.New("exit status 3")
+		case strings.Contains(cmd, "connection up"):
+			commands = append(commands, cmd)
+		}
+		return nil, nil
+	}})
+	w.profile = filepath.Join(t.TempDir(), "client.nmconnection")
+	if err := os.WriteFile(w.profile, []byte("saved profile"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	w.restore(context.Background())
+	w.poll(context.Background())
+	if s := w.Status(); s.Mode != "connecting" || len(commands) != 1 {
+		t.Fatalf("interrupted a slow join: %+v, %q", s, commands)
+	}
+
+	device = "100 (connected)\n" + clientUUID + "\n"
+	w.poll(context.Background())
+	if s := w.Status(); s.Mode != "connected" || s.SSID != "Home" || len(commands) != 1 {
+		t.Fatalf("slow join did not finish: %+v, %q", s, commands)
+	}
+
+	device = "70 (connecting (getting IP configuration))\n" + clientUUID + "\n"
+	w.restore(context.Background())
+	device = "120 (connection failed)\n\n"
+	w.poll(context.Background())
+	if s := w.Status(); s.Mode != "hotspot" || s.Message == "" {
+		t.Fatalf("failed join did not return to the hotspot: %+v", s)
+	}
+	if last := commands[len(commands)-1]; !strings.Contains(last, hotspotUUID) {
+		t.Fatalf("retried the failed network instead of the hotspot: %q", commands)
+	}
+}
+
 func TestMissingAdapterLogsEachFailureOnce(t *testing.T) {
 	var logged bytes.Buffer
 	log.SetOutput(&logged)

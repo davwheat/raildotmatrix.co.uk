@@ -50,6 +50,8 @@ type WiFi struct {
 	profile  string
 	written  []byte
 	failures map[string]string
+	// The hotspot message to show if a saved network activation that nmcli stopped waiting for fails.
+	pending string
 }
 
 func NewWiFi(o Options) *WiFi {
@@ -215,9 +217,9 @@ func (w *WiFi) Monitor(ctx context.Context) {
 	}
 }
 
-// NetworkManager keeps activating a connection after nmcli stops waiting for it. Bringing the same
-// connection up again restarts it, which takes the hotspot off the air, so leave an activating
-// connection alone until it either activates or fails.
+// NetworkManager keeps activating a connection after nmcli stops waiting for it. Bringing up the same
+// or another connection interrupts it, which takes the hotspot off the air or abandons a slow join, so
+// leave an activating connection alone until it either activates or fails.
 func (w *WiFi) poll(ctx context.Context) {
 	state, uuid, err := w.device(ctx)
 	if err != nil {
@@ -228,17 +230,25 @@ func (w *WiFi) poll(ctx context.Context) {
 	status := w.Status()
 	switch {
 	case uuid == clientUUID && state == nmActivated:
+		w.pending = ""
 		ssid := status.SSID
 		if status.Mode != "connected" {
 			ssid = w.clientSSID(ctx)
 		}
 		w.set("connected", ssid, "")
 	case uuid == clientUUID && activating(state):
-		w.set("connecting", "saved network", "")
+		ssid := status.SSID
+		if status.Mode != "connecting" {
+			ssid = "saved network"
+		}
+		w.set("connecting", ssid, "")
 	case uuid == hotspotUUID && state == nmActivated:
 		w.set("hotspot", "DepartureBoard", status.Message)
 	case uuid == hotspotUUID && activating(state):
 		w.set("starting", "DepartureBoard", status.Message)
+	case w.pending != "":
+		// Retrying a network that has just failed would keep the board off the hotspot indefinitely.
+		w.hotspot(ctx, w.pending)
 	default:
 		w.restore(ctx)
 	}
@@ -246,18 +256,32 @@ func (w *WiFi) poll(ctx context.Context) {
 func (w *WiFi) restore(ctx context.Context) {
 	if _, err := os.Stat(w.profile); err == nil {
 		w.set("connecting", "saved network", "")
-		output, err := w.nm(ctx, "--wait", "30", "connection", "up", "uuid", clientUUID, "ifname", w.opts.Interface)
-		if err == nil {
+		if w.join(ctx, "Could not connect to the saved network. Check its name and password.") {
 			w.set("connected", w.clientSSID(ctx), "")
-			return
 		}
-		w.logFailure("connect to the saved network", err, output)
-		w.hotspot(ctx, "Could not connect to the saved network. Check its name and password.")
 		return
 	}
 	w.hotspot(ctx, "")
 }
+
+// join reports whether the saved network connected. If it is still connecting when nmcli stops
+// waiting, the poll returns to the hotspot with failure if the connection then fails.
+func (w *WiFi) join(ctx context.Context, failure string) bool {
+	output, err := w.nm(ctx, "--wait", "30", "connection", "up", "uuid", clientUUID, "ifname", w.opts.Interface)
+	if err == nil {
+		w.pending = ""
+		return true
+	}
+	w.logFailure("connect to the saved network", err, output)
+	if state, uuid, err := w.device(ctx); err == nil && uuid == clientUUID && activating(state) {
+		w.pending = failure
+		return false
+	}
+	w.hotspot(ctx, failure)
+	return false
+}
 func (w *WiFi) hotspot(ctx context.Context, message string) {
+	w.pending = ""
 	if !w.opts.Demo {
 		if output, err := w.nm(ctx, "--wait", "15", "connection", "up", "uuid", hotspotUUID, "ifname", w.opts.Interface); err != nil {
 			w.logFailure("start the setup hotspot", err, output)
@@ -329,12 +353,9 @@ func (w *WiFi) Connect(in NetworkInput) error {
 			w.hotspot(ctx, "Could not save this Wi-Fi network.")
 			return
 		}
-		if output, err := w.nm(ctx, "--wait", "30", "connection", "up", "uuid", clientUUID, "ifname", w.opts.Interface); err != nil {
-			w.logFailure("connect to "+strconv.Quote(in.SSID), err, output)
-			w.hotspot(ctx, "Connection failed. Check the network password and try again.")
-			return
+		if w.join(ctx, "Connection failed. Check the network password and try again.") {
+			w.set("connected", in.SSID, "")
 		}
-		w.set("connected", in.SSID, "")
 	}()
 	return nil
 }
