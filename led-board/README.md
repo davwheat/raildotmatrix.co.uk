@@ -201,6 +201,11 @@ The website and Pi management UI offer a Use smaller scrolling text toggle. The 
 API and shared URLs use `smallScrollingText`. The smaller font redistributes space around the information
 row, formation and separator; widths, clipping and scroll duration follow the selected font.
 
+`ampersand_calling_points = true` joins the last two Infotec calling points with "&" in place of "and", such as
+"Gatwick Airport (19:56) & Horsham (20:05).". It defaults to `false`. The website and Pi management UI offer a
+Use "&" in calling points toggle. The command-line flag is `-ampersand-calling-points`, the environment variable
+is `BOARD_AMPERSAND_CALLING_POINTS=true`, and the browser API and shared URLs use `ampersandCallingPoints`.
+
 Unless `led.limit_refresh` or `led.pwm_bits` is set, the panel timing follows the board. The refresh rate is
 the lowest whole multiple of the scroll speed from 60 Hz up, so that every scroll step lasts the same number
 of refreshes, and the PWM bit depth is the most the panel manages at that rate: 11 bits at 60 Hz for Infotec,

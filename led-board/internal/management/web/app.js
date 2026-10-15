@@ -99,6 +99,7 @@ const labels = {
   legacy_toc_names: "Use historic operator names",
   scroll_speed: "Scroll speed (dots / second)",
   small_scrolling_text: "Use smaller scrolling text",
+  ampersand_calling_points: 'Use "&" in calling points',
   url: "Live departure feed",
   fixture: "Example departure board",
   fps: "Animation rate (frames / second)",
@@ -152,7 +153,7 @@ const groups = [
   [
     "Display options",
     "",
-    "show_unconfirmed_platforms hide_terminating warning_platform platform_box compact_lower_row align_platform_rows small_scrolling_text worldline page_destinations reserve_etd_column legacy_toc_names",
+    "show_unconfirmed_platforms hide_terminating warning_platform platform_box compact_lower_row align_platform_rows small_scrolling_text ampersand_calling_points worldline page_destinations reserve_etd_column legacy_toc_names",
   ],
   [
     "LED panels",

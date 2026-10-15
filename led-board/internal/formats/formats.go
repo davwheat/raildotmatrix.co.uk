@@ -43,6 +43,8 @@ type Config struct {
 	ScrollSpeed int
 	// SmallScrollingText uses the compact Infotec information font.
 	SmallScrollingText bool
+	// AmpersandCallingPoints joins the last two Infotec calling points with "&" in place of "and".
+	AmpersandCallingPoints bool
 	// RowPrefix selects ordinals or platform numbers before each train's time.
 	RowPrefix board.RowPrefix
 	// WarningPlatform names the platform in a warning when the warning is for one platform.
@@ -85,8 +87,8 @@ func New(name string, c Config) (board.Board, error) {
 		}
 		return infotec.New(infotec.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, ScrollSpeed: c.ScrollSpeed,
-			SmallScrollingText: c.SmallScrollingText,
-			RowPrefix:          c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform,
+			SmallScrollingText: c.SmallScrollingText, AmpersandCallingPoints: c.AmpersandCallingPoints,
+			RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform,
 			FormationCount:    c.FormationCount,
 			CoachLetterTOCs:   c.CoachLetterTOCs,
 			FormationIcons:    c.FormationIcons,

@@ -158,6 +158,9 @@ export default function BoardOptions() {
               <Check name="smallScrollingText" hint="Use the compact font for calling points and service information.">
                 Use smaller scrolling text
               </Check>
+              <Check name="ampersandCallingPoints" hint='Join the last two calling points with "&" in place of "and".'>
+                Use "&" in calling points
+              </Check>
             </>
           )}
           {daktronics && (

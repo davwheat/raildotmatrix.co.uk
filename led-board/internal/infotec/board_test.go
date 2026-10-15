@@ -254,6 +254,15 @@ func TestInfoPagesForDividingTrain(t *testing.T) {
 	}
 }
 
+func TestAmpersandCallingPoints(t *testing.T) {
+	b := newTestBoard(t)
+	b.cfg.AmpersandCallingPoints = true
+	pages := b.derive(fixtures.Steps("dividing-service")[0]).pages
+	if want := "Gatwick Airport (19:56) & Horsham (20:05)."; pages[1].text != want {
+		t.Errorf("calling points = %q, want %q", pages[1].text, want)
+	}
+}
+
 func TestDividingTrainDestinationsShareALineWhenTheyFit(t *testing.T) {
 	b := newTestBoard(t)
 	r := b.derive(fixtures.Steps("dividing-service")[0]).rows[0]

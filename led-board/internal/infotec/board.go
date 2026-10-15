@@ -37,6 +37,8 @@ type Config struct {
 	ScrollSpeed int
 	// SmallScrollingText uses the compact font for calling points and service information.
 	SmallScrollingText bool
+	// AmpersandCallingPoints joins the last two calling points with "&" in place of "and".
+	AmpersandCallingPoints bool
 	// RowPrefix selects ordinals or platform numbers before each train's time.
 	RowPrefix board.RowPrefix
 	// PlatformBox is the single requested platform to show in a box beside the first train, or empty.

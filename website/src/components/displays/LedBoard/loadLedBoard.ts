@@ -45,6 +45,8 @@ export interface LedBoardOptions {
   scrollSpeed?: number
   /** Use the compact font for Infotec calling points and service information. */
   smallScrollingText?: boolean
+  /** Join the last two Infotec calling points with "&" in place of "and". */
+  ampersandCallingPoints?: boolean
   width?: number
   height?: number
   verbose?: boolean

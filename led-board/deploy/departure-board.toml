@@ -72,6 +72,8 @@ reserve_etd_column = false
 scroll_speed = 0
 # Infotec only: use the compact font for calling points and service information.
 small_scrolling_text = false
+# Infotec only: join the last two calling points with "&" in place of "and".
+ampersand_calling_points = false
 
 url = "wss://darwinbrowser.com"
 verbose = false

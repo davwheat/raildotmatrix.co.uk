@@ -45,6 +45,7 @@ type config struct {
 	PlatformBox              bool   `mapstructure:"platform_box"`
 	ScrollSpeed              int    `mapstructure:"scroll_speed"`
 	SmallScrollingText       bool   `mapstructure:"small_scrolling_text"`
+	AmpersandCallingPoints   bool   `mapstructure:"ampersand_calling_points"`
 	URL                      string
 	Platforms                []string
 	ShowUnconfirmedPlatforms bool `mapstructure:"show_unconfirmed_platforms"`
@@ -97,6 +98,7 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.Bool("reserve-etd-column", false, "keep every destination clear of the space that \"Cancelled\" needs, even when the train shows a time (Daktronics only)")
 	fs.Int("scroll-speed", 0, "scroll speed in dots per second; 0 uses the board's default (48 daktronics, 60 infotec). The panel refresh and PWM depth follow it")
 	fs.Bool("small-scrolling-text", false, "use the smaller font for calling points and service information (Infotec only)")
+	fs.Bool("ampersand-calling-points", false, "join the last two calling points with \"&\" in place of \"and\" (Infotec only)")
 	fs.Int("fps", 50, "animation tick rate")
 	fs.Bool("v", false, "debug logging")
 	fs.String("display", "matrix", "where to show the board: matrix, window, or png")

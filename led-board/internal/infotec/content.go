@@ -143,7 +143,7 @@ func joinedDestinations(s *model.Service) string {
 func (b *Board) infoPages(s *model.Service) []page {
 	pages := []page{{text: serviceInfo(s), hold: infoHold}}
 	for _, cp := range b.callingPointPages(s) {
-		pages = append(pages, page{prefix: cp.prefix, text: joinCalls(cp.points), hold: callingHold})
+		pages = append(pages, page{prefix: cp.prefix, text: joinCalls(cp.points, b.cfg.AmpersandCallingPoints), hold: callingHold})
 	}
 	return pages
 }
@@ -247,14 +247,18 @@ func coaches(position string, length int) string {
 }
 
 // joinCalls punctuates calling points as the ::after rules in trainServiceAdditionalInfo.scss do.
-func joinCalls(points []string) string {
+func joinCalls(points []string, ampersand bool) string {
 	switch len(points) {
 	case 0:
 		return ""
 	case 1:
 		return points[0] + " only."
 	}
-	return strings.Join(points[:len(points)-1], ", ") + " and " + points[len(points)-1] + "."
+	conjunction := " and "
+	if ampersand {
+		conjunction = " & "
+	}
+	return strings.Join(points[:len(points)-1], ", ") + conjunction + points[len(points)-1] + "."
 }
 
 var nreLines = [3]string{"Please listen for announcements", "or call National Rail Enquiries", "on 03457 48 49 50"}
