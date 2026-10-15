@@ -36,6 +36,13 @@ type Config struct {
 	// PageDestinations lets the lower row page through a dividing train's destinations and clip a destination
 	// too long for the row. The real board instead leaves out a train whose destination doesn't fit on one line.
 	PageDestinations bool
+	// ReserveETDColumn keeps every destination clear of the whole expected-time column, which is wide enough for
+	// "Cancelled", whether the row shows a time or a status. Otherwise a destination may run up to whatever the row's
+	// expected time or status leaves free.
+	ReserveETDColumn bool
+	// ClearDownWarningToCIS wipes a platform warning away with the pinwheel when "CUSTOMER INFORMATION SYSTEM"
+	// follows it, as it does when trains follow. Otherwise the message replaces the warning at once.
+	ClearDownWarningToCIS bool
 }
 
 // Durations of the animations in TrainServices.tsx, PlatformAlterationMessage.tsx and SwapBetween.tsx, in
@@ -91,9 +98,11 @@ type geometry struct {
 	destX    int
 	destW    int
 	etdW     int
-	ch       int
-	clockX   int
-	cell     int
+	// reserveETD gives every destination the room that "Cancelled" leaves, whatever the row shows.
+	reserveETD bool
+	ch         int
+	clockX     int
+	cell       int
 }
 
 func newGeometry(w, h int, prefix board.RowPrefix) geometry {
@@ -129,13 +138,27 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 	return g
 }
 
-// destWidth is the room for a row's destination. The ETD column is wide enough for "Cancelled", so a time leaves
-// the rest of it to the destination.
+// etdPad is the gap kept right of an expected time or "Arrived". "Cancelled" and "Delayed" run to the board's edge.
+const etdPad = 5
+
+// destWidth is the room for a row's destination. The ETD column is wide enough for "Cancelled", so a time or a
+// shorter status leaves the rest of it to the destination unless the column is reserved.
 func (g *geometry) destWidth(etd string) int {
-	if isTime(etd) {
-		return g.destW + g.etdW - 4*g.ch
+	if g.reserveETD {
+		return g.destW
 	}
-	return g.destW
+	return g.destW + g.etdW - g.etdWidth(etd)
+}
+
+// etdWidth is the room an expected time or status takes at the right of a row, including any gap after it.
+func (g *geometry) etdWidth(etd string) int {
+	switch {
+	case isTime(etd):
+		return 4*g.ch + etdPad
+	case etd == "Arrived":
+		return font.Text.Width(etd) + etdPad
+	}
+	return font.Text.Width(etd)
 }
 
 func (g *geometry) rowTop(i int) int { return i * g.rowH }
@@ -200,6 +223,7 @@ func New(cfg Config) *Board {
 	}
 	cfg.ServiceCount = min(6, max(1, cfg.ServiceCount))
 	b := &Board{cfg: cfg, geo: newGeometry(cfg.Width, cfg.Height, cfg.RowPrefix)}
+	b.geo.reserveETD = cfg.ReserveETDColumn
 	b.info.speed = cfg.ScrollSpeed
 	return b
 }
@@ -292,22 +316,29 @@ func (b *Board) target() mode {
 }
 
 func (b *Board) show(m mode, now time.Time, previous content) {
-	// The last train leaving clears down like any other change of first train; the no-services message
-	// waits until the wipe has finished. Losing the connection blanks the board at once, as the web does.
-	if m == modeNoServices && b.mode == modeTrains && b.view.Connected && len(previous.rows) > 0 {
-		b.clearDown(previous.rows[0], now)
-		return
-	}
-	// A platform warning replaces the trains at once, and the real board wipes it away with the pinwheel
-	// before the trains return.
-	if m != modeTrains {
-		b.mode, b.modeStart = m, now
-		return
-	}
-	if b.mode == modeWarning {
+	// The real board wipes a platform warning away with the pinwheel before the trains return. Losing the
+	// connection blanks the board at once, as the web does.
+	wipeWarning := m == modeTrains || m == modeNoServices && b.cfg.ClearDownWarningToCIS
+	if b.mode == modeWarning && wipeWarning && b.view.Connected {
 		b.mode, b.modeStart = modeTrains, now
 		b.outgoing = row{centred: previous.warning[0]}
 		b.phase, b.phaseStart = phaseClearDown, now
+		return
+	}
+	// The last train leaving clears down like any other change of first train; the no-services message
+	// waits until the wipe has finished, even when the feed repeats the empty board during it.
+	if m == modeNoServices && b.mode == modeTrains && b.view.Connected {
+		if b.phase == phaseClearDown {
+			return
+		}
+		if len(previous.rows) > 0 {
+			b.clearDown(previous.rows[0], now)
+			return
+		}
+	}
+	// A platform warning replaces the trains at once.
+	if m != modeTrains {
+		b.mode, b.modeStart = m, now
 		return
 	}
 	if b.mode != modeTrains {

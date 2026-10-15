@@ -53,7 +53,17 @@ def set_settings(text, settings):
     return "\n".join(lines) + "\n"
 
 
-def build_image(base, board, output, manager):
+def managed_files():
+    """Read managed-files.txt as (mode, source, path) tuples."""
+    entries = []
+    for line in (DEPLOY / "dietpi/managed-files.txt").read_text().splitlines():
+        if line.strip() and not line.startswith("#"):
+            mode, source, path = line.split()
+            entries.append((mode, source, path))
+    return entries
+
+
+def build_image(base, board, output, manager, manifest):
     for binary in (board, manager):
         with binary.open("rb") as source:
             header = source.read(20)
@@ -103,22 +113,23 @@ def build_image(base, board, output, manager):
             copy_in(stage / name, name)
         copy_in(DEPLOY / "dietpi/README.txt", "RAILDOTMATRIX-README.txt")
         subprocess.run(["mmd", "-i", device, "::raildotmatrix"], check=True)
-        copy_in(board, "raildotmatrix/board")
-        copy_in(manager, "raildotmatrix/manage")
-        for name in ("install-image.sh", "verify-image.sh", "firstboot.sh", "hotspot.nmconnection", "departure-board-manager.service", "departure-board-init.service", "avahi.service"):
+        built = {"build/board": board, "build/manage": manager}
+        for _, source, _ in managed_files():
+            copy_in(built.get(source, DEPLOY.parent / source), "raildotmatrix/" + Path(source).name)
+        for name in ("install-image.sh", "verify-image.sh", "managed-files.txt", "packages.txt"):
             copy_in(DEPLOY / "dietpi" / name, "raildotmatrix/" + name)
-        copy_in(DEPLOY / "departure-board.service", "raildotmatrix/departure-board.service")
-        copy_in(DEPLOY / "dietpi/boot-config.conf", "raildotmatrix/boot-config.conf")
+        copy_in(manifest, "raildotmatrix/installed-manifest.json")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base-image", type=Path, required=True, help="uncompressed official DietPi RPi234 ARMv8 Trixie .img")
+    parser.add_argument("--base-image", type=Path, required=True, help="uncompressed official DietPi RPi234 or RPi5 ARMv8 Trixie .img")
     parser.add_argument("--board", type=Path, required=True, help="binary from just board")
     parser.add_argument("--output", type=Path, required=True, help="new uncompressed .img to create")
     parser.add_argument("--manager", type=Path, required=True, help="binary from just manager")
+    parser.add_argument("--manifest", type=Path, required=True, help="this variant's manifest from cmd/release, which the board records as installed")
     args = parser.parse_args()
-    build_image(args.base_image, args.board, args.output, args.manager)
+    build_image(args.base_image, args.board, args.output, args.manager, args.manifest)
     print(f"Staged {args.output}; run prepare-image.sh before flashing")
 
 

@@ -18,6 +18,10 @@ export interface LedBoardOptions {
   worldline?: boolean
   /** Daktronics only: page through a dividing train's destinations on the lower row, in place of leaving out a train whose destination doesn't fit. */
   pageDestinations?: boolean
+  /** Daktronics only: keep every destination clear of the space that "Cancelled" needs, even beside a time. */
+  reserveEtdColumn?: boolean
+  /** Daktronics only: wipe a platform warning away with the pinwheel when "CUSTOMER INFORMATION SYSTEM" follows it. */
+  clearDownWarningToCis?: boolean
   /** The single prefix before each train's time: an ordinal or its platform number. */
   rowPrefix?: RowPrefix
   ordinalFormat?: OrdinalFormat
@@ -43,6 +47,8 @@ export interface LedBoardOptions {
   scrollSpeed?: number
   /** Use the compact font for Infotec calling points and service information. */
   smallScrollingText?: boolean
+  /** Join the last two Infotec calling points with "&" in place of "and". */
+  ampersandCallingPoints?: boolean
   width?: number
   height?: number
   verbose?: boolean

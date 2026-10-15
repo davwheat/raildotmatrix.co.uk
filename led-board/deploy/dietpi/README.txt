@@ -1,8 +1,10 @@
 Raildotmatrix departure board
 ============================
 
-Supports Raspberry Pi Zero 2 W, Pi 2 v1.2, Pi 3, Pi 4 and Pi 400 with a
-HUB75 LED matrix. Original Pi Zero/Zero W and Pi 5 are not supported.
+Supports Raspberry Pi Zero 2 W, Pi 2 v1.2, Pi 3, Pi 4, Pi 400, Pi 5 and
+Pi 500 with a HUB75 LED matrix. For a Pi 5 or Pi 500, use the rpi5 image.
+For other models, use the rpi234 image. The original Pi Zero/Zero W is not
+supported.
 
 Flash the .img.xz using Raspberry Pi Imager (Use custom) or balenaEtcher.
 Skip Imager's OS customisation. Before first boot, set your console/SSH
@@ -28,6 +30,11 @@ On your home network, it shows departureboard.local and the assigned IP.
 The GUI edits all board and panel settings, validates them and restarts
 the display. Device settings let you change the web password and restart
 the display. The hotspot password remains DotMatrix.
+
+Updates: in Updates, choose stable releases, prereleases or development
+builds, and when to check. The board downloads only the files that
+changed. An update never changes your settings, and stops if it would
+replace a system file that was edited on the board.
 
 Manual configuration is also supported: departure-board.toml is at the
 root of this partition (/boot/firmware/departure-board.toml on the Pi).

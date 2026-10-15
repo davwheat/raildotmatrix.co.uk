@@ -4,6 +4,9 @@ let snapshot,
   sshSnapshot,
   sshDirty = false,
   sshBusy = false,
+  updateDirty = false,
+  updateTimer,
+  commitsFor,
   dirty = false,
   switching = false,
   countryLoaded = false,
@@ -48,6 +51,7 @@ async function signedIn() {
     clearInterval(poll);
     poll = setInterval(pollStatus, 5000);
     if (!$("developer-page").hidden) await loadSSHKeys();
+    void loadUpdates();
   } catch (error) {
     notice(error.message, "error");
   }
@@ -95,9 +99,12 @@ const labels = {
   platform_box: "Infotec platform box",
   worldline: "Worldline display style",
   page_destinations: "Page dividing trains' destinations",
+  reserve_etd_column: 'Reserve space for "Cancelled"',
+  clear_down_warning_to_cis: "Clear down warnings when no trains follow",
   legacy_toc_names: "Use historic operator names",
   scroll_speed: "Scroll speed (dots / second)",
   small_scrolling_text: "Use smaller scrolling text",
+  ampersand_calling_points: 'Use "&" in calling points',
   url: "Live departure feed",
   fixture: "Example departure board",
   fps: "Animation rate (frames / second)",
@@ -151,7 +158,7 @@ const groups = [
   [
     "Display options",
     "",
-    "show_unconfirmed_platforms hide_terminating warning_platform platform_box compact_lower_row align_platform_rows small_scrolling_text worldline page_destinations legacy_toc_names",
+    "show_unconfirmed_platforms hide_terminating warning_platform platform_box compact_lower_row align_platform_rows small_scrolling_text ampersand_calling_points worldline page_destinations reserve_etd_column clear_down_warning_to_cis legacy_toc_names",
   ],
   [
     "LED panels",
@@ -354,7 +361,7 @@ $("reload").onclick = async () => {
   }
 };
 window.addEventListener("beforeunload", (event) => {
-  if (dirty || sshDirty) {
+  if (dirty || sshDirty || updateDirty) {
     event.preventDefault();
     event.returnValue = "";
   }
@@ -370,6 +377,7 @@ for (const button of document.querySelectorAll("[data-tab]"))
     }
     if (button.dataset.tab === "network") scan();
     if (button.dataset.tab === "developer" && !sshSnapshot) loadSSHKeys();
+    if (button.dataset.tab === "updates") loadUpdates();
   };
 function sshControls(busy) {
   sshBusy = busy;
@@ -616,6 +624,273 @@ $("password-form").addEventListener("submit", async (event) => {
       "Password changed. Sign in with your new password.";
   } catch (error) {
     notice(error.message, "error");
+  }
+});
+const channelHelp = {
+  stable: "Tested releases. Recommended for most boards.",
+  prerelease:
+    "The newest release, including test releases before they become stable.",
+  development: "Every change to the code, as soon as it passes the tests.",
+};
+const busyText = {
+  checking: "Checking for updates…",
+  downloading: "Downloading the update…",
+  installing:
+    "Installing the update. The display and this page restart, which takes about a minute.",
+};
+function when(time) {
+  return !time || time.startsWith("0001-")
+    ? ""
+    : new Date(time).toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+}
+function describe(build) {
+  return build
+    ? build.version + " (build " + build.build + ")"
+    : "Unknown — this board doesn't record its version.";
+}
+function megabytes(bytes) {
+  return (bytes / 1e6).toFixed(1) + " MB";
+}
+function text(tag, content, className) {
+  const element = document.createElement(tag);
+  element.textContent = content;
+  if (className) element.className = className;
+  return element;
+}
+function showUpdateSettings(settings) {
+  $("update-channel").value = settings.channel;
+  $("update-schedule").value = settings.schedule;
+  $("update-weekday").value = String(settings.weekday);
+  $("update-time").value = settings.time;
+  $("update-auto").checked = settings.autoInstall;
+  updateDirty = false;
+  $("update-save-status").textContent = "No unsaved changes.";
+  updateSettingsForm();
+}
+function updateSettingsForm() {
+  const channel = $("update-channel").value,
+    schedule = $("update-schedule").value;
+  $("update-channel-help").textContent = channelHelp[channel];
+  $("update-dev-warning").hidden = channel !== "development";
+  $("update-weekday").hidden = $("update-weekday-label").hidden =
+    schedule !== "weekly";
+  $("update-time").hidden = $("update-time-label").hidden = schedule === "off";
+  $("update-time").required = schedule !== "off";
+  $("update-auto").disabled = schedule === "off";
+}
+async function loadUpdates() {
+  clearTimeout(updateTimer);
+  let data;
+  try {
+    data = await api("update/status");
+  } catch (error) {
+    // The manager restarts while an update installs, so keep waiting for it.
+    if (!$("updates-page").hidden) updateTimer = setTimeout(loadUpdates, 3000);
+    return;
+  }
+  $("device-version").textContent = data.running;
+  $("update-installed").textContent = describe(data.installed);
+  $("update-last-check").textContent = when(data.lastCheck) || "Never";
+  $("update-next-check").textContent =
+    when(data.nextCheck) ||
+    (data.settings.schedule === "off" ? "Not scheduled" : "Soon");
+  if (!updateDirty) showUpdateSettings(data.settings);
+  const result = data.lastResult;
+  $("update-result").textContent = result
+    ? when(result.time) + ": " + result.message
+    : "";
+  $("update-result").className =
+    "small " + (result && !result.ok ? "error-text" : "");
+  showAvailable(data);
+  $("update-check").disabled = Boolean(data.busy);
+  if (data.busy) updateTimer = setTimeout(loadUpdates, 2000);
+}
+function showAvailable(data) {
+  const box = $("update-available"),
+    install = $("update-install"),
+    a = data.available;
+  box.replaceChildren();
+  install.hidden = true;
+  $("update-heading").textContent = "Available update";
+  if (data.busy) {
+    box.append(text("p", busyText[data.busy] || data.busy));
+    return;
+  }
+  if (!data.canVerify)
+    box.append(
+      text(
+        "p",
+        "This version of the board can't check for updates. Reflash it with a newer image.",
+        "error-text",
+      ),
+    );
+  if (data.error) box.append(text("p", data.error, "error-text"));
+  if (!a) {
+    if (!data.error)
+      box.append(
+        text("p", "Check for updates to see what's available.", "muted"),
+      );
+    return;
+  }
+  if (a.upToDate) {
+    box.append(text("p", "This board is up to date."));
+    return;
+  }
+  $("update-heading").textContent = a.name || a.version;
+  const facts = document.createElement("dl");
+  facts.className = "facts";
+  for (const [term, value] of [
+    ["Version", a.version + " (build " + a.build + ")"],
+    ["Published", when(a.publishedAt)],
+    ["Download", a.download ? megabytes(a.download) : "Nothing to download"],
+    ["Files changed", String(a.changes?.length || 0)],
+  ]) {
+    if (value) facts.append(text("dt", term), text("dd", value));
+  }
+  box.append(facts);
+  if (a.notes) box.append(text("p", a.notes, "release-notes"));
+  if (a.url) {
+    const link = text("a", "View on GitHub");
+    link.href = a.url;
+    link.target = "_blank";
+    link.rel = "noopener";
+    const paragraph = text("p", "");
+    paragraph.append(link);
+    box.append(paragraph);
+  }
+  if (a.channel === "development" && a.newer) showCommits(box, a.commit);
+  if (a.conflicts?.length) {
+    box.append(
+      text(
+        "p",
+        "This update can't be installed, because it would replace files that were changed on this board. Undo the changes, or reflash the board, to update.",
+        "error-text",
+      ),
+    );
+    const list = document.createElement("ul");
+    list.className = "conflicts";
+    for (const conflict of a.conflicts) {
+      const item = document.createElement("li");
+      item.append(
+        text("code", conflict.path),
+        text("span", " — " + conflict.reason),
+      );
+      if (conflict.diff) {
+        const details = document.createElement("details");
+        details.append(
+          text("summary", "Compare with the update"),
+          text("pre", conflict.diff, "diff"),
+        );
+        item.append(details);
+      }
+      list.append(item);
+    }
+    box.append(list);
+    return;
+  }
+  if (a.missingPackages?.length) {
+    box.append(
+      text(
+        "p",
+        "This update needs software that isn't installed on this board: " +
+          a.missingPackages.join(", ") +
+          ". Reflash the board to update.",
+        "error-text",
+      ),
+    );
+    return;
+  }
+  install.hidden = false;
+  install.dataset.older = String(!a.newer);
+  if (a.newer) install.textContent = "Install update";
+  else {
+    box.append(
+      text(
+        "p",
+        "This channel is behind the version installed on this board. The board stays on its version until the channel catches up, or you can install this older version now.",
+      ),
+    );
+    install.textContent = "Install older version";
+  }
+}
+async function showCommits(box, commit) {
+  const list = document.createElement("ul");
+  list.className = "commits";
+  box.append(text("h4", "Changes"), list);
+  if (commitsFor?.commit !== commit) {
+    try {
+      commitsFor = { commit, commits: await api("update/commits") };
+    } catch (error) {
+      list.replaceWith(text("p", "Couldn't list the changes.", "muted"));
+      return;
+    }
+  }
+  for (const c of commitsFor.commits.slice(0, 30)) {
+    const item = document.createElement("li"),
+      link = text("a", c.sha.slice(0, 7));
+    link.href = c.url;
+    link.target = "_blank";
+    link.rel = "noopener";
+    item.append(link, text("span", " " + c.message));
+    list.append(item);
+  }
+  if (!commitsFor.commits.length)
+    list.replaceWith(text("p", "No changes listed.", "muted"));
+}
+$("update-check").onclick = async () => {
+  try {
+    await api("update/check", "POST", {});
+    await loadUpdates();
+  } catch (error) {
+    notice(error.message, "error");
+  }
+};
+$("update-install").onclick = async () => {
+  const older = $("update-install").dataset.older === "true";
+  if (
+    older &&
+    !confirm(
+      "Install an older version? If it can't use the board's settings, the update stops and nothing changes.",
+    )
+  )
+    return;
+  try {
+    const result = await api("update/install", "POST", { allowOlder: older });
+    notice(result.message);
+    await loadUpdates();
+  } catch (error) {
+    notice(error.message, "error");
+  }
+};
+$("update-settings").addEventListener("input", () => {
+  updateDirty = true;
+  $("update-save-status").textContent = "Unsaved changes";
+  updateSettingsForm();
+});
+$("update-settings").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  $("update-save").disabled = true;
+  try {
+    const channelChanged =
+      $("update-channel").value !== (await api("update/settings")).channel;
+    const result = await api("update/settings", "PUT", {
+      channel: $("update-channel").value,
+      schedule: $("update-schedule").value,
+      time: $("update-time").value || "03:00",
+      weekday: Number($("update-weekday").value),
+      autoInstall: $("update-auto").checked,
+    });
+    updateDirty = false;
+    notice(result.message, "success");
+    if (channelChanged) await api("update/check", "POST", {});
+    await loadUpdates();
+  } catch (error) {
+    notice(error.message, "error");
+  } finally {
+    $("update-save").disabled = false;
   }
 });
 api("session")

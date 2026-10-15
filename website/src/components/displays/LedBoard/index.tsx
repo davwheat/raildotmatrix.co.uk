@@ -28,6 +28,8 @@ export default function LedBoard({
   legacyTocNames,
   worldline,
   pageDestinations,
+  reserveEtdColumn,
+  clearDownWarningToCis,
   rowPrefix,
   ordinalFormat,
   serviceCount,
@@ -40,6 +42,7 @@ export default function LedBoard({
   platformBox,
   compactLowerRow,
   smallScrollingText,
+  ampersandCallingPoints,
   alignPlatformRows,
   colour,
 }: Props) {
@@ -60,6 +63,8 @@ export default function LedBoard({
     legacyTocNames,
     worldline,
     pageDestinations,
+    reserveEtdColumn,
+    clearDownWarningToCis,
     rowPrefix,
     ordinalFormat,
     serviceCount,
@@ -72,6 +77,7 @@ export default function LedBoard({
     platformBox,
     compactLowerRow,
     smallScrollingText,
+    ampersandCallingPoints,
     alignPlatformRows,
     colour,
   })

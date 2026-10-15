@@ -16,6 +16,8 @@ powersave=2
 key-mgmt=wpa-psk
 proto=rsn;
 psk=DotMatrix
+# 1 turns PMF off. PMF is a suspected cause of devices failing to join hotspots on the Pi's Broadcom Wi-Fi.
+pmf=1
 
 [ipv4]
 method=shared

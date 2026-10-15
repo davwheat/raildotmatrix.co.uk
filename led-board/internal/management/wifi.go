@@ -17,12 +17,19 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/atomicfile"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/setupdisplay"
 )
 
 const hotspotUUID = "4c376e41-f15d-4dbf-9747-5932b6c9d078"
 const clientUUID = "10e4bf67-d053-4e24-8f93-ed70b5161a5d"
 const clientProfile = "/etc/NetworkManager/system-connections/departure-board-client.nmconnection"
+
+// NetworkManager device states, from NMDeviceState.
+const (
+	nmPrepare   = 40
+	nmActivated = 100
+)
 
 type NetworkInput struct {
 	SSID     string `json:"ssid"`
@@ -37,12 +44,15 @@ type Network struct {
 	Security string `json:"security"`
 }
 type WiFi struct {
-	opts    Options
-	mu      sync.Mutex
-	status  setupdisplay.Status
-	busy    bool
-	profile string
-	written []byte
+	opts     Options
+	mu       sync.Mutex
+	status   setupdisplay.Status
+	busy     bool
+	profile  string
+	written  []byte
+	failures map[string]string
+	// The hotspot message to show if a saved network activation that nmcli stopped waiting for fails.
+	pending string
 }
 
 func NewWiFi(o Options) *WiFi {
@@ -50,7 +60,7 @@ func NewWiFi(o Options) *WiFi {
 	if o.Demo {
 		profile = filepath.Join(o.StateDir, "client.nmconnection")
 	}
-	return &WiFi{opts: o, profile: profile, status: setupdisplay.Status{Mode: "starting", IPs: []string{}}}
+	return &WiFi{opts: o, profile: profile, status: setupdisplay.Status{Mode: "starting", IPs: []string{}}, failures: map[string]string{}}
 }
 func (w *WiFi) Status() setupdisplay.Status {
 	w.mu.Lock()
@@ -113,7 +123,7 @@ func (w *WiFi) set(mode, ssid, message string) {
 			return
 		}
 	}
-	if err := atomicWrite(w.opts.StatusPath, data, 0644); err != nil {
+	if err := atomicfile.Write(w.opts.StatusPath, data, 0644); err != nil {
 		log.Printf("write matrix setup status: %v", err)
 	} else {
 		w.written = data
@@ -121,6 +131,48 @@ func (w *WiFi) set(mode, ssid, message string) {
 }
 func (w *WiFi) nm(ctx context.Context, args ...string) ([]byte, error) {
 	return w.opts.Run(ctx, "nmcli", args...)
+}
+
+// A board without a Wi-Fi adapter fails the same way on every poll, so only log a failure that differs
+// from the last one for the same action.
+func (w *WiFi) logFailure(action string, err error, output []byte) {
+	failure := fmt.Sprintf("%s: %v", action, err)
+	if output = bytes.TrimSpace(output); len(output) > 0 {
+		failure += ": " + string(output)
+	}
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if failure != w.failures[action] {
+		log.Print(failure)
+		w.failures[action] = failure
+	}
+}
+
+func (w *WiFi) device(ctx context.Context) (int, string, error) {
+	output, err := w.nm(ctx, "-g", "GENERAL.STATE,GENERAL.CON-UUID", "device", "show", w.opts.Interface)
+	if err != nil {
+		return 0, "", fmt.Errorf("%w: %s", err, bytes.TrimSpace(output))
+	}
+	// Accept the values on one line or two; neither "100 (connected)" nor a UUID contains a colon.
+	fields := strings.FieldsFunc(string(output), func(r rune) bool { return r == '\n' || r == ':' })
+	if len(fields) == 0 {
+		return 0, "", fmt.Errorf("unexpected device state %q", output)
+	}
+	number, _, _ := strings.Cut(strings.TrimSpace(fields[0]), " ")
+	state, err := strconv.Atoi(number)
+	if err != nil {
+		return 0, "", fmt.Errorf("unexpected device state %q", output)
+	}
+	uuid := ""
+	if len(fields) > 1 {
+		uuid = strings.TrimSpace(fields[1])
+	}
+	return state, uuid, nil
+}
+func activating(state int) bool { return state >= nmPrepare && state < nmActivated }
+func (w *WiFi) clientSSID(ctx context.Context) string {
+	ssid, _ := w.nm(ctx, "--escape", "no", "-g", "802-11-wireless.ssid", "connection", "show", "uuid", clientUUID)
+	return strings.TrimSpace(string(ssid))
 }
 func (w *WiFi) claim() bool {
 	w.mu.Lock()
@@ -160,35 +212,84 @@ func (w *WiFi) Monitor(ctx context.Context) {
 			if !w.claim() {
 				continue
 			}
-			current, err := w.nm(ctx, "-g", "GENERAL.CON-UUID", "device", "show", w.opts.Interface)
-			state := w.Status()
-			if err == nil && strings.TrimSpace(string(current)) == clientUUID {
-				w.set("connected", state.SSID, "")
-			} else if err == nil && strings.TrimSpace(string(current)) == hotspotUUID {
-				w.set("hotspot", "DepartureBoard", state.Message)
-			} else {
-				w.restore(ctx)
-			}
+			w.poll(ctx)
 			w.done()
 		}
+	}
+}
+
+// NetworkManager keeps activating a connection after nmcli stops waiting for it. Bringing up the same
+// or another connection interrupts it, which takes the hotspot off the air or abandons a slow join, so
+// leave an activating connection alone until it either activates or fails.
+func (w *WiFi) poll(ctx context.Context) {
+	state, uuid, err := w.device(ctx)
+	if err != nil {
+		w.logFailure("read Wi-Fi state", err, nil)
+		w.restore(ctx)
+		return
+	}
+	status := w.Status()
+	switch {
+	case uuid == clientUUID && state == nmActivated:
+		w.pending = ""
+		ssid := status.SSID
+		if status.Mode != "connected" {
+			ssid = w.clientSSID(ctx)
+		}
+		w.set("connected", ssid, "")
+	case uuid == clientUUID && activating(state):
+		ssid := status.SSID
+		if status.Mode != "connecting" {
+			ssid = "saved network"
+		}
+		w.set("connecting", ssid, "")
+	case uuid == hotspotUUID && state == nmActivated:
+		w.set("hotspot", "DepartureBoard", status.Message)
+	case uuid == hotspotUUID && activating(state):
+		w.set("starting", "DepartureBoard", status.Message)
+	case w.pending != "":
+		// Retrying a network that has just failed would keep the board off the hotspot indefinitely.
+		w.hotspot(ctx, w.pending)
+	default:
+		w.restore(ctx)
 	}
 }
 func (w *WiFi) restore(ctx context.Context) {
 	if _, err := os.Stat(w.profile); err == nil {
 		w.set("connecting", "saved network", "")
-		if _, err = w.nm(ctx, "--wait", "30", "connection", "up", "uuid", clientUUID, "ifname", w.opts.Interface); err == nil {
-			ssid, _ := w.nm(ctx, "--escape", "no", "-g", "802-11-wireless.ssid", "connection", "show", "uuid", clientUUID)
-			w.set("connected", strings.TrimSpace(string(ssid)), "")
-			return
+		if w.join(ctx, "Could not connect to the saved network. Check its name and password.") {
+			w.set("connected", w.clientSSID(ctx), "")
 		}
-		w.hotspot(ctx, "Could not connect to the saved network. Check its name and password.")
 		return
 	}
 	w.hotspot(ctx, "")
 }
+
+// join reports whether the saved network connected. If it is still connecting when nmcli stops
+// waiting, the poll returns to the hotspot with failure if the connection then fails.
+func (w *WiFi) join(ctx context.Context, failure string) bool {
+	output, err := w.nm(ctx, "--wait", "30", "connection", "up", "uuid", clientUUID, "ifname", w.opts.Interface)
+	if err == nil {
+		w.pending = ""
+		return true
+	}
+	w.logFailure("connect to the saved network", err, output)
+	if state, uuid, err := w.device(ctx); err == nil && uuid == clientUUID && activating(state) {
+		w.pending = failure
+		return false
+	}
+	w.hotspot(ctx, failure)
+	return false
+}
 func (w *WiFi) hotspot(ctx context.Context, message string) {
+	w.pending = ""
 	if !w.opts.Demo {
-		if _, err := w.nm(ctx, "--wait", "15", "connection", "up", "uuid", hotspotUUID, "ifname", w.opts.Interface); err != nil {
+		if output, err := w.nm(ctx, "--wait", "15", "connection", "up", "uuid", hotspotUUID, "ifname", w.opts.Interface); err != nil {
+			w.logFailure("start the setup hotspot", err, output)
+			if state, uuid, err := w.device(ctx); err == nil && uuid == hotspotUUID && activating(state) {
+				w.set("starting", "DepartureBoard", message)
+				return
+			}
 			w.set("unavailable", "", "Wi-Fi is unavailable. Connect Ethernet or check the wireless adapter.")
 			return
 		}
@@ -229,11 +330,11 @@ func (w *WiFi) Connect(in NetworkInput) error {
 	if !w.claim() {
 		return errors.New("a connection change is already in progress")
 	}
-	if err = atomicWrite(w.profile, data, 0600); err != nil {
+	if err = atomicfile.Write(w.profile, data, 0600); err != nil {
 		w.done()
 		return err
 	}
-	if err = atomicWrite(filepath.Join(w.opts.StateDir, "country"), []byte(in.Country), 0600); err != nil {
+	if err = atomicfile.Write(filepath.Join(w.opts.StateDir, "country"), []byte(in.Country), 0600); err != nil {
 		w.done()
 		return err
 	}
@@ -248,15 +349,14 @@ func (w *WiFi) Connect(in NetworkInput) error {
 			return
 		}
 		w.opts.Run(ctx, "iw", "reg", "set", in.Country)
-		if _, err := w.nm(ctx, "connection", "load", w.profile); err != nil {
+		if output, err := w.nm(ctx, "connection", "load", w.profile); err != nil {
+			w.logFailure("load the Wi-Fi network", err, output)
 			w.hotspot(ctx, "Could not save this Wi-Fi network.")
 			return
 		}
-		if _, err := w.nm(ctx, "--wait", "30", "connection", "up", "uuid", clientUUID, "ifname", w.opts.Interface); err != nil {
-			w.hotspot(ctx, "Connection failed. Check the network password and try again.")
-			return
+		if w.join(ctx, "Connection failed. Check the network password and try again.") {
+			w.set("connected", in.SSID, "")
 		}
-		w.set("connected", in.SSID, "")
 	}()
 	return nil
 }

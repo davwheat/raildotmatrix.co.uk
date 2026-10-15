@@ -29,11 +29,9 @@ func Lines(s Status) []string {
 			return []string{"Setup available", "http://departureboard.local", "http://192.168.4.1"}
 		}
 		// A wired connection can provide setup access before anyone joins Wi-Fi.
-		for _, ip := range s.IPs {
-			if ip != "192.168.4.1" {
-				s.Mode = "connected"
-				return Lines(s)
-			}
+		if reachable(s.IPs) {
+			s.Mode = "connected"
+			return Lines(s)
 		}
 		return []string{"Connect to DepartureBoard", "Password: DotMatrix"}
 	case "connected":
@@ -46,13 +44,25 @@ func Lines(s Status) []string {
 		return lines
 	case "connecting":
 		return []string{"Connecting to Wi-Fi", s.SSID, "Please wait..."}
+	case "unavailable":
+		if reachable(s.IPs) {
+			s.Mode = "connected"
+			return Lines(s)
+		}
+		// The manager retries the hotspot on every poll, and a wired connection gives setup access meanwhile.
+		return []string{"Wi-Fi unavailable", "Retrying...", "Or connect Ethernet"}
 	default:
-		if len(s.IPs) > 0 {
+		if reachable(s.IPs) {
 			s.Mode = "connected"
 			return Lines(s)
 		}
 		return []string{"Starting setup...", "Please wait"}
 	}
+}
+
+// The hotspot holds 192.168.4.1 while it is still starting, before any device can join it.
+func reachable(ips []string) bool {
+	return slices.ContainsFunc(ips, func(ip string) bool { return ip != "192.168.4.1" })
 }
 
 type Board struct {

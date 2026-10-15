@@ -2,8 +2,10 @@
 # Runs inside the prepared ARM image, without starting networking or using GPIO.
 set -euo pipefail
 /opt/departure-board/board -check-config -config /boot/firmware/departure-board.toml
-/opt/departure-board/manage -help >/dev/null 2>&1
+/opt/departure-board/manage -version
+/opt/departure-board/manage verify-installed
 nmcli --offline connection modify connection.id departure-board-hotspot < /etc/NetworkManager/system-connections/departure-board-hotspot.nmconnection >/dev/null
+# departure-board-update.service isn't verified, because its program exists only while an update is staged.
 systemd-analyze verify departure-board-init.service departure-board-manager.service departure-board.service
 for service in NetworkManager avahi-daemon departure-board-init departure-board-manager departure-board dropbear; do
     systemctl is-enabled --quiet "$service.service"
@@ -17,6 +19,15 @@ done
 test "$(cat /etc/hostname)" = departureboard
 test "$(stat -c %a /etc/NetworkManager/system-connections/departure-board-hotspot.nmconnection)" = 600
 test "$(stat -c %a /root/.ssh)" = 700
+test "$(stat -c %a /var/lib/departure-board)" = 700
+# A host key shipped in a public image would let anyone impersonate every board.
+if compgen -G '/etc/dropbear/dropbear_*_host_key*' >/dev/null; then
+    echo 'The image must not contain Dropbear host keys' >&2
+    exit 1
+fi
+keys=$(mktemp -d)
+dropbearkey -t ed25519 -f "$keys/ed25519" >/dev/null
+rm -r "$keys"
 # The GPIO renderer drops to daemon, which must be able to read the SD config.
 setpriv --reuid=daemon --regid=daemon --clear-groups cat /boot/firmware/departure-board.toml >/dev/null
-printf 'ARM executables, configuration, hotspot profile and systemd units verified.\n'
+printf 'ARM executables, installed manifest, configuration, hotspot profile, SSH host key generation and systemd units verified.\n'

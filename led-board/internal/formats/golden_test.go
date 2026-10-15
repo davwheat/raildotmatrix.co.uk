@@ -94,13 +94,19 @@ func goldenCases() []goldenCase {
 		}
 		// The single calling point's "only" reaches the board 10.6 seconds in, after the line scrolls in.
 		add("daktronics", "single-call", "worldline", size, Config{Worldline: true}, 11500*time.Millisecond)
-		for _, fixture := range []string{"long-destination", "hyphenated-destination"} {
+		for _, fixture := range []string{"long-destination", "hyphenated-destination", "long-dividing-service"} {
 			add("daktronics", fixture, "", size, Config{}, settled["daktronics"])
+		}
+		for _, fixture := range []string{"long-destination", "hyphenated-destination", "triple-line", "long-dividing-service"} {
+			add("daktronics", fixture, "reserve-etd-column", size, Config{ReserveETDColumn: true}, settled["daktronics"])
 		}
 		// The bus's calling prefix rests at the right edge between 3 and 4.5 seconds, before the line scrolls.
 		add("daktronics", "replacement-bus", "", size, Config{}, 4*time.Second)
 	}
 	add("infotec", "busy-board", "white", panel, Config{Colour: board.White}, settled["infotec"])
+	for _, size := range []goldenSize{panel, webSizes["infotec"]} {
+		add("infotec", "dividing-second", "platform-box", size, Config{PlatformBox: true}, settled["infotec"])
+	}
 	for _, size := range []goldenSize{panel, webSizes["infotec"]} {
 		add("infotec", "busy-board", "small-scrolling-text", size, Config{SmallScrollingText: true}, settled["infotec"])
 		add("infotec", "busy-board", "small-scrolling-text-platform-box", size, Config{SmallScrollingText: true, PlatformBox: true}, settled["infotec"])

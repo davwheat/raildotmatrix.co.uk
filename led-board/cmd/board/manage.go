@@ -40,7 +40,7 @@ func describeConfig(fs *flag.FlagSet) []configschema.Field {
 }
 
 func controlFlag(name string) bool {
-	return name == "config" || name == "config-schema" || name == "check-config" || name == "setup-status"
+	return name == "config" || name == "config-schema" || name == "check-config" || name == "setup-status" || name == "version"
 }
 
 // Check before opening hardware, both for normal starts and GUI edits.

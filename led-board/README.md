@@ -101,6 +101,17 @@ out, along with every train after it. Set `page_destinations = true` to page thr
 destinations every 3 seconds instead, clipping any that are still too long. The website offers the same **Page
 dividing trains' destinations** setting.
 
+Each destination on the Daktronics board can use whatever space the expected time or status beside it leaves free,
+so a destination beside a time, "Arrived" or "Delayed" has more room than one beside "Cancelled". Set
+`reserve_etd_column = true` to keep every destination clear of the space that "Cancelled" needs, whether the row
+shows a time or a status. The website offers the same **Reserve space for "Cancelled"** setting. In both cases, an expected time or "Arrived" keeps a 5-dot gap to its right.
+
+When a platform warning ends on the Daktronics board, the pinwheel wipes it away before the trains return. If no
+trains follow it, "CUSTOMER INFORMATION SYSTEM" replaces the warning at once. Set `clear_down_warning_to_cis = true`
+to wipe the warning away with the pinwheel first in that case too. The message then appears when the wipe ends. The
+website and Pi management UI offer the same **Clear down warnings when no trains follow** setting. The command-line
+flag is `-clear-down-warning-to-cis`, and the browser API and shared URLs use `clearDownWarningToCis`.
+
 `row_prefix` selects the single prefix before each train's scheduled time: `ordinals` (the default) shows
 `1st`, `2nd` or `3rd`, and `platforms` shows the platform number, such as `Pl 1`. The platform column is wide
 enough for a three-character platform such as `10A`. A platform that isn't published, or that Darwin
@@ -195,6 +206,11 @@ The website and Pi management UI offer a Use smaller scrolling text toggle. The 
 `-small-scrolling-text`, the environment variable is `BOARD_SMALL_SCROLLING_TEXT=true`, and the browser
 API and shared URLs use `smallScrollingText`. The smaller font redistributes space around the information
 row, formation and separator; widths, clipping and scroll duration follow the selected font.
+
+`ampersand_calling_points = true` joins the last two Infotec calling points with "&" in place of "and", such as
+"Gatwick Airport (19:56) & Horsham (20:05).". It defaults to `false`. The website and Pi management UI offer a
+Use "&" in calling points toggle. The command-line flag is `-ampersand-calling-points`, the environment variable
+is `BOARD_AMPERSAND_CALLING_POINTS=true`, and the browser API and shared URLs use `ampersandCallingPoints`.
 
 Unless `led.limit_refresh` or `led.pwm_bits` is set, the panel timing follows the board. The refresh rate is
 the lowest whole multiple of the scroll speed from 60 Hz up, so that every scroll step lasts the same number

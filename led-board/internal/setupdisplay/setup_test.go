@@ -25,6 +25,9 @@ func TestSetupInstructions(t *testing.T) {
 		{"other devices remain", Status{Mode: "hotspot", Clients: 2}, []string{"Setup available", "http://departureboard.local", "http://192.168.4.1"}},
 		{"joined network", Status{Mode: "connected", IPs: []string{"192.168.1.82"}}, []string{"Setup available", "http://departureboard.local", "http://192.168.1.82"}},
 		{"wired fallback", Status{Mode: "unavailable", IPs: []string{"10.0.0.8"}}, []string{"Setup available", "http://departureboard.local", "http://10.0.0.8"}},
+		{"no Wi-Fi or Ethernet", Status{Mode: "unavailable"}, []string{"Wi-Fi unavailable", "Retrying...", "Or connect Ethernet"}},
+		{"hotspot activating", Status{Mode: "starting", SSID: "DepartureBoard", IPs: []string{"192.168.4.1"}}, []string{"Starting setup...", "Please wait"}},
+		{"hotspot stalled", Status{Mode: "unavailable", IPs: []string{"192.168.4.1"}}, []string{"Wi-Fi unavailable", "Retrying...", "Or connect Ethernet"}},
 		{"wired with unused hotspot", Status{Mode: "hotspot", IPs: []string{"192.168.4.1", "10.0.0.8"}}, []string{"Setup available", "http://departureboard.local", "http://10.0.0.8"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

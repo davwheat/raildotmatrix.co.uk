@@ -33,6 +33,8 @@ func main() {
 	boardName := flag.String("board", "daktronics", "board format: daktronics or infotec")
 	worldline := flag.Bool("worldline", false, "render the Worldline-powered Daktronics variant")
 	pageDestinations := flag.Bool("page-destinations", false, "page through dividing trains' destinations on the Daktronics lower row")
+	reserveETDColumn := flag.Bool("reserve-etd-column", false, "keep every Daktronics destination clear of the space that \"Cancelled\" needs")
+	clearDownWarningToCIS := flag.Bool("clear-down-warning-to-cis", false, "wipe a Daktronics warning away when no trains follow it")
 	scrollSpeed := flag.Int("scroll-speed", 0, "scroll speed in dots per second; 0 uses the board's default")
 	rowPrefixName := flag.String("row-prefix", "ordinals", "prefix before each train time: ordinals or platforms")
 	warningPlatform := flag.Bool("warning-platform", false, "name the platform in warnings")
@@ -63,7 +65,7 @@ func main() {
 	}
 	w, h := *width, *height
 	b, err := formats.New(*boardName, formats.Config{
-		Width: w, Height: h, Zone: zone, Worldline: *worldline, PageDestinations: *pageDestinations, ScrollSpeed: *scrollSpeed, RowPrefix: rowPrefix,
+		Width: w, Height: h, Zone: zone, Worldline: *worldline, PageDestinations: *pageDestinations, ReserveETDColumn: *reserveETDColumn, ClearDownWarningToCIS: *clearDownWarningToCIS, ScrollSpeed: *scrollSpeed, RowPrefix: rowPrefix,
 		WarningPlatform: *warningPlatform,
 	})
 	if err != nil {

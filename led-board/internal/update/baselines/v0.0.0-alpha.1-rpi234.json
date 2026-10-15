@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "version": "v0.0.0-alpha.1",
+  "commit": "f35a23b6411e4d2826e98e72c7d5f4685ed1070f",
+  "build": 475,
+  "channel": "prerelease",
+  "variant": "rpi234",
+  "packages": [
+    "network-manager",
+    "dnsmasq-base",
+    "avahi-daemon",
+    "iw",
+    "rfkill",
+    "ca-certificates",
+    "tzdata",
+    "dropbear"
+  ],
+  "files": [
+    {
+      "path": "/opt/departure-board/board",
+      "mode": "0755",
+      "sha256": "9109f3acf1576ac19940b1efe7b1b7a0353d6363c585326a88abc534d47a6632"
+    },
+    {
+      "path": "/opt/departure-board/manage",
+      "mode": "0755",
+      "sha256": "fe43c9c0e93bdc299b956b9792e1b5f9a35e50b7b8b6111ef4f70ab559b87efb"
+    },
+    {
+      "path": "/opt/departure-board/firstboot.sh",
+      "mode": "0755",
+      "sha256": "86d531647a6504ac047985ffc9474fa455b44d896acf30a78c1006c512cf0d26"
+    },
+    {
+      "path": "/etc/systemd/system/departure-board.service",
+      "mode": "0644",
+      "sha256": "835850d992b3a80e22e4e2379c145588cec0a37a92ec321c59270e3972a518b8"
+    },
+    {
+      "path": "/etc/systemd/system/departure-board.service.d/boot-config.conf",
+      "mode": "0644",
+      "sha256": "0b6dd331822cfa216da0d906634ddcc95bb4e0676906a2d795458b049f926e20"
+    },
+    {
+      "path": "/etc/systemd/system/departure-board-manager.service",
+      "mode": "0644",
+      "sha256": "7ee3e94a382e5344aa32ab0fce5e10c5e941832e3f5316b5eb08730856b9ec95"
+    },
+    {
+      "path": "/etc/systemd/system/departure-board-init.service",
+      "mode": "0644",
+      "sha256": "f0e6a54bd6823c7e591a2667410bf11f45fb9765fea145fce8ecd04e500ed319"
+    },
+    {
+      "path": "/etc/NetworkManager/system-connections/departure-board-hotspot.nmconnection",
+      "mode": "0600",
+      "sha256": "5c124103d15ecddd38ca8aa8e14cb4deb3373b2060b44eea7e6d076eb6173dee"
+    },
+    {
+      "path": "/etc/NetworkManager/conf.d/departure-board.conf",
+      "mode": "0644",
+      "sha256": "6642493a9b417d4027aaeb1f8e54165691b612561509da52cbfd65e4a271263e"
+    },
+    {
+      "path": "/etc/avahi/services/departure-board.service",
+      "mode": "0644",
+      "sha256": "907f1f4b47a5926b9524857257e47a7b3b3bd73bfdf4e3d6a1857cde1ffd2924"
+    },
+    {
+      "path": "/etc/modprobe.d/raildotmatrix.conf",
+      "mode": "0644",
+      "sha256": "090782698ba2116b69caf02866936de12369fafafb0bab744fec7b1d313238a6"
+    }
+  ]
+}

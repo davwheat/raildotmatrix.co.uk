@@ -158,6 +158,9 @@ export default function BoardOptions() {
               <Check name="smallScrollingText" hint="Use the compact font for calling points and service information.">
                 Use smaller scrolling text
               </Check>
+              <Check name="ampersandCallingPoints" hint='Join the last two calling points with "&" in place of "and".'>
+                Use "&" in calling points
+              </Check>
             </>
           )}
           {daktronics && (
@@ -170,6 +173,18 @@ export default function BoardOptions() {
                 hint="Page through each destination of a dividing train on the lower row. The real board leaves out a train whose destination doesn't fit."
               >
                 Page dividing trains' destinations
+              </Check>
+              <Check
+                name="reserveEtdColumn"
+                hint='Keep every destination clear of the space that "Cancelled" needs, even when the train shows a time or a shorter status, such as "Arrived".'
+              >
+                Reserve space for "Cancelled"
+              </Check>
+              <Check
+                name="clearDownWarningToCis"
+                hint='Wipe a platform warning away with the pinwheel before showing "CUSTOMER INFORMATION SYSTEM". By default, the message replaces the warning at once.'
+              >
+                Clear down warnings when no trains follow
               </Check>
             </>
           )}

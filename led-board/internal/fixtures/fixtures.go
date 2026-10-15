@@ -93,6 +93,17 @@ func Steps(name string) []model.View {
 		divide.Divides = append(divide.Divides, model.Portion{Length: 2, CallPoints: []model.CallPoint{call(horshamLoc, 1500, 2), call(bognorLoc, 2700, 2)}})
 		s.Destinations = append(s.Destinations, bognorLoc)
 		return snapshot(s, bedford())
+	case "long-dividing-service":
+		// "Portsmouth Hbr & Bognor Regis" fits on the Daktronics panel's first line beside "Delayed" only if it can
+		// use the room that "Delayed" leaves in the expected-time column.
+		portsmouthLoc := model.Location{Name: "Portsmouth Harbour", CRS: "PMH"}
+		bognorLoc := model.Location{Name: "Bognor Regis", CRS: "BOG"}
+		divide := call(horshamLoc, 1500, 4)
+		divide.Divides = []model.Portion{{Length: 4, CallPoints: []model.CallPoint{call(horshamLoc, 1500, 4), call(bognorLoc, 3300, 4)}}}
+		s := service("long-dividing", "Southern", "6", 300, 8, portsmouthLoc, call(gatwickLoc, 960, 8), divide, call(portsmouthLoc, 4800, 4))
+		s.Destinations = append(s.Destinations, bognorLoc)
+		s.Estimated = nil
+		return snapshot(s, bedford())
 	case "single-call":
 		s := victoria()
 		s.CallPoints = s.CallPoints[1:]

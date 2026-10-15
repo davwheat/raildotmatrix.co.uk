@@ -36,10 +36,18 @@ type Config struct {
 	// PageDestinations lets the Daktronics lower row page through a dividing train's destinations. Other formats
 	// ignore it.
 	PageDestinations bool
+	// ReserveETDColumn keeps every Daktronics destination clear of the space that "Cancelled" needs, even beside a
+	// time. Other formats ignore it.
+	ReserveETDColumn bool
+	// ClearDownWarningToCIS wipes a Daktronics platform warning away with the pinwheel when the no-services
+	// message follows it. Other formats ignore it.
+	ClearDownWarningToCIS bool
 	// ScrollSpeed is in dots per second.
 	ScrollSpeed int
 	// SmallScrollingText uses the compact Infotec information font.
 	SmallScrollingText bool
+	// AmpersandCallingPoints joins the last two Infotec calling points with "&" in place of "and".
+	AmpersandCallingPoints bool
 	// RowPrefix selects ordinals or platform numbers before each train's time.
 	RowPrefix board.RowPrefix
 	// WarningPlatform names the platform in a warning when the warning is for one platform.
@@ -73,7 +81,7 @@ func New(name string, c Config) (board.Board, error) {
 		return daktronics.New(daktronics.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, WorldlinePowered: c.Worldline,
 			ScrollSpeed: c.ScrollSpeed, RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform, ServiceCount: c.ServiceCount,
-			PageDestinations: c.PageDestinations,
+			PageDestinations: c.PageDestinations, ReserveETDColumn: c.ReserveETDColumn, ClearDownWarningToCIS: c.ClearDownWarningToCIS,
 		}), nil
 	case "infotec":
 		platformBox := ""
@@ -82,8 +90,8 @@ func New(name string, c Config) (board.Board, error) {
 		}
 		return infotec.New(infotec.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, ScrollSpeed: c.ScrollSpeed,
-			SmallScrollingText: c.SmallScrollingText,
-			RowPrefix:          c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform,
+			SmallScrollingText: c.SmallScrollingText, AmpersandCallingPoints: c.AmpersandCallingPoints,
+			RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform,
 			FormationCount:    c.FormationCount,
 			CoachLetterTOCs:   c.CoachLetterTOCs,
 			FormationIcons:    c.FormationIcons,

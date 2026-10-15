@@ -85,6 +85,8 @@ align_platform_rows = false
 formation_count = "coaches"
 scroll_speed = 40
 small_scrolling_text = true
+ampersand_calling_points = true
+clear_down_warning_to_cis = true
 
 [led]
 brightness = 40
@@ -117,6 +119,12 @@ func TestFile(t *testing.T) {
 	}
 	if !cfg.SmallScrollingText {
 		t.Error("small_scrolling_text option was not loaded")
+	}
+	if !cfg.AmpersandCallingPoints {
+		t.Error("ampersand_calling_points option was not loaded")
+	}
+	if !cfg.ClearDownWarningToCIS {
+		t.Error("clear_down_warning_to_cis option was not loaded")
 	}
 	if cfg.FormationCount != "coaches" {
 		t.Errorf("formation count = %q; want coaches from file", cfg.FormationCount)
@@ -240,7 +248,7 @@ func TestKeys(t *testing.T) {
 		led.gpio_mapping led.limit_refresh led.multiplexing led.no_busy_waiting led.no_drop_privs led.no_hardware_pulse led.parallel
 		led.pwm_bits led.pwm_dither_bits led.pwm_lsb_nanoseconds led.rgb_sequence led.row_addr_type led.rows
 		led.scan_mode led.show_refresh led.slowdown_gpio align_platform_rows compact_lower_row loading_brightness formation_count clock_style ordinal_format service_count platform_box row_prefix platforms png_dir scale scroll_speed
-		show_unconfirmed_platforms hide_terminating small_scrolling_text url verbose warning_platform worldline page_destinations`)
+		show_unconfirmed_platforms hide_terminating small_scrolling_text url verbose warning_platform worldline page_destinations reserve_etd_column ampersand_calling_points clear_down_warning_to_cis`)
 	slices.Sort(keys)
 	slices.Sort(want)
 	if !slices.Equal(keys, want) {
@@ -257,8 +265,8 @@ func TestSettingsCoverEveryKey(t *testing.T) {
 	if _, ok := settings(v)["led.limit_refresh"]; !ok {
 		t.Error("a key without a default must still be watched")
 	}
-	if got := len(v.AllKeys()); got != 49 {
-		t.Errorf("%d keys, want 49", got)
+	if got := len(v.AllKeys()); got != 52 {
+		t.Errorf("%d keys, want 52", got)
 	}
 }
 

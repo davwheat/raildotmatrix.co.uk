@@ -21,7 +21,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/atomicfile"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/configschema"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/update"
 	"github.com/pelletier/go-toml/v2"
 )
 
@@ -45,13 +47,16 @@ func Run(ctx context.Context, name string, args ...string) ([]byte, error) {
 
 type Options struct {
 	ConfigPath, BoardBinary, StateDir, StatusPath, Interface string
-	Demo                                                     bool
-	Run                                                      Runner
+	// UpdateRepo is the GitHub repository that releases come from, and UpdateAPI the API that serves it.
+	UpdateRepo, UpdateAPI string
+	Demo                  bool
+	Run                   Runner
 }
 type Server struct {
 	opts        Options
 	fields      []configschema.Field
 	wifi        *WiFi
+	updater     *update.Updater
 	sshPath     string
 	mu          sync.Mutex
 	sessions    map[string]time.Time
@@ -83,10 +88,15 @@ func New(o Options) (*Server, error) {
 		return nil, err
 	}
 	s.wifi = NewWiFi(o)
+	s.updater = newUpdater(o)
 	return s, nil
 }
 
-func (s *Server) Start(ctx context.Context) { go s.wifi.Monitor(ctx) }
+func (s *Server) Start(ctx context.Context) {
+	go s.wifi.Monitor(ctx)
+	s.updater.Resume(ctx)
+	go s.updater.Schedule(ctx)
+}
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
@@ -145,6 +155,7 @@ func (s *Server) Handler() http.Handler {
 		}
 		writeJSON(w, 200, map[string]string{"message": "Board restarted."})
 	})
+	s.updateRoutes(api)
 	mux.Handle("/api/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !s.authenticated(r) {
 			fail(w, 401, errors.New("sign in to manage the board"))
@@ -262,8 +273,8 @@ func (s *Server) putConfig(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, fmt.Errorf("settings were not saved: %s", strings.TrimSpace(string(check))))
 		return
 	}
-	if err = atomicWrite(s.opts.ConfigPath+".bak", old, 0644); err == nil {
-		err = atomicWrite(s.opts.ConfigPath, data, 0644)
+	if err = atomicfile.Write(s.opts.ConfigPath+".bak", old, 0644); err == nil {
+		err = atomicfile.Write(s.opts.ConfigPath, data, 0644)
 	}
 	if err != nil {
 		fail(w, 500, err)
@@ -271,7 +282,7 @@ func (s *Server) putConfig(w http.ResponseWriter, r *http.Request) {
 	}
 	if !s.opts.Demo {
 		if _, err = s.opts.Run(r.Context(), "systemctl", "restart", "departure-board.service"); err != nil {
-			if restore := atomicWrite(s.opts.ConfigPath, old, 0644); restore != nil {
+			if restore := atomicfile.Write(s.opts.ConfigPath, old, 0644); restore != nil {
 				fail(w, 500, fmt.Errorf("restart failed and settings could not be restored: %w", restore))
 				return
 			}

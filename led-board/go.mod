@@ -12,6 +12,7 @@ require (
 	github.com/hajimehoshi/ebiten/v2 v2.10.3
 	github.com/pelletier/go-toml/v2 v2.4.3
 	github.com/spf13/viper v1.21.0
+	github.com/ulikunitz/xz v0.5.17
 	golang.org/x/crypto v0.57.0
 )
 

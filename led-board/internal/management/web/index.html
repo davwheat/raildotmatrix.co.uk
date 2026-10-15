@@ -59,6 +59,7 @@
             Board settings</button
           ><button data-tab="network">Wi-Fi & connection</button
           ><button data-tab="device">Device</button
+          ><button data-tab="updates">Updates</button
           ><button data-tab="developer">Developer</button>
         </nav>
         <section id="board-page" class="tab-page">
@@ -200,6 +201,9 @@
               </p>
               <button id="restart" class="secondary">Restart display</button>
               <hr />
+              <h3>Software version</h3>
+              <p id="device-version">Checking…</p>
+              <hr />
               <h3>Find this board</h3>
               <p>
                 On your network:
@@ -213,6 +217,82 @@
               </p>
             </section>
           </div>
+        </section>
+        <section id="updates-page" class="tab-page" hidden>
+          <div class="section-heading">
+            <div><h2>Updates</h2></div>
+            <button id="update-check" class="quiet">Check now</button>
+          </div>
+          <div class="network-grid">
+            <section class="card">
+              <h3>This board</h3>
+              <dl class="facts">
+                <dt>Installed version</dt>
+                <dd id="update-installed">Checking…</dd>
+                <dt>Last checked</dt>
+                <dd id="update-last-check">Never</dd>
+                <dt>Next check</dt>
+                <dd id="update-next-check">Not scheduled</dd>
+              </dl>
+              <p id="update-result" class="small" role="status"></p>
+            </section>
+            <section class="card" aria-live="polite">
+              <h3 id="update-heading">Available update</h3>
+              <div id="update-available">
+                <p class="muted">Check for updates to see what's available.</p>
+              </div>
+              <button id="update-install" hidden>Install update</button>
+            </section>
+          </div>
+          <section class="card">
+            <h3>Update settings</h3>
+            <form id="update-settings">
+              <label for="update-channel">Update channel</label
+              ><select id="update-channel">
+                <option value="stable">Stable releases</option>
+                <option value="prerelease">Prereleases</option>
+                <option value="development">Development builds</option></select
+              ><small id="update-channel-help"></small>
+              <div id="update-dev-warning" class="hint" hidden>
+                Development builds come from each change to the code that passes
+                automated tests. Nobody tries them on a board first, so they can
+                stop the display working.
+              </div>
+              <label for="update-schedule">Check for updates</label
+              ><select id="update-schedule">
+                <option value="off">Only when I click Check now</option>
+                <option value="daily">Every day</option>
+                <option value="weekly">Every week</option></select
+              ><label for="update-weekday" id="update-weekday-label">Day</label
+              ><select id="update-weekday">
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+                <option value="0">Sunday</option></select
+              ><label for="update-time" id="update-time-label">Time</label
+              ><input id="update-time" type="time" required /><small
+                >The board checks within 30 minutes after this time, so that
+                boards don't all check at once.</small
+              >
+              <label class="checkbox-label"
+                ><input type="checkbox" id="update-auto" /> Install updates
+                automatically</label
+              ><small
+                >An update never replaces a file that was edited on the board.
+                If it would, the update stops and lists the file here. The
+                board's settings are never changed by an update.</small
+              >
+              <div class="save-bar">
+                <span id="update-save-status">No unsaved changes.</span
+                ><button type="submit" id="update-save">
+                  Save update settings
+                </button>
+              </div>
+            </form>
+          </section>
         </section>
         <section id="developer-page" class="tab-page" hidden>
           <div class="section-heading">

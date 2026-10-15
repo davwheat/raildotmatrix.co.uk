@@ -1,6 +1,7 @@
 package infotec
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -245,8 +246,43 @@ func TestInfoPagesForDividingTrain(t *testing.T) {
 			t.Errorf("page %d = %+v, want %+v", i, c.pages[i], want[i])
 		}
 	}
-	if len(c.rows[0].pages) != 2 || c.rows[0].pages[0] != "Horsham" || c.rows[0].pages[1] != "and Littlehampton" {
+	if len(c.rows[0].pages) != 2 || c.rows[0].pages[0] != "Horsham &" || c.rows[0].pages[1] != "& Littlehampton" {
 		t.Errorf("destination pages = %q", c.rows[0].pages)
+	}
+	if c.rows[0].joined != "Horsham & Littlehampton" {
+		t.Errorf("joined destinations = %q", c.rows[0].joined)
+	}
+}
+
+func TestAmpersandCallingPoints(t *testing.T) {
+	b := newTestBoard(t)
+	b.cfg.AmpersandCallingPoints = true
+	pages := b.derive(fixtures.Steps("dividing-service")[0]).pages
+	if want := "Gatwick Airport (19:56) & Horsham (20:05)."; pages[1].text != want {
+		t.Errorf("calling points = %q, want %q", pages[1].text, want)
+	}
+}
+
+func TestDividingTrainDestinationsShareALineWhenTheyFit(t *testing.T) {
+	b := newTestBoard(t)
+	r := b.derive(fixtures.Steps("dividing-service")[0]).rows[0]
+	at := b.steadyStart.Add(destinationPage * time.Millisecond)
+	joinedW := font.PISTall.Width(r.joined)
+	if got := b.rowScene(&r, at, font.PISTall, joinedW).dest; got != r.joined {
+		t.Errorf("dest with room = %q, want %q", got, r.joined)
+	}
+	if got := b.rowScene(&r, at, font.PISTall, joinedW-1).dest; got != "& Littlehampton" {
+		t.Errorf("dest without room = %q, want the second page", got)
+	}
+}
+
+func TestDestinationPagesForThreePortions(t *testing.T) {
+	s := &model.Service{Destinations: []model.Location{{Name: "A"}, {Name: "B", Via: "via C"}, {Name: "D"}}}
+	if got, want := destinationPages(s), []string{"A &", "& B via C &", "& D"}; !slices.Equal(got, want) {
+		t.Errorf("pages = %q, want %q", got, want)
+	}
+	if got := joinedDestinations(s); got != "" {
+		t.Errorf("joined = %q, want none for a train with a via", got)
 	}
 }
 
@@ -430,6 +466,7 @@ func TestLowerRowsSwap(t *testing.T) {
 	b := newTestBoard(t)
 	g := b.geo
 	var swapAt, settledAt time.Time
+	var wrapped bool
 	run(t, b, "busy-board", 26*time.Second, func(now time.Time, _ bool, _ *frame.Frame) {
 		e := now.Sub(fixtures.Clock)
 		switch {
@@ -440,9 +477,11 @@ func TestLowerRowsSwap(t *testing.T) {
 		case swapAt.IsZero():
 			swapAt = now
 		case b.last.lower[0].on && b.last.lower[1].on:
-			if b.last.lower[0].dy >= 0 || b.last.lower[1].dy <= 0 {
-				t.Fatalf("at %v: 2nd row dy %d (want up), 3rd row dy %d (want below)", e, b.last.lower[0].dy, b.last.lower[1].dy)
+			out, in := b.last.lower[b.swapFrom], b.last.lower[b.swapIndex]
+			if out.dy >= 0 || in.dy <= 0 {
+				t.Fatalf("at %v: outgoing %s row dy %d (want up), incoming %s row dy %d (want below)", e, out.prefix, out.dy, in.prefix, in.dy)
 			}
+			wrapped = wrapped || b.swapIndex == 0
 		case settledAt.IsZero() && b.last.lower[1].on && b.last.lower[1].dy == 0:
 			settledAt = now
 		}
@@ -453,7 +492,10 @@ func TestLowerRowsSwap(t *testing.T) {
 	if got := settledAt.Sub(swapAt); got < swapSlide*time.Millisecond || got > swapSlide*time.Millisecond+tick {
 		t.Fatalf("3rd row settled %v after the swap began, want %v", got, swapSlide*time.Millisecond)
 	}
-	// The second swap, at 24 s, brings the 2nd train back down from above.
+	// The second swap, at 24 s, brings the 2nd train back up from below.
+	if !wrapped {
+		t.Fatal("never saw the swap back to the 2nd train")
+	}
 	if !b.last.lower[0].on || b.last.lower[1].on || b.last.lower[0].prefix != "2nd" {
 		t.Fatalf("after two swaps: %+v", b.last.lower)
 	}

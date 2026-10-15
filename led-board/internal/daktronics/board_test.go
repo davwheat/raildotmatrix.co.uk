@@ -303,6 +303,61 @@ func TestWarningReplacesTrainsAndClearsDownToThem(t *testing.T) {
 	}
 }
 
+// warnWithNoServices shows a warning with no trains due, then clears it, and returns the board, its frame and
+// when the warning cleared.
+func warnWithNoServices(t *testing.T, cfg Config) (*Board, *frame.Frame, time.Time) {
+	t.Helper()
+	cfg.Width, cfg.Height = testW, testH
+	b := New(cfg)
+	f := frame.New(testW, testH)
+	empty := fixtures.Steps("no-departures")[0]
+	warned := empty
+	warned.Notice = model.StandClear
+	b.Update(warned)
+	b.Tick(fixtures.Clock, f)
+	if b.mode != modeWarning {
+		t.Fatalf("mode %v, want the warning", b.mode)
+	}
+	b.Update(empty)
+	return b, f, fixtures.Clock.Add(5 * time.Second)
+}
+
+func TestWarningGivesWayToNoServicesAtOnce(t *testing.T) {
+	b, f, clearedAt := warnWithNoServices(t, Config{})
+	b.Tick(clearedAt, f)
+	if b.mode != modeNoServices {
+		t.Fatalf("mode %v phase %v as the warning clears, want the no-services message at once", b.mode, b.phase)
+	}
+}
+
+func TestWarningClearsDownToNoServices(t *testing.T) {
+	b, f, clearedAt := warnWithNoServices(t, Config{ClearDownWarningToCIS: true})
+	empty := fixtures.Steps("no-departures")[0]
+	end := clearedAt.Add(clearDownTotal * time.Millisecond)
+	sawSpinner := false
+	for now := clearedAt; now.Before(end); now = now.Add(tick) {
+		// The feed sends the same empty board again partway through the wipe.
+		if now.Equal(clearedAt.Add(time.Second)) {
+			b.Update(empty)
+		}
+		b.Tick(now, f)
+		if b.mode != modeTrains || b.phase != phaseClearDown {
+			t.Fatalf("at %v mode %v phase %v, want the warning clearing down", now.Sub(clearedAt), b.mode, b.phase)
+		}
+		if b.last.first.on && b.last.first.centred != "PLEASE STAND CLEAR" {
+			t.Fatalf("wiping %q, want the warning's first line", b.last.first.centred)
+		}
+		sawSpinner = sawSpinner || b.last.spinner
+	}
+	if !sawSpinner {
+		t.Fatal("the warning cleared without the pinwheel")
+	}
+	b.Tick(end, f)
+	if b.mode != modeNoServices {
+		t.Fatalf("mode %v phase %v after the wipe, want the no-services message at once", b.mode, b.phase)
+	}
+}
+
 func TestWorldlineSingleCallingPointSaysOnly(t *testing.T) {
 	v := fixtures.Steps("single-departure")[0]
 	v.Services[0].CallPoints = v.Services[0].CallPoints[1:]

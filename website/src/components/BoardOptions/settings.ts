@@ -17,6 +17,7 @@ export const defaults = {
   platformBox: false,
   compactLowerRow: true,
   smallScrollingText: false,
+  ampersandCallingPoints: false,
   serviceCount: 3,
   loadingBrightness: 50 as 50 | 100,
   formationCount: 'none' as 'none' | 'number' | 'coaches' | 'coaches-no-brackets' | 'carriages' | 'carriages-no-brackets',
@@ -27,6 +28,8 @@ export const defaults = {
   showCasing: true,
   worldlinePowered: false,
   pageDestinations: false,
+  reserveEtdColumn: false,
+  clearDownWarningToCis: false,
   withBackground: false,
   showUnconfirmedPlatforms: false,
   hideTerminating: false,
@@ -54,6 +57,7 @@ export function optionKeys(type: DisplayType): OptionKey[] {
         'platformBox',
         'compactLowerRow',
         'smallScrollingText',
+        'ampersandCallingPoints',
         'clockStyle',
         'loadingBrightness',
         'formationCount',
@@ -61,7 +65,17 @@ export function optionKeys(type: DisplayType): OptionKey[] {
         'alignPlatformRows',
       ]
     case 'daktronics-data-display-dmi':
-      return [...common, ...led, 'boardStyle', 'showCasing', 'worldlinePowered', 'pageDestinations', 'withBackground']
+      return [
+        ...common,
+        ...led,
+        'boardStyle',
+        'showCasing',
+        'worldlinePowered',
+        'pageDestinations',
+        'reserveEtdColumn',
+        'clearDownWarningToCis',
+        'withBackground',
+      ]
     case 'blackbox-landscape-lcd':
       return common
     default:
