@@ -34,19 +34,26 @@ just ZIG_TARGET=aarch64-linux-gnu.2.36 deploy
 ## DietPi SD card image
 
 The [DietPi image workflow](https://github.com/davwheat/raildotmatrix.co.uk/actions/workflows/dietpi-image.yml)
-builds a flashable 64-bit image when LED board files change on a push or pull request. It can also be run
-manually with **Run workflow**. Download the `raildotmatrix-dietpi-rpi234-arm64` artifact from a successful
-run and extract the ZIP. It contains an `.img.xz`, its SHA-256 checksum, the source commit and base-image
-checksum in `build-info.txt`, and flashing instructions. Artifacts are retained for 14 days.
+builds two flashable 64-bit images when LED board files change on a push or pull request. It can also be run
+manually with **Run workflow**. Each image is built from a different DietPi Debian 13 (Trixie) base:
+
+| Artifact                            | DietPi base      | Raspberry Pi models                           |
+|-------------------------------------|------------------|-----------------------------------------------|
+| `raildotmatrix-dietpi-rpi234-arm64` | **RPi234 ARMv8** | Pi Zero 2 W, Pi 2 v1.2, Pi 3, Pi 4 and Pi 400 |
+| `raildotmatrix-dietpi-rpi5-arm64`   | **RPi5 ARMv8**   | Pi 5 and Pi 500                               |
+
+The original Pi Zero/Zero W and Pi 2 v1.1 need different images and aren't supported.
+
+Download the artifact for your Pi from a successful run and extract the ZIP. It contains an `.img.xz`, its
+SHA-256 checksum, a build information file with the source commit and base-image checksum, and flashing
+instructions. The build information file is named after the artifact, for example
+`raildotmatrix-dietpi-rpi5-arm64-build-info.txt`. Artifacts are retained for 14 days.
 
 Publishing a GitHub Release (including a pre-release) also runs the workflow against that release's tag.
-Once the image build succeeds, it attaches the `.img.xz`, SHA-256 checksum, `build-info.txt` and `README.txt`
-to the release as downloadable assets. Draft releases start the build when published. The workflow must
-be present in the tagged commit. If an upload fails, rerun the failed job; matching assets are replaced.
-
-The image uses DietPi's Debian 13 (Trixie) **RPi234 ARMv8** base, for the Pi Zero 2 W, Pi 2 v1.2, Pi 3,
-Pi 4 and Pi 400. The original Pi Zero/Zero W, Pi 2 v1.1 and Pi 5 need different images and are not supported
-by this artifact.
+Once both image builds succeed, it attaches each image's `.img.xz`, SHA-256 checksum and build information file,
+plus one `README.txt`, to the release as downloadable assets. Draft releases start the build when published.
+The workflow must be present in the tagged commit. If an upload fails, rerun the failed job; matching assets
+are replaced.
 
 1. Flash the `.img.xz` with Raspberry Pi Imager's **Use custom** option or balenaEtcher.
    Skip Raspberry Pi Imager's OS customisation.
@@ -116,7 +123,8 @@ panel's PWM hardware. Each device generates its own machine identity and SSH hos
 
 To build locally, use Linux with Python 3.11+, `mtools`, `xz`, `e2fsprogs` and `util-linux`, plus the
 build tools above. An x86 Linux host also needs `qemu-user-static` and enabled `qemu-aarch64` binfmt
-support. Download and checksum-verify `DietPi_RPi234-ARMv8-Trixie.img.xz`, extract it, then run:
+support. Download and checksum-verify `DietPi_RPi234-ARMv8-Trixie.img.xz`, extract it, then run the
+following commands. For a Pi 5 or Pi 500, use `DietPi_RPi5-ARMv8-Trixie.img.xz` instead.
 
 ```sh
 just ZIG_TARGET=aarch64-linux-gnu.2.41 board

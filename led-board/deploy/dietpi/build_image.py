@@ -113,7 +113,7 @@ def build_image(base, board, output, manager):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base-image", type=Path, required=True, help="uncompressed official DietPi RPi234 ARMv8 Trixie .img")
+    parser.add_argument("--base-image", type=Path, required=True, help="uncompressed official DietPi RPi234 or RPi5 ARMv8 Trixie .img")
     parser.add_argument("--board", type=Path, required=True, help="binary from just board")
     parser.add_argument("--output", type=Path, required=True, help="new uncompressed .img to create")
     parser.add_argument("--manager", type=Path, required=True, help="binary from just manager")

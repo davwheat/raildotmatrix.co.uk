@@ -20,15 +20,27 @@ permissions:
 
 jobs:
   image:
-    name: Raspberry Pi Zero 2 W / 2 / 3 / 4 (64-bit)
+    name: ${{ matrix.name }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Raspberry Pi Zero 2 W / 2 / 3 / 4 (64-bit)
+            dietpi: RPi234
+            variant: rpi234
+          # DietPi ships the Pi 5 kernel only in its separate RPi5 image.
+          - name: Raspberry Pi 5 / 500 (64-bit)
+            dietpi: RPi5
+            variant: rpi5
     defaults:
       run:
         working-directory: led-board
     env:
-      DIETPI_IMAGE: DietPi_RPi234-ARMv8-Trixie.img
-      OUTPUT_IMAGE: raildotmatrix-dietpi-rpi234-arm64.img
+      DIETPI_IMAGE: DietPi_${{ matrix.dietpi }}-ARMv8-Trixie.img
+      ARTIFACT: raildotmatrix-dietpi-${{ matrix.variant }}-arm64
+      OUTPUT_IMAGE: raildotmatrix-dietpi-${{ matrix.variant }}-arm64.img
 
     steps:
       - name: Checkout code and LED matrix library
@@ -92,14 +104,14 @@ jobs:
             printf 'Board binary SHA-256:\n'
             sha256sum build/board
             sha256sum build/manage
-          } > build/dietpi/artifacts/build-info.txt
+          } > "build/dietpi/artifacts/$ARTIFACT-build-info.txt"
           cd build/dietpi/artifacts
           sha256sum "$OUTPUT_IMAGE.xz" > "$OUTPUT_IMAGE.xz.sha256"
 
       - name: Upload image and flashing instructions
         uses: actions/upload-artifact@v7
         with:
-          name: raildotmatrix-dietpi-rpi234-arm64
+          name: ${{ env.ARTIFACT }}
           path: led-board/build/dietpi/artifacts/
           compression-level: 0
           if-no-files-found: error
@@ -116,11 +128,13 @@ jobs:
       contents: write
 
     steps:
-      - name: Download the image built from the release tag
+      - name: Download the images built from the release tag
         uses: actions/download-artifact@v8
         with:
-          name: raildotmatrix-dietpi-rpi234-arm64
+          pattern: raildotmatrix-dietpi-*-arm64
           path: artifacts
+          # Every image ships the same README.txt, so merging leaves one copy.
+          merge-multiple: true
 
       - name: Upload image, checksum and instructions to the release
         env:
