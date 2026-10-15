@@ -11,7 +11,11 @@ if [[ $password ]]; then
     sed -i 's/^AUTO_SETUP_GLOBAL_PASSWORD=.*/AUTO_SETUP_GLOBAL_PASSWORD=/' /boot/dietpi.txt
 fi
 unset password
-if command -v ssh-keygen >/dev/null; then ssh-keygen -A; fi
+# DietPi creates these in dietpi-firstboot, which the image disables, and Debian's
+# Dropbear unit doesn't pass -R, so Dropbear can't start without them.
+key=/etc/dropbear/dropbear_ed25519_host_key
+rm -f "$key" "$key.pub"
+dropbearkey -t ed25519 -f "$key"
 # The manager applies this before activating Wi-Fi. It can later be changed in the GUI.
 country=$(sed -n '/^AUTO_SETUP_NET_WIFI_COUNTRY_CODE=/{s/^[^=]*=//p;q}' /boot/dietpi.txt)
 [[ $country =~ ^[A-Z]{2}$ ]] || country=GB

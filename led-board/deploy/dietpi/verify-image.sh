@@ -17,6 +17,14 @@ done
 test "$(cat /etc/hostname)" = departureboard
 test "$(stat -c %a /etc/NetworkManager/system-connections/departure-board-hotspot.nmconnection)" = 600
 test "$(stat -c %a /root/.ssh)" = 700
+# A host key shipped in a public image would let anyone impersonate every board.
+if compgen -G '/etc/dropbear/dropbear_*_host_key*' >/dev/null; then
+    echo 'The image must not contain Dropbear host keys' >&2
+    exit 1
+fi
+keys=$(mktemp -d)
+dropbearkey -t ed25519 -f "$keys/ed25519" >/dev/null
+rm -r "$keys"
 # The GPIO renderer drops to daemon, which must be able to read the SD config.
 setpriv --reuid=daemon --regid=daemon --clear-groups cat /boot/firmware/departure-board.toml >/dev/null
-printf 'ARM executables, configuration, hotspot profile and systemd units verified.\n'
+printf 'ARM executables, configuration, hotspot profile, SSH host key generation and systemd units verified.\n'

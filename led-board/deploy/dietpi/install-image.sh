@@ -43,7 +43,10 @@ ln -snf /usr/share/zoneinfo/Europe/London /etc/localtime
 printf '%s\n' 'blacklist snd_bcm2835' > /etc/modprobe.d/raildotmatrix.conf
 rm -f /etc/modprobe.d/dietpi-disable_wifi.conf
 # Each flashed board gets its own machine identity and SSH host keys.
-rm -f /etc/machine-id /var/lib/dbus/machine-id /etc/ssh/ssh_host_* /etc/dropbear/dropbear_*_host_key
+rm -f /etc/machine-id /var/lib/dbus/machine-id /etc/ssh/ssh_host_* /etc/dropbear/dropbear_*_host_key*
+# firstboot.sh creates only an Ed25519 key. Without -r, Dropbear also tries the
+# default RSA and ECDSA paths and logs a failure for each on every start.
+printf '%s\n' 'DROPBEAR_EXTRA_ARGS="-r /etc/dropbear/dropbear_ed25519_host_key"' >> /etc/default/dropbear
 : > /etc/machine-id
 rm -f /var/lib/systemd/random-seed
 apt-get clean
