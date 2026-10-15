@@ -180,6 +180,12 @@ export default function BoardOptions() {
               >
                 Reserve space for "Cancelled"
               </Check>
+              <Check
+                name="clearDownWarningToCis"
+                hint='Wipe a platform warning away with the pinwheel before showing "CUSTOMER INFORMATION SYSTEM". By default, the message replaces the warning at once.'
+              >
+                Clear down warnings when no trains follow
+              </Check>
             </>
           )}
           <Check name="warningPlatform">Name the platform in warnings</Check>

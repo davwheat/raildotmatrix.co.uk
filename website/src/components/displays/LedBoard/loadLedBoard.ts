@@ -20,6 +20,8 @@ export interface LedBoardOptions {
   pageDestinations?: boolean
   /** Daktronics only: keep a destination beside a status, such as "Arrived", clear of the space that "Cancelled" needs. */
   reserveEtdColumn?: boolean
+  /** Daktronics only: wipe a platform warning away with the pinwheel when "CUSTOMER INFORMATION SYSTEM" follows it. */
+  clearDownWarningToCis?: boolean
   /** The single prefix before each train's time: an ordinal or its platform number. */
   rowPrefix?: RowPrefix
   ordinalFormat?: OrdinalFormat

@@ -303,21 +303,36 @@ func TestWarningReplacesTrainsAndClearsDownToThem(t *testing.T) {
 	}
 }
 
-func TestWarningClearsDownToNoServices(t *testing.T) {
-	b := newTestBoard(t, false)
+// warnWithNoServices shows a warning with no trains due, then clears it, and returns the board, its frame and
+// when the warning cleared.
+func warnWithNoServices(t *testing.T, cfg Config) (*Board, *frame.Frame, time.Time) {
+	t.Helper()
+	cfg.Width, cfg.Height = testW, testH
+	b := New(cfg)
 	f := frame.New(testW, testH)
 	empty := fixtures.Steps("no-departures")[0]
 	warned := empty
 	warned.Notice = model.StandClear
 	b.Update(warned)
-	start := fixtures.Clock
-	b.Tick(start, f)
+	b.Tick(fixtures.Clock, f)
 	if b.mode != modeWarning {
 		t.Fatalf("mode %v, want the warning", b.mode)
 	}
-
 	b.Update(empty)
-	clearedAt := start.Add(5 * time.Second)
+	return b, f, fixtures.Clock.Add(5 * time.Second)
+}
+
+func TestWarningGivesWayToNoServicesAtOnce(t *testing.T) {
+	b, f, clearedAt := warnWithNoServices(t, Config{})
+	b.Tick(clearedAt, f)
+	if b.mode != modeNoServices {
+		t.Fatalf("mode %v phase %v as the warning clears, want the no-services message at once", b.mode, b.phase)
+	}
+}
+
+func TestWarningClearsDownToNoServices(t *testing.T) {
+	b, f, clearedAt := warnWithNoServices(t, Config{ClearDownWarningToCIS: true})
+	empty := fixtures.Steps("no-departures")[0]
 	end := clearedAt.Add(clearDownTotal * time.Millisecond)
 	sawSpinner := false
 	for now := clearedAt; now.Before(end); now = now.Add(tick) {

@@ -114,6 +114,7 @@ export default function DaktronicsDataDisplay({ station, editBoardUrl }: IProps)
             worldline={customBoardSettings.worldlinePowered}
             pageDestinations={customBoardSettings.pageDestinations}
             reserveEtdColumn={customBoardSettings.reserveEtdColumn}
+            clearDownWarningToCis={customBoardSettings.clearDownWarningToCis}
             rowPrefix={customBoardSettings.rowPrefix}
             ordinalFormat={customBoardSettings.ordinalFormat}
             serviceCount={customBoardSettings.serviceCount}

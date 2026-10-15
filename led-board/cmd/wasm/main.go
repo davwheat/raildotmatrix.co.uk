@@ -14,6 +14,7 @@
 //	  worldline: false,                 // Daktronics only
 //	  pageDestinations: false,          // Daktronics only; page dividing trains' destinations on the lower row
 //	  reserveEtdColumn: false,          // Daktronics only; keep destinations beside a status clear of the space "Cancelled" needs
+//	  clearDownWarningToCis: false,     // Daktronics only; wipe a warning away when no trains follow it
 //	  rowPrefix: 'ordinals',            // or 'platforms' ("Pl 1")
 //	  warningPlatform: false,           // name the platform in warnings, in place of "this station"
 //	  alignPlatformRows: true,          // align lower rows beneath the Infotec platform box
@@ -136,7 +137,7 @@ func create(zone *time.Location, args []js.Value) (js.Value, error) {
 		alignPlatformRows = value.Bool()
 	}
 	b, err := formats.New(o.string("board", "daktronics"), formats.Config{
-		Width: w, Height: h, Zone: zone, Colour: colour, Worldline: o.bool("worldline"), PageDestinations: o.bool("pageDestinations"), ReserveETDColumn: o.bool("reserveEtdColumn"), ScrollSpeed: o.int("scrollSpeed", 0),
+		Width: w, Height: h, Zone: zone, Colour: colour, Worldline: o.bool("worldline"), PageDestinations: o.bool("pageDestinations"), ReserveETDColumn: o.bool("reserveEtdColumn"), ClearDownWarningToCIS: o.bool("clearDownWarningToCis"), ScrollSpeed: o.int("scrollSpeed", 0),
 		RowPrefix: rowPrefix, OrdinalFormat: ordinalFormat, LoadingBrightness: o.int("loadingBrightness", 50), ClockStyle: o.string("clockStyle", ""), ServiceCount: serviceCount, WarningPlatform: o.bool("warningPlatform"),
 		FormationCount:         o.string("formationCount", "none"),
 		CoachLetterTOCs:        o.strings("coachLetterTocs"),

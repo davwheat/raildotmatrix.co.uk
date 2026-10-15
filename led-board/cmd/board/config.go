@@ -38,6 +38,7 @@ type config struct {
 	Worldline                bool
 	PageDestinations         bool   `mapstructure:"page_destinations"`
 	ReserveETDColumn         bool   `mapstructure:"reserve_etd_column"`
+	ClearDownWarningToCIS    bool   `mapstructure:"clear_down_warning_to_cis"`
 	RowPrefix                string `mapstructure:"row_prefix"`
 	WarningPlatform          bool   `mapstructure:"warning_platform"`
 	AlignPlatformRows        bool   `mapstructure:"align_platform_rows"`
@@ -96,6 +97,7 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.Bool("worldline", false, "Worldline-driven Daktronics board: single scrolling info line, capitalised locations")
 	fs.Bool("page-destinations", false, "page through a dividing train's destinations on the lower row, in place of hiding a train whose destination doesn't fit (Daktronics only)")
 	fs.Bool("reserve-etd-column", false, "keep a destination beside a status, such as \"Arrived\", clear of the space that \"Cancelled\" needs (Daktronics only)")
+	fs.Bool("clear-down-warning-to-cis", false, "wipe a platform warning away with the pinwheel when \"CUSTOMER INFORMATION SYSTEM\" follows it (Daktronics only)")
 	fs.Int("scroll-speed", 0, "scroll speed in dots per second; 0 uses the board's default (48 daktronics, 60 infotec). The panel refresh and PWM depth follow it")
 	fs.Bool("small-scrolling-text", false, "use the smaller font for calling points and service information (Infotec only)")
 	fs.Bool("ampersand-calling-points", false, "join the last two calling points with \"&\" in place of \"and\" (Infotec only)")

@@ -67,6 +67,9 @@ page_destinations = false
 # "Cancelled" needs. A destination beside a time still uses whatever space the time leaves free. By default, a
 # destination can use whatever space the expected time or status leaves free.
 reserve_etd_column = false
+# Daktronics only: wipe a platform warning away with the pinwheel when "CUSTOMER INFORMATION SYSTEM" follows it, as
+# the board does when trains follow it. By default, the message replaces the warning at once.
+clear_down_warning_to_cis = false
 
 # Scroll speed in dots per second; 0 uses the board's default (48 Daktronics, 60 Infotec).
 scroll_speed = 0

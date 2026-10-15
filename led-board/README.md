@@ -107,6 +107,12 @@ so a destination beside "Arrived" or "Delayed" has more room than one beside "Ca
 destination beside a time still uses whatever space the time leaves free. The website offers the same **Reserve space
 for "Cancelled"** setting. In both cases, an expected time or "Arrived" keeps a 5-dot gap to its right.
 
+When a platform warning ends on the Daktronics board, the pinwheel wipes it away before the trains return. If no
+trains follow it, "CUSTOMER INFORMATION SYSTEM" replaces the warning at once. Set `clear_down_warning_to_cis = true`
+to wipe the warning away with the pinwheel first in that case too. The message then appears when the wipe ends. The
+website and Pi management UI offer the same **Clear down warnings when no trains follow** setting. The command-line
+flag is `-clear-down-warning-to-cis`, and the browser API and shared URLs use `clearDownWarningToCis`.
+
 `row_prefix` selects the single prefix before each train's scheduled time: `ordinals` (the default) shows
 `1st`, `2nd` or `3rd`, and `platforms` shows the platform number, such as `Pl 1`. The platform column is wide
 enough for a three-character platform such as `10A`. A platform that isn't published, or that Darwin

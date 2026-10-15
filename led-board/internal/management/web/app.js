@@ -96,6 +96,7 @@ const labels = {
   worldline: "Worldline display style",
   page_destinations: "Page dividing trains' destinations",
   reserve_etd_column: 'Reserve space for "Cancelled"',
+  clear_down_warning_to_cis: "Clear down warnings when no trains follow",
   legacy_toc_names: "Use historic operator names",
   scroll_speed: "Scroll speed (dots / second)",
   small_scrolling_text: "Use smaller scrolling text",
@@ -153,7 +154,7 @@ const groups = [
   [
     "Display options",
     "",
-    "show_unconfirmed_platforms hide_terminating warning_platform platform_box compact_lower_row align_platform_rows small_scrolling_text ampersand_calling_points worldline page_destinations reserve_etd_column legacy_toc_names",
+    "show_unconfirmed_platforms hide_terminating warning_platform platform_box compact_lower_row align_platform_rows small_scrolling_text ampersand_calling_points worldline page_destinations reserve_etd_column clear_down_warning_to_cis legacy_toc_names",
   ],
   [
     "LED panels",

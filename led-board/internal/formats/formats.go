@@ -39,6 +39,9 @@ type Config struct {
 	// ReserveETDColumn keeps a Daktronics destination beside a status clear of the space that "Cancelled" needs.
 	// Other formats ignore it.
 	ReserveETDColumn bool
+	// ClearDownWarningToCIS wipes a Daktronics platform warning away with the pinwheel when the no-services
+	// message follows it. Other formats ignore it.
+	ClearDownWarningToCIS bool
 	// ScrollSpeed is in dots per second.
 	ScrollSpeed int
 	// SmallScrollingText uses the compact Infotec information font.
@@ -78,7 +81,7 @@ func New(name string, c Config) (board.Board, error) {
 		return daktronics.New(daktronics.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, WorldlinePowered: c.Worldline,
 			ScrollSpeed: c.ScrollSpeed, RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform, ServiceCount: c.ServiceCount,
-			PageDestinations: c.PageDestinations, ReserveETDColumn: c.ReserveETDColumn,
+			PageDestinations: c.PageDestinations, ReserveETDColumn: c.ReserveETDColumn, ClearDownWarningToCIS: c.ClearDownWarningToCIS,
 		}), nil
 	case "infotec":
 		platformBox := ""

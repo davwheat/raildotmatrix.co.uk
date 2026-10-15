@@ -40,6 +40,9 @@ type Config struct {
 	// expected-time column, which is wide enough for "Cancelled". A destination beside a time, and every destination
 	// otherwise, may run up to whatever the row's expected time or status leaves free.
 	ReserveETDColumn bool
+	// ClearDownWarningToCIS wipes a platform warning away with the pinwheel when "CUSTOMER INFORMATION SYSTEM"
+	// follows it, as it does when trains follow. Otherwise the message replaces the warning at once.
+	ClearDownWarningToCIS bool
 }
 
 // Durations of the animations in TrainServices.tsx, PlatformAlterationMessage.tsx and SwapBetween.tsx, in
@@ -313,9 +316,10 @@ func (b *Board) target() mode {
 }
 
 func (b *Board) show(m mode, now time.Time, previous content) {
-	// The real board wipes a platform warning away with the pinwheel, whether trains or the no-services message
-	// follow it. Losing the connection blanks the board at once, as the web does.
-	if b.mode == modeWarning && m != modeWarning && b.view.Connected {
+	// The real board wipes a platform warning away with the pinwheel before the trains return. Losing the
+	// connection blanks the board at once, as the web does.
+	wipeWarning := m == modeTrains || m == modeNoServices && b.cfg.ClearDownWarningToCIS
+	if b.mode == modeWarning && wipeWarning && b.view.Connected {
 		b.mode, b.modeStart = modeTrains, now
 		b.outgoing = row{centred: previous.warning[0]}
 		b.phase, b.phaseStart = phaseClearDown, now
