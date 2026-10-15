@@ -96,7 +96,7 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.Bool("platform-box", false, "show a platform box beside the first train (Infotec only)")
 	fs.Bool("worldline", false, "Worldline-driven Daktronics board: single scrolling info line, capitalised locations")
 	fs.Bool("page-destinations", false, "page through a dividing train's destinations on the lower row, in place of hiding a train whose destination doesn't fit (Daktronics only)")
-	fs.Bool("reserve-etd-column", false, "keep a destination beside a status, such as \"Arrived\", clear of the space that \"Cancelled\" needs (Daktronics only)")
+	fs.Bool("reserve-etd-column", false, "keep every destination clear of the space that \"Cancelled\" needs, even beside a time (Daktronics only)")
 	fs.Bool("clear-down-warning-to-cis", false, "wipe a platform warning away with the pinwheel when \"CUSTOMER INFORMATION SYSTEM\" follows it (Daktronics only)")
 	fs.Int("scroll-speed", 0, "scroll speed in dots per second; 0 uses the board's default (48 daktronics, 60 infotec). The panel refresh and PWM depth follow it")
 	fs.Bool("small-scrolling-text", false, "use the smaller font for calling points and service information (Infotec only)")

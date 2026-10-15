@@ -13,7 +13,7 @@
 //	  legacyTocNames: false,
 //	  worldline: false,                 // Daktronics only
 //	  pageDestinations: false,          // Daktronics only; page dividing trains' destinations on the lower row
-//	  reserveEtdColumn: false,          // Daktronics only; keep destinations beside a status clear of the space "Cancelled" needs
+//	  reserveEtdColumn: false,          // Daktronics only; keep every destination clear of the space "Cancelled" needs
 //	  clearDownWarningToCis: false,     // Daktronics only; wipe a warning away when no trains follow it
 //	  rowPrefix: 'ordinals',            // or 'platforms' ("Pl 1")
 //	  warningPlatform: false,           // name the platform in warnings, in place of "this station"

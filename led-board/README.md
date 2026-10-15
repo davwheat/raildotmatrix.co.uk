@@ -102,10 +102,9 @@ destinations every 3 seconds instead, clipping any that are still too long. The 
 dividing trains' destinations** setting.
 
 Each destination on the Daktronics board can use whatever space the expected time or status beside it leaves free,
-so a destination beside "Arrived" or "Delayed" has more room than one beside "Cancelled". Set
-`reserve_etd_column = true` to keep a destination beside any status clear of the space that "Cancelled" needs. A
-destination beside a time still uses whatever space the time leaves free. The website offers the same **Reserve space
-for "Cancelled"** setting. In both cases, an expected time or "Arrived" keeps a 5-dot gap to its right.
+so a destination beside a time, "Arrived" or "Delayed" has more room than one beside "Cancelled". Set
+`reserve_etd_column = true` to keep every destination clear of the space that "Cancelled" needs, whether the row
+shows a time or a status. The website offers the same **Reserve space for "Cancelled"** setting. In both cases, an expected time or "Arrived" keeps a 5-dot gap to its right.
 
 When a platform warning ends on the Daktronics board, the pinwheel wipes it away before the trains return. If no
 trains follow it, "CUSTOMER INFORMATION SYSTEM" replaces the warning at once. Set `clear_down_warning_to_cis = true`

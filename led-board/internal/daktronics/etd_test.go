@@ -32,14 +32,10 @@ func TestDestinationFitsBesideETD(t *testing.T) {
 
 func TestReservedETDColumn(t *testing.T) {
 	b := New(Config{Width: testW, Height: testH, ReserveETDColumn: true})
-	for _, etd := range []string{"Arrived", "Delayed", "Cancelled"} {
+	for _, etd := range []string{"1943", "Arrived", "Delayed", "Cancelled"} {
 		if got := b.geo.destWidth(etd); got != b.geo.destW {
 			t.Errorf("a destination beside %q has %d dots, want the reserved %d", etd, got, b.geo.destW)
 		}
-	}
-	unreserved := newGeometry(testW, testH, board.PrefixOrdinals)
-	if got, want := b.geo.destWidth("1943"), unreserved.destWidth("1943"); got != want {
-		t.Errorf("a destination beside a time has %d dots, want the unreserved %d", got, want)
 	}
 }
 

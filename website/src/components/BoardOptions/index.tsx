@@ -176,7 +176,7 @@ export default function BoardOptions() {
               </Check>
               <Check
                 name="reserveEtdColumn"
-                hint='Keep a destination beside a status, such as "Arrived" or "Delayed", clear of the space that "Cancelled" needs. A destination beside a time still uses the space the time leaves free.'
+                hint='Keep every destination clear of the space that "Cancelled" needs, even when the train shows a time or a shorter status, such as "Arrived".'
               >
                 Reserve space for "Cancelled"
               </Check>

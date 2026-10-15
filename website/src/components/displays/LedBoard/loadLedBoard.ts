@@ -18,7 +18,7 @@ export interface LedBoardOptions {
   worldline?: boolean
   /** Daktronics only: page through a dividing train's destinations on the lower row, in place of leaving out a train whose destination doesn't fit. */
   pageDestinations?: boolean
-  /** Daktronics only: keep a destination beside a status, such as "Arrived", clear of the space that "Cancelled" needs. */
+  /** Daktronics only: keep every destination clear of the space that "Cancelled" needs, even beside a time. */
   reserveEtdColumn?: boolean
   /** Daktronics only: wipe a platform warning away with the pinwheel when "CUSTOMER INFORMATION SYSTEM" follows it. */
   clearDownWarningToCis?: boolean

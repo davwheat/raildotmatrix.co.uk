@@ -97,7 +97,7 @@ func goldenCases() []goldenCase {
 		for _, fixture := range []string{"long-destination", "hyphenated-destination", "long-dividing-service"} {
 			add("daktronics", fixture, "", size, Config{}, settled["daktronics"])
 		}
-		for _, fixture := range []string{"hyphenated-destination", "long-dividing-service"} {
+		for _, fixture := range []string{"long-destination", "hyphenated-destination", "triple-line", "long-dividing-service"} {
 			add("daktronics", fixture, "reserve-etd-column", size, Config{ReserveETDColumn: true}, settled["daktronics"])
 		}
 		// The bus's calling prefix rests at the right edge between 3 and 4.5 seconds, before the line scrolls.
