@@ -15,7 +15,7 @@
     "@mpth/react-no-ssr": "^1.0.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.23",
-    "next": "^16.3.6",
+    "next": "^16.3.8",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-select": "^5.10.2",
