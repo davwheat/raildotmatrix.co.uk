@@ -105,6 +105,9 @@ func goldenCases() []goldenCase {
 	}
 	add("infotec", "busy-board", "white", panel, Config{Colour: board.White}, settled["infotec"])
 	for _, size := range []goldenSize{panel, webSizes["infotec"]} {
+		add("infotec", "dividing-second", "platform-box", size, Config{PlatformBox: true}, settled["infotec"])
+	}
+	for _, size := range []goldenSize{panel, webSizes["infotec"]} {
 		add("infotec", "busy-board", "small-scrolling-text", size, Config{SmallScrollingText: true}, settled["infotec"])
 		add("infotec", "busy-board", "small-scrolling-text-platform-box", size, Config{SmallScrollingText: true, PlatformBox: true}, settled["infotec"])
 		add("infotec", "busy-board", "small-scrolling-text-calling", size, Config{SmallScrollingText: true, PlatformBox: true}, 11*time.Second)

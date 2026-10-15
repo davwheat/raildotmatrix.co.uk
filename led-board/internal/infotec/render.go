@@ -60,30 +60,37 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 	g := &b.geo
 	if b.phase == phaseSlideOut {
 		e := now.Sub(b.phaseStart).Milliseconds()
-		s.first = b.rowScene(&b.outgoing, now)
+		s.first = b.rowScene(&b.outgoing, now, font.PISTall, g.destW)
 		if e > slideOutDelay {
 			s.first.dx = int(int64(g.w) * min(e-slideOutDelay, slideOutTravel) / slideOutTravel)
 		}
 		s.first.on = s.first.dx < g.w
 		return
 	}
-	s.first = b.rowScene(&b.content.rows[0], now)
+	s.first = b.rowScene(&b.content.rows[0], now, font.PISTall, g.destW)
 	s.formation = s.first.length
 	s.coachContents = b.cachedFormation(b.content.rows[0].coaches, now.Sub(b.steadyStart))
 	if len(b.content.pages) > 0 {
 		s.info = b.info.scene(now)
 	}
+	lowerGeo := b.lowerGeometry()
+	lowerRow := func(r *row) rowScene {
+		if g.compact {
+			return b.rowScene(r, now, font.InfotecSmall, b.compactLayout(r.etd).destW)
+		}
+		return b.rowScene(r, now, font.PISTall, lowerGeo.destW)
+	}
 	switch {
 	case len(b.content.rows) < 2:
 	case !hasSwap(b.content):
-		s.lower[0] = b.rowScene(&b.content.rows[1], now)
+		s.lower[0] = lowerRow(&b.content.rows[1])
 	default:
 		e := now.Sub(b.swapStart).Milliseconds()
 		for i := range len(b.content.rows) - 1 {
 			if i != b.swapIndex && (i != b.swapFrom || e >= swapSlide) {
 				continue
 			}
-			r := b.rowScene(&b.content.rows[1+i], now)
+			r := lowerRow(&b.content.rows[1+i])
 			if e < swapSlide && b.swapFrom != b.swapIndex {
 				direction := 1
 				if len(b.content.rows) == 3 && b.swapIndex == 0 {
@@ -102,11 +109,15 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 	}
 }
 
-func (b *Board) rowScene(r *row, now time.Time) rowScene {
+// rowScene shows a dividing train's destinations on one line when they fit in destW dots of face.
+func (b *Board) rowScene(r *row, now time.Time, face *font.Face, destW int) rowScene {
 	e := now.Sub(b.steadyStart).Milliseconds()
 	sc := rowScene{on: true, prefix: r.prefix, std: r.std, etd: r.etd, etdLevel: fadeLevels}
 	sc.length = r.length
-	if len(r.pages) > 0 {
+	switch {
+	case r.joined != "" && face.Width(r.joined) <= destW:
+		sc.dest = r.joined
+	case len(r.pages) > 0:
 		sc.dest = r.pages[int(e/destinationPage)%len(r.pages)]
 	}
 	if r.cancelled {
@@ -191,11 +202,7 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 	for x := g.infoX; x < g.w; x++ {
 		f.Set(x, g.sepY, b.dim)
 	}
-	lowerGeo := g
-	if g.boxW > 0 && b.cfg.AlignPlatformRows != nil && !*b.cfg.AlignPlatformRows {
-		legacy := newGeometry(g.w, g.h, b.cfg.RowPrefix)
-		lowerGeo = &legacy
-	}
+	lowerGeo := b.lowerGeometry()
 	for i := range s.lower {
 		if s.lower[i].on {
 			if g.compact {
@@ -205,6 +212,17 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 			}
 		}
 	}
+}
+
+// lowerGeometry is the layout of the lower rows, which keep the columns of a board without a platform box when
+// they aren't aligned beneath it.
+func (b *Board) lowerGeometry() *geometry {
+	g := &b.geo
+	if g.boxW > 0 && b.cfg.AlignPlatformRows != nil && !*b.cfg.AlignPlatformRows {
+		legacy := newGeometry(g.w, g.h, b.cfg.RowPrefix)
+		return &legacy
+	}
+	return g
 }
 
 func (b *Board) drawRow(f *frame.Frame, r *rowScene, g *geometry, y int, c board.Clip, colour frame.RGB) {

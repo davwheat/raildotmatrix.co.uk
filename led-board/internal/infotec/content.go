@@ -23,6 +23,8 @@ type row struct {
 	std string
 	// pages are the destination texts the row cycles through every three seconds.
 	pages []string
+	// joined names every destination of a dividing train on one line, shown in place of pages when it fits.
+	joined string
 	// etd is "On time", "Cancelled", "Arrived", "Delayed", or an expected time as HHmm.
 	etd       string
 	cancelled bool
@@ -62,6 +64,7 @@ func (b *Board) derive(v model.View) content {
 			prefix:    b.cfg.RowPrefix.Text(i, s.Platform, b.cfg.OrdinalFormat),
 			std:       s.STD(b.cfg.Zone),
 			pages:     destinationPages(s),
+			joined:    joinedDestinations(s),
 			etd:       b.etd(s),
 			cancelled: s.Cancelled,
 			length:    max(0, s.Length, len(s.Coaches)),
@@ -96,27 +99,45 @@ func isTime(s string) bool {
 	return true
 }
 
-// destinationPages mirrors getDestinationAsStrings: a destination and its via share a page when short enough,
-// else take one each.
+// destinationPages follows getDestinationAsStrings: a destination and its via share a page when short enough,
+// else take one each. A dividing train's destinations are paged as "Alton &" and "& Farnham".
 func destinationPages(s *model.Service) []string {
 	pages := make([]string, 0, len(s.Destinations))
 	for i, d := range s.Destinations {
 		name := d.Name
 		if i > 0 {
-			name = "and " + name
-		}
-		if d.Via == "" {
-			pages = append(pages, name)
-			continue
+			name = "& " + name
 		}
 		whole := strings.TrimSpace(name + " " + d.Via)
-		if utf8.RuneCountInString(whole) <= destinationMaxLength {
+		switch {
+		case d.Via == "":
+			pages = append(pages, name)
+		case utf8.RuneCountInString(whole) <= destinationMaxLength:
 			pages = append(pages, whole)
-		} else {
+		default:
 			pages = append(pages, name, d.Via)
+		}
+		if i < len(s.Destinations)-1 {
+			pages[len(pages)-1] += " &"
 		}
 	}
 	return pages
+}
+
+// joinedDestinations is a dividing train's destinations on one line, or "" for a train with one destination.
+// A train with a via is left to its pages, as "Alton via Guildford & Farnham" reads as running via both.
+func joinedDestinations(s *model.Service) string {
+	if len(s.Destinations) < 2 {
+		return ""
+	}
+	names := make([]string, len(s.Destinations))
+	for i, d := range s.Destinations {
+		if d.Via != "" {
+			return ""
+		}
+		names[i] = d.Name
+	}
+	return strings.Join(names, " & ")
 }
 
 func (b *Board) infoPages(s *model.Service) []page {

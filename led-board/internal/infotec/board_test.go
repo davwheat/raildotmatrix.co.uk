@@ -1,6 +1,7 @@
 package infotec
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -245,8 +246,34 @@ func TestInfoPagesForDividingTrain(t *testing.T) {
 			t.Errorf("page %d = %+v, want %+v", i, c.pages[i], want[i])
 		}
 	}
-	if len(c.rows[0].pages) != 2 || c.rows[0].pages[0] != "Horsham" || c.rows[0].pages[1] != "and Littlehampton" {
+	if len(c.rows[0].pages) != 2 || c.rows[0].pages[0] != "Horsham &" || c.rows[0].pages[1] != "& Littlehampton" {
 		t.Errorf("destination pages = %q", c.rows[0].pages)
+	}
+	if c.rows[0].joined != "Horsham & Littlehampton" {
+		t.Errorf("joined destinations = %q", c.rows[0].joined)
+	}
+}
+
+func TestDividingTrainDestinationsShareALineWhenTheyFit(t *testing.T) {
+	b := newTestBoard(t)
+	r := b.derive(fixtures.Steps("dividing-service")[0]).rows[0]
+	at := b.steadyStart.Add(destinationPage * time.Millisecond)
+	joinedW := font.PISTall.Width(r.joined)
+	if got := b.rowScene(&r, at, font.PISTall, joinedW).dest; got != r.joined {
+		t.Errorf("dest with room = %q, want %q", got, r.joined)
+	}
+	if got := b.rowScene(&r, at, font.PISTall, joinedW-1).dest; got != "& Littlehampton" {
+		t.Errorf("dest without room = %q, want the second page", got)
+	}
+}
+
+func TestDestinationPagesForThreePortions(t *testing.T) {
+	s := &model.Service{Destinations: []model.Location{{Name: "A"}, {Name: "B", Via: "via C"}, {Name: "D"}}}
+	if got, want := destinationPages(s), []string{"A &", "& B via C &", "& D"}; !slices.Equal(got, want) {
+		t.Errorf("pages = %q, want %q", got, want)
+	}
+	if got := joinedDestinations(s); got != "" {
+		t.Errorf("joined = %q, want none for a train with a via", got)
 	}
 }
 
