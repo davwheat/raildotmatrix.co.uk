@@ -65,7 +65,17 @@ export function optionKeys(type: DisplayType): OptionKey[] {
         'alignPlatformRows',
       ]
     case 'daktronics-data-display-dmi':
-      return [...common, ...led, 'boardStyle', 'showCasing', 'worldlinePowered', 'pageDestinations', 'reserveEtdColumn', 'clearDownWarningToCis', 'withBackground']
+      return [
+        ...common,
+        ...led,
+        'boardStyle',
+        'showCasing',
+        'worldlinePowered',
+        'pageDestinations',
+        'reserveEtdColumn',
+        'clearDownWarningToCis',
+        'withBackground',
+      ]
     case 'blackbox-landscape-lcd':
       return common
     default:
