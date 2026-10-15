@@ -27,6 +27,7 @@ export const defaults = {
   showCasing: true,
   worldlinePowered: false,
   pageDestinations: false,
+  reserveEtdColumn: false,
   withBackground: false,
   showUnconfirmedPlatforms: false,
   hideTerminating: false,
@@ -61,7 +62,7 @@ export function optionKeys(type: DisplayType): OptionKey[] {
         'alignPlatformRows',
       ]
     case 'daktronics-data-display-dmi':
-      return [...common, ...led, 'boardStyle', 'showCasing', 'worldlinePowered', 'pageDestinations', 'withBackground']
+      return [...common, ...led, 'boardStyle', 'showCasing', 'worldlinePowered', 'pageDestinations', 'reserveEtdColumn', 'withBackground']
     case 'blackbox-landscape-lcd':
       return common
     default:

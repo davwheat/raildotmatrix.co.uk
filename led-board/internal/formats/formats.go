@@ -36,6 +36,9 @@ type Config struct {
 	// PageDestinations lets the Daktronics lower row page through a dividing train's destinations. Other formats
 	// ignore it.
 	PageDestinations bool
+	// ReserveETDColumn keeps Daktronics destinations clear of the whole expected-time column. Other formats ignore
+	// it.
+	ReserveETDColumn bool
 	// ScrollSpeed is in dots per second.
 	ScrollSpeed int
 	// SmallScrollingText uses the compact Infotec information font.
@@ -73,7 +76,7 @@ func New(name string, c Config) (board.Board, error) {
 		return daktronics.New(daktronics.Config{
 			Width: c.Width, Height: c.Height, Zone: c.Zone, Colour: c.Colour, WorldlinePowered: c.Worldline,
 			ScrollSpeed: c.ScrollSpeed, RowPrefix: c.RowPrefix, OrdinalFormat: c.OrdinalFormat, WarningPlatform: c.WarningPlatform, ServiceCount: c.ServiceCount,
-			PageDestinations: c.PageDestinations,
+			PageDestinations: c.PageDestinations, ReserveETDColumn: c.ReserveETDColumn,
 		}), nil
 	case "infotec":
 		platformBox := ""

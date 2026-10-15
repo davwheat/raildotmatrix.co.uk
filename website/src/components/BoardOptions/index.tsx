@@ -171,6 +171,12 @@ export default function BoardOptions() {
               >
                 Page dividing trains' destinations
               </Check>
+              <Check
+                name="reserveEtdColumn"
+                hint='Keep every destination clear of the space that "Cancelled" needs, even when the train shows a time, as the original web board does.'
+              >
+                Reserve space for "Cancelled"
+              </Check>
             </>
           )}
           <Check name="warningPlatform">Name the platform in warnings</Check>

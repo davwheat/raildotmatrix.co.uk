@@ -18,6 +18,8 @@ export interface LedBoardOptions {
   worldline?: boolean
   /** Daktronics only: page through a dividing train's destinations on the lower row, in place of leaving out a train whose destination doesn't fit. */
   pageDestinations?: boolean
+  /** Daktronics only: keep every destination clear of the space that "Cancelled" needs, even beside a time. */
+  reserveEtdColumn?: boolean
   /** The single prefix before each train's time: an ordinal or its platform number. */
   rowPrefix?: RowPrefix
   ordinalFormat?: OrdinalFormat

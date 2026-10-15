@@ -188,9 +188,9 @@ func (b *Board) drawRow(f *frame.Frame, r *rowScene, rowIndex int, c board.Clip)
 	board.DrawCells(f, font.Text, g.stdX, y, r.std, g.ch, b.cfg.Colour, c)
 	board.DrawText(f, font.Text, g.destX, y, r.dest, b.cfg.Colour, c.Intersect(board.Clip{X0: g.destX, X1: g.destX + g.destWidth(r.etd), Y1: g.h}))
 	if isTime(r.etd) {
-		board.DrawCells(f, font.Text, g.w-4*g.ch, y, r.etd, g.ch, b.cfg.Colour, c)
+		board.DrawCells(f, font.Text, g.w-g.etdWidth(r.etd), y, r.etd, g.ch, b.cfg.Colour, c)
 	} else {
-		board.DrawText(f, font.Text, g.w-font.Text.Width(r.etd), y, r.etd, b.cfg.Colour, c)
+		board.DrawText(f, font.Text, g.w-g.etdWidth(r.etd), y, r.etd, b.cfg.Colour, c)
 	}
 }
 

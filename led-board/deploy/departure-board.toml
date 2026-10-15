@@ -63,6 +63,10 @@ worldline = false
 # long. By default, as on the real board, a train whose destination doesn't fit on one line is left out, along
 # with every train after it.
 page_destinations = false
+# Daktronics only: keep every destination clear of the space that "Cancelled" needs, even when the train shows a
+# time or a shorter status, such as "Arrived". By default, a destination can use whatever space the expected time
+# or status leaves free.
+reserve_etd_column = false
 
 # Scroll speed in dots per second; 0 uses the board's default (48 Daktronics, 60 Infotec).
 scroll_speed = 0
