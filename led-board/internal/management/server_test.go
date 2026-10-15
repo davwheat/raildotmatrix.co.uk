@@ -131,6 +131,18 @@ func TestManagementAPI(t *testing.T) {
 	if restarts != 3 {
 		t.Fatal("restart failure did not retry previous config")
 	}
+	updates := request("GET", "/api/update/status", "")
+	expect(updates, 200)
+	if !strings.Contains(updates.Body.String(), `"settings":{"channel":`) {
+		t.Fatalf("update status = %s", updates.Body.String())
+	}
+	expect(request("PUT", "/api/update/settings", `{"channel":"nightly","schedule":"daily","time":"03:00","weekday":0,"autoInstall":false}`), 400)
+	expect(request("PUT", "/api/update/settings", `{"channel":"development","schedule":"weekly","time":"04:30","weekday":2,"autoInstall":true}`), 200)
+	updates = request("GET", "/api/update/settings", "")
+	if !strings.Contains(updates.Body.String(), `"channel":"development"`) {
+		t.Fatalf("update settings = %s", updates.Body.String())
+	}
+	expect(request("POST", "/api/update/install", `{"allowOlder":false}`), 202)
 	for _, origin := range []string{"http://attacker.example", "null"} {
 		r := httptest.NewRequest("POST", "http://departureboard.local/api/restart", nil)
 		r.Header.Set("Origin", origin)

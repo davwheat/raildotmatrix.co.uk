@@ -17,6 +17,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/atomicfile"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/setupdisplay"
 )
 
@@ -122,7 +123,7 @@ func (w *WiFi) set(mode, ssid, message string) {
 			return
 		}
 	}
-	if err := atomicWrite(w.opts.StatusPath, data, 0644); err != nil {
+	if err := atomicfile.Write(w.opts.StatusPath, data, 0644); err != nil {
 		log.Printf("write matrix setup status: %v", err)
 	} else {
 		w.written = data
@@ -329,11 +330,11 @@ func (w *WiFi) Connect(in NetworkInput) error {
 	if !w.claim() {
 		return errors.New("a connection change is already in progress")
 	}
-	if err = atomicWrite(w.profile, data, 0600); err != nil {
+	if err = atomicfile.Write(w.profile, data, 0600); err != nil {
 		w.done()
 		return err
 	}
-	if err = atomicWrite(filepath.Join(w.opts.StateDir, "country"), []byte(in.Country), 0600); err != nil {
+	if err = atomicfile.Write(filepath.Join(w.opts.StateDir, "country"), []byte(in.Country), 0600); err != nil {
 		w.done()
 		return err
 	}

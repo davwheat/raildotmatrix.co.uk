@@ -1,0 +1,15 @@
+# Files the image installs and updates replace: mode, source in led-board/, and path on the board.
+# The image's payload folder holds each source under its base name, so base names must be unique.
+# Never list a file that people configure, such as departure-board.toml; updates would refuse to replace it.
+0755 build/board /opt/departure-board/board
+0755 build/manage /opt/departure-board/manage
+0755 deploy/dietpi/firstboot.sh /opt/departure-board/firstboot.sh
+0644 deploy/departure-board.service /etc/systemd/system/departure-board.service
+0644 deploy/dietpi/boot-config.conf /etc/systemd/system/departure-board.service.d/boot-config.conf
+0644 deploy/dietpi/departure-board-manager.service /etc/systemd/system/departure-board-manager.service
+0644 deploy/dietpi/departure-board-init.service /etc/systemd/system/departure-board-init.service
+0644 deploy/dietpi/departure-board-update.service /etc/systemd/system/departure-board-update.service
+0600 deploy/dietpi/hotspot.nmconnection /etc/NetworkManager/system-connections/departure-board-hotspot.nmconnection
+0644 deploy/dietpi/networkmanager.conf /etc/NetworkManager/conf.d/departure-board.conf
+0644 deploy/dietpi/avahi.service /etc/avahi/services/departure-board.service
+0644 deploy/dietpi/modprobe.conf /etc/modprobe.d/raildotmatrix.conf

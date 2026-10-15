@@ -28,6 +28,7 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix/pngdisplay"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/setupdisplay"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/version"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/windowdisplay"
 )
 
@@ -37,7 +38,12 @@ func main() {
 	schema := fs.Bool("config-schema", false, "print the configuration schema as JSON and exit")
 	check := fs.Bool("check-config", false, "validate the configuration without opening the display")
 	setupStatus := fs.String("setup-status", "", "network status JSON for the unconfigured board's setup display")
+	showVersion := fs.Bool("version", false, "print the version and exit")
 	fs.Parse(os.Args[1:])
+	if *showVersion {
+		fmt.Println(version.String())
+		return
+	}
 	if *schema {
 		json.NewEncoder(os.Stdout).Encode(describeConfig(fs))
 		return

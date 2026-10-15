@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/atomicfile"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -117,7 +118,7 @@ func (s *Server) putSSHKeys(w http.ResponseWriter, r *http.Request) {
 		err = os.Chmod(dir, 0700)
 	}
 	if err == nil {
-		err = atomicWrite(s.sshPath, data, 0600)
+		err = atomicfile.Write(s.sshPath, data, 0600)
 	}
 	if err != nil {
 		fail(w, 500, fmt.Errorf("SSH keys were not saved: %w", err))

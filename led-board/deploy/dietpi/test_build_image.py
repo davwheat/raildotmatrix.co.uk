@@ -8,7 +8,7 @@ import tempfile
 import tomllib
 import unittest
 
-from build_image import DEPLOY, boot_offset, build_image, set_settings
+from build_image import DEPLOY, boot_offset, build_image, managed_files, set_settings
 
 
 class ImageTest(unittest.TestCase):
@@ -20,6 +20,8 @@ class ImageTest(unittest.TestCase):
         self.output = self.root / "board.img"
         self.board = self.root / "board"
         self.board.write_bytes(b"\x7fELF\x02\x01" + bytes(12) + b"\xb7\x00" + b"test payload")
+        self.manifest = self.root / "manifest-rpi234.json"
+        self.manifest.write_text('{"schema": 1}\n')
 
         # FAT16 boot partition followed by a stand-in root filesystem. The
         # builder must preserve the partition table and everything outside FAT.
@@ -53,7 +55,7 @@ class ImageTest(unittest.TestCase):
 
     def test_flashable_image_contains_board_and_editable_config(self):
         original = hashlib.sha256(self.base.read_bytes()).digest()
-        build_image(self.base, self.board, self.output, self.board)
+        build_image(self.base, self.board, self.output, self.board, self.manifest)
         self.assertEqual(hashlib.sha256(self.base.read_bytes()).digest(), original)
         self.assertEqual(self.output.stat().st_size, self.base.stat().st_size)
         self.assertEqual(boot_offset(self.output), self.offset)
@@ -68,6 +70,9 @@ class ImageTest(unittest.TestCase):
         self.assertEqual(self.read_boot("raildotmatrix/boot-config.conf"), (DEPLOY / "dietpi/boot-config.conf").read_bytes())
         self.assertEqual(self.read_boot("raildotmatrix/manage"), self.board.read_bytes())
         self.assertEqual(self.read_boot("raildotmatrix/install-image.sh"), (DEPLOY / "dietpi/install-image.sh").read_bytes())
+        self.assertEqual(self.read_boot("raildotmatrix/installed-manifest.json"), self.manifest.read_bytes())
+        for name in ("managed-files.txt", "packages.txt", "departure-board-update.service", "networkmanager.conf", "modprobe.conf"):
+            self.assertEqual(self.read_boot("raildotmatrix/" + name), (DEPLOY / "dietpi" / name).read_bytes())
         self.assertIn(b"ssid=DepartureBoard", self.read_boot("raildotmatrix/hotspot.nmconnection"))
         self.assertIn(b"psk=DotMatrix", self.read_boot("raildotmatrix/hotspot.nmconnection"))
         self.assertIn(b"\npmf=1\n", self.read_boot("raildotmatrix/hotspot.nmconnection"))
@@ -95,21 +100,38 @@ class ImageTest(unittest.TestCase):
     def test_refuses_to_overwrite_an_image(self):
         self.output.write_bytes(b"keep me")
         with self.assertRaises(FileExistsError):
-            build_image(self.base, self.board, self.output, self.board)
+            build_image(self.base, self.board, self.output, self.board, self.manifest)
         self.assertEqual(self.output.read_bytes(), b"keep me")
 
     def test_rejects_wrong_architecture_before_creating_output(self):
         self.board.write_bytes(b"\x7fELF\x02\x01" + bytes(12) + b"\x3e\x00")
         with self.assertRaisesRegex(ValueError, "ARM ELF"):
-            build_image(self.base, self.board, self.output, self.board)
+            build_image(self.base, self.board, self.output, self.board, self.manifest)
         self.assertFalse(self.output.exists())
 
     def test_rejects_truncated_partition(self):
         with self.base.open("r+b") as target:
             target.truncate(self.offset + 512)
         with self.assertRaisesRegex(ValueError, "outside the image"):
-            build_image(self.base, self.board, self.output, self.board)
+            build_image(self.base, self.board, self.output, self.board, self.manifest)
         self.assertFalse(self.output.exists())
+
+
+class ManagedFilesTest(unittest.TestCase):
+    def test_every_source_exists_under_a_unique_name(self):
+        entries = managed_files()
+        names = [Path(source).name for _, source, _ in entries]
+        self.assertEqual(len(names), len(set(names)))
+        for mode, source, path in entries:
+            self.assertRegex(mode, r"^0[0-7]{3}$")
+            self.assertTrue(path.startswith("/"), path)
+            if not source.startswith("build/"):
+                self.assertTrue((DEPLOY.parent / source).is_file(), source)
+
+    def test_owner_settings_are_never_managed(self):
+        paths = {path for _, _, path in managed_files()}
+        for owned in ("/boot/firmware/departure-board.toml", "/boot/firmware/dietpi.txt", "/boot/firmware/config.txt"):
+            self.assertNotIn(owned, paths)
 
 
 class SettingsTest(unittest.TestCase):

@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/atomicfile"
 )
 
 type passwordRecord struct {
@@ -40,7 +42,7 @@ func (s *Server) savePassword(password string) error {
 	p := passwordRecord{Salt: randomToken()}
 	p.Hash = hashPassword(password, p.Salt)
 	data, _ := json.Marshal(p)
-	if err := atomicWrite(s.passwordPath(), data, 0600); err != nil {
+	if err := atomicfile.Write(s.passwordPath(), data, 0600); err != nil {
 		return err
 	}
 	s.password = p

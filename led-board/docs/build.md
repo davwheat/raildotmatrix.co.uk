@@ -103,9 +103,10 @@ options. Remove a line and save to revoke that key for new connections, or clear
 all keys. Existing SSH sessions and console/SSH password settings are unaffected.
 
 Keys are stored in `/root/.ssh/authorized_keys` with mode `0600`, inside a `0700` directory. New images
-include an enabled Dropbear SSH server. When upgrading an existing image manually, also install the
-updated `departure-board-manager.service`, create `/root/.ssh` with mode `0700`, and run
-`systemctl daemon-reload` before restarting the manager so its sandbox permits saving keys.
+include an enabled Dropbear SSH server.
+
+The **Updates** tab installs new releases, including the system files above. For how updates work and how
+to set up release signing, see [Over-the-air updates](updates.md).
 
 Useful commands on the Pi:
 
@@ -204,6 +205,8 @@ Run `just --list` for a summary. `just` on its own builds the board.
 | `just install-service` | Installs the systemd unit and starts or restarts the service, and installs the example config as `/etc/departure-board.toml` if the Pi doesn't have one. |
 | `just deploy-panel-test` | Builds `panel-test` and installs it as `BIN_DIR/panel-test` on the Pi. |
 | `just run-panel-test` | Pauses the board service, runs the deployed `panel-test` for five seconds with a CPU snapshot from `top`, and then resumes the service. |
+| `just release-assets` | Builds both binaries and packs them, with the managed system files, into update assets and unsigned manifests in `build/release`. |
+| `just bootstrap-updater` | Gives a board flashed with `v0.0.0-alpha.1` an updater. See [Over-the-air updates](updates.md). |
 | `just web` | Builds the boards as WebAssembly and bundles them into `WEB_DIR`. |
 | `just clean` | Deletes the `build` directory. |
 

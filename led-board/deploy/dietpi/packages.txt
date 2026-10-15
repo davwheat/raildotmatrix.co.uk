@@ -1,0 +1,9 @@
+# Debian packages the image installs. Updates check that these are installed, but don't install them.
+network-manager
+dnsmasq-base
+avahi-daemon
+iw
+rfkill
+ca-certificates
+tzdata
+dropbear

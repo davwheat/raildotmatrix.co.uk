@@ -1,11 +1,12 @@
-package management
+// Package atomicfile replaces files so that readers see either the old or the new contents, even after a power cut.
+package atomicfile
 
 import (
 	"os"
 	"path/filepath"
 )
 
-func atomicWrite(path string, data []byte, mode os.FileMode) error {
+func Write(path string, data []byte, mode os.FileMode) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
 	}

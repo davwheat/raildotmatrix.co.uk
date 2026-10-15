@@ -17,6 +17,14 @@ WEB_DIR := env("WEB_DIR", "../website/public/led-board")
 # Fewer Zopfli iterations build the web bundle faster, and slightly larger.
 ZOPFLI_ITERATIONS := env("ZOPFLI_ITERATIONS", "15")
 
+# Builds are numbered by the commits that lead to them, so the number orders builds from every update channel.
+VERSION := env("VERSION", `git describe --tags --match 'v*' --always --dirty 2>/dev/null || echo dev`)
+COMMIT := env("COMMIT", `git rev-parse HEAD 2>/dev/null || true`)
+BUILD := env("BUILD", `git rev-list --count HEAD 2>/dev/null || echo 0`)
+DATE := env("DATE", `git log -1 --format=%cI 2>/dev/null || true`)
+version_pkg := "github.com/davwheat/raildotmatrix.co.uk/led-board/internal/version"
+version_flags := "-X " + version_pkg + ".Version=" + VERSION + " -X " + version_pkg + ".Commit=" + COMMIT + " -X " + version_pkg + ".Build=" + BUILD + " -X " + version_pkg + ".Date=" + DATE
+
 cc := "zig cc -target " + ZIG_TARGET
 cxx := "zig c++ -target " + ZIG_TARGET
 ssh := "ssh " + SSH_OPTS + " " + PI_HOST
@@ -30,7 +38,7 @@ lib_cflags := "-W -Wall -Wextra -Wno-unused-parameter -O3 -Ithird_party/rpi-rgb-
 
 # -extldflags=-s makes the external (zig) linker strip too; without it the binary keeps libc++ debug info and is
 # nearly four times larger.
-go_build := 'CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC="' + cc + '" CXX="' + cxx + '" go build -trimpath -ldflags="-s -w -extldflags=-s"'
+go_build := 'CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC="' + cc + '" CXX="' + cxx + '" go build -trimpath -ldflags="-s -w -extldflags=-s ' + version_flags + '"'
 
 # Cross-compiles the board into build/board.
 board: lib
@@ -38,7 +46,7 @@ board: lib
 
 # Builds the self-contained web management server; it needs no C libraries.
 manager:
-    CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o build/manage ./cmd/manage
+    CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w {{ version_flags }}" -o build/manage ./cmd/manage
 
 # Cross-compiles the panel test pattern into build/panel-test.
 panel-test: lib
@@ -89,6 +97,17 @@ install-service:
     sed 's|/opt/departure-board|{{ BIN_DIR }}|' deploy/departure-board.service | {{ ssh }} '{{ SUDO }} sh -c "cat > /etc/systemd/system/departure-board.service"'
     {{ ssh }} '{{ SUDO }} sh -c "test -e /etc/departure-board.toml || { cat > /etc/departure-board.toml && chmod 644 /etc/departure-board.toml; }"' < deploy/departure-board.toml
     {{ ssh }} '{{ SUDO }} systemctl daemon-reload && {{ SUDO }} systemctl enable departure-board && {{ SUDO }} systemctl restart departure-board'
+
+# Boards flashed with v0.0.0-alpha.1 can't install the update unit themselves. The board checks that its files still
+# match that release before it changes anything. Set PI_HOST=root@departureboard.local and SUDO= for DietPi images.
+[doc('Gives a board flashed with v0.0.0-alpha.1 an updater. Later updates come from the web UI.')]
+bootstrap-updater: board manager (push "build/board" "/var/lib/departure-board/bootstrap/board") (push "build/manage" "/var/lib/departure-board/bootstrap/manage")
+    {{ ssh }} '{{ SUDO }} sh -c "cat > /var/lib/departure-board/bootstrap/departure-board-update.service"' < deploy/dietpi/departure-board-update.service
+    {{ ssh }} '{{ SUDO }} /var/lib/departure-board/bootstrap/manage bootstrap -from /var/lib/departure-board/bootstrap && {{ SUDO }} rm -r /var/lib/departure-board/bootstrap'
+
+# Packs build/board, build/manage and the managed system files into update assets and manifests in build/release.
+release-assets channel="development" suffix="": board manager
+    go run ./cmd/release build -channel {{ channel }} -suffix '{{ suffix }}' -version {{ VERSION }} -commit {{ COMMIT }} -build {{ BUILD }} -out build/release
 
 # Builds the panel test pattern and installs it on the Pi.
 deploy-panel-test: panel-test (push "build/panel-test" (BIN_DIR / "panel-test"))

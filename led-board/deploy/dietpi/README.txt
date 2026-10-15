@@ -31,6 +31,11 @@ The GUI edits all board and panel settings, validates them and restarts
 the display. Device settings let you change the web password and restart
 the display. The hotspot password remains DotMatrix.
 
+Updates: in Updates, choose stable releases, prereleases or development
+builds, and when to check. The board downloads only the files that
+changed. An update never changes your settings, and stops if it would
+replace a system file that was edited on the board.
+
 Manual configuration is also supported: departure-board.toml is at the
 root of this partition (/boot/firmware/departure-board.toml on the Pi).
 The default is two chained 128x64 panels, with no station set. Edit the

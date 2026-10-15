@@ -1,0 +1,10 @@
+[Unit]
+Description=Install a downloaded departure board update
+# The manager starts this unit after it downloads and checks an update. The staged manage binary belongs to the new
+# release, so each release installs itself. Restarting the manager doesn't stop this unit.
+ConditionPathExists=/var/lib/departure-board/update/staged/manage
+
+[Service]
+Type=oneshot
+ExecStart=/var/lib/departure-board/update/staged/manage apply
+TimeoutStartSec=10min
