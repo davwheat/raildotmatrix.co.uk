@@ -36,8 +36,8 @@ type Config struct {
 	// PageDestinations lets the Daktronics lower row page through a dividing train's destinations. Other formats
 	// ignore it.
 	PageDestinations bool
-	// ReserveETDColumn keeps Daktronics destinations clear of the whole expected-time column. Other formats ignore
-	// it.
+	// ReserveETDColumn keeps a Daktronics destination beside a status clear of the space that "Cancelled" needs.
+	// Other formats ignore it.
 	ReserveETDColumn bool
 	// ScrollSpeed is in dots per second.
 	ScrollSpeed int

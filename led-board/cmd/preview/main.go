@@ -33,7 +33,7 @@ func main() {
 	boardName := flag.String("board", "daktronics", "board format: daktronics or infotec")
 	worldline := flag.Bool("worldline", false, "render the Worldline-powered Daktronics variant")
 	pageDestinations := flag.Bool("page-destinations", false, "page through dividing trains' destinations on the Daktronics lower row")
-	reserveETDColumn := flag.Bool("reserve-etd-column", false, "keep Daktronics destinations clear of the whole expected-time column")
+	reserveETDColumn := flag.Bool("reserve-etd-column", false, "keep Daktronics destinations beside a status clear of the space that \"Cancelled\" needs")
 	scrollSpeed := flag.Int("scroll-speed", 0, "scroll speed in dots per second; 0 uses the board's default")
 	rowPrefixName := flag.String("row-prefix", "ordinals", "prefix before each train time: ordinals or platforms")
 	warningPlatform := flag.Bool("warning-platform", false, "name the platform in warnings")

@@ -13,7 +13,7 @@
 //	  legacyTocNames: false,
 //	  worldline: false,                 // Daktronics only
 //	  pageDestinations: false,          // Daktronics only; page dividing trains' destinations on the lower row
-//	  reserveEtdColumn: false,          // Daktronics only; keep destinations clear of the whole expected-time column
+//	  reserveEtdColumn: false,          // Daktronics only; keep destinations beside a status clear of the space "Cancelled" needs
 //	  rowPrefix: 'ordinals',            // or 'platforms' ("Pl 1")
 //	  warningPlatform: false,           // name the platform in warnings, in place of "this station"
 //	  alignPlatformRows: true,          // align lower rows beneath the Infotec platform box

@@ -36,9 +36,9 @@ type Config struct {
 	// PageDestinations lets the lower row page through a dividing train's destinations and clip a destination
 	// too long for the row. The real board instead leaves out a train whose destination doesn't fit on one line.
 	PageDestinations bool
-	// ReserveETDColumn keeps every destination clear of the whole expected-time column, which is wide enough for
-	// "Cancelled", as the original web board's grid does. Otherwise a destination may run up to whatever the
-	// row's expected time or status leaves free.
+	// ReserveETDColumn keeps a destination beside a status, such as "Arrived" or "Delayed", clear of the whole
+	// expected-time column, which is wide enough for "Cancelled". A destination beside a time, and every destination
+	// otherwise, may run up to whatever the row's expected time or status leaves free.
 	ReserveETDColumn bool
 }
 
@@ -95,7 +95,7 @@ type geometry struct {
 	destX    int
 	destW    int
 	etdW     int
-	// reserveETD gives every destination the room that "Cancelled" leaves, whatever the row shows.
+	// reserveETD gives a destination beside any status the room that "Cancelled" leaves.
 	reserveETD bool
 	ch         int
 	clockX     int
@@ -138,10 +138,10 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 // etdPad is the gap kept right of an expected time or "Arrived". "Cancelled" and "Delayed" run to the board's edge.
 const etdPad = 5
 
-// destWidth is the room for a row's destination. The ETD column is wide enough for "Cancelled", so a shorter
-// expected time or status leaves the rest of it to the destination unless the column is reserved.
+// destWidth is the room for a row's destination. The ETD column is wide enough for "Cancelled", so a time leaves
+// the rest of it to the destination, and so does a shorter status unless the column is reserved.
 func (g *geometry) destWidth(etd string) int {
-	if g.reserveETD {
+	if g.reserveETD && !isTime(etd) {
 		return g.destW
 	}
 	return g.destW + g.etdW - g.etdWidth(etd)

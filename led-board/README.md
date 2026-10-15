@@ -102,9 +102,10 @@ destinations every 3 seconds instead, clipping any that are still too long. The 
 dividing trains' destinations** setting.
 
 Each destination on the Daktronics board can use whatever space the expected time or status beside it leaves free,
-so a destination beside a time has more room than one beside "Cancelled". Set `reserve_etd_column = true` to keep
-every destination clear of the space that "Cancelled" needs, as the original web board does. The website offers the
-same **Reserve space for "Cancelled"** setting. In both cases, an expected time or "Arrived" keeps a 5-dot gap to its right.
+so a destination beside "Arrived" or "Delayed" has more room than one beside "Cancelled". Set
+`reserve_etd_column = true` to keep a destination beside any status clear of the space that "Cancelled" needs. A
+destination beside a time still uses whatever space the time leaves free. The website offers the same **Reserve space
+for "Cancelled"** setting. In both cases, an expected time or "Arrived" keeps a 5-dot gap to its right.
 
 `row_prefix` selects the single prefix before each train's scheduled time: `ordinals` (the default) shows
 `1st`, `2nd` or `3rd`, and `platforms` shows the platform number, such as `Pl 1`. The platform column is wide
