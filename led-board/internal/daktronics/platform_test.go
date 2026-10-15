@@ -34,15 +34,17 @@ func TestRowPrefixDrawn(t *testing.T) {
 	for _, tc := range []struct {
 		name     string
 		prefix   board.RowPrefix
+		format   board.OrdinalFormat
 		platform string
 		want     [3]string
 	}{
-		{"ordinals", board.PrefixOrdinals, "10A", [3]string{"1st", "2nd", "3rd"}},
-		{"platforms", board.PrefixPlatforms, "10A", [3]string{"Pl 10A", "Pl 10A", "Pl 10A"}},
-		{"unpublished", board.PrefixPlatforms, "", [3]string{"", "", ""}},
+		{"ordinals", board.PrefixOrdinals, board.OrdinalSuffix, "10A", [3]string{"1st", "2nd", "3rd"}},
+		{"dot ordinals", board.PrefixOrdinals, board.OrdinalDot, "10A", [3]string{"1.", "2.", "3."}},
+		{"platforms", board.PrefixPlatforms, board.OrdinalSuffix, "10A", [3]string{"Pl 10A", "Pl 10A", "Pl 10A"}},
+		{"unpublished", board.PrefixPlatforms, board.OrdinalSuffix, "", [3]string{"", "", ""}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			b := New(Config{Width: testW, Height: testH, Zone: zone, RowPrefix: tc.prefix})
+			b := New(Config{Width: testW, Height: testH, Zone: zone, RowPrefix: tc.prefix, OrdinalFormat: tc.format})
 			v := fixtures.Steps("busy-board")[0]
 			for i := range v.Services {
 				v.Services[i].Platform = tc.platform
@@ -59,7 +61,13 @@ func TestRowPrefixDrawn(t *testing.T) {
 			}
 			expected := frame.New(testW, testH)
 			y := b.geo.textY(0)
-			board.DrawText(expected, font.Text, 0, y, tc.want[0], b.cfg.Colour, board.Clip{X1: testW, Y1: testH})
+			full := board.Clip{X1: testW, Y1: testH}
+			if tc.want[0] == "1st" {
+				x := board.DrawText(expected, font.Text, 1, y, "1", b.cfg.Colour, full)
+				board.DrawText(expected, font.Text, x+1, y, "st", b.cfg.Colour, full)
+			} else {
+				board.DrawText(expected, font.Text, 0, y, tc.want[0], b.cfg.Colour, full)
+			}
 			for py := y; py < y+font.Text.Height; py++ {
 				for x := 0; x < b.geo.stdX; x++ {
 					if f.At(x, py) != expected.At(x, py) {
