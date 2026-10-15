@@ -91,12 +91,9 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 				continue
 			}
 			r := lowerRow(&b.content.rows[1+i])
+			// Real Infotec boards always roll the lower row upwards, even when wrapping back to the 2nd train.
 			if e < swapSlide && b.swapFrom != b.swapIndex {
-				direction := 1
-				if len(b.content.rows) == 3 && b.swapIndex == 0 {
-					direction = -1
-				}
-				travel := direction * g.swapTravel
+				travel := g.swapTravel
 				if i == b.swapFrom {
 					r.dy = -int(int64(travel) * e / swapSlide)
 				} else {
