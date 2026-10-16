@@ -1,13 +1,13 @@
 # Native dot patterns. Edit this YAFF file or import it into tools/font-builder.html.
-yaff: 1.0
-name: Small main row
-encoding: unicode
-line-height: 10
-ascent: 8
-descent: 2
-shift-up: -2
-right-bearing: 1
-default-char: u+003f
+yaff: "1.0"
+encoding: "unicode"
+line-height: "10"
+ascent: "8"
+descent: "2"
+shift-up: "-2"
+right-bearing: "1"
+name: "Small main row"
+default-char: "u+003f"
 
 u+0020:
     ...
@@ -634,16 +634,16 @@ u+0053:
     ....
 
 u+0054:
-    ...
-    @@@
-    .@.
-    .@.
-    .@.
-    .@.
-    .@.
-    .@.
-    ...
-    ...
+    .....
+    @@@@@
+    ..@..
+    ..@..
+    ..@..
+    ..@..
+    ..@..
+    ..@..
+    .....
+    .....
 
 u+0055:
     ....
