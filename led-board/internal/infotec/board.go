@@ -47,6 +47,8 @@ type Config struct {
 	ServicePlatformBox bool
 	// AlignPlatformRows aligns lower service columns with the platform box; nil defaults to true.
 	AlignPlatformRows *bool
+	// ServiceSeparator draws the line between the first train and the later trains; nil defaults to true.
+	ServiceSeparator *bool
 	// WarningPlatform names the platform in a warning, in place of "this station", when the warning is for one
 	// platform.
 	WarningPlatform bool

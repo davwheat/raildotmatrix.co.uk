@@ -30,8 +30,8 @@ hands each frame to the panel in a single call.
 The renderer never talks to hardware. Anything that implements `frame.Display` can show the board, so a
 different panel or an on-screen viewer is one small package.
 
-The website's build runs `just web` to compile the boards for it; see
-[docs/build.md](docs/build.md#building-for-the-web).
+The website's build runs `just web` to compile the boards for it, and `just manager` embeds the same build in the
+Pi management UI for its previews; see [docs/build.md](docs/build.md#building-for-the-web).
 
 ## Build and deploy
 
@@ -40,6 +40,11 @@ It starts the board and a **DepartureBoard** Wi-Fi hotspot (password **DotMatrix
 **http://192.168.4.1**. Setup asks for a new board password, checks the panel layout and colour order on
 the board itself, and then sets the station and Wi-Fi. Once connected to your network, use
 **http://departureboard.local**. The config also remains at the root of the card as `departure-board.toml`.
+
+**Board settings** shows each display option as a picture of the board with that option, and a preview of the
+board with every setting on the page, including changes that you haven't saved. Your browser draws them with the
+board's own renderer, so the Pi's processor stays free for the panel. The preview plays example trains, which you
+choose below it.
 See [the DietPi image instructions](docs/build.md#dietpi-sd-card-image).
 
 See [docs/build.md](docs/build.md). In short:
@@ -141,6 +146,10 @@ the full-size row also aligns destinations. Turn it off to keep the lower row's 
 left-aligned prefix. It only affects Infotec displays with an active platform box. The website settings
 and Pi management UI expose the same toggle; the CLI flag is `-align-platform-rows=false`.
 
+`service_separator` (default `true`) draws the dim line between the first train and the later trains on the
+Infotec board. Set it to `false` to leave the line out; a platform box keeps its own outline. The website settings
+and Pi management UI expose the same toggle; the CLI flag is `-service-separator=false`.
+
 `compact_lower_row` (default `true`) places the lower service row beside a small clock when the platform
 box is enabled, with the row and clock vertically centred between the separator and the bottom edge.
 Disable it to put the main clock beneath the row. Both clocks use the corresponding
@@ -173,7 +182,7 @@ When details are available, all coaches share five-second pages: identifiers, lo
 skip that page, while loading and facilities remain visible. Set `coach_letter_tocs = []` to hide all coach letters.
 The Pi management UI exposes this list; `-coach-letter-tocs VT,GR` and `BOARD_COACH_LETTER_TOCS=VT,GR`
 override it. The browser uses the same defaults and accepts a `coachLetterTocs` array.
-Loading fills the interior from the floor upwards in proportion to the percentage at `loading_brightness` (50 or 100 percent, default 50). The website offers the same Loading fill brightness setting.
+Loading fills the interior from the floor upwards in proportion to the percentage at `loading_brightness` (50, 75 or 100 percent, default 50). The website offers the same Loading fill brightness setting.
 Unknown loads remain hollow. Facility pages use the "Small formation contents" font: `§` for accessibility,
 `#` for cycles, `±` for toilets, `€` for food and `1st` for first class (including mixed-class coaches). Standard class is implicit.
 Coaches with fewer facilities hold their highest-priority facility for the spare slots (accessibility,

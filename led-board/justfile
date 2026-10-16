@@ -44,8 +44,8 @@ go_build := 'CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC="' + cc + '" CXX="' + cxx 
 board: lib
     {{ go_build }} -o build/board ./cmd/board
 
-# Builds the self-contained web management server; it needs no C libraries.
-manager:
+# Builds the self-contained web management server; it needs no C libraries. It embeds the boards for its previews.
+manager: manager-boards
     CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w {{ version_flags }}" -o build/manage ./cmd/manage
 
 # Cross-compiles the panel test pattern into build/panel-test.
@@ -118,11 +118,18 @@ run-panel-test:
     {{ ssh }} 'was=$(systemctl is-active departure-board 2>/dev/null); {{ SUDO }} systemctl stop departure-board 2>/dev/null; {{ SUDO }} timeout 10 {{ BIN_DIR }}/panel-test -seconds 5 {{ PANEL_TEST_FLAGS }} & sleep 2.5; top -bn1 | head -15; wait; [ "$was" != active ] || {{ SUDO }} systemctl start departure-board'
 
 [doc("Builds the boards for a web page and bundles them into WEB_DIR, the website's public directory by default.")]
-web:
+web: wasm
+    go run ./cmd/webbundle -wasm build/wasm/board.wasm -exec "$(go env GOROOT)/lib/wasm/wasm_exec.js" -out {{ WEB_DIR }} -iterations {{ ZOPFLI_ITERATIONS }}
+
+# Builds the boards for the management UI's previews into internal/management/boards, which the manager embeds.
+manager-boards: wasm
+    go run ./cmd/webbundle -wasm build/wasm/board.wasm -exec "$(go env GOROOT)/lib/wasm/wasm_exec.js" -out internal/management/boards -iterations {{ ZOPFLI_ITERATIONS }}
+
+# Compiles the boards to WebAssembly in build/wasm/board.wasm.
+wasm:
     mkdir -p build/wasm
     go generate ./internal/london
     GOOS=js GOARCH=wasm go build -trimpath -ldflags="-s -w" -o build/wasm/board.wasm ./cmd/wasm
-    go run ./cmd/webbundle -wasm build/wasm/board.wasm -exec "$(go env GOROOT)/lib/wasm/wasm_exec.js" -out {{ WEB_DIR }} -iterations {{ ZOPFLI_ITERATIONS }}
 
 # Deletes the build directory.
 clean:

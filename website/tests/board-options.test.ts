@@ -106,14 +106,15 @@ test('RailAnnouncements modal requires an iframe and a matching marker or referr
   assert.equal(isRailAnnouncementsEmbed(true, new URLSearchParams(), ''), false)
 })
 
-test('loading brightness accepts only 50 or 100 and round-trips in shared links', () => {
+test('loading brightness accepts only 50, 75 or 100 and round-trips in shared links', () => {
   assert.equal(readOptions(infotec, {}, new URLSearchParams()).loadingBrightness, 50)
   assert.equal(readOptions(infotec, { loadingBrightness: 100 }, new URLSearchParams()).loadingBrightness, 100)
   assert.equal(readOptions(infotec, {}, new URLSearchParams('loadingBrightness=100')).loadingBrightness, 100)
-  assert.equal(readOptions(infotec, {}, new URLSearchParams('loadingBrightness=75')).loadingBrightness, 50)
+  assert.equal(readOptions(infotec, {}, new URLSearchParams('loadingBrightness=75')).loadingBrightness, 75)
+  assert.equal(readOptions(infotec, {}, new URLSearchParams('loadingBrightness=60')).loadingBrightness, 50)
   const query = new URLSearchParams()
-  applyOptions(query, infotec, { ...defaults, loadingBrightness: 100 })
-  assert.equal(readOptions(infotec, {}, query).loadingBrightness, 100)
+  applyOptions(query, infotec, { ...defaults, loadingBrightness: 75 })
+  assert.equal(readOptions(infotec, {}, query).loadingBrightness, 75)
 })
 
 test('formation count validates all six choices and round-trips in shared links', () => {

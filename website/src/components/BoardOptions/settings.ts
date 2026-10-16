@@ -19,11 +19,12 @@ export const defaults = {
   smallScrollingText: false,
   ampersandCallingPoints: false,
   serviceCount: 3,
-  loadingBrightness: 50 as 50 | 100,
+  loadingBrightness: 50 as 50 | 75 | 100,
   formationCount: 'none' as 'none' | 'number' | 'coaches' | 'coaches-no-brackets' | 'carriages' | 'carriages-no-brackets',
   formationIcons: [...formationIconTypes] as FormationIcon[],
   clockStyle: 'normal' as 'normal' | 'small-seconds' | 'small',
   alignPlatformRows: true,
+  serviceSeparator: true,
   boardStyle: 'Yellow' as 'Yellow' | 'Blue' | 'Green/Blue',
   showCasing: true,
   worldlinePowered: false,
@@ -63,6 +64,7 @@ export function optionKeys(type: DisplayType): OptionKey[] {
         'formationCount',
         'formationIcons',
         'alignPlatformRows',
+        'serviceSeparator',
       ]
     case 'daktronics-data-display-dmi':
       return [
@@ -109,7 +111,7 @@ export function readOptionOverrides(type: DisplayType, stored: unknown, query: U
         if ((choices[key as keyof typeof choices] as readonly unknown[]).includes(raw)) values[key] = raw
       } else if (key === 'loadingBrightness') {
         const brightness = Number(raw)
-        if (brightness === 50 || brightness === 100) values[key] = brightness
+        if (brightness === 50 || brightness === 75 || brightness === 100) values[key] = brightness
       } else if (key === 'serviceCount') {
         const count = Number(raw)
         if (Number.isInteger(count) && count >= 1 && count <= 6) values[key] = count

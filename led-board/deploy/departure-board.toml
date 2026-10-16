@@ -33,7 +33,7 @@ ordinal_format = "suffix"
 service_count = 3
 # Clock: normal, small-seconds (HH:MM ss), or small.
 clock_style = "normal"
-# Coach loading fill brightness: 50 or 100 percent.
+# Coach loading fill brightness: 50, 75 or 100 percent.
 loading_brightness = 50
 # Count beside the formation: none, number, coaches, coaches-no-brackets, carriages or carriages-no-brackets.
 # Wording falls back to a bracketed number if needed.
@@ -53,6 +53,8 @@ platform_box = false
 compact_lower_row = true
 # Align lower service columns and centre their prefix beneath the platform box.
 align_platform_rows = true
+# Infotec only: the line between the first train and the later trains.
+service_separator = true
 
 # Historic operator names, such as "London Midland".
 legacy_toc_names = false

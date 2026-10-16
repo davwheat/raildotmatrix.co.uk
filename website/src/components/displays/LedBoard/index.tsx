@@ -44,6 +44,7 @@ export default function LedBoard({
   smallScrollingText,
   ampersandCallingPoints,
   alignPlatformRows,
+  serviceSeparator,
   colour,
 }: Props) {
   const surfaceRef = useRef<HTMLDivElement>(null)
@@ -79,6 +80,7 @@ export default function LedBoard({
     smallScrollingText,
     ampersandCallingPoints,
     alignPlatformRows,
+    serviceSeparator,
     colour,
   })
 

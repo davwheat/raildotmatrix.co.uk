@@ -133,6 +133,7 @@ func main() {
 		SmallScrollingText:     cfg.SmallScrollingText,
 		AmpersandCallingPoints: cfg.AmpersandCallingPoints,
 		CompactLowerRow:        &cfg.CompactLowerRow, PlatformBox: cfg.PlatformBox, Platforms: cfg.Platforms, AlignPlatformRows: &cfg.AlignPlatformRows,
+		ServiceSeparator: &cfg.ServiceSeparator,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

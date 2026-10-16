@@ -222,7 +222,7 @@ func TestFormationUpdateRedrawsAtSameTime(t *testing.T) {
 
 func TestLoadingBrightnessPreservesFillArea(t *testing.T) {
 	b := New(Config{})
-	for _, brightness := range []int{50, 100} {
+	for _, brightness := range []int{50, 75, 100} {
 		f := frame.New(40, 11)
 		contents := b.formationContents([]model.Coach{{Loading: 50}}, 0)
 		drawFormationContents(f, 0, 0, 40, 11, 1, &contents, board.White, brightness)

@@ -42,6 +42,7 @@ type config struct {
 	RowPrefix                string `mapstructure:"row_prefix"`
 	WarningPlatform          bool   `mapstructure:"warning_platform"`
 	AlignPlatformRows        bool   `mapstructure:"align_platform_rows"`
+	ServiceSeparator         bool   `mapstructure:"service_separator"`
 	CompactLowerRow          bool   `mapstructure:"compact_lower_row"`
 	PlatformBox              bool   `mapstructure:"platform_box"`
 	ScrollSpeed              int    `mapstructure:"scroll_speed"`
@@ -84,7 +85,7 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.Bool("warning-platform", false, "name the platform in a stand clear or not-for-public-use warning, in place of \"this station\"")
 	fs.Bool("align-platform-rows", true, "align lower service columns and centre their prefix beneath the platform box (Infotec only)")
 	fs.String("ordinal-format", "suffix", "ordinal style: suffix (1st/2nd/3rd) or dot (1./2./3.)")
-	fs.Int("loading-brightness", 50, "coach loading fill brightness: 50 or 100 percent (Infotec only)")
+	fs.Int("loading-brightness", 50, "coach loading fill brightness: 50, 75 or 100 percent (Infotec only)")
 	fs.String("formation-count", "none", "count beside the formation: none, number, coaches, coaches-no-brackets, carriages or carriages-no-brackets (Infotec only; wording falls back to a bracketed number if space is limited)")
 	coachLetterTOCs := commaList(infotec.DefaultCoachLetterTOCs())
 	fs.Var(&coachLetterTOCs, "coach-letter-tocs", "comma-separated TOC codes whose coach letters are shown; empty hides all letters (Infotec only)")
@@ -94,6 +95,7 @@ func addFlags(fs *flag.FlagSet) (configPath *string) {
 	fs.Int("service-count", 3, "number of services to show, from 1 to 6")
 	fs.Bool("compact-lower-row", true, "show smaller lower service text beside the clock (Infotec only)")
 	fs.Bool("platform-box", false, "show a platform box beside the first train (Infotec only)")
+	fs.Bool("service-separator", true, "draw the line between the first train and the later trains (Infotec only)")
 	fs.Bool("worldline", false, "Worldline-driven Daktronics board: single scrolling info line, capitalised locations")
 	fs.Bool("page-destinations", false, "page through a dividing train's destinations on the lower row, in place of hiding a train whose destination doesn't fit (Daktronics only)")
 	fs.Bool("reserve-etd-column", false, "keep every destination clear of the space that \"Cancelled\" needs, even beside a time (Daktronics only)")

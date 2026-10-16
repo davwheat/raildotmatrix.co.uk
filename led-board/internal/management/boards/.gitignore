@@ -1,0 +1,3 @@
+# just manager-boards writes the WebAssembly boards here for the manager to embed.
+*
+!.gitignore

@@ -56,7 +56,10 @@ type Config struct {
 	PlatformBox bool
 	// AlignPlatformRows aligns lower service columns with the platform box; nil defaults to true.
 	AlignPlatformRows *bool
-	Platforms         []string
+	// ServiceSeparator draws the Infotec line between the first train and the later trains; nil defaults to true.
+	// Other formats ignore it.
+	ServiceSeparator *bool
+	Platforms        []string
 }
 
 // New returns the named board format.
@@ -70,8 +73,8 @@ func New(name string, c Config) (board.Board, error) {
 	if err := infotec.ValidateClockStyle(c.ClockStyle); err != nil {
 		return nil, err
 	}
-	if c.LoadingBrightness != 0 && c.LoadingBrightness != 50 && c.LoadingBrightness != 100 {
-		return nil, fmt.Errorf("loading brightness must be 50 or 100")
+	if c.LoadingBrightness != 0 && c.LoadingBrightness != 50 && c.LoadingBrightness != 75 && c.LoadingBrightness != 100 {
+		return nil, fmt.Errorf("loading brightness must be 50, 75 or 100")
 	}
 	if c.ServiceCount < 0 || c.ServiceCount > 6 {
 		return nil, fmt.Errorf("service count must be between 1 and 6")
@@ -96,6 +99,7 @@ func New(name string, c Config) (board.Board, error) {
 			CoachLetterTOCs:   c.CoachLetterTOCs,
 			FormationIcons:    c.FormationIcons,
 			LoadingBrightness: c.LoadingBrightness, ClockStyle: c.ClockStyle, ServiceCount: c.ServiceCount, CompactLowerRow: c.CompactLowerRow, PlatformBox: platformBox, ServicePlatformBox: c.PlatformBox && platformBox == "", AlignPlatformRows: c.AlignPlatformRows,
+			ServiceSeparator: c.ServiceSeparator,
 		}), nil
 	default:
 		return nil, fmt.Errorf("unknown board %q; want daktronics or infotec", name)

@@ -7,6 +7,7 @@
     <title>Departure board settings</title>
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/style.css" />
+    <script src="/preview.js" defer></script>
     <script src="/app.js" defer></script>
   </head>
   <body>
@@ -226,6 +227,30 @@
             <button id="reload" class="quiet">Reload settings</button>
           </div>
           <form id="config-form">
+            <section
+              id="board-preview"
+              class="board-preview"
+              aria-labelledby="board-preview-title"
+            >
+              <div class="board-preview-heading">
+                <h3 id="board-preview-title">Preview</h3>
+                <span id="board-preview-status" class="caption" role="status"
+                  >Loading the preview…</span
+                >
+              </div>
+              <canvas
+                id="board-preview-canvas"
+                class="dots"
+                role="img"
+                aria-label="Preview of the board with example departures"
+              ></canvas>
+              <div
+                class="scenes"
+                id="board-preview-scenes"
+                role="group"
+                aria-label="Example to show"
+              ></div>
+            </section>
             <div id="config-fields"></div>
             <div class="save-bar">
               <span id="save-status">No unsaved changes.</span

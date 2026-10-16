@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/testpattern"
@@ -288,5 +289,38 @@ func TestSetupSkippedForConfiguredBoard(t *testing.T) {
 	s := &Server{opts: Options{ConfigPath: config, StateDir: dir}}
 	if err := s.loadSetup(); err != nil || s.setupStep != "done" {
 		t.Fatalf("configured board setup step %q, %v", s.setupStep, err)
+	}
+}
+
+func TestServeBoards(t *testing.T) {
+	bundle := fstest.MapFS{
+		".gitignore":         {Data: []byte("*\n")},
+		"manifest.json":      {Data: []byte(`{"wasm":"board.abc.wasm.gz"}`)},
+		"board.abc.wasm.gz":  {Data: []byte{0x1f, 0x8b}},
+		"wasm_exec.def.js":   {Data: []byte("// glue")},
+		"board.abc.wasm.gz~": {Data: []byte("stray")},
+	}
+	mux := http.NewServeMux()
+	mux.Handle("GET /boards/{name}", serveBoards(bundle))
+	get := func(name string) *httptest.ResponseRecorder {
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, httptest.NewRequest("GET", "/boards/"+name, nil))
+		return w
+	}
+	for name, want := range map[string]struct{ contentType, encoding, cache string }{
+		"manifest.json":     {"application/json", "", ""},
+		"board.abc.wasm.gz": {"application/wasm", "gzip", "public, max-age=31536000, immutable"},
+		"wasm_exec.def.js":  {"text/javascript; charset=utf-8", "", "public, max-age=31536000, immutable"},
+	} {
+		w := get(name)
+		h := w.Header()
+		if w.Code != 200 || h.Get("Content-Type") != want.contentType || h.Get("Content-Encoding") != want.encoding || h.Get("Cache-Control") != want.cache {
+			t.Errorf("%s: status %d, headers %v", name, w.Code, h)
+		}
+	}
+	for _, name := range []string{".gitignore", "board.abc.wasm.gz~", "missing.js"} {
+		if w := get(name); w.Code != 404 {
+			t.Errorf("%s: status %d, want 404", name, w.Code)
+		}
 	}
 }

@@ -135,6 +135,7 @@ export default function BoardOptions() {
                 label="Loading fill brightness"
                 values={[
                   [50, '50%'],
+                  [75, '75%'],
                   [100, '100%'],
                 ]}
               />
@@ -155,6 +156,7 @@ export default function BoardOptions() {
                 Align lower rows with the platform box
               </Check>
               <Check name="compactLowerRow">Place lower service row beside the clock</Check>
+              <Check name="serviceSeparator">Show the line between the first and later trains</Check>
               <Check name="smallScrollingText" hint="Use the compact font for calling points and service information.">
                 Use smaller scrolling text
               </Check>

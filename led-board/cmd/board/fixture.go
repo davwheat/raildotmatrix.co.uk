@@ -4,14 +4,15 @@ import (
 	"context"
 	"time"
 
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/formats"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 // The tests and cmd/preview send a fixture's second view two seconds after its first, so the board does too. It then
 // starts the fixture again, so that the change the fixture shows, such as a departure, keeps recurring.
 const (
-	fixtureStep   = 2 * time.Second
-	fixtureRepeat = 20 * time.Second
+	fixtureStep   = formats.FixtureStep
+	fixtureRepeat = formats.FixtureRepeat
 )
 
 // playFixture shows a fixture's views in place of the live feed until ctx is done. A fixture with a single view is

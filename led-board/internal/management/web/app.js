@@ -41,6 +41,8 @@ function notice(message, type = "") {
 }
 function signedOut() {
   clearInterval(poll);
+  previewHandle?.close();
+  previewHandle = previewKey = undefined;
   session = { authenticated: false };
   loaded = false;
   currentTab = currentStep = undefined;
@@ -148,6 +150,7 @@ const labels = {
   hide_terminating: "Hide terminating trains",
   warning_platform: "Name platforms in warnings",
   align_platform_rows: "Align lower service rows with platform box",
+  service_separator: "Line between the first and later trains",
   compact_lower_row: "Show lower service row beside clock",
   platform_box: "Infotec platform box",
   worldline: "Worldline display style",
@@ -202,6 +205,23 @@ const helpText = {
   "led.brightness": "From 1 to 100.",
   "led.rgb_sequence":
     "To find the right order, use Identify the colour order, which asks what the board shows.",
+  row_prefix: "What the board shows before each train's time.",
+  platform_box: "Shows the first train's platform in a box beside it.",
+  compact_lower_row: "Applies when the board shows the platform box.",
+  align_platform_rows: "Applies when the board shows the platform box.",
+  service_separator:
+    "The dim line that separates the first train from the trains after it.",
+  formation_count:
+    "If the words don't fit, the board shows the number in brackets.",
+  loading_brightness:
+    "How brightly the board fills each coach to show how busy it is.",
+  small_scrolling_text: "The font for calling points and service information.",
+  ampersand_calling_points: "How the board joins the last two calling points.",
+  worldline:
+    "A Worldline-driven board has one scrolling information line, and shows place names in capitals.",
+  reserve_etd_column:
+    'Whether a destination can use the space beside a time that "Cancelled" needs.',
+  warning_platform: "What stand clear and not-for-public-use warnings name.",
 };
 const nice = {
   daktronics: "Daktronics Data Display",
@@ -220,16 +240,94 @@ const nice = {
   carriages: "(n carriages)",
   "carriages-no-brackets": "n carriages",
 };
+// optionLabels names the options that a visual setting shows as pictures of the board.
+const optionLabels = {
+  clock_style: {
+    normal: "Large",
+    "small-seconds": "Small seconds",
+    small: "Small",
+  },
+  formation_count: {
+    none: "No count",
+    number: "(8)",
+    coaches: "(8 coaches)",
+    "coaches-no-brackets": "8 coaches",
+    carriages: "(8 carriages)",
+    "carriages-no-brackets": "8 carriages",
+  },
+  loading_brightness: {
+    50: "Half brightness",
+    75: "Three-quarter brightness",
+    100: "Full brightness",
+  },
+  ordinal_format: { suffix: "1st, 2nd", dot: "1., 2." },
+  row_prefix: { ordinals: "Order", platforms: "Platform" },
+  platform_box: { false: "No box", true: "Platform box" },
+  compact_lower_row: { false: "Clock below", true: "Clock beside" },
+  align_platform_rows: { false: "Not aligned", true: "Aligned" },
+  service_separator: { false: "No line", true: "Line" },
+  small_scrolling_text: { false: "Regular", true: "Smaller" },
+  ampersand_calling_points: { false: "“and”", true: "“&”" },
+  worldline: { false: "Standard", true: "Worldline" },
+  reserve_etd_column: { false: "Use the space", true: "Keep it clear" },
+  warning_platform: { false: "This station", true: "Platform number" },
+};
+// scenes are the examples that show each visual setting: a fixture from internal/fixtures, and the times into it, in
+// milliseconds, in order. The first time that the options look different is shown, or, with focus "start", the time
+// that the first difference is nearest the middle, and the pictures centre on it. Without a time, a board is shown
+// once it settles.
+const scenes = {
+  board: {},
+  colour: {},
+  row_prefix: {},
+  ordinal_format: {},
+  // With no trains, only the clock changes, wherever the layout puts it.
+  clock_style: { fixture: "no-departures" },
+  platform_box: {},
+  compact_lower_row: {},
+  align_platform_rows: {},
+  service_separator: {},
+  formation_count: { fixture: "detailed-formation" },
+  // The formation's pages take turns every five seconds, and which come first depends on the other settings.
+  loading_brightness: {
+    fixture: "detailed-formation",
+    at: [4000, 9000, 14000, 19000],
+  },
+  small_scrolling_text: { at: [11000] },
+  // The calling points scroll, so the board is shown when the "and" or "&" is near the middle of the row.
+  ampersand_calling_points: {
+    at: Array.from({ length: 81 }, (_, i) => 8000 + i * 250),
+    focus: "start",
+  },
+  worldline: {},
+  reserve_etd_column: { fixture: "triple-line" },
+  warning_platform: { fixture: "stand-clear" },
+};
+const previewFixtures = {
+  "busy-board": "Several trains",
+  delayed: "Delay",
+  cancelled: "Cancellation",
+  "dividing-service": "Dividing train",
+  "stand-clear": "Platform warning",
+  "detailed-formation": "Coach formation",
+  "first-departs": "Departure",
+  "no-departures": "No trains",
+};
 const groups = [
   [
     "Station",
     "Leave the station empty to show setup instructions.",
-    "crs board colour platforms row_prefix loading_brightness formation_count coach_letter_tocs formation_icons clock_style ordinal_format service_count scroll_speed",
+    "crs platforms service_count show_unconfirmed_platforms hide_terminating legacy_toc_names",
   ],
   [
-    "Display options",
+    "Appearance",
+    "Each option shows the example board with your other settings. Settings that don't change the board you've chosen are hidden.",
+    "board colour row_prefix ordinal_format clock_style platform_box compact_lower_row align_platform_rows service_separator formation_count loading_brightness small_scrolling_text ampersand_calling_points worldline reserve_etd_column warning_platform",
+  ],
+  [
+    "More display options",
     "",
-    "show_unconfirmed_platforms hide_terminating warning_platform platform_box compact_lower_row align_platform_rows small_scrolling_text ampersand_calling_points worldline page_destinations reserve_etd_column clear_down_warning_to_cis legacy_toc_names",
+    "coach_letter_tocs formation_icons scroll_speed page_destinations clear_down_warning_to_cis",
   ],
   [
     "LED panels",
@@ -252,8 +350,52 @@ function unset(values, key) {
   if (keys.length === 2) delete values[keys[0]]?.[keys[1]];
   else delete values[key];
 }
+function optionLabel(key, value) {
+  return optionLabels[key]?.[value] ?? nice[value] ?? value;
+}
+function visualField(field, prefix) {
+  const wrap = document.createElement("fieldset");
+  wrap.className = "field visual";
+  wrap.id = prefix + field.key;
+  wrap.dataset.key = field.key;
+  const legend = document.createElement("legend");
+  legend.textContent = labels[field.key] || field.key.replaceAll("_", " ");
+  const options = document.createElement("div");
+  options.className = "options";
+  const current = String(get(snapshot.values, field.key) ?? field.default);
+  for (const value of field.type === "bool"
+    ? ["false", "true"]
+    : field.choices) {
+    const option = document.createElement("label");
+    option.className = "option";
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = wrap.id;
+    input.value = value;
+    input.checked = value === current;
+    const dots = document.createElement("canvas");
+    dots.className = "dots";
+    dots.setAttribute("aria-hidden", "true");
+    option.append(input, dots, text("span", optionLabel(field.key, value)));
+    options.append(option);
+  }
+  const help = text("small", helpText[field.key] || "", "field-help");
+  help.hidden = !helpText[field.key];
+  const same = text(
+    "small",
+    "With your other settings, the example board looks the same with each option.",
+    "field-help same",
+  );
+  same.hidden = true;
+  wrap.append(legend, options, help, same);
+  return wrap;
+}
 function field(field, prefix = "setting-") {
-  const wrap = document.createElement("div");
+  const wrap = visualFor(field)
+    ? visualField(field, prefix)
+    : document.createElement("div");
+  if (field.boards) wrap.dataset.boards = field.boards.join(" ");
+  if (wrap.tagName === "FIELDSET") return wrap;
   wrap.className = "field";
   const label = document.createElement("label");
   label.textContent = labels[field.key] || field.key.replaceAll("_", " ");
@@ -366,13 +508,205 @@ async function loadConfig() {
   for (const f of snapshot.fields) if (!used.has(f.key)) grid.append(field(f));
   advanced.append(summary, grid);
   container.append(advanced);
+  showRelevantFields(container, "setting-");
+  showPreviewFixtures();
+  schedulePreviews();
   dirty = false;
   $("save-status").textContent = get(snapshot.values, "crs")
     ? "No unsaved changes."
     : "Choose a station to start showing live departures.";
 }
+function choiceValue(f, value) {
+  return f.type === "bool"
+    ? value === "true"
+    : f.type === "int"
+      ? Number(value)
+      : value;
+}
+// formValues returns every setting as the page shows it: the fields with this prefix, and the saved or default
+// value of the rest.
+function formValues(prefix) {
+  const values = {};
+  for (const f of snapshot.fields) {
+    let value = get(snapshot.values, f.key) ?? f.default;
+    if ($(prefix + f.key) && !f.automatic)
+      try {
+        value = inputValue(f, prefix);
+      } catch {
+        // A number that's still being typed keeps the saved value.
+      }
+    set(values, f.key, value);
+  }
+  return values;
+}
+// needs names the settings that only change the board when another setting is on.
+const needs = {
+  compact_lower_row: "platform_box",
+  align_platform_rows: "platform_box",
+};
+// showRelevantFields hides the settings that don't change the board with the board style and settings chosen.
+function showRelevantFields(container, prefix) {
+  const values = formValues(prefix);
+  for (const element of container.querySelectorAll("[data-key]")) {
+    const wrap = element.closest(".field") ?? element;
+    const boards = wrap.dataset.boards?.split(" ");
+    wrap.hidden =
+      Boolean(boards && !boards.includes(values.board)) ||
+      (element.dataset.key in needs && !values[needs[element.dataset.key]]);
+  }
+}
+// The live feed's settings don't change how an example looks, and verbose logging would fill the console.
+const notPreviewed = new Set(["crs", "url", "fixture", "verbose", "led"]);
+function boardOptions(values) {
+  const options = {};
+  for (const [key, value] of Object.entries(values))
+    if (!notPreviewed.has(key))
+      options[key.replace(/_(\w)/g, (_, c) => c.toUpperCase())] = value;
+  options.width = values.led.cols * values.led.chain;
+  options.height = values.led.rows * values.led.parallel;
+  return options;
+}
+let previewTimer,
+  previewGeneration = 0,
+  previewFixture = "busy-board",
+  previewHandle,
+  previewKey,
+  previewDots,
+  previewLooping = false;
+function schedulePreviews() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(renderPreviews, 120);
+}
+async function renderPreviews() {
+  const generation = ++previewGeneration;
+  let api;
+  try {
+    api = await boardPreview.load();
+  } catch (error) {
+    document.body.classList.add("no-previews");
+    $("board-preview-status").textContent = error.message;
+    return;
+  }
+  for (const [container, prefix] of [
+    [$("config-fields"), "setting-"],
+    [$("setup-station-fields"), "setup-"],
+  ]) {
+    if (!snapshot || container.closest("[hidden]")) continue;
+    const values = formValues(prefix);
+    if (prefix === "setting-") play(api, values);
+    for (const fieldset of container.querySelectorAll("fieldset.visual")) {
+      if (fieldset.hidden) continue;
+      renderOptions(api, fieldset, values);
+      // Each fieldset takes a few milliseconds, so the page answers input between them.
+      await new Promise((resolve) => setTimeout(resolve));
+      if (generation !== previewGeneration) return;
+    }
+  }
+}
+function renderOptions(api, fieldset, values) {
+  const key = fieldset.dataset.key,
+    scene = scenes[key];
+  const f = snapshot.fields.find((f) => f.key === key);
+  const inputs = [...fieldset.querySelectorAll("input")];
+  const times = scene.at ?? [undefined];
+  const lists = inputs.map((input) => {
+    const variant = structuredClone(values);
+    set(variant, key, choiceValue(f, input.value));
+    const result = api.render({
+      ...boardOptions(variant),
+      fixture: scene.fixture ?? "busy-board",
+      at: scene.at,
+    });
+    return result instanceof Error ? null : scene.at ? result : [result];
+  });
+  let chosen = 0,
+    box = null;
+  for (let i = 0; i < times.length; i++) {
+    const drawn = lists.filter(Boolean).map((list) => list[i]);
+    const difference = drawn.length > 1 && boardPreview.difference(drawn);
+    if (!difference) continue;
+    const middle = drawn[0].width / 2;
+    if (
+      !box ||
+      (scene.focus === "start" &&
+        Math.abs(difference.x - middle) < Math.abs(box.x - middle))
+    ) {
+      chosen = i;
+      box = difference;
+    }
+    if (scene.focus !== "start") break;
+  }
+  const stills = lists.map((list) => list?.[chosen]);
+  const first = stills.find(Boolean);
+  if (box && scene.focus === "start") box = { ...box, x: box.x - 24, w: 48 };
+  const crop =
+    first && box && boardPreview.around(box, first.width, first.height);
+  inputs.forEach((input, i) => {
+    const canvas = input.nextElementSibling;
+    canvas.hidden = !stills[i];
+    if (!stills[i]) return;
+    canvas.dots ??= new boardPreview.Dots(canvas, 4);
+    canvas.dots.paint(stills[i], crop || undefined);
+  });
+  fieldset.querySelector(".same").hidden = Boolean(box) || !first;
+}
+function play(api, values) {
+  const options = { ...boardOptions(values), fixture: previewFixture };
+  const key = JSON.stringify(options);
+  if (key === previewKey) return;
+  previewKey = key;
+  previewHandle?.close();
+  previewHandle = undefined;
+  const handle = api.create(options);
+  if (handle instanceof Error) {
+    $("board-preview-status").textContent =
+      "The preview can't show these settings: " + handle.message;
+    return;
+  }
+  previewHandle = handle;
+  $("board-preview-status").textContent = "Example trains";
+  previewDots ??= new boardPreview.Dots($("board-preview-canvas"));
+  if (!previewLooping) {
+    previewLooping = true;
+    requestAnimationFrame(animatePreview);
+  }
+}
+function animatePreview() {
+  const handle = previewHandle;
+  if (!handle) {
+    previewLooping = false;
+    return;
+  }
+  if (!$("board-page").hidden && !$("app").hidden && handle.tick(Date.now()))
+    previewDots.paint(handle);
+  requestAnimationFrame(animatePreview);
+}
+function showPreviewFixtures() {
+  const group = $("board-preview-scenes");
+  group.replaceChildren();
+  for (const [name, title] of Object.entries(previewFixtures)) {
+    const button = text("button", title, "scene");
+    button.type = "button";
+    button.setAttribute("aria-pressed", String(name === previewFixture));
+    button.onclick = () => {
+      previewFixture = name;
+      for (const other of group.children)
+        other.setAttribute("aria-pressed", String(other === button));
+      schedulePreviews();
+    };
+    group.append(button);
+  }
+}
+function visualFor(field) {
+  return field.key in scenes && (field.choices || field.type === "bool");
+}
 function inputValue(f, prefix = "setting-") {
   const input = $(prefix + f.key);
+  if (input.tagName === "FIELDSET")
+    return choiceValue(
+      f,
+      input.querySelector("input:checked")?.value ?? String(f.default),
+    );
   if (f.type === "int" && input.value === "")
     throw new Error("Enter a value for " + (labels[f.key] || f.key));
   return f.type === "bool"
@@ -389,6 +723,8 @@ function inputValue(f, prefix = "setting-") {
 $("config-form").addEventListener("input", () => {
   dirty = true;
   $("save-status").textContent = "Unsaved changes";
+  showRelevantFields($("config-fields"), "setting-");
+  schedulePreviews();
 });
 $("config-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -451,6 +787,7 @@ function showTab(tab) {
     else item.removeAttribute("aria-current");
     $(item.dataset.tab + "-page").hidden = !active;
   }
+  if (tab === "board") schedulePreviews();
   if (tab === "network") scan();
   if (tab === "developer" && !sshSnapshot) loadSSHKeys();
   if (tab === "updates") loadUpdates();
@@ -561,10 +898,15 @@ async function saveSetup(changes, testPattern = "") {
   // Board settings shows what setup saved, and keeps any unsaved changes.
   for (const [key, value] of Object.entries(changes)) {
     const input = $("setting-" + key);
-    if (input?.type === "checkbox") input.checked = value;
+    if (input?.tagName === "FIELDSET")
+      for (const option of input.querySelectorAll("input"))
+        option.checked = option.value === String(value);
+    else if (input?.type === "checkbox") input.checked = value;
     else if (input)
       input.value = Array.isArray(value) ? value.join(", ") : value;
   }
+  showRelevantFields($("config-fields"), "setting-");
+  schedulePreviews();
 }
 function readFields(keys, prefix) {
   const changes = {};
@@ -635,6 +977,7 @@ function enterStep(step) {
   if (step === "station") {
     setupFields($("setup-station-fields"), stationKeys, "setup-");
     $("setup-crs").required = true;
+    schedulePreviews();
   }
   if (step === "wifi") {
     $("setup-wifi-slot").append($("wifi-forms"));
@@ -767,6 +1110,10 @@ $("colours-no").onclick = () =>
   );
 $("colours-restart").onclick = () => startColours();
 $("colours-skip").onclick = () => nextStep("colours");
+$("setup-station-form").addEventListener("input", () => {
+  showRelevantFields($("setup-station-fields"), "setup-");
+  schedulePreviews();
+});
 $("setup-station-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = event.submitter;

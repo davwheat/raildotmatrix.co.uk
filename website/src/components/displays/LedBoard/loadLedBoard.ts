@@ -27,7 +27,7 @@ export interface LedBoardOptions {
   ordinalFormat?: OrdinalFormat
   /** Service limit for either board, 1–6; defaults to 3. */
   serviceCount?: number
-  loadingBrightness?: 50 | 100
+  loadingBrightness?: 50 | 75 | 100
   /** TOC codes whose Infotec coach letters are shown; an empty list hides all letters. */
   coachLetterTocs?: string[]
   /** Enabled Infotec facility icons; defaults to all, while an empty list hides all. */
@@ -43,6 +43,8 @@ export interface LedBoardOptions {
   compactLowerRow?: boolean
   /** Align lower service rows with the Infotec platform box; defaults to true. */
   alignPlatformRows?: boolean
+  /** Infotec only: draw the line between the first train and the later trains; defaults to true. */
+  serviceSeparator?: boolean
   colour?: 'amber' | 'white'
   scrollSpeed?: number
   /** Use the compact font for Infotec calling points and service information. */

@@ -26,7 +26,6 @@ const (
 	failureDir = "../../build/golden-failures"
 	// goldenScale is large enough for the round dots to read as a panel.
 	goldenScale = 4
-	goldenTick  = 20 * time.Millisecond
 )
 
 // goldenSize is a size a board is drawn at: the LED panel, or the website's layout.
@@ -40,13 +39,6 @@ var panel = goldenSize{"panel", 256, 64}
 var webSizes = map[string]goldenSize{
 	"daktronics": {"web", 193, 36},
 	"infotec":    {"web", 272, 70},
-}
-
-// settled is how long each format takes to finish its entrance, and any second view's transition, so that a
-// golden shows the screen a fixture is about rather than a frame of an animation.
-var settled = map[string]time.Duration{
-	"daktronics": 8600 * time.Millisecond,
-	"infotec":    4600 * time.Millisecond,
 }
 
 type goldenCase struct {
@@ -73,7 +65,7 @@ func goldenCases() []goldenCase {
 		cases = append(cases, goldenCase{name: name, board: format, fixture: fixture, size: size, config: c, at: at})
 	}
 	for _, format := range Names {
-		at := settled[format]
+		at := Settled[format]
 		for _, size := range []goldenSize{panel, webSizes[format]} {
 			for _, fixture := range fixtures.Names {
 				fixtureAt := at
@@ -90,45 +82,48 @@ func goldenCases() []goldenCase {
 	}
 	for _, size := range []goldenSize{panel, webSizes["daktronics"]} {
 		for _, fixture := range []string{"busy-board", "dividing-service", "terminating", "three-way-split"} {
-			add("daktronics", fixture, "worldline", size, Config{Worldline: true}, settled["daktronics"])
+			add("daktronics", fixture, "worldline", size, Config{Worldline: true}, Settled["daktronics"])
 		}
 		// The single calling point's "only" reaches the board 10.6 seconds in, after the line scrolls in.
 		add("daktronics", "single-call", "worldline", size, Config{Worldline: true}, 11500*time.Millisecond)
 		for _, fixture := range []string{"long-destination", "hyphenated-destination", "long-dividing-service"} {
-			add("daktronics", fixture, "", size, Config{}, settled["daktronics"])
+			add("daktronics", fixture, "", size, Config{}, Settled["daktronics"])
 		}
 		for _, fixture := range []string{"long-destination", "hyphenated-destination", "triple-line", "long-dividing-service"} {
-			add("daktronics", fixture, "reserve-etd-column", size, Config{ReserveETDColumn: true}, settled["daktronics"])
+			add("daktronics", fixture, "reserve-etd-column", size, Config{ReserveETDColumn: true}, Settled["daktronics"])
 		}
 		// The bus's calling prefix rests at the right edge between 3 and 4.5 seconds, before the line scrolls.
 		add("daktronics", "replacement-bus", "", size, Config{}, 4*time.Second)
 	}
-	add("infotec", "busy-board", "white", panel, Config{Colour: board.White}, settled["infotec"])
+	add("infotec", "busy-board", "white", panel, Config{Colour: board.White}, Settled["infotec"])
 	for _, size := range []goldenSize{panel, webSizes["infotec"]} {
-		add("infotec", "dividing-second", "platform-box", size, Config{PlatformBox: true}, settled["infotec"])
+		add("infotec", "dividing-second", "platform-box", size, Config{PlatformBox: true}, Settled["infotec"])
 	}
 	for _, size := range []goldenSize{panel, webSizes["infotec"]} {
-		add("infotec", "busy-board", "small-scrolling-text", size, Config{SmallScrollingText: true}, settled["infotec"])
-		add("infotec", "busy-board", "small-scrolling-text-platform-box", size, Config{SmallScrollingText: true, PlatformBox: true}, settled["infotec"])
+		add("infotec", "busy-board", "small-scrolling-text", size, Config{SmallScrollingText: true}, Settled["infotec"])
+		noSeparator := false
+		add("infotec", "busy-board", "no-separator", size, Config{ServiceSeparator: &noSeparator}, Settled["infotec"])
+		add("infotec", "busy-board", "platform-box-no-separator", size, Config{PlatformBox: true, Platforms: []string{"2"}, ServiceSeparator: &noSeparator}, Settled["infotec"])
+		add("infotec", "busy-board", "small-scrolling-text-platform-box", size, Config{SmallScrollingText: true, PlatformBox: true}, Settled["infotec"])
 		add("infotec", "busy-board", "small-scrolling-text-calling", size, Config{SmallScrollingText: true, PlatformBox: true}, 11*time.Second)
 		for _, style := range []string{"number", "coaches", "coaches-no-brackets", "carriages", "carriages-no-brackets"} {
-			add("infotec", "detailed-formation", "count-"+style, size, Config{PlatformBox: true, FormationCount: style}, settled["infotec"])
+			add("infotec", "detailed-formation", "count-"+style, size, Config{PlatformBox: true, FormationCount: style}, Settled["infotec"])
 		}
 		for _, style := range []string{"normal", "small-seconds", "small"} {
-			add("infotec", "busy-board", "clock-"+style, size, Config{PlatformBox: true, ClockStyle: style}, settled["infotec"])
+			add("infotec", "busy-board", "clock-"+style, size, Config{PlatformBox: true, ClockStyle: style}, Settled["infotec"])
 		}
 		for i, page := range []string{"letters", "loading", "facilities-1", "facilities-2", "facilities-3"} {
 			add("infotec", "detailed-formation", page, size, Config{PlatformBox: true, ClockStyle: "small-seconds"}, time.Duration(i*5+4)*time.Second)
 		}
 		compact := false
-		add("infotec", "busy-board", "small-scrolling-text-platform-box-separate-clock", size, Config{SmallScrollingText: true, PlatformBox: true, CompactLowerRow: &compact}, settled["infotec"])
-		add("infotec", "busy-board", "platform-box-separate-clock", size, Config{PlatformBox: true, Platforms: []string{"2"}, CompactLowerRow: &compact}, settled["infotec"])
-		add("infotec", "busy-board", "compact-dot-ordinals", size, Config{PlatformBox: true, Platforms: []string{"2"}, OrdinalFormat: board.OrdinalDot, ServiceCount: 6}, settled["infotec"])
-		add("infotec", "busy-board", "platform-box-multiple", size, Config{PlatformBox: true, Platforms: []string{"1", "2"}}, settled["infotec"])
+		add("infotec", "busy-board", "small-scrolling-text-platform-box-separate-clock", size, Config{SmallScrollingText: true, PlatformBox: true, CompactLowerRow: &compact}, Settled["infotec"])
+		add("infotec", "busy-board", "platform-box-separate-clock", size, Config{PlatformBox: true, Platforms: []string{"2"}, CompactLowerRow: &compact}, Settled["infotec"])
+		add("infotec", "busy-board", "compact-dot-ordinals", size, Config{PlatformBox: true, Platforms: []string{"2"}, OrdinalFormat: board.OrdinalDot, ServiceCount: 6}, Settled["infotec"])
+		add("infotec", "busy-board", "platform-box-multiple", size, Config{PlatformBox: true, Platforms: []string{"1", "2"}}, Settled["infotec"])
 		align := false
-		add("infotec", "busy-board", "platform-box-unaligned", size, Config{PlatformBox: true, Platforms: []string{"2"}, AlignPlatformRows: &align}, settled["infotec"])
-		add("infotec", "busy-board", "platform-box", size, Config{PlatformBox: true, Platforms: []string{"2"}}, settled["infotec"])
-		add("infotec", "busy-board", "platform-box-10A", size, Config{PlatformBox: true, Platforms: []string{"10A"}, Colour: board.White}, settled["infotec"])
+		add("infotec", "busy-board", "platform-box-unaligned", size, Config{PlatformBox: true, Platforms: []string{"2"}, AlignPlatformRows: &align}, Settled["infotec"])
+		add("infotec", "busy-board", "platform-box", size, Config{PlatformBox: true, Platforms: []string{"2"}}, Settled["infotec"])
+		add("infotec", "busy-board", "platform-box-10A", size, Config{PlatformBox: true, Platforms: []string{"10A"}, Colour: board.White}, Settled["infotec"])
 	}
 	return cases
 }
@@ -181,16 +176,7 @@ func render(t *testing.T, c goldenCase) *frame.Frame {
 	if err != nil {
 		t.Fatal(err)
 	}
-	steps := fixtures.Steps(c.fixture)
-	f := frame.New(c.size.w, c.size.h)
-	b.Update(steps[0])
-	for now := fixtures.Clock; !now.After(fixtures.Clock.Add(c.at)); now = now.Add(goldenTick) {
-		if len(steps) > 1 && now.Equal(fixtures.Clock.Add(2*time.Second)) {
-			b.Update(steps[1])
-		}
-		b.Tick(now, f)
-	}
-	return f
+	return Play(b, fixtures.Steps(c.fixture), c.size.w, c.size.h, c.at)
 }
 
 func samePixels(a, b image.Image) bool {

@@ -196,8 +196,10 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 		b.drawTrainFormation(f, s, colour)
 	}
 	// The separator stays lit through the slide-out, so fading it in with the new rows would blink it off.
-	for x := g.infoX; x < g.w; x++ {
-		f.Set(x, g.sepY, b.dim)
+	if b.cfg.ServiceSeparator == nil || *b.cfg.ServiceSeparator {
+		for x := g.infoX; x < g.w; x++ {
+			f.Set(x, g.sepY, b.dim)
+		}
 	}
 	lowerGeo := b.lowerGeometry()
 	for i := range s.lower {

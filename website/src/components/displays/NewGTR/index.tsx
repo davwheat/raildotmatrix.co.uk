@@ -71,6 +71,7 @@ export default function NewGTR({ station, editBoardUrl }: IProps) {
             formationCount={settings.formationCount}
             formationIcons={settings.formationIcons}
             alignPlatformRows={settings.alignPlatformRows !== false}
+            serviceSeparator={settings.serviceSeparator !== false}
           />
         </div>
       </ZoomDiv>

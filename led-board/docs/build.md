@@ -172,6 +172,7 @@ From `led-board`:
 
 ```sh
 go build -o build/board-native ./cmd/board
+just ZOPFLI_ITERATIONS=1 manager-boards
 go build -o build/manage-native ./cmd/manage
 mkdir -p build/management-demo
 cp deploy/departure-board.toml build/management-demo/board.toml
@@ -181,6 +182,10 @@ build/manage-native -demo -listen 127.0.0.1:8098 \
   -state-dir "$PWD/build/management-demo/state" \
   -status "$PWD/build/management-demo/network.json"
 ```
+
+`just manager-boards` builds the boards that draw the settings previews, which the manager embeds. Without it,
+the settings page works but shows no previews. Rebuild the manager after you change a file in
+`internal/management/web`, because the manager embeds those too.
 
 Open http://127.0.0.1:8098, sign in with `DotMatrix`, and then choose a new password. Demo mode simulates
 networks and service restarts, while config validation and persistence work against the separate demo file.
@@ -205,7 +210,7 @@ PI_HOST=board@departure-board.local
 | `BIN_DIR` | `/opt/departure-board` | Where the binaries are installed on the Pi. |
 | `PANEL_TEST_FLAGS` | none | Extra flags for `just run-panel-test`, such as `-led-rgb-sequence=BGR`. |
 | `WEB_DIR` | `../website/public/led-board` | Where `just web` writes the WebAssembly bundle. |
-| `ZOPFLI_ITERATIONS` | `15` | How hard `just web` compresses the bundle. `1` takes half the time and makes a bundle about 0.2% larger. |
+| `ZOPFLI_ITERATIONS` | `15` | How hard `just web` and `just manager-boards` compress the bundle. `1` takes half the time and makes a bundle about 0.2% larger. |
 | `ZIG_TARGET` | `aarch64-linux-gnu.2.41` | The target triple and glibc version to build for. |
 
 Environment variables of the same names override the file, and so does setting
@@ -227,6 +232,9 @@ Run `just --list` for a summary. `just` on its own builds the board.
 | `just run-panel-test` | Pauses the board service, runs the deployed `panel-test` for five seconds with a CPU snapshot from `top`, and then resumes the service. |
 | `just release-assets` | Builds both binaries and packs them, with the managed system files, into update assets and unsigned manifests in `build/release`. |
 | `just bootstrap-updater` | Gives a board flashed with `v0.0.0-alpha.1` an updater. See [Over-the-air updates](updates.md). |
+| `just manager` | Cross-compiles `cmd/manage` into `build/manage`, with the boards for its previews from `just manager-boards`. |
+| `just manager-boards` | Builds the boards as WebAssembly and bundles them into `internal/management/boards`, which the manager embeds. |
+| `just wasm` | Compiles `cmd/wasm` into `build/wasm/board.wasm`. |
 | `just web` | Builds the boards as WebAssembly and bundles them into `WEB_DIR`. |
 | `just clean` | Deletes the `build` directory. |
 
@@ -308,6 +316,13 @@ is described at the top of `cmd/wasm/main.go`.
 
 `WEB_DIR` defaults to the website's `public/led-board` directory, which git ignores. The website's `pnpm build`
 runs `just web`, and `pnpm dev` runs it with `ZOPFLI_ITERATIONS=1`, so you don't need to run it yourself.
+
+`just manager-boards` writes the same bundle into `internal/management/boards`, which git also ignores, and the
+manager embeds it to draw the previews in **Board settings**. The manager serves the module with
+`Content-Encoding: gzip`, so the browser inflates it on arrival. The page needs the `'wasm-unsafe-eval'` source in
+the manager's `Content-Security-Policy` to compile it. The previews call `ledDepartureBoard.render` for each option
+and `ledDepartureBoard.create` with a `fixture` for the combined preview, so they play the built-in examples rather
+than the live feed.
 
 ## Running on a desktop
 

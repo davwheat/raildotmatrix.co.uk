@@ -32,6 +32,12 @@ import (
 //go:embed web/*
 var web embed.FS
 
+// boards holds the WebAssembly boards that draw the settings previews, from just manager-boards. A build without
+// them leaves only the .gitignore, and the page shows its settings without previews.
+//
+//go:embed all:boards
+var boards embed.FS
+
 type Runner func(context.Context, string, ...string) ([]byte, error)
 
 func Run(ctx context.Context, name string, args ...string) ([]byte, error) {
@@ -184,6 +190,8 @@ func (s *Server) Handler() http.Handler {
 	}))
 	assets, _ := fs.Sub(web, "web")
 	mux.Handle("/", http.FileServer(http.FS(assets)))
+	bundle, _ := fs.Sub(boards, "boards")
+	mux.Handle("GET /boards/{name}", serveBoards(bundle))
 	// The page shows each tab and setup step at its own address, so that a reload or a bookmark returns to it.
 	page := func(w http.ResponseWriter, r *http.Request) { http.ServeFileFS(w, r, assets, "index.html") }
 	for _, tab := range []string{"board", "network", "device", "updates", "developer"} {
@@ -194,7 +202,7 @@ func (s *Server) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
-		w.Header().Set("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
 		w.Header().Set("Cache-Control", "no-store")
 		host := r.Host
 		if h, _, err := net.SplitHostPort(host); err == nil {
@@ -205,6 +213,34 @@ func (s *Server) Handler() http.Handler {
 			return
 		}
 		protected.ServeHTTP(w, r)
+	})
+}
+
+// serveBoards serves the preview bundle. Its file names change with their content, so a browser keeps them, and
+// only the manifest is fetched each time. The module is stored gzipped, and the browser inflates it on arrival.
+func serveBoards(bundle fs.FS) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		name := r.PathValue("name")
+		data, err := fs.ReadFile(bundle, name)
+		if err != nil || strings.HasPrefix(name, ".") {
+			http.NotFound(w, r)
+			return
+		}
+		switch {
+		case name == "manifest.json":
+			w.Header().Set("Content-Type", "application/json")
+		case strings.HasSuffix(name, ".wasm.gz"):
+			w.Header().Set("Content-Type", "application/wasm")
+			w.Header().Set("Content-Encoding", "gzip")
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		case strings.HasSuffix(name, ".js"):
+			w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		default:
+			http.NotFound(w, r)
+			return
+		}
+		w.Write(data)
 	})
 }
 

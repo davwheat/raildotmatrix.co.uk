@@ -17,7 +17,7 @@ import (
 func describeConfig(fs *flag.FlagSet) []configschema.Field {
 	choices := map[string][]string{
 		"board": formats.Names, "colour": {"amber", "white"},
-		"loading_brightness": {"50", "100"},
+		"loading_brightness": {"50", "75", "100"},
 		"formation_count":    {"none", "number", "coaches", "coaches-no-brackets", "carriages", "carriages-no-brackets"},
 		"clock_style":        {"normal", "small-seconds", "small"},
 		"ordinal_format":     {"suffix", "dot"},
@@ -27,6 +27,14 @@ func describeConfig(fs *flag.FlagSet) []configschema.Field {
 		"led.rgb_sequence":   matrix.Sequences,
 		"led.gpio_mapping":   matrix.HardwareMappings,
 	}
+	infotec, daktronics := []string{"infotec"}, []string{"daktronics"}
+	boards := map[string][]string{
+		"loading_brightness": infotec, "formation_count": infotec, "coach_letter_tocs": infotec, "formation_icons": infotec,
+		"clock_style": infotec, "compact_lower_row": infotec, "platform_box": infotec, "align_platform_rows": infotec,
+		"small_scrolling_text": infotec, "ampersand_calling_points": infotec, "service_separator": infotec,
+		"worldline": daktronics, "page_destinations": daktronics, "reserve_etd_column": daktronics,
+		"clear_down_warning_to_cis": daktronics,
+	}
 	var fields []configschema.Field
 	fs.VisitAll(func(f *flag.Flag) {
 		if controlFlag(f.Name) {
@@ -35,7 +43,7 @@ func describeConfig(fs *flag.FlagSet) []configschema.Field {
 		value := flagValue{flag: f}
 		fields = append(fields, configschema.Field{
 			Key: key(f.Name), Type: value.ValueType(), Help: f.Usage,
-			Default: value.value(), Choices: choices[key(f.Name)], Automatic: boardChosen[f.Name],
+			Default: value.value(), Choices: choices[key(f.Name)], Automatic: boardChosen[f.Name], Boards: boards[key(f.Name)],
 		})
 	})
 	return fields
@@ -53,8 +61,8 @@ func validateConfig(c config) error {
 	if err := infotec.ValidateFormationCount(c.FormationCount); err != nil {
 		return err
 	}
-	if c.LoadingBrightness != 50 && c.LoadingBrightness != 100 {
-		return fmt.Errorf("loading brightness must be 50 or 100")
+	if c.LoadingBrightness != 50 && c.LoadingBrightness != 75 && c.LoadingBrightness != 100 {
+		return fmt.Errorf("loading brightness must be 50, 75 or 100")
 	}
 	if c.ClockStyle != "normal" && c.ClockStyle != "small-seconds" && c.ClockStyle != "small" {
 		return fmt.Errorf("clock style must be normal, small-seconds or small")

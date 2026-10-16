@@ -8,4 +8,6 @@ type Field struct {
 	Default   any      `json:"default"`
 	Choices   []string `json:"choices,omitempty"`
 	Automatic bool     `json:"automatic,omitempty"`
+	// Boards lists the board formats the setting affects; empty means every format.
+	Boards []string `json:"boards,omitempty"`
 }
