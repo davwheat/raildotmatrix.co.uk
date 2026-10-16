@@ -21,7 +21,7 @@ try {
  window.statusCount=0;window.pendingStatus=[];
  window.fetch=async url=>{
   let data={};
-  if(url==='/api/session')data={authenticated:true};
+  if(url==='/api/session')data={authenticated:true,passwordChangeRequired:false,setupStep:'done'};
   else if(url==='/api/config')data={values:{},fields:[],revision:'test'};
   else if(url==='/api/status'){
    window.statusCount++;
