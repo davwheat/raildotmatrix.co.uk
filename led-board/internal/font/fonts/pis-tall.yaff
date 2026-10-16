@@ -1,13 +1,13 @@
 # Native dot patterns. Edit this YAFF file or import it into tools/font-builder.html.
-yaff: 1.0
-name: Modern National Rail PIS Tall
-encoding: unicode
-line-height: 12
-ascent: 9
-descent: 3
-shift-up: -3
-right-bearing: 1
-default-char: u+003f
+yaff: "1.0"
+encoding: "unicode"
+line-height: "12"
+ascent: "9"
+descent: "3"
+shift-up: "-3"
+right-bearing: "1"
+name: "Modern National Rail PIS Tall"
+default-char: "u+003f"
 
 u+0020:
     ....
@@ -570,18 +570,18 @@ u+0048:
     .....
 
 u+0049:
-    @
-    @
-    @
-    @
-    @
-    @
-    @
-    @
-    @
-    .
-    .
-    .
+    @@@
+    .@.
+    .@.
+    .@.
+    .@.
+    .@.
+    .@.
+    .@.
+    @@@
+    ...
+    ...
+    ...
 
 u+004a:
     ....@
