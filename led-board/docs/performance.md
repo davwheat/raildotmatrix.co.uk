@@ -19,10 +19,10 @@ frame contents and panel timing. PNG and window output share the drawing improve
 - The systemd service uses `GOGC=150`, measured to reduce collections during large
   updates at a small memory cost. Automatic Go concurrency remains unchanged.
 
-The refresh loop uses the native library's sleep option between capped refreshes.
-Set `led.no_busy_waiting = false` or pass `-led-no-busy-waiting=false` to restore
-busy waiting on hardware that shows scheduling jitter. GPIO pulse timing, colour
-depth and refresh profiles remain unchanged.
+The refresh loop busy-waits between capped refreshes, which keeps one core busy.
+The native library's sleep option (`led.no_busy_waiting = true` or
+`-led-no-busy-waiting`) frees that core, but on the DietPi image the manager and
+network services add enough scheduling jitter to make the panel flicker.
 
 ## Browser
 

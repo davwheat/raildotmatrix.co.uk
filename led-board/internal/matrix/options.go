@@ -57,7 +57,8 @@ type Options struct {
 	LimitRefreshRateHz int `mapstructure:"limit_refresh"`
 
 	// DisableBusyWaiting lets the refresh thread sleep between capped refreshes.
-	// GPIO pulse timing is unchanged; leave this off if the OS's scheduling jitter is visible on the panel.
+	// GPIO pulse timing is unchanged, but the OS's scheduling jitter flickers the panel on a Pi that also runs
+	// the manager and network services, so leave it off.
 	DisableBusyWaiting bool `mapstructure:"no_busy_waiting"`
 }
 
@@ -83,7 +84,6 @@ func Default() *Options {
 		HardwareMapping:    "regular",
 		GPIOSlowdown:       2,
 		DropPrivileges:     true,
-		DisableBusyWaiting: true,
 	}
 }
 
