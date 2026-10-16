@@ -20,7 +20,7 @@ func TestCompactLowerRowKeepsClockClear(t *testing.T) {
 			t.Fatalf("invalid compact layout: %+v", g)
 		}
 		for _, etd := range []string{"On time", "Cancelled", "Delayed", "1234"} {
-			for dy := -font.Infotec10x5.Height; dy <= font.Infotec10x5.Height; dy++ {
+			for dy := -font.Infotec10x4.Height; dy <= font.Infotec10x4.Height; dy++ {
 				f := frame.New(g.w, g.h)
 				b.drawCompactRow(f, &rowScene{prefix: "6th", std: "1234", dest: "A very long destination via another station", etd: etd, etdLevel: fadeLevels, dy: dy}, board.White)
 				if x, y, lit := litOutside(f, [2]int{g.secondY, g.secondBand().Y1}); lit {
@@ -48,7 +48,7 @@ func TestCompactLowerRowVerticallyCentred(t *testing.T) {
 					name      string
 					y, height int
 				}{
-					{"service row", g.secondY, font.Infotec10x5.Height},
+					{"service row", g.secondY, font.Infotec10x4.Height},
 					{"clock", g.clockY, g.clockFace(false).Height},
 				} {
 					topGap := item.y - (g.sepY + 1)

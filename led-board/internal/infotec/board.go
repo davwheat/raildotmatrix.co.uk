@@ -99,6 +99,7 @@ type geometry struct {
 	smallScrollingText bool
 	clockStyle         string
 	compact            bool
+	details            bool
 	w, h               int
 	ch                 int
 	// prefixW reserves one column for either ordinals or platform numbers.
@@ -110,8 +111,6 @@ type geometry struct {
 	// colonCell-wide colon.
 	stdX, colonCell, timeW int
 	destX, destW           int
-	// exptW is the width of the "Expt " label and its spacing, drawn before an expected time.
-	exptW int
 	// firstY, infoY, sepY and secondY are the cap tops of the rows and the separator's dot row.
 	firstY, infoY, sepY, secondY int
 	// infoSlide and swapTravel are the 110% and 105% of a row that the information page and the swapped rows
@@ -147,7 +146,6 @@ func newGeometry(w, h int, prefix board.RowPrefix) geometry {
 	g.destX = x
 	g.infoDestX = g.destX
 	g.destW = w - g.destX - gap - 19*ch/2
-	g.exptW = text.Width("Expt ") + text.Spacing
 
 	// The web's rows have cap tops at dot rows 0, 17 and 38 with the separator at 33; the panel keeps those
 	// and drops the slack above the clock.
@@ -194,6 +192,7 @@ func (b *Board) geometry(details bool) geometry {
 		g.destX = g.infoDestX
 		details = true
 	}
+	g.details = details
 	if details {
 		// Use the slack between the rows for a formation without taking space from the clock.
 		g.secondY = g.clockY - font.InfotecRegular.Height - 1
@@ -209,14 +208,13 @@ func (b *Board) geometry(details bool) geometry {
 		if b.cfg.ClockStyle == "" {
 			g.clockStyle = "small"
 		}
-		g.clockY = g.h - max(font.Infotec10x5.Height, g.clockFace(false).Height)
+		g.clockY = g.h - max(font.Infotec10x4.Height, g.clockFace(false).Height)
 		g.clockCell = g.clockFace(false).Advance('0')
 		g.colon = g.clockFace(false).Advance(':')
 		g.clockX = g.w - g.clockWidth()
-		g.secondY = g.h - font.Infotec10x5.Height
+		g.secondY = g.h - font.Infotec10x4.Height
 		g.sepY = g.clockY - 2
 		g.infoY = font.InfotecRegular.Height + 5
-		g.swapTravel = font.Infotec10x5.Height + 1
 		if details {
 			g.formationY, g.formationH = g.sepY-12, 11
 		}
@@ -242,10 +240,11 @@ func (b *Board) geometry(details bool) geometry {
 	if g.compact {
 		// Centre the service text and its clock in the band below the final separator.
 		top := g.sepY + 1
-		g.secondY = top + (g.h-top-font.Infotec10x5.Height)/2
+		g.secondY = top + (g.h-top-font.Infotec10x4.Height)/2
 		g.clockY = top + (g.h-top-g.clockFace(false).Height)/2
 	}
 	g.infoSlide = (g.infoFace().Height*110 + 50) / 100
+	g.swapTravel = (g.lowerFace().Height*105 + 50) / 100
 	return g
 }
 

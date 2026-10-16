@@ -308,15 +308,15 @@ func TestPlatformBoxServiceColumnsAlign(t *testing.T) {
 				s := scene{first: r, lower: [5]rowScene{r}}
 				s.lower[0].prefix = ordinal
 				b.renderTrains(f, &s, board.White)
-				for y := range font.InfotecRegular.Height {
-					for x := g.infoX; x < g.w; x++ {
-						if f.At(x, g.firstY+y) != f.At(x, g.secondY+y) {
-							t.Fatalf("platform %s: %s service columns differ at (%d,%d)", platform, ordinal, x, y)
-						}
+				for _, column := range [][2]int{{g.stdX, g.stdX + g.timeW}, {g.destX, g.destX + g.destW}} {
+					first := firstLitColumn(f, column, g.firstY, font.InfotecRegular.Height)
+					if second := firstLitColumn(f, column, g.secondY, g.lowerFace().Height); first < 0 || second != first {
+						t.Fatalf("platform %s: %s service column %v starts at %d, first service at %d", platform, ordinal, column, second, first)
 					}
 				}
-				want := frame.New(g.boxW, font.InfotecRegular.Height)
-				font.InfotecRegular.Draw(want, (g.boxW-font.InfotecRegular.Width(ordinal))/2, 0, ordinal, board.White)
+				prefix := g.lowerPrefixFace()
+				want := frame.New(g.boxW, prefix.Height)
+				prefix.Draw(want, (g.boxW-prefix.Width(ordinal))/2, 0, ordinal, board.White)
 				for y := range want.H {
 					for x := range want.W {
 						if f.At(x, g.secondY+y) != want.At(x, y) {
@@ -348,7 +348,7 @@ func TestPlatformBoxAlignmentCanBeDisabled(t *testing.T) {
 						want.Set(x, y, frame.Black)
 					}
 				}
-				b.drawRow(want, &r, &legacy, g.secondY, g.secondBand(), board.White)
+				b.drawRow(want, &r, &legacy, g.lowerPrefixFace(), g.lowerFace(), g.secondY, g.secondBand(), board.White)
 				for y := range g.h {
 					for x := range g.w {
 						if got.At(x, y) != want.At(x, y) {
@@ -393,4 +393,15 @@ func TestPlatformBoxSurvivesScrollingAndDeparture(t *testing.T) {
 			}
 		})
 	}
+}
+
+func firstLitColumn(f *frame.Frame, columns [2]int, y, h int) int {
+	for x := columns[0]; x < columns[1]; x++ {
+		for row := y; row < y+h; row++ {
+			if f.At(x, row) != frame.Black {
+				return x
+			}
+		}
+	}
+	return -1
 }

@@ -76,9 +76,9 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 	lowerGeo := b.lowerGeometry()
 	lowerRow := func(r *row) rowScene {
 		if g.compact {
-			return b.rowScene(r, now, font.Infotec10x5, b.compactLayout(r.etd).destW)
+			return b.rowScene(r, now, font.Infotec10x4, b.compactLayout(r.etd).destW)
 		}
-		return b.rowScene(r, now, font.InfotecRegular, lowerGeo.destW)
+		return b.rowScene(r, now, g.lowerFace(), lowerGeo.destW)
 	}
 	switch {
 	case len(b.content.rows) < 2:
@@ -180,7 +180,7 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 		if g.boxW > 0 {
 			first.prefix = ""
 		}
-		b.drawRow(f, &first, g, g.firstY, g.full, colour)
+		b.drawRow(f, &first, g, font.InfotecRegular, font.InfotecRegular, g.firstY, g.full, colour)
 	}
 	if g.boxW > 0 {
 		boxColour := colour
@@ -205,7 +205,7 @@ func (b *Board) renderTrains(f *frame.Frame, s *scene, colour frame.RGB) {
 			if g.compact {
 				b.drawCompactRow(f, &s.lower[i], colour)
 			} else {
-				b.drawRow(f, &s.lower[i], lowerGeo, g.secondY, g.secondBand(), colour)
+				b.drawRow(f, &s.lower[i], lowerGeo, g.lowerPrefixFace(), g.lowerFace(), g.secondY, g.secondBand(), colour)
 			}
 		}
 	}
@@ -222,36 +222,38 @@ func (b *Board) lowerGeometry() *geometry {
 	return g
 }
 
-func (b *Board) drawRow(f *frame.Frame, r *rowScene, g *geometry, y int, c board.Clip, colour frame.RGB) {
-	text := font.InfotecRegular
+// drawRow keeps the columns of g whichever faces it draws in, because the faces share Infotec Regular's 1ch digit
+// advance.
+func (b *Board) drawRow(f *frame.Frame, r *rowScene, g *geometry, prefixFace, text *font.Face, y int, c board.Clip, colour frame.RGB) {
 	x, y := r.dx, y+r.dy
 	prefix := c.Intersect(board.Clip{X0: x, X1: x + g.prefixW, Y1: g.h})
 	prefixX := x
 	if g.boxW > 0 {
-		prefixX += (g.boxW - text.Width(r.prefix)) / 2
+		prefixX += (g.boxW - prefixFace.Width(r.prefix)) / 2
 	}
-	board.DrawText(f, text, prefixX, y, r.prefix, colour, prefix)
-	b.drawTime(f, x+g.stdX, y, r.std, c, colour)
+	board.DrawText(f, prefixFace, prefixX, y, r.prefix, colour, prefix)
+	b.drawTime(f, text, x+g.stdX, y, r.std, c, colour)
 	dest := c.Intersect(board.Clip{X0: x + g.destX, X1: x + g.destX + g.destW, Y1: g.h})
 	board.DrawText(f, text, x+g.destX, y, r.dest, colour, dest)
 	etd := board.Scale(colour, r.etdLevel, fadeLevels)
 	if isTime(r.etd) {
-		board.DrawText(f, text, x+g.w-g.timeW-g.exptW, y, "Expt ", etd, c)
-		b.drawTime(f, x+g.w-g.timeW, y, r.etd, c, etd)
+		exptW := text.Width("Expt ") + text.Spacing
+		board.DrawText(f, text, x+g.w-g.timeW-exptW, y, "Expt ", etd, c)
+		b.drawTime(f, text, x+g.w-g.timeW, y, r.etd, c, etd)
 	} else {
 		board.DrawText(f, text, x+g.w-text.Width(r.etd), y, r.etd, etd, c)
 	}
 }
 
 // drawTime draws HHmm as the web's .time spans: each digit centred in a 1ch cell, the colon in a 0.5ch one.
-func (b *Board) drawTime(f *frame.Frame, x, y int, hhmm string, c board.Clip, colour frame.RGB) {
+func (b *Board) drawTime(f *frame.Frame, face *font.Face, x, y int, hhmm string, c board.Clip, colour frame.RGB) {
 	if len(hhmm) != 4 {
 		return
 	}
 	g := &b.geo
-	x = board.DrawCells(f, font.InfotecRegular, x, y, hhmm[:2], g.ch, colour, c)
-	x = board.DrawCells(f, font.InfotecRegular, x, y, ":", g.colonCell, colour, c)
-	board.DrawCells(f, font.InfotecRegular, x, y, hhmm[2:], g.ch, colour, c)
+	x = board.DrawCells(f, face, x, y, hhmm[:2], g.ch, colour, c)
+	x = board.DrawCells(f, face, x, y, ":", g.colonCell, colour, c)
+	board.DrawCells(f, face, x, y, hhmm[2:], g.ch, colour, c)
 }
 
 func (b *Board) drawInfo(f *frame.Frame, sc *scrollScene, base frame.RGB) {

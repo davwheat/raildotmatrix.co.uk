@@ -6,9 +6,21 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 )
 
+// lowerFace is the lower row's text face. The row narrows when the clock shares it, and drops to 10x5 when a
+// formation leaves less height above the clock.
 func (g *geometry) lowerFace() *font.Face {
-	if g.compact {
+	switch {
+	case g.compact:
+		return font.Infotec10x4
+	case g.details:
 		return font.Infotec10x5
+	}
+	return font.InfotecRegular
+}
+
+func (g *geometry) lowerPrefixFace() *font.Face {
+	if g.compact || g.details {
+		return font.Infotec10x4
 	}
 	return font.InfotecRegular
 }
@@ -23,12 +35,12 @@ type compactRow struct {
 }
 
 func (b *Board) compactLayout(etd string) compactRow {
-	g, ordinal, text := &b.geo, font.Infotec10x4, font.Infotec10x5
+	g, text := &b.geo, font.Infotec10x4
 	l := compactRow{ch: text.Advance('0'), colon: 2}
 	l.timeW = 4*l.ch + l.colon
-	l.prefixW = ordinal.Width("3rd")
+	l.prefixW = text.Width("3rd")
 	if b.cfg.RowPrefix == board.PrefixPlatforms {
-		l.prefixW = board.PlatformWidth(ordinal)
+		l.prefixW = board.PlatformWidth(text)
 	}
 	l.stdX = l.prefixW + 3
 	if g.boxW > 0 && (b.cfg.AlignPlatformRows == nil || *b.cfg.AlignPlatformRows) {
@@ -49,15 +61,15 @@ func (b *Board) compactLayout(etd string) compactRow {
 }
 
 func (b *Board) drawCompactRow(f *frame.Frame, r *rowScene, colour frame.RGB) {
-	g, ordinal, text := &b.geo, font.Infotec10x4, font.Infotec10x5
+	g, text := &b.geo, font.Infotec10x4
 	c := g.secondBand()
 	y := g.secondY + r.dy
 	l := b.compactLayout(r.etd)
 	prefixX := 0
 	if l.underBox {
-		prefixX = (g.boxW - ordinal.Width(r.prefix)) / 2
+		prefixX = (g.boxW - text.Width(r.prefix)) / 2
 	}
-	board.DrawText(f, ordinal, prefixX, y, r.prefix, colour, c.Intersect(board.Clip{X1: l.prefixW, Y1: g.h}))
+	board.DrawText(f, text, prefixX, y, r.prefix, colour, c.Intersect(board.Clip{X1: l.prefixW, Y1: g.h}))
 	drawTime := func(x int, value string, colour frame.RGB) {
 		if len(value) != 4 {
 			return

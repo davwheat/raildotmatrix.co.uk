@@ -144,8 +144,9 @@ and Pi management UI expose the same toggle; the CLI flag is `-align-platform-ro
 box is enabled, with the row and clock vertically centred between the separator and the bottom edge.
 Disable it to put the main clock beneath the row. Both clocks use the corresponding
 "Clock" and "Small Clock" faces in `internal/font/fonts/infotec-clock.yaff` and
-`internal/font/fonts/infotec-small-clock.yaff`. The compact service row draws its ordinal or platform
-prefix in `infotec-10x4.yaff` and the rest of the row in `infotec-10x5.yaff`.
+`internal/font/fonts/infotec-small-clock.yaff`; the compact service row beside the clock uses
+`infotec-10x4.yaff`. When a train formation is shown and the clock is beneath the lower service row, that
+row draws its ordinal or platform prefix in `infotec-10x4.yaff` and the rest in `infotec-10x5.yaff`.
 
 `clock_style` selects `normal`, `small-seconds`, or `small` (small everything). The small-seconds
 layout displays HH:MM followed by small seconds with a gap and no second colon. The compact service row
