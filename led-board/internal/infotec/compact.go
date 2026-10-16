@@ -8,9 +8,9 @@ import (
 
 func (g *geometry) lowerFace() *font.Face {
 	if g.compact {
-		return font.InfotecSmall
+		return font.Infotec10x5
 	}
-	return font.PISTall
+	return font.InfotecRegular
 }
 
 // compactRow is where the compact lower row puts each column, which depends on the width of its expected time.
@@ -23,12 +23,12 @@ type compactRow struct {
 }
 
 func (b *Board) compactLayout(etd string) compactRow {
-	g, text := &b.geo, font.InfotecSmall
+	g, ordinal, text := &b.geo, font.Infotec10x4, font.Infotec10x5
 	l := compactRow{ch: text.Advance('0'), colon: 2}
 	l.timeW = 4*l.ch + l.colon
-	l.prefixW = text.Width("3rd")
+	l.prefixW = ordinal.Width("3rd")
 	if b.cfg.RowPrefix == board.PrefixPlatforms {
-		l.prefixW = board.PlatformWidth(text)
+		l.prefixW = board.PlatformWidth(ordinal)
 	}
 	l.stdX = l.prefixW + 3
 	if g.boxW > 0 && (b.cfg.AlignPlatformRows == nil || *b.cfg.AlignPlatformRows) {
@@ -49,15 +49,15 @@ func (b *Board) compactLayout(etd string) compactRow {
 }
 
 func (b *Board) drawCompactRow(f *frame.Frame, r *rowScene, colour frame.RGB) {
-	g, text := &b.geo, font.InfotecSmall
+	g, ordinal, text := &b.geo, font.Infotec10x4, font.Infotec10x5
 	c := g.secondBand()
 	y := g.secondY + r.dy
 	l := b.compactLayout(r.etd)
 	prefixX := 0
 	if l.underBox {
-		prefixX = (g.boxW - text.Width(r.prefix)) / 2
+		prefixX = (g.boxW - ordinal.Width(r.prefix)) / 2
 	}
-	board.DrawText(f, text, prefixX, y, r.prefix, colour, c.Intersect(board.Clip{X1: l.prefixW, Y1: g.h}))
+	board.DrawText(f, ordinal, prefixX, y, r.prefix, colour, c.Intersect(board.Clip{X1: l.prefixW, Y1: g.h}))
 	drawTime := func(x int, value string, colour frame.RGB) {
 		if len(value) != 4 {
 			return

@@ -144,7 +144,8 @@ and Pi management UI expose the same toggle; the CLI flag is `-align-platform-ro
 box is enabled, with the row and clock vertically centred between the separator and the bottom edge.
 Disable it to put the main clock beneath the row. Both clocks use the corresponding
 "Clock" and "Small Clock" faces in `internal/font/fonts/infotec-clock.yaff` and
-`internal/font/fonts/infotec-small-clock.yaff`; the compact service text uses `infotec-small.yaff`.
+`internal/font/fonts/infotec-small-clock.yaff`. The compact service row draws its ordinal or platform
+prefix in `infotec-10x4.yaff` and the rest of the row in `infotec-10x5.yaff`.
 
 `clock_style` selects `normal`, `small-seconds`, or `small` (small everything). The small-seconds
 layout displays HH:MM followed by small seconds with a gap and no second colon. The compact service row
@@ -200,7 +201,7 @@ and update (an empty list clears it). Notices are not currently rendered by the 
 `scroll_speed` sets how fast text scrolls, in dots per second. The defaults are 48 for Daktronics (the web
 board's 550 px/s) and 60 for Infotec (the web's 77 dots/s reads too fast on the panel).
 
-`small_scrolling_text = true` uses the Infotec "Small main row" font for calling points and service
+`small_scrolling_text = true` uses the "Infotec 10x4" font for calling points and service
 information, including their prefixes and pages that fit without scrolling. It defaults to `false`.
 The website and Pi management UI offer a Use smaller scrolling text toggle. The command-line flag is
 `-small-scrolling-text`, the environment variable is `BOARD_SMALL_SCROLLING_TEXT=true`, and the browser
@@ -281,7 +282,7 @@ On GitHub, the board screenshots workflow rewrites them and commits any change t
 go install github.com/aperturerobotics/protobuf-go-lite/cmd/protoc-gen-go-lite@v0.19.0
 ```
 
-All ten native dot fonts are YAFF files in [`internal/font/fonts`](internal/font/fonts). Go embeds and
+All eleven native dot fonts are YAFF files in [`internal/font/fonts`](internal/font/fonts). Go embeds and
 parses them once at startup using `github.com/davwheat/yaff-go`; there is no font-generation step.
 Edit these files directly, or open `../tools/font-builder.html`, import a `.yaff` file, edit its glyphs,
 and download the selected font as YAFF. The editor preserves metadata, glyph metrics, comments and

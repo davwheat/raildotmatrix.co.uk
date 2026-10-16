@@ -6,7 +6,7 @@ ascent: "8"
 descent: "2"
 shift-up: "-2"
 right-bearing: "1"
-name: "Small main row"
+name: "Infotec 10x4"
 default-char: "u+003f"
 
 u+0020:

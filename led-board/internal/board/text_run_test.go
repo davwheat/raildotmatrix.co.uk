@@ -11,7 +11,7 @@ import (
 
 func TestTextRunMatchesDrawText(t *testing.T) {
 	rng := rand.New(rand.NewPCG(17, 31))
-	faces := []*font.Face{font.Text, font.PISTall, font.InfotecSmall, font.InfotecFormation}
+	faces := []*font.Face{font.Text, font.InfotecRegular, font.Infotec10x4, font.Infotec10x5, font.InfotecFormation}
 	texts := []string{"", "Calling at: ", "Clapham Junction, East Croydon and Brighton", "A § ± € # 1st → 未知", "invalid \xff\xfe UTF-8", strings.Repeat("Station, ", 500), strings.Repeat("Station, ", 600)}
 	var run TextRun
 	got, want := frame.New(89, 27), frame.New(89, 27)

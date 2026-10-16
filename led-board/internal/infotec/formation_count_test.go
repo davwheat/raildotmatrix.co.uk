@@ -21,7 +21,7 @@ func TestFormationCountFit(t *testing.T) {
 		for _, length := range []int{1, 4, 12} {
 			label := fmt.Sprintf(tc.format, length)
 			graphic := 5 + 14*length
-			fits := graphic + 4 + font.InfotecSmall.Width(label)
+			fits := graphic + 4 + font.Infotec10x4.Width(label)
 			for _, width := range []int{fits - 1, fits, fits + 1} {
 				t.Run(fmt.Sprintf("%s/%d/%d", tc.style, length, width), func(t *testing.T) {
 					w, got := formationCountLayout(width, 11, length, tc.style)
@@ -29,7 +29,7 @@ func TestFormationCountFit(t *testing.T) {
 					if width < fits {
 						want = fmt.Sprintf("(%d)", length)
 					}
-					if got != want || w+4+font.InfotecSmall.Width(got) > width {
+					if got != want || w+4+font.Infotec10x4.Width(got) > width {
 						t.Fatalf("width %d: graphic %d, label %q, want %q fitting on board", width, w, got, want)
 					}
 					if tc.style != "number" && w != graphic {
@@ -74,7 +74,7 @@ func TestFormationCountPixels(t *testing.T) {
 			want := frame.New(f.W, f.H)
 			drawFormation(want, x, y, tc.graphic, height, tc.length, board.White)
 			textX := x + tc.graphic + 4
-			font.InfotecSmall.Draw(want, textX, y+height-tc.textHeight, tc.label, board.White)
+			font.Infotec10x4.Draw(want, textX, y+height-tc.textHeight, tc.label, board.White)
 			if !f.Equal(want) {
 				t.Fatal("formation or label pixels differ: check wording, four-pixel gap and bottom alignment")
 			}

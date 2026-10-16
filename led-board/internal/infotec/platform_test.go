@@ -18,7 +18,7 @@ func TestRowPrefixColumn(t *testing.T) {
 	if ordinals.prefixW != 3*ordinals.ch || ordinals.stdX != ordinals.prefixW+gap {
 		t.Errorf("ordinal prefix width %d, time at %d", ordinals.prefixW, ordinals.stdX)
 	}
-	if platforms.prefixW < font.PISTall.Width("Pl 10A") || platforms.stdX != platforms.prefixW+gap {
+	if platforms.prefixW < font.InfotecRegular.Width("Pl 10A") || platforms.stdX != platforms.prefixW+gap {
 		t.Errorf("platform prefix width %d, time at %d", platforms.prefixW, platforms.stdX)
 	}
 	if platforms.destW != ordinals.destW+ordinals.prefixW-platforms.prefixW {
@@ -59,8 +59,8 @@ func TestRowPrefixDrawn(t *testing.T) {
 			}
 			expected := frame.New(testW, testH)
 			y := b.geo.firstY
-			board.DrawText(expected, font.PISTall, 0, y, tc.want[0], b.cfg.Colour, board.Clip{X1: testW, Y1: testH})
-			for py := y; py < y+font.PISTall.Height; py++ {
+			board.DrawText(expected, font.InfotecRegular, 0, y, tc.want[0], b.cfg.Colour, board.Clip{X1: testW, Y1: testH})
+			for py := y; py < y+font.InfotecRegular.Height; py++ {
 				for x := 0; x < b.geo.stdX; x++ {
 					if f.At(x, py) != expected.At(x, py) {
 						t.Fatalf("prefix pixel (%d, %d) differs: must draw only %q before the time", x, py, tc.want[0])
@@ -89,7 +89,7 @@ func TestWarningNamesPlatform(t *testing.T) {
 		}
 		for _, size := range sizes {
 			for _, line := range lines {
-				if w := font.PISTall.Width(line); w > size[0] {
+				if w := font.InfotecRegular.Width(line); w > size[0] {
 					t.Errorf("%q is %d dots wide, wider than the %d-dot board", line, w, size[0])
 				}
 			}

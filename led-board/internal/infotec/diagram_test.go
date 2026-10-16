@@ -117,7 +117,7 @@ func TestFormationChangesWithTrainLength(t *testing.T) {
 			}
 			g := b.geo
 			if length > 0 {
-				if g.formationY < g.infoY+font.PISTall.Height || g.formationY+g.formationH >= g.sepY || g.secondY+font.PISTall.Height > g.clockY {
+				if g.formationY < g.infoY+font.InfotecRegular.Height || g.formationY+g.formationH >= g.sepY || g.secondY+font.InfotecRegular.Height > g.clockY {
 					t.Fatalf("formation overlaps a text row: %+v", g)
 				}
 				if f.At(1, g.formationY+g.formationH-1) != b.cfg.Colour {
@@ -154,8 +154,8 @@ func TestPlatformBoxLabelAndNumber(t *testing.T) {
 						}
 					}
 				}
-				font.PISTall.Draw(label, (g.boxW-font.PISTall.Width("Plat"))/2, labelY, "Plat", board.White)
-				for y := labelY; y < labelY+font.PISTall.Baseline; y++ {
+				font.InfotecRegular.Draw(label, (g.boxW-font.InfotecRegular.Width("Plat"))/2, labelY, "Plat", board.White)
+				for y := labelY; y < labelY+font.InfotecRegular.Baseline; y++ {
 					for x := 1; x < g.boxW-1; x++ {
 						if f.At(x, y) != label.At(x, y) {
 							t.Fatalf("%q: Plat must be centred above the number", platform)
@@ -163,14 +163,14 @@ func TestPlatformBoxLabelAndNumber(t *testing.T) {
 					}
 				}
 				left, right, top, bottom := g.boxW, 0, g.sepY, 0
-				for y := labelY + font.PISTall.Baseline; y < labelY+font.PISTall.Baseline+6; y++ {
+				for y := labelY + font.InfotecRegular.Baseline; y < labelY+font.InfotecRegular.Baseline+6; y++ {
 					for x := 1; x < g.boxW-1; x++ {
 						if f.At(x, y) != frame.Black {
 							t.Fatalf("%q: gap below Plat must have six blank rows", platform)
 						}
 					}
 				}
-				for y := labelY + font.PISTall.Baseline + 6; y < g.sepY; y++ {
+				for y := labelY + font.InfotecRegular.Baseline + 6; y < g.sepY; y++ {
 					for x := 1; x < g.boxW-1; x++ {
 						if f.At(x, y) != frame.Black {
 							left, right, top, bottom = min(left, x), max(right, x), min(top, y), max(bottom, y)
@@ -209,7 +209,7 @@ func TestServicePlatformBoxFollowsFirstTrain(t *testing.T) {
 				width -= 2 // Two character gaps, each reduced by one dot.
 				padding = 3
 			}
-			if b.geo.boxW != max(font.PISTall.Width("Plat"), width)+2*(padding+1) {
+			if b.geo.boxW != max(font.InfotecRegular.Width("Plat"), width)+2*(padding+1) {
 				t.Fatalf("box does not fit platform %q", platform)
 			}
 			want := frame.New(size[0], size[1])
@@ -308,15 +308,15 @@ func TestPlatformBoxServiceColumnsAlign(t *testing.T) {
 				s := scene{first: r, lower: [5]rowScene{r}}
 				s.lower[0].prefix = ordinal
 				b.renderTrains(f, &s, board.White)
-				for y := range font.PISTall.Height {
+				for y := range font.InfotecRegular.Height {
 					for x := g.infoX; x < g.w; x++ {
 						if f.At(x, g.firstY+y) != f.At(x, g.secondY+y) {
 							t.Fatalf("platform %s: %s service columns differ at (%d,%d)", platform, ordinal, x, y)
 						}
 					}
 				}
-				want := frame.New(g.boxW, font.PISTall.Height)
-				font.PISTall.Draw(want, (g.boxW-font.PISTall.Width(ordinal))/2, 0, ordinal, board.White)
+				want := frame.New(g.boxW, font.InfotecRegular.Height)
+				font.InfotecRegular.Draw(want, (g.boxW-font.InfotecRegular.Width(ordinal))/2, 0, ordinal, board.White)
 				for y := range want.H {
 					for x := range want.W {
 						if f.At(x, g.secondY+y) != want.At(x, y) {
@@ -343,7 +343,7 @@ func TestPlatformBoxAlignmentCanBeDisabled(t *testing.T) {
 				b.renderTrains(got, &s, board.White)
 				aligned.renderTrains(want, &s, board.White)
 				legacy := newGeometry(g.w, g.h, b.cfg.RowPrefix)
-				for y := g.secondY; y < g.secondY+font.PISTall.Height; y++ {
+				for y := g.secondY; y < g.secondY+font.InfotecRegular.Height; y++ {
 					for x := range g.w {
 						want.Set(x, y, frame.Black)
 					}

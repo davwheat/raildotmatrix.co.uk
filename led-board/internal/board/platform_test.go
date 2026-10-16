@@ -20,7 +20,7 @@ func TestParseRowPrefix(t *testing.T) {
 }
 
 func TestPlatformWidthFitsThreeCharacters(t *testing.T) {
-	for _, f := range []*font.Face{font.Text, font.PISTall} {
+	for _, f := range []*font.Face{font.Text, font.InfotecRegular} {
 		for _, number := range []string{"1", "10A", "888", "WWW", "MMM"} {
 			if w := f.Width(PlatformText(number)); w > PlatformWidth(f) {
 				t.Errorf("%q is %d dots wide, more than the column's %d", PlatformText(number), w, PlatformWidth(f))

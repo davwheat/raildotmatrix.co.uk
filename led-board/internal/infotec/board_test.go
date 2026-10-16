@@ -85,7 +85,7 @@ func TestFixturesStayWithinRows(t *testing.T) {
 	for _, size := range sizes {
 		for _, name := range fixtures.Names {
 			b := newSizedBoard(t, size[0], size[1])
-			h := font.PISTall.Height
+			h := font.InfotecRegular.Height
 			run(t, b, name, 40*time.Second, func(now time.Time, _ bool, f *frame.Frame) {
 				g := b.geo
 				allowed := [][2]int{
@@ -139,7 +139,7 @@ func TestFirstTrainChangeSlidesOut(t *testing.T) {
 				b.last.info.on, b.last.lower[0].on, b.last.lower[1].on)
 		}
 		g := b.geo
-		if x, y, lit := litOutside(f, [2]int{g.firstY, g.firstY + font.PISTall.Height}, [2]int{g.sepY, g.sepY + 1},
+		if x, y, lit := litOutside(f, [2]int{g.firstY, g.firstY + font.InfotecRegular.Height}, [2]int{g.sepY, g.sepY + 1},
 			[2]int{g.clockY, g.clockY + font.InfotecClock.Height}); lit {
 			t.Fatalf("at %v: dot lit at (%d,%d) during the slide-out", now.Sub(fixtures.Clock), x, y)
 		}
@@ -267,11 +267,11 @@ func TestDividingTrainDestinationsShareALineWhenTheyFit(t *testing.T) {
 	b := newTestBoard(t)
 	r := b.derive(fixtures.Steps("dividing-service")[0]).rows[0]
 	at := b.steadyStart.Add(destinationPage * time.Millisecond)
-	joinedW := font.PISTall.Width(r.joined)
-	if got := b.rowScene(&r, at, font.PISTall, joinedW).dest; got != r.joined {
+	joinedW := font.InfotecRegular.Width(r.joined)
+	if got := b.rowScene(&r, at, font.InfotecRegular, joinedW).dest; got != r.joined {
 		t.Errorf("dest with room = %q, want %q", got, r.joined)
 	}
-	if got := b.rowScene(&r, at, font.PISTall, joinedW-1).dest; got != "& Littlehampton" {
+	if got := b.rowScene(&r, at, font.InfotecRegular, joinedW-1).dest; got != "& Littlehampton" {
 		t.Errorf("dest without room = %q, want the second page", got)
 	}
 }
@@ -417,8 +417,8 @@ func TestCallingPointsScroll(t *testing.T) {
 		}
 		lastX = b.last.info.x
 		for x := range g.destX {
-			for y := b.geo.infoY; y < b.geo.infoY+font.PISTall.Height; y++ {
-				if x > font.PISTall.Width("Calling at:") && f.At(x, y) != frame.Black {
+			for y := b.geo.infoY; y < b.geo.infoY+font.InfotecRegular.Height; y++ {
+				if x > font.InfotecRegular.Width("Calling at:") && f.At(x, y) != frame.Black {
 					t.Fatalf("at %v: list dot lit at (%d,%d), left of its area", now.Sub(fixtures.Clock), x, y)
 				}
 			}

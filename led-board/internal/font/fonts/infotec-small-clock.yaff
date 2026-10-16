@@ -1,6 +1,6 @@
 # Native dot patterns. Edit this YAFF file or import it into tools/font-builder.html.
 yaff: 1.0
-name: Small Clock
+name: Infotec Small Clock
 encoding: unicode
 line-height: 8
 ascent: 8

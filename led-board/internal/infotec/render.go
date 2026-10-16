@@ -60,14 +60,14 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 	g := &b.geo
 	if b.phase == phaseSlideOut {
 		e := now.Sub(b.phaseStart).Milliseconds()
-		s.first = b.rowScene(&b.outgoing, now, font.PISTall, g.destW)
+		s.first = b.rowScene(&b.outgoing, now, font.InfotecRegular, g.destW)
 		if e > slideOutDelay {
 			s.first.dx = int(int64(g.w) * min(e-slideOutDelay, slideOutTravel) / slideOutTravel)
 		}
 		s.first.on = s.first.dx < g.w
 		return
 	}
-	s.first = b.rowScene(&b.content.rows[0], now, font.PISTall, g.destW)
+	s.first = b.rowScene(&b.content.rows[0], now, font.InfotecRegular, g.destW)
 	s.formation = s.first.length
 	s.coachContents = b.cachedFormation(b.content.rows[0].coaches, now.Sub(b.steadyStart))
 	if len(b.content.pages) > 0 {
@@ -76,9 +76,9 @@ func (b *Board) composeTrains(now time.Time, s *scene) {
 	lowerGeo := b.lowerGeometry()
 	lowerRow := func(r *row) rowScene {
 		if g.compact {
-			return b.rowScene(r, now, font.InfotecSmall, b.compactLayout(r.etd).destW)
+			return b.rowScene(r, now, font.Infotec10x5, b.compactLayout(r.etd).destW)
 		}
-		return b.rowScene(r, now, font.PISTall, lowerGeo.destW)
+		return b.rowScene(r, now, font.InfotecRegular, lowerGeo.destW)
 	}
 	switch {
 	case len(b.content.rows) < 2:
@@ -163,7 +163,7 @@ func (b *Board) renderInfoChange(f *frame.Frame, s, previous *scene) bool {
 	}
 	g := &b.geo
 	c := g.infoBand()
-	if c.Y0 < g.firstY+font.PISTall.Height || c.Y1 > min(g.sepY, g.secondY, g.clockY) || s.formation > 0 && c.Y1 > g.formationY {
+	if c.Y0 < g.firstY+font.InfotecRegular.Height || c.Y1 > min(g.sepY, g.secondY, g.clockY) || s.formation > 0 && c.Y1 > g.formationY {
 		return false
 	}
 	f.FillRect(c.X0, c.Y0, c.X1-c.X0, c.Y1-c.Y0, frame.Black)
@@ -223,7 +223,7 @@ func (b *Board) lowerGeometry() *geometry {
 }
 
 func (b *Board) drawRow(f *frame.Frame, r *rowScene, g *geometry, y int, c board.Clip, colour frame.RGB) {
-	text := font.PISTall
+	text := font.InfotecRegular
 	x, y := r.dx, y+r.dy
 	prefix := c.Intersect(board.Clip{X0: x, X1: x + g.prefixW, Y1: g.h})
 	prefixX := x
@@ -249,9 +249,9 @@ func (b *Board) drawTime(f *frame.Frame, x, y int, hhmm string, c board.Clip, co
 		return
 	}
 	g := &b.geo
-	x = board.DrawCells(f, font.PISTall, x, y, hhmm[:2], g.ch, colour, c)
-	x = board.DrawCells(f, font.PISTall, x, y, ":", g.colonCell, colour, c)
-	board.DrawCells(f, font.PISTall, x, y, hhmm[2:], g.ch, colour, c)
+	x = board.DrawCells(f, font.InfotecRegular, x, y, hhmm[:2], g.ch, colour, c)
+	x = board.DrawCells(f, font.InfotecRegular, x, y, ":", g.colonCell, colour, c)
+	board.DrawCells(f, font.InfotecRegular, x, y, hhmm[2:], g.ch, colour, c)
 }
 
 func (b *Board) drawInfo(f *frame.Frame, sc *scrollScene, base frame.RGB) {
@@ -266,6 +266,6 @@ func (b *Board) drawInfo(f *frame.Frame, sc *scrollScene, base frame.RGB) {
 func (b *Board) drawLines(f *frame.Frame, lines [3]string, colour frame.RGB) {
 	g := &b.geo
 	for i, line := range lines {
-		board.DrawText(f, font.PISTall, (g.w-font.PISTall.Width(line))/2, g.lineY[i], line, colour, g.full)
+		board.DrawText(f, font.InfotecRegular, (g.w-font.InfotecRegular.Width(line))/2, g.lineY[i], line, colour, g.full)
 	}
 }

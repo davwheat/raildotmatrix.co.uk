@@ -6,7 +6,7 @@ ascent: "9"
 descent: "3"
 shift-up: "-3"
 right-bearing: "1"
-name: "Modern National Rail PIS Tall"
+name: Infotec Regular
 default-char: "u+003f"
 
 u+0020:

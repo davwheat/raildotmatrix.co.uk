@@ -125,7 +125,7 @@ type geometry struct {
 }
 
 func newGeometry(w, h int, prefix board.RowPrefix) geometry {
-	text := font.PISTall
+	text := font.InfotecRegular
 	ch := text.Advance('0')
 	// The grid gap is 36 px at 7.17 px per dot.
 	gap := 5
@@ -185,7 +185,7 @@ func (b *Board) geometry(details bool) geometry {
 		platform := b.platformBox()
 		text, padding := platformBoxStyle(platform)
 		// Include the blank padding and the one-dot border on each side.
-		g.boxW = max(font.PISTall.Width("Plat"), text.Width(platform)) + 2*(padding+1)
+		g.boxW = max(font.InfotecRegular.Width("Plat"), text.Width(platform)) + 2*(padding+1)
 		g.infoX = g.boxW + 2
 		g.infoDestX = g.infoX + g.timeW + 5
 		g.prefixW = g.boxW
@@ -196,12 +196,12 @@ func (b *Board) geometry(details bool) geometry {
 	}
 	if details {
 		// Use the slack between the rows for a formation without taking space from the clock.
-		g.secondY = g.clockY - font.PISTall.Height - 1
+		g.secondY = g.clockY - font.InfotecRegular.Height - 1
 		g.sepY = g.secondY - 2
 		// On the 64-row panel, remove the extra gaps above and below the info
 		// row rather than shortening the cab for the main clock.
-		g.infoY = max(font.PISTall.Height, min(g.infoY, g.sepY-font.PISTall.Height-12))
-		g.formationY = min(g.infoY+font.PISTall.Height+1, g.sepY-12)
+		g.infoY = max(font.InfotecRegular.Height, min(g.infoY, g.sepY-font.InfotecRegular.Height-12))
+		g.formationY = min(g.infoY+font.InfotecRegular.Height+1, g.sepY-12)
 		g.formationH = min(11, g.sepY-g.formationY-1)
 	}
 	if g.boxW > 0 && (b.cfg.CompactLowerRow == nil || *b.cfg.CompactLowerRow) {
@@ -209,14 +209,14 @@ func (b *Board) geometry(details bool) geometry {
 		if b.cfg.ClockStyle == "" {
 			g.clockStyle = "small"
 		}
-		g.clockY = g.h - max(font.InfotecSmall.Height, g.clockFace(false).Height)
+		g.clockY = g.h - max(font.Infotec10x5.Height, g.clockFace(false).Height)
 		g.clockCell = g.clockFace(false).Advance('0')
 		g.colon = g.clockFace(false).Advance(':')
 		g.clockX = g.w - g.clockWidth()
-		g.secondY = g.h - font.InfotecSmall.Height
+		g.secondY = g.h - font.Infotec10x5.Height
 		g.sepY = g.clockY - 2
-		g.infoY = font.PISTall.Height + 5
-		g.swapTravel = font.InfotecSmall.Height + 1
+		g.infoY = font.InfotecRegular.Height + 5
+		g.swapTravel = font.Infotec10x5.Height + 1
 		if details {
 			g.formationY, g.formationH = g.sepY-12, 11
 		}
@@ -225,7 +225,7 @@ func (b *Board) geometry(details bool) geometry {
 		// Share the space above the lower row between the information, formation
 		// and separator. The main font already reserves descender space, so give
 		// its following gap one fewer dot before distributing the remainder.
-		firstEnd, lowerTop := g.firstY+font.PISTall.Height, g.secondY
+		firstEnd, lowerTop := g.firstY+font.InfotecRegular.Height, g.secondY
 		if g.compact {
 			lowerTop = min(lowerTop, g.clockY)
 		}
@@ -237,12 +237,12 @@ func (b *Board) geometry(details bool) geometry {
 		g.formationY = g.infoY + g.infoFace().Height + formationGap
 		g.sepY = g.formationY + g.formationH + separatorGap
 	} else {
-		g.infoY += (font.PISTall.Height - g.infoFace().Height) / 2
+		g.infoY += (font.InfotecRegular.Height - g.infoFace().Height) / 2
 	}
 	if g.compact {
 		// Centre the service text and its clock in the band below the final separator.
 		top := g.sepY + 1
-		g.secondY = top + (g.h-top-font.InfotecSmall.Height)/2
+		g.secondY = top + (g.h-top-font.Infotec10x5.Height)/2
 		g.clockY = top + (g.h-top-g.clockFace(false).Height)/2
 	}
 	g.infoSlide = (g.infoFace().Height*110 + 50) / 100
@@ -251,9 +251,9 @@ func (b *Board) geometry(details bool) geometry {
 
 func (g *geometry) infoFace() *font.Face {
 	if g.smallScrollingText {
-		return font.InfotecSmall
+		return font.Infotec10x4
 	}
-	return font.PISTall
+	return font.InfotecRegular
 }
 
 // infoBand is the area the information row is clipped to (clip-path: inset(0) in the web).

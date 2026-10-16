@@ -28,7 +28,7 @@ func formationCountLayout(width, height, length int, style string) (diagramWidth
 	if diagramWidth == 0 || style == "" || style == "none" {
 		return
 	}
-	face := font.InfotecSmall
+	face := font.Infotec10x4
 	number := strconv.Itoa(length)
 	numeric := "(" + number + ")"
 	_, _, labelledWidth := formationDimensions(width-formationCountGap-face.Width(numeric), height, length)
@@ -57,7 +57,7 @@ func (b *Board) drawTrainFormation(f *frame.Frame, s *scene, colour frame.RGB) {
 	if label == "" {
 		return
 	}
-	face := font.InfotecSmall
+	face := font.Infotec10x4
 	// Align the last lit row, including the descender in "carriages", rather
 	// than the font's bounding box, which has blank rows below most letters.
 	bottom := 0

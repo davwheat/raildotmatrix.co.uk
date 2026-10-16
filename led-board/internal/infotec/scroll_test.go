@@ -26,9 +26,9 @@ func TestScrollingFontControlsTextFit(t *testing.T) {
 		if b.info.static {
 			t.Fatal("long page did not scroll")
 		}
-		face := font.PISTall
+		face := font.InfotecRegular
 		if small {
-			face = font.InfotecSmall
+			face = font.Infotec10x4
 		}
 		end := fixtures.Clock.Add(time.Duration(scrollPauseAtEnds+(face.Width(p.text)+b.info.outerW)*1000/DefaultScrollSpeed) * time.Millisecond)
 		b.info.advance(end.Add(-time.Millisecond))
@@ -52,7 +52,7 @@ func TestSmallScrollingTextClipsAnimation(t *testing.T) {
 				{prefix: "Front 12 coaches:", text: strings.Repeat("Brighton, ", 12), hold: callingHold},
 			} {
 				b.info.reset(p, g, fixtures.Clock)
-				if p.prefix != "" && b.info.x0 < g.infoX+font.InfotecSmall.Width(p.prefix)+prefixSpacing {
+				if p.prefix != "" && b.info.x0 < g.infoX+font.Infotec10x4.Width(p.prefix)+prefixSpacing {
 					t.Fatal("calling points overlap their prefix")
 				}
 				for elapsed := time.Duration(0); elapsed < 8*time.Second; elapsed += tick {
@@ -63,7 +63,7 @@ func TestSmallScrollingTextClipsAnimation(t *testing.T) {
 					if sc.on {
 						b.drawInfo(f, &sc, board.White)
 					}
-					if x, y, lit := litOutside(f, [2]int{g.infoY, g.infoY + font.InfotecSmall.Height}); lit {
+					if x, y, lit := litOutside(f, [2]int{g.infoY, g.infoY + font.Infotec10x4.Height}); lit {
 						t.Fatalf("%dx%d box=%q at %v: information pixel outside small row at (%d,%d)", g.w, g.h, box, elapsed, x, y)
 					}
 				}
@@ -89,7 +89,7 @@ func TestSmallScrollingTextSpacesRows(t *testing.T) {
 				if g.compact {
 					lowerTop = min(lowerTop, g.clockY)
 				}
-				if g.infoY < g.firstY+font.PISTall.Height || g.formationY < g.infoY+font.InfotecSmall.Height+1 ||
+				if g.infoY < g.firstY+font.InfotecRegular.Height || g.formationY < g.infoY+font.Infotec10x4.Height+1 ||
 					g.sepY < g.formationY+g.formationH+2 || lowerTop < g.sepY+3 {
 					t.Fatalf("%dx%d %s %s: insufficient spacing between rows: %+v", size[0], size[1], clock, layout.name, g)
 				}

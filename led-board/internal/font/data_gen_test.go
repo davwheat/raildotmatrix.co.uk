@@ -28,7 +28,9 @@ func TestDigitWidths(t *testing.T) {
 	}{
 		{"Text", Text, 5, map[rune]int{'1': 3}},
 		{"Clock", Clock, 7, map[rune]int{'1': 6}},
-		{"PISTall", PISTall, 5, map[rune]int{'1': 3}},
+		{"InfotecRegular", InfotecRegular, 5, map[rune]int{'1': 3}},
+		{"Infotec10x4", Infotec10x4, 4, map[rune]int{'1': 3}},
+		{"Infotec10x5", Infotec10x5, 5, map[rune]int{'1': 3}},
 		{"InfotecLarge", InfotecLarge, 9, map[rune]int{'1': 4}},
 		{"DotMatrixClock", DotMatrixClock, 8, map[rune]int{'1': 4, '4': 6}},
 	}
@@ -61,7 +63,9 @@ func TestFaceGeometry(t *testing.T) {
 	}{
 		{"Text", Text, 7, 6, 1, 1, 4},
 		{"Clock", Clock, 7, 7, 1, 2, 3},
-		{"PISTall", PISTall, 12, 9, 1, 1, 4},
+		{"InfotecRegular", InfotecRegular, 12, 9, 1, 1, 4},
+		{"Infotec10x4", Infotec10x4, 10, 8, 1, 1, 3},
+		{"Infotec10x5", Infotec10x5, 10, 8, 1, 1, 3},
 		{"DotMatrixClock", DotMatrixClock, 9, 7, 1, 2, -1},
 		{"InfotecLarge", InfotecLarge, 13, 13, 2, 2, -1},
 	}
@@ -111,10 +115,20 @@ func TestCoverage(t *testing.T) {
 			t.Errorf("Clock lacks %q", r)
 		}
 	}
-	// The PIS Tall font has no '$' or '`'.
+	// Infotec Regular has no '$' or '`'.
 	for r := rune(' '); r <= '~'; r++ {
-		if _, ok := PISTall.Glyphs[r]; !ok && r != '$' && r != '`' {
-			t.Errorf("PISTall lacks %q", r)
+		if _, ok := InfotecRegular.Glyphs[r]; !ok && r != '$' && r != '`' {
+			t.Errorf("InfotecRegular lacks %q", r)
+		}
+	}
+	for _, face := range []struct {
+		name string
+		face *Face
+	}{{"Infotec10x4", Infotec10x4}, {"Infotec10x5", Infotec10x5}} {
+		for r := rune(' '); r <= '~'; r++ {
+			if _, ok := face.face.Glyphs[r]; !ok {
+				t.Errorf("%s lacks %q", face.name, r)
+			}
 		}
 	}
 	for _, r := range "0123456789:" {
@@ -139,7 +153,7 @@ func TestGlyphShapes(t *testing.T) {
 			'1': {0b010, 0b011, 0b010, 0b010, 0b010, 0b111, 0b000},
 			'g': {0b00000, 0b01110, 0b10001, 0b10001, 0b11110, 0b10000, 0b01110},
 		}},
-		{"PISTall", PISTall, map[rune][]uint16{
+		{"InfotecRegular", InfotecRegular, map[rune][]uint16{
 			'1': {0b010, 0b011, 0b010, 0b010, 0b010, 0b010, 0b010, 0b010, 0b111, 0b000, 0b000, 0b000},
 			':': {0b0, 0b0, 0b0, 0b1, 0b0, 0b0, 0b0, 0b1, 0b0, 0b0, 0b0, 0b0},
 		}},

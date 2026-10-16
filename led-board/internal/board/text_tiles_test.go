@@ -12,7 +12,7 @@ func TestTextTilesClipsAndEviction(t *testing.T) {
 	text := strings.Repeat("Clapham Junction, East Croydon; ", 90)
 	var run TextRun
 	used := false
-	for _, face := range []*font.Face{font.Text, font.PISTall, font.InfotecSmall, font.InfotecFormation} {
+	for _, face := range []*font.Face{font.Text, font.InfotecRegular, font.Infotec10x4, font.Infotec10x5, font.InfotecFormation} {
 		for _, width := range []int{1, 63, 64, 65, 256, 511, 512, 513, 900} {
 			got, want := frame.New(width, 41), frame.New(width, 41)
 			for _, x := range []int{-20000, -4096, -1025, -513, -512, -511, -129, -65, -64, -63, -1, 0, 63, 64, 255, 256} {
