@@ -64,15 +64,29 @@ are replaced.
    with password **DotMatrix**. Wi-Fi setup works without internet access. The default panel layout is
    two chained 128×64 panels; change it in the GUI or in `departure-board.toml` at the root of the card.
 4. Join the hotspot. Open **http://192.168.4.1** and sign in with board password **DotMatrix**.
-   Under **Wi-Fi & connection**, select or enter your network and connect. The hotspot disconnects
-   while the Pi joins that network. If connection fails, the hotspot returns automatically.
+   Setup then takes you through these steps, one page each:
+   1. **Password**: choose a new board password. The board refuses every other change until the
+      password is no longer `DotMatrix`, including on boards set up before this step existed.
+   2. **Panels**: check the panel size, chain length and adapter wiring. Saving restarts the display
+      with each panel outlined and numbered, so a missing, repeated or misordered panel stands out.
+   3. **Colours**: the board lights each of red, green and blue in turn, and you choose the colour
+      that you see. The board works out `led.rgb_sequence` from your answers, restarts, and shows
+      red, green and blue bands for you to confirm.
+   4. **Station**: enter a three-letter station code and choose the board style.
+   5. **Wi-Fi**: select or enter your network and connect, or finish setup to keep an Ethernet or
+      existing connection. The hotspot disconnects while the Pi joins that network. If connection
+      fails, the hotspot returns automatically.
 5. Join the same network on your phone/computer and open **http://departureboard.local**. Ethernet
    also uses DHCP. The board advertises its hostname and HTTP service with Avahi/mDNS; use the IP
    address shown on the panel or in your router if your network does not support mDNS.
-6. In **Board settings**, enter a three-letter station code and save. All board and panel options,
-   including the advanced settings, are editable through the GUI. Saving validates the settings,
-   backs up the previous file and restarts the display. The **Device** tab changes the web password
-   and restarts the display. The hotspot password remains `DotMatrix`.
+6. All board and panel options, including the advanced settings, are editable in **Board settings**.
+   Saving validates the settings, backs up the previous file and restarts the display. The **Device**
+   tab changes the web password, restarts the display and runs setup again. The hotspot password
+   remains `DotMatrix`.
+
+Setup records how far it got, so signing in again resumes at the same step. A board whose config
+already names a station skips setup, apart from the password step. Each tab and setup step has its
+own address, such as `/network` or `/setup/colours`, so that a reload or bookmark returns to it.
 
 Until a station is configured, the LED matrix shows these instructions:
 
@@ -87,6 +101,11 @@ The manager checks the wireless driver's associated stations every three seconds
 that status once per second, so joining/leaving normally updates the instructions within four seconds.
 Long lines scroll and smaller panel layouts page through the instructions. Setting a station code
 switches to live departures; clearing it restores the setup display.
+
+The setup test patterns work whatever the board shows. The manager writes the requested pattern to
+`/run/departure-board/test-pattern.json`, beside the network status, and sends the board `SIGUSR1`. The
+board also reads the file when it starts, so a pattern requested with a restart shows from the first
+frame. A pattern ends when setup moves on, when settings are saved, or after 10 minutes.
 
 The config remains **`departure-board.toml` at the root of the boot partition**, mounted on the Pi at
 `/boot/firmware/departure-board.toml`. It can still be edited by hand. Brightness applies live; restart
@@ -163,8 +182,9 @@ build/manage-native -demo -listen 127.0.0.1:8098 \
   -status "$PWD/build/management-demo/network.json"
 ```
 
-Open http://127.0.0.1:8098 and sign in with `DotMatrix`. Demo mode simulates networks and service
-restarts, while config validation and persistence work against the separate demo file. Developer SSH
+Open http://127.0.0.1:8098, sign in with `DotMatrix`, and then choose a new password. Demo mode simulates
+networks and service restarts, while config validation and persistence work against the separate demo file.
+It writes test pattern requests beside `network.json` but doesn't signal a board. Developer SSH
 keys are saved to `state/ssh/authorized_keys` in the demo directory; they do not enable host SSH access.
 
 ## Local settings

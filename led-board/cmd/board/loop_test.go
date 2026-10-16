@@ -9,6 +9,7 @@ import (
 
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/testpattern"
 )
 
 type sleepingBoard struct {
@@ -67,4 +68,50 @@ func TestIdleWaitWakesForUpdatesBrightnessAndCancellation(t *testing.T) {
 	wait(d.swaps, "brightness did not force an unchanged frame to upload")
 	cancel()
 	wait(done, "cancellation did not interrupt sleep")
+}
+
+type recordingDisplay struct{ swaps chan frame.RGB }
+
+func (d *recordingDisplay) Size() (int, int)          { return 4, 2 }
+func (d *recordingDisplay) Swap(f *frame.Frame) error { d.swaps <- f.At(0, 0); return nil }
+func (d *recordingDisplay) WaitVSync() error          { return nil }
+func (d *recordingDisplay) Close() error              { return nil }
+
+type paintingBoard struct{ sleepingBoard }
+
+func (b *paintingBoard) Tick(now time.Time, f *frame.Frame) bool {
+	if !b.changed.Swap(false) {
+		return false
+	}
+	f.Set(0, 0, frame.RGB{R: 1, G: 2, B: 3})
+	return true
+}
+
+func TestTestPatternReplacesBoardUntilItEnds(t *testing.T) {
+	b := &paintingBoard{}
+	b.changed.Store(true)
+	d := &recordingDisplay{swaps: make(chan frame.RGB, 8)}
+	a := app{board: b, wake: make(chan struct{}, 1), brightness: make(chan int, 1), tests: make(chan testpattern.Request, 1), panelW: 4, panelH: 2, logger: slog.New(slog.DiscardHandler)}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go a.loop(ctx, d, b)
+	swap := func(want frame.RGB, reason string) {
+		t.Helper()
+		select {
+		case got := <-d.swaps:
+			if got != want {
+				t.Fatalf("%s: first dot %+v, want %+v", reason, got, want)
+			}
+		case <-time.After(time.Second):
+			t.Fatal(reason + ": no swap")
+		}
+	}
+	boardDot := frame.RGB{R: 1, G: 2, B: 3}
+	swap(boardDot, "board")
+	a.setTest(testpattern.Request{Pattern: "green", Until: time.Now().Add(time.Hour)})
+	swap(frame.RGB{G: 255}, "pattern")
+	a.setTest(testpattern.Request{Pattern: "red", Until: time.Now().Add(150 * time.Millisecond)})
+	swap(frame.RGB{R: 255}, "replacement pattern")
+	// The board doesn't change, so only the end of the pattern can bring back its picture.
+	swap(boardDot, "board after the pattern expired")
 }

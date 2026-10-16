@@ -28,11 +28,16 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix/pngdisplay"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/setupdisplay"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/testpattern"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/version"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/windowdisplay"
 )
 
 func main() {
+	// The manager signals the board when it asks for a test pattern. SIGUSR1 ends a process that doesn't handle it, so
+	// the handler goes in before anything slow can delay it.
+	testSignals := make(chan os.Signal, 1)
+	signal.Notify(testSignals, syscall.SIGUSR1)
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	configPath := addFlags(fs)
 	schema := fs.Bool("config-schema", false, "print the configuration schema as JSON and exit")
@@ -164,10 +169,19 @@ func main() {
 		fixture:    fixture,
 		fps:        cfg.FPS,
 		brightness: make(chan int, 1),
+		tests:      make(chan testpattern.Request, 1),
+		panelW:     opts.Cols,
+		panelH:     opts.Rows,
 		logger:     logger,
 	}
 	if v.ConfigFileUsed() != "" {
 		watch(v, logger, a.setBrightness)
+	}
+	if *setupStatus != "" {
+		// A restart in the middle of setup leaves a request waiting, which shows from the first frame.
+		path := testpattern.Path(*setupStatus)
+		a.setTest(testpattern.Read(path))
+		go a.readTests(ctx, path, testSignals)
 	}
 
 	// The window library must run on the main goroutine, so the window
@@ -222,8 +236,11 @@ type app struct {
 	// it between frames. Only the latest value matters, so a newer one
 	// replaces an unread one.
 	brightness chan int
-	wake       chan struct{}
-	logger     *slog.Logger
+	// tests carries the latest test pattern request to the loop, which shows it in place of the board.
+	tests          chan testpattern.Request
+	panelW, panelH int
+	wake           chan struct{}
+	logger         *slog.Logger
 }
 
 func (a app) setBrightness(percent int) {
@@ -232,6 +249,26 @@ func (a app) setBrightness(percent int) {
 	default:
 	}
 	a.brightness <- percent
+}
+
+// readTests hands the loop the request in the file each time the manager signals.
+func (a app) readTests(ctx context.Context, path string, signals <-chan os.Signal) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-signals:
+			a.setTest(testpattern.Read(path))
+		}
+	}
+}
+
+func (a app) setTest(r testpattern.Request) {
+	select {
+	case <-a.tests:
+	default:
+	}
+	a.tests <- r
 }
 
 // run shows live departures on display until ctx is done or the display
@@ -271,6 +308,11 @@ func (a app) update(v model.View) {
 func (a app) loop(ctx context.Context, display frame.Display, b board.Board) {
 	w, h := display.Size()
 	f := frame.New(w, h)
+	// A test pattern has a frame of its own, so f keeps the board's picture, and the board's record of what it
+	// drew there stays true, for when the pattern ends.
+	var test testpattern.Request
+	var pattern *frame.Frame
+	showingTest := false
 
 	vsync, _ := display.(frame.VSyncer)
 	deadlines, _ := b.(board.NextTicker)
@@ -294,9 +336,16 @@ func (a app) loop(ctx context.Context, display frame.Display, b board.Board) {
 			case <-a.wake:
 			case percent := <-a.brightness:
 				forceSwap = a.dim(display, percent)
+			case test = <-a.tests:
+				forceSwap = true
 			case <-idle.C:
 			}
 			idle.Stop()
+		}
+		select {
+		case test = <-a.tests:
+			forceSwap = true
+		default:
 		}
 		if ticker != nil {
 			select {
@@ -309,13 +358,27 @@ func (a app) loop(ctx context.Context, display frame.Display, b board.Board) {
 		}
 
 		now := time.Now()
-		changed := b.Tick(now, f) || forceSwap
-		if deadlines != nil {
-			nextTick = deadlines.NextTick(now)
-			if !nextTick.IsZero() {
-				// Calendar boundaries may lack a monotonic reading. Preserve
-				// this tick's clock so a wall-clock correction cannot extend the wait.
-				nextTick = now.Add(nextTick.Sub(now))
+		shown, changed := f, false
+		if test.Showing(now) {
+			if pattern == nil {
+				pattern = frame.New(w, h)
+			}
+			if forceSwap || !showingTest {
+				testpattern.Draw(pattern, test.Pattern, a.panelW, a.panelH)
+				changed = true
+			}
+			shown, showingTest, nextTick = pattern, true, test.Until
+		} else {
+			changed = b.Tick(now, f) || forceSwap || showingTest
+			showingTest = false
+			nextTick = time.Time{}
+			if deadlines != nil {
+				nextTick = deadlines.NextTick(now)
+				if !nextTick.IsZero() {
+					// Calendar boundaries may lack a monotonic reading. Preserve
+					// this tick's clock so a wall-clock correction cannot extend the wait.
+					nextTick = now.Add(nextTick.Sub(now))
+				}
 			}
 		}
 		select {
@@ -327,7 +390,7 @@ func (a app) loop(ctx context.Context, display frame.Display, b board.Board) {
 		var err error
 		switch {
 		case changed:
-			err = display.Swap(f)
+			err = display.Swap(shown)
 		case vsync != nil && (nextTick.IsZero() || a.wake == nil):
 			err = vsync.WaitVSync()
 		}
