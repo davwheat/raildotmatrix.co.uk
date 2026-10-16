@@ -11,6 +11,7 @@ import (
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/fixtures"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/formats"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/infotec"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/matrix"
 )
 
 func describeConfig(fs *flag.FlagSet) []configschema.Field {
@@ -23,7 +24,8 @@ func describeConfig(fs *flag.FlagSet) []configschema.Field {
 		"row_prefix":         {"ordinals", "platforms"},
 		"display":            {"matrix", "window", "png"},
 		"fixture":            append([]string{""}, fixtures.Names...),
-		"led.rgb_sequence":   {"RGB", "RBG", "GRB", "GBR", "BRG", "BGR"},
+		"led.rgb_sequence":   matrix.Sequences,
+		"led.gpio_mapping":   matrix.HardwareMappings,
 	}
 	var fields []configschema.Field
 	fs.VisitAll(func(f *flag.Flag) {
@@ -89,7 +91,7 @@ func validateConfig(c config) error {
 	if (o.PWMLSBNanoseconds != 0 && (o.PWMLSBNanoseconds < 50 || o.PWMLSBNanoseconds > 3000)) || o.PWMDitherBits < 0 || o.PWMDitherBits > 2 || o.RowAddrType < 0 || o.RowAddrType > 5 || o.ScanMode < 0 || o.ScanMode > 1 || o.GPIOSlowdown < 0 || o.GPIOSlowdown > 4 || o.Multiplexing < 0 {
 		return fmt.Errorf("invalid advanced panel timing or addressing settings")
 	}
-	if !slices.Contains([]string{"RGB", "RBG", "GRB", "GBR", "BRG", "BGR"}, o.RGBSequence) {
+	if !slices.Contains(matrix.Sequences, o.RGBSequence) {
 		return fmt.Errorf("RGB sequence must be a permutation of RGB")
 	}
 	return nil

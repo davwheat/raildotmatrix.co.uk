@@ -142,7 +142,10 @@ func TestSSHKeysAPI(t *testing.T) {
 	}
 	expect(request("GET", "", ""), 401)
 	expect(request("PUT", `{}`, ""), 401)
-	r := httptest.NewRequest("POST", "http://departureboard.local/api/login", strings.NewReader(`{"password":"DotMatrix"}`))
+	if err := s.savePassword("ssh-test-password"); err != nil {
+		t.Fatal(err)
+	}
+	r := httptest.NewRequest("POST", "http://departureboard.local/api/login", strings.NewReader(`{"password":"ssh-test-password"}`))
 	r.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, r)

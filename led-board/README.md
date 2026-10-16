@@ -37,7 +37,8 @@ The website's build runs `just web` to compile the boards for it; see
 
 For a ready-to-flash SD card, download the artifact from the **DietPi image** GitHub Actions workflow.
 It starts the board and a **DepartureBoard** Wi-Fi hotspot (password **DotMatrix**). Join it and open
-**http://192.168.4.1** to set up Wi-Fi and edit every board setting. Once connected to your network, use
+**http://192.168.4.1**. Setup asks for a new board password, checks the panel layout and colour order on
+the board itself, and then sets the station and Wi-Fi. Once connected to your network, use
 **http://departureboard.local**. The config also remains at the root of the card as `departure-board.toml`.
 See [the DietPi image instructions](docs/build.md#dietpi-sd-card-image).
 
@@ -219,8 +220,9 @@ of refreshes, and the PWM bit depth is the most the panel manages at that rate: 
 the half-brightness separator need.
 
 The panel defaults suit two chained 128x64 panels on a bare adapter board (`--led-rows=64 --led-cols=128
---led-chain=2 --led-slowdown-gpio=2 --led-pwm-lsb-nanoseconds=100`). If red and blue come out swapped, set
-`rgb_sequence = "BGR"` in the `[led]` table; for a HAT, set `gpio_mapping`. Every `rpi-rgb-led-matrix` flag
+--led-chain=2 --led-slowdown-gpio=2 --led-pwm-lsb-nanoseconds=100`). If the colours come out wrong, use
+**Identify the colour order** in the management UI's LED panels settings, or set `rgb_sequence`, such as `"BGR"`, in
+the `[led]` table; for a HAT, set `gpio_mapping`. Every `rpi-rgb-led-matrix` flag
 is available under its usual name, and as a key in the `[led]` table without the `led-` prefix. Run
 `/opt/departure-board/board -h` for the full list.
 

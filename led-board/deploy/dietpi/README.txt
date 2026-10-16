@@ -14,9 +14,10 @@ with AUTO_SETUP_NET_WIFI_COUNTRY_CODE (default GB).
 1. Connect the panels and power on. Setup works without internet access.
 2. Join Wi-Fi network DepartureBoard. Password: DotMatrix
 3. Open http://192.168.4.1 and sign in. Board password: DotMatrix
-4. Select Wi-Fi & connection and connect the Pi to your network.
+4. Follow the setup steps: choose a new board password, check the panel
+   layout and colours on the board, enter your station's three-letter
+   code, and connect the Pi to your Wi-Fi network.
 5. Join that network on your device and open http://departureboard.local.
-6. Enter your station's three-letter code in Board settings and save.
 
 The hotspot returns if the Wi-Fi connection fails. Ethernet uses DHCP.
 If mDNS is unavailable, use the Pi's IP address shown on the LED display
@@ -28,8 +29,8 @@ When the last device leaves, it returns to the name/password prompt.
 On your home network, it shows departureboard.local and the assigned IP.
 
 The GUI edits all board and panel settings, validates them and restarts
-the display. Device settings let you change the web password and restart
-the display. The hotspot password remains DotMatrix.
+the display. Device settings let you change the web password, restart
+the display and run setup again. The hotspot password remains DotMatrix.
 
 Updates: in Updates, choose stable releases, prereleases or development
 builds, and when to check. The board downloads only the files that

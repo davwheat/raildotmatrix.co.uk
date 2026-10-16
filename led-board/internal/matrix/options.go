@@ -15,8 +15,11 @@
 package matrix
 
 import (
+	"errors"
 	"flag"
+	"slices"
 	"strconv"
+	"strings"
 )
 
 // Options configures the panels and the refresh thread. Zero values, other
@@ -103,6 +106,33 @@ func PWMBitsFor(hz int) int {
 		}
 	}
 	return 3
+}
+
+// HardwareMappings are the adapter wirings the library knows, by the names led.gpio_mapping takes.
+var HardwareMappings = []string{"regular", "adafruit-hat", "adafruit-hat-pwm", "regular-pi1", "classic", "classic-pi1", "compute-module"}
+
+// Sequences are the colour orders a panel can take, the permutations of "RGB".
+var Sequences = []string{"RGB", "RBG", "GRB", "GBR", "BRG", "BGR"}
+
+// CorrectSequence returns the colour order that shows each colour as itself, given the order the panel ran with
+// and seen, the colours the panel showed when it was sent red, green and blue, as a string such as "GRB".
+//
+// The library puts the colour at index i of the order on the panel's ith data line (R1, G1, B1), and line i lights
+// whatever colour the panel wires it to. Sending colour c lit the line at its index in current, so that line lights
+// the colour seen for c, and the corrected order names that colour at that index.
+func CorrectSequence(current, seen string) (string, error) {
+	current, seen = strings.ToUpper(current), strings.ToUpper(seen)
+	if !slices.Contains(Sequences, current) {
+		return "", errors.New("the current colour order must be a permutation of RGB")
+	}
+	if !slices.Contains(Sequences, seen) {
+		return "", errors.New("each of red, green and blue must be seen exactly once")
+	}
+	corrected := make([]byte, 3)
+	for i, c := range []byte("RGB") {
+		corrected[strings.IndexByte(current, c)] = seen[i]
+	}
+	return string(corrected), nil
 }
 
 // AddFlags registers the panel flags on fs, named like the library's own

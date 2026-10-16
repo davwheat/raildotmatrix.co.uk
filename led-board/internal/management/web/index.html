@@ -26,10 +26,170 @@
             autocomplete="current-password"
             required
           /><small
-            >The default board password is <strong>DotMatrix</strong>.</small
+            >The default board password is <strong>DotMatrix</strong>. After you
+            first sign in, you choose a new one.</small
           ><button type="submit">Sign in</button>
           <p id="login-error" role="alert"></p>
         </form>
+      </section>
+      <div id="notice" class="notice" role="status" hidden></div>
+      <section id="setup" hidden>
+        <div class="page-heading">
+          <div>
+            <span class="caption">Set up your departure board</span>
+            <h1 id="setup-title">Setup</h1>
+          </div>
+          <button class="quiet" id="setup-exit" hidden>Exit setup</button>
+        </div>
+        <ol class="steps" id="setup-steps" aria-label="Setup steps"></ol>
+        <p class="display-state" id="setup-board-state" hidden></p>
+        <section data-step="password" class="setup-step" hidden>
+          <p>
+            Choose a new password for this page. Anyone who knows the default
+            password can change the board's settings, so you need a new one
+            before you continue.
+          </p>
+          <form id="setup-password-form">
+            <label for="setup-new-password">New board password</label
+            ><input
+              type="password"
+              id="setup-new-password"
+              autocomplete="new-password"
+              minlength="8"
+              maxlength="128"
+              required
+            /><label for="setup-confirm-password">Confirm password</label
+            ><input
+              type="password"
+              id="setup-confirm-password"
+              autocomplete="new-password"
+              minlength="8"
+              maxlength="128"
+              required
+            /><small
+              >Use 8 to 128 characters. The setup hotspot password stays
+              DotMatrix.</small
+            >
+            <div class="step-actions">
+              <button type="submit">Save password and continue</button>
+            </div>
+          </form>
+        </section>
+        <section data-step="panels" class="setup-step" hidden>
+          <p>
+            Tell the board how its LED panels are arranged and how they're wired
+            to the Raspberry Pi. If you built the board with two 128×64 panels
+            on a standard adapter, the settings are already correct.
+          </p>
+          <form id="setup-panels-form">
+            <div id="setup-panel-fields" class="field-grid"></div>
+            <div class="step-actions">
+              <button type="submit">Save and show a test pattern</button>
+            </div>
+          </form>
+          <div id="panels-check" class="check" hidden>
+            <h2>Look at the board</h2>
+            <p id="panels-expected"></p>
+            <p class="question">Does the board look like this?</p>
+            <div class="step-actions">
+              <button id="panels-yes">Yes, continue</button
+              ><button id="panels-no" class="secondary">No</button>
+            </div>
+            <div id="panels-help" class="hint" hidden>
+              <p>Change the settings above, and then save again:</p>
+              <ul>
+                <li>
+                  If nothing lights up, check that the panels have power and
+                  that the ribbon cable goes into each panel's input connector.
+                </li>
+                <li>
+                  If a panel is blank or the picture repeats, check
+                  <strong>Panels in each chain</strong> and
+                  <strong>Columns per panel</strong>.
+                </li>
+                <li>
+                  If the picture is split into bands or doubled, check
+                  <strong>Rows per panel</strong>.
+                </li>
+                <li>
+                  If dots flicker or light up at random, increase
+                  <strong>GPIO slowdown</strong>.
+                </li>
+                <li>
+                  If the panels connect through an Adafruit HAT or Bonnet, set
+                  <strong>Adapter wiring</strong> to match it.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+        <section data-step="colours" class="setup-step" hidden>
+          <div id="colour-question">
+            <span class="caption" id="colour-count">Colour 1 of 3</span>
+            <h2>Choose the colour shown on the board</h2>
+            <p>
+              The board lights a pattern of dots in one colour. Panels don't all
+              wire their colours in the same order, so the board learns its
+              order from your answers.
+            </p>
+            <div class="colour-choices">
+              <button class="colour-choice" data-colour="R">
+                <span class="swatch red"></span>Red</button
+              ><button class="colour-choice" data-colour="G">
+                <span class="swatch green"></span>Green</button
+              ><button class="colour-choice" data-colour="B">
+                <span class="swatch blue"></span>Blue</button
+              ><button class="colour-choice" data-colour="">
+                <span class="swatch other"></span>Something else
+              </button>
+            </div>
+          </div>
+          <div id="colour-check" hidden>
+            <h2>Look at the board</h2>
+            <p>
+              The board restarts with the new colour order, and then shows three
+              bands of colour.
+            </p>
+            <p class="question">
+              From left to right, are the bands red, green, and then blue?
+            </p>
+            <div class="step-actions">
+              <button id="colours-yes">Yes, continue</button
+              ><button id="colours-no" class="secondary">
+                No, start again
+              </button>
+            </div>
+          </div>
+          <div id="colour-help" class="hint" role="alert" hidden></div>
+          <div id="colour-fault" class="step-actions" hidden>
+            <button id="colours-restart" class="secondary">Start again</button
+            ><button id="colours-skip" class="quiet">Skip this step</button>
+          </div>
+        </section>
+        <section data-step="station" class="setup-step" hidden>
+          <p>
+            Choose the station whose departures the board shows, and how the
+            board looks. You can change these, and every other setting, in
+            <strong>Board settings</strong>.
+          </p>
+          <form id="setup-station-form">
+            <div id="setup-station-fields" class="field-grid"></div>
+            <div class="step-actions">
+              <button type="submit">Save and continue</button>
+            </div>
+          </form>
+        </section>
+        <section data-step="wifi" class="setup-step" hidden>
+          <p id="setup-wifi-state"></p>
+          <div id="setup-wifi-slot"></div>
+          <div class="save-bar">
+            <span>To keep the board's current connection, finish setup.</span
+            ><button id="setup-finish" class="secondary">Finish setup</button>
+          </div>
+        </section>
+        <div class="step-back">
+          <button id="setup-back" class="quiet" hidden>Back</button>
+        </div>
       </section>
       <div id="app" hidden>
         <div class="page-heading">
@@ -53,14 +213,12 @@
             ><span id="demo-label"></span>
           </div>
         </section>
-        <div id="notice" class="notice" role="status" hidden></div>
         <nav aria-label="Board management">
-          <button data-tab="board" class="selected" aria-current="page">
-            Board settings</button
-          ><button data-tab="network">Wi-Fi & connection</button
-          ><button data-tab="device">Device</button
-          ><button data-tab="updates">Updates</button
-          ><button data-tab="developer">Developer</button>
+          <a data-tab="board" href="/board">Board settings</a
+          ><a data-tab="network" href="/network">Wi-Fi and connection</a
+          ><a data-tab="device" href="/device">Device</a
+          ><a data-tab="updates" href="/updates">Updates</a
+          ><a data-tab="developer" href="/developer">Developer</a>
         </nav>
         <section id="board-page" class="tab-page">
           <div class="section-heading">
@@ -79,7 +237,7 @@
           <div class="section-heading">
             <div><h2>Wi-Fi</h2></div>
           </div>
-          <div class="network-grid">
+          <div class="network-grid" id="wifi-forms">
             <section class="card">
               <div class="card-title">
                 <h3>Nearby networks</h3>
@@ -200,6 +358,13 @@
                 settings are kept.
               </p>
               <button id="restart" class="secondary">Restart display</button>
+              <hr />
+              <h3>Set up the board again</h3>
+              <p>
+                Check the panels and their colours, and choose a station and a
+                Wi-Fi network, one step at a time.
+              </p>
+              <a class="button secondary" href="/setup/panels">Start setup</a>
               <hr />
               <h3>Software version</h3>
               <p id="device-version">Checking…</p>

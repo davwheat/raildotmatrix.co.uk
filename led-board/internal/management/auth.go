@@ -18,6 +18,9 @@ type passwordRecord struct {
 	Hash []byte `json:"hash"`
 }
 
+// defaultPassword is printed in the instructions, so it must be changed before the board can be managed.
+const defaultPassword = "DotMatrix"
+
 func hashPassword(password, salt string) []byte {
 	key, _ := pbkdf2.Key(sha256.New, password, []byte(salt), 100000, 32)
 	return key
@@ -25,7 +28,7 @@ func hashPassword(password, salt string) []byte {
 func (s *Server) loadPassword() error {
 	data, err := os.ReadFile(s.passwordPath())
 	if errors.Is(err, os.ErrNotExist) {
-		return s.savePassword("DotMatrix")
+		return s.savePassword(defaultPassword)
 	}
 	if err != nil {
 		return err
@@ -36,6 +39,8 @@ func (s *Server) loadPassword() error {
 	if len(s.password.Salt) < 16 || len(s.password.Hash) != 32 {
 		return errors.New("invalid management password file")
 	}
+	// Boards set up before the change was required can still have the default password.
+	s.passwordDefault = subtle.ConstantTimeCompare(hashPassword(defaultPassword, s.password.Salt), s.password.Hash) == 1
 	return nil
 }
 func (s *Server) savePassword(password string) error {
@@ -46,6 +51,7 @@ func (s *Server) savePassword(password string) error {
 		return err
 	}
 	s.password = p
+	s.passwordDefault = password == defaultPassword
 	return nil
 }
 func (s *Server) authenticated(r *http.Request) bool {
@@ -57,6 +63,11 @@ func (s *Server) authenticated(r *http.Request) bool {
 	defer s.mu.Unlock()
 	expiry, ok := s.sessions[cookie.Value]
 	return ok && time.Now().Before(expiry)
+}
+func (s *Server) passwordChangeRequired() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.passwordDefault
 }
 func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	var in struct {
@@ -113,12 +124,20 @@ func (s *Server) changePassword(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, errors.New("use a password of 8–128 characters"))
 		return
 	}
+	if in.Password == defaultPassword {
+		fail(w, 400, errors.New("choose a password other than the default"))
+		return
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if err := s.savePassword(in.Password); err != nil {
 		fail(w, 500, err)
 		return
 	}
+	// Sign out everywhere else, but keep this browser signed in so that setup can carry on.
+	cookie, _ := r.Cookie("departureboard")
+	expiry := s.sessions[cookie.Value]
 	clear(s.sessions)
-	writeJSON(w, 200, map[string]string{"message": "Board password changed. Sign in again."})
+	s.sessions[cookie.Value] = expiry
+	writeJSON(w, 200, map[string]string{"message": "Board password changed. Other devices are signed out."})
 }

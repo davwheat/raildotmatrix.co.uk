@@ -11,7 +11,15 @@ let snapshot,
   switching = false,
   countryLoaded = false,
   statusRequests = 0,
-  poll;
+  poll,
+  session = { authenticated: false },
+  loaded = false,
+  currentTab,
+  currentStep,
+  patternShown = false,
+  colourSeen = "";
+const tabs = ["board", "network", "device", "updates", "developer"];
+const setupSteps = ["panels", "colours", "station", "wifi"];
 async function api(path, method = "GET", body) {
   const response = await fetch("/api/" + path, {
     method,
@@ -33,28 +41,71 @@ function notice(message, type = "") {
 }
 function signedOut() {
   clearInterval(poll);
+  session = { authenticated: false };
+  loaded = false;
+  currentTab = currentStep = undefined;
   sshSnapshot = undefined;
   sshDirty = false;
   $("ssh-form").reset();
   $("ssh-keys").disabled = true;
   $("ssh-save").disabled = true;
+  notice("");
   $("login").hidden = false;
   $("app").hidden = true;
+  $("setup").hidden = true;
 }
-async function signedIn() {
-  $("login").hidden = true;
-  $("app").hidden = false;
-  $("login-password").value = "";
+// Settings and status are loaded once the password is no longer the default,
+// because until then the board refuses every other request.
+async function load() {
+  if (loaded) return true;
+  loaded = true;
   try {
     await loadConfig();
     await status();
     clearInterval(poll);
     poll = setInterval(pollStatus, 5000);
-    if (!$("developer-page").hidden) await loadSSHKeys();
     void loadUpdates();
+    return true;
   } catch (error) {
-    notice(error.message, "error");
+    loaded = false;
+    notice(error.message + " Reload the page to try again.", "error");
+    return false;
   }
+}
+function navigate(path, replace = false) {
+  if (location.pathname !== path)
+    history[replace ? "replaceState" : "pushState"](null, "", path);
+  return render();
+}
+window.addEventListener("popstate", () => void render());
+document.addEventListener("click", (event) => {
+  const link = event.target.closest("a[href^='/']");
+  if (
+    !link ||
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey
+  )
+    return;
+  event.preventDefault();
+  navigate(link.getAttribute("href"));
+});
+async function render() {
+  if (!session.authenticated) return signedOut();
+  const [, section, step] = location.pathname.split("/");
+  if (session.passwordChangeRequired) {
+    if (section !== "setup" || step !== "password")
+      return navigate("/setup/password", true);
+    return showSetup("password");
+  }
+  if (section === "setup" && setupSteps.includes(step))
+    return (await load()) && showSetup(step);
+  if (session.setupStep !== "done")
+    return navigate("/setup/" + session.setupStep, true);
+  if (!tabs.includes(section)) return navigate("/board", true);
+  if (await load()) showTab(section);
 }
 $("login-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -63,7 +114,9 @@ $("login-form").addEventListener("submit", async (event) => {
   try {
     await api("login", "POST", { password: $("login-password").value });
     $("login-error").textContent = "";
-    await signedIn();
+    $("login-password").value = "";
+    session = await api("session");
+    await render();
   } catch (error) {
     $("login-error").textContent = error.message;
   } finally {
@@ -132,6 +185,24 @@ const labels = {
   "led.no_drop_privs": "Keep root privileges",
   "led.show_refresh": "Log panel refresh rate",
 };
+const helpText = {
+  crs: "Three-letter CRS code, e.g. BTN for Brighton.",
+  platforms:
+    "Separate platform numbers with commas. Leave empty for all platforms.",
+  "led.rows": "The height of one panel, in dots.",
+  "led.cols": "The width of one panel, in dots.",
+  "led.chain":
+    "How many panels are connected one after another to the adapter.",
+  "led.parallel":
+    "How many of the adapter's outputs have panels connected. Most boards use 1.",
+  "led.gpio_mapping":
+    "Most adapters use regular. For an Adafruit HAT or Bonnet, choose adafruit-hat.",
+  "led.slowdown_gpio":
+    "From 0 to 4. Increase it if the picture flickers or shows random dots.",
+  "led.brightness": "From 1 to 100.",
+  "led.rgb_sequence":
+    "To find the right order, use Identify the colour order, which asks what the board shows.",
+};
 const nice = {
   daktronics: "Daktronics Data Display",
   infotec: "Infotec landscape",
@@ -181,12 +252,12 @@ function unset(values, key) {
   if (keys.length === 2) delete values[keys[0]]?.[keys[1]];
   else delete values[key];
 }
-function field(field) {
+function field(field, prefix = "setting-") {
   const wrap = document.createElement("div");
   wrap.className = "field";
   const label = document.createElement("label");
   label.textContent = labels[field.key] || field.key.replaceAll("_", " ");
-  label.htmlFor = "setting-" + field.key;
+  label.htmlFor = prefix + field.key;
   let input;
   if (field.choices) {
     input = document.createElement("select");
@@ -237,7 +308,7 @@ function field(field) {
     autoLabel.className = "automatic";
     const auto = document.createElement("input");
     auto.type = "checkbox";
-    auto.id = "auto-" + field.key;
+    auto.id = prefix + "auto-" + field.key;
     auto.checked = current === undefined;
     input.disabled = auto.checked;
     auto.onchange = () => (input.disabled = auto.checked);
@@ -249,12 +320,7 @@ function field(field) {
   }
   const help = document.createElement("small");
   help.className = "field-help";
-  help.textContent =
-    field.key === "crs"
-      ? "Three-letter CRS code, e.g. BTN for Brighton."
-      : field.key === "platforms"
-        ? "Separate platform numbers with commas. Leave empty for all platforms."
-        : field.help;
+  help.textContent = helpText[field.key] || field.help;
   wrap.append(help);
   return wrap;
 }
@@ -283,6 +349,11 @@ async function loadConfig() {
         used.add(key);
       }
     }
+    if (title === "LED panels") {
+      const identify = text("a", "Identify the colour order", "button quiet");
+      identify.href = "/setup/colours";
+      copy.append(identify);
+    }
     card.append(copy, grid);
     container.append(card);
   }
@@ -300,6 +371,21 @@ async function loadConfig() {
     ? "No unsaved changes."
     : "Choose a station to start showing live departures.";
 }
+function inputValue(f, prefix = "setting-") {
+  const input = $(prefix + f.key);
+  if (f.type === "int" && input.value === "")
+    throw new Error("Enter a value for " + (labels[f.key] || f.key));
+  return f.type === "bool"
+    ? input.checked
+    : f.type === "int"
+      ? Number(input.value)
+      : f.type === "stringSlice"
+        ? input.value
+            .split(",")
+            .map((x) => x.trim())
+            .filter(Boolean)
+        : input.value;
+}
 $("config-form").addEventListener("input", () => {
   dirty = true;
   $("save-status").textContent = "Unsaved changes";
@@ -311,25 +397,11 @@ $("config-form").addEventListener("submit", async (event) => {
   try {
     const values = structuredClone(snapshot.values);
     for (const f of snapshot.fields) {
-      const input = $("setting-" + f.key);
-      if (f.automatic && $("auto-" + f.key).checked) {
+      if (f.automatic && $("setting-auto-" + f.key).checked) {
         unset(values, f.key);
         continue;
       }
-      let value =
-        f.type === "bool"
-          ? input.checked
-          : f.type === "int"
-            ? Number(input.value)
-            : f.type === "stringSlice"
-              ? input.value
-                  .split(",")
-                  .map((x) => x.trim())
-                  .filter(Boolean)
-              : input.value;
-      if (f.type === "int" && input.value === "")
-        throw new Error("Enter a value for " + (labels[f.key] || f.key));
-      set(values, f.key, value);
+      set(values, f.key, inputValue(f));
     }
     const result = await api("config", "PUT", {
       values,
@@ -366,19 +438,23 @@ window.addEventListener("beforeunload", (event) => {
     event.returnValue = "";
   }
 });
-for (const button of document.querySelectorAll("[data-tab]"))
-  button.onclick = () => {
-    for (const item of document.querySelectorAll("[data-tab]")) {
-      const active = item === button;
-      item.classList.toggle("selected", active);
-      if (active) item.setAttribute("aria-current", "page");
-      else item.removeAttribute("aria-current");
-      $(item.dataset.tab + "-page").hidden = !active;
-    }
-    if (button.dataset.tab === "network") scan();
-    if (button.dataset.tab === "developer" && !sshSnapshot) loadSSHKeys();
-    if (button.dataset.tab === "updates") loadUpdates();
-  };
+function showTab(tab) {
+  leaveSetup();
+  $("login").hidden = true;
+  $("app").hidden = false;
+  if (tab === currentTab) return;
+  currentTab = tab;
+  for (const item of document.querySelectorAll("[data-tab]")) {
+    const active = item.dataset.tab === tab;
+    item.classList.toggle("selected", active);
+    if (active) item.setAttribute("aria-current", "page");
+    else item.removeAttribute("aria-current");
+    $(item.dataset.tab + "-page").hidden = !active;
+  }
+  if (tab === "network") scan();
+  if (tab === "developer" && !sshSnapshot) loadSSHKeys();
+  if (tab === "updates") loadUpdates();
+}
 function sshControls(busy) {
   sshBusy = busy;
   $("ssh-keys").disabled = !sshSnapshot;
@@ -402,6 +478,309 @@ async function loadSSHKeys() {
     sshControls(false);
   }
 }
+const stepTitles = {
+  password: "Change the board password",
+  panels: "Set up the LED panels",
+  colours: "Check the colours",
+  station: "Choose a station",
+  wifi: "Connect to Wi-Fi",
+};
+const stepNames = {
+  password: "Password",
+  panels: "Panels",
+  colours: "Colours",
+  station: "Station",
+  wifi: "Wi-Fi",
+};
+const panelKeys = [
+  "led.rows",
+  "led.cols",
+  "led.chain",
+  "led.parallel",
+  "led.gpio_mapping",
+  "led.slowdown_gpio",
+  "led.brightness",
+];
+const stationKeys = ["crs", "board", "colour", "platforms"];
+function setupComplete() {
+  return session.setupStep === "done";
+}
+// setupStep records progress through first-time setup, which only moves
+// forward, so that a reload or a return after joining Wi-Fi carries on there.
+async function advance(step) {
+  const order = [...setupSteps, "done"];
+  if (order.indexOf(step) <= order.indexOf(session.setupStep)) return;
+  await api("setup", "PUT", { step });
+  session.setupStep = step;
+}
+async function nextStep(step) {
+  const next = setupSteps[setupSteps.indexOf(step) + 1] || "done";
+  await advance(next);
+  if (next !== "done") return navigate("/setup/" + next);
+  await navigate("/board");
+  notice("Setup is complete.", "success");
+}
+// Requests go one at a time, so that clearing the last step's pattern can't
+// overtake the next step's.
+let patternQueue = Promise.resolve();
+function showPattern(pattern) {
+  patternShown = Boolean(pattern);
+  patternQueue = patternQueue
+    .then(() => api("test-pattern", "POST", { pattern }))
+    .catch((error) => notice(error.message, "error"));
+  return patternQueue;
+}
+function leaveSetup() {
+  if (patternShown) void showPattern("");
+  if (currentStep === "wifi")
+    $("network-page").insertBefore(
+      $("wifi-forms"),
+      $("hotspot").closest("section"),
+    );
+  currentStep = undefined;
+  $("setup").hidden = true;
+}
+function setupFields(container, keys, prefix) {
+  container.replaceChildren();
+  for (const key of keys) {
+    const f = snapshot.fields.find((f) => f.key === key);
+    if (f) container.append(field(f, prefix));
+  }
+}
+async function saveSetup(changes, testPattern = "") {
+  const values = structuredClone(snapshot.values);
+  for (const [key, value] of Object.entries(changes)) set(values, key, value);
+  const result = await api("config", "PUT", {
+    values,
+    revision: snapshot.revision,
+    testPattern,
+  });
+  patternShown = Boolean(testPattern);
+  snapshot.values = values;
+  snapshot.revision = result.revision;
+  // Board settings shows what setup saved, and keeps any unsaved changes.
+  for (const [key, value] of Object.entries(changes)) {
+    const input = $("setting-" + key);
+    if (input?.type === "checkbox") input.checked = value;
+    else if (input)
+      input.value = Array.isArray(value) ? value.join(", ") : value;
+  }
+}
+function readFields(keys, prefix) {
+  const changes = {};
+  for (const key of keys) {
+    const f = snapshot.fields.find((f) => f.key === key);
+    if (f) changes[key] = inputValue(f, prefix);
+  }
+  return changes;
+}
+function showSetup(step) {
+  const steps = setupComplete()
+    ? session.passwordChangeRequired
+      ? ["password"]
+      : setupSteps
+    : ["password", ...setupSteps];
+  if (step !== currentStep) {
+    leaveSetup();
+    currentStep = step;
+    enterStep(step);
+  }
+  currentTab = undefined;
+  $("login").hidden = true;
+  $("app").hidden = true;
+  $("setup").hidden = false;
+  $("setup-title").textContent = stepTitles[step];
+  $("setup-exit").hidden = !setupComplete() || session.passwordChangeRequired;
+  const reached = setupComplete()
+    ? steps.length
+    : steps.indexOf(session.setupStep);
+  const list = $("setup-steps");
+  list.replaceChildren();
+  steps.forEach((name, i) => {
+    const item = document.createElement("li");
+    const done =
+      name === "password" ? !session.passwordChangeRequired : i < reached;
+    item.className = name === step ? "current" : done ? "done" : "";
+    if (name === step) item.setAttribute("aria-current", "step");
+    if (
+      name !== step &&
+      name !== "password" &&
+      !session.passwordChangeRequired &&
+      i <= reached
+    ) {
+      const link = text("a", stepNames[name]);
+      link.href = "/setup/" + name;
+      item.append(link);
+    } else item.append(text("span", stepNames[name]));
+    list.append(item);
+  });
+  const index = setupSteps.indexOf(step);
+  $("setup-back").hidden = index < 1;
+  $("setup-back").onclick = () => navigate("/setup/" + setupSteps[index - 1]);
+  for (const section of document.querySelectorAll("[data-step]"))
+    section.hidden = section.dataset.step !== step;
+}
+function enterStep(step) {
+  notice("");
+  if (step === "password") {
+    $("setup-password-form").reset();
+    $("setup-new-password").focus();
+  }
+  if (step === "panels") {
+    setupFields($("setup-panel-fields"), panelKeys, "setup-");
+    $("panels-check").hidden = true;
+    $("panels-help").hidden = true;
+  }
+  if (step === "colours") startColours();
+  if (step === "station") {
+    setupFields($("setup-station-fields"), stationKeys, "setup-");
+    $("setup-crs").required = true;
+  }
+  if (step === "wifi") {
+    $("setup-wifi-slot").append($("wifi-forms"));
+    void status();
+    scan();
+  }
+}
+$("setup-exit").onclick = () => navigate("/board");
+$("setup-password-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if ($("setup-new-password").value !== $("setup-confirm-password").value) {
+    notice("The passwords don't match.", "error");
+    return;
+  }
+  const button = event.submitter;
+  button.disabled = true;
+  try {
+    await api("password", "POST", {
+      password: $("setup-new-password").value,
+    });
+    session.passwordChangeRequired = false;
+    $("setup-password-form").reset();
+    await navigate(setupComplete() ? "/board" : "/setup/" + session.setupStep);
+    notice("Password changed.", "success");
+  } catch (error) {
+    notice(error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+$("setup-panels-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.submitter;
+  button.disabled = true;
+  notice("Restarting the display…");
+  try {
+    const changes = readFields(panelKeys, "setup-");
+    await saveSetup(changes, "layout");
+    const panels = changes["led.chain"] * changes["led.parallel"];
+    $("panels-expected").textContent =
+      panels === 1
+        ? "The board outlines its panel in white and labels it Panel 1."
+        : "The board outlines each of its " +
+          panels +
+          " panels in white and labels them Panel 1 to Panel " +
+          panels +
+          ", in the order that they're chained.";
+    $("panels-check").hidden = false;
+    $("panels-help").hidden = true;
+    notice("");
+    $("panels-check").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } catch (error) {
+    notice(error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+$("panels-yes").onclick = () => nextStep("panels");
+$("panels-no").onclick = () => ($("panels-help").hidden = false);
+const colourPatterns = ["red", "green", "blue"];
+const colourWords = { R: "red", G: "green", B: "blue" };
+function startColours(message = "") {
+  colourSeen = "";
+  $("colour-check").hidden = true;
+  $("colour-fault").hidden = true;
+  $("colour-help").hidden = !message;
+  $("colour-help").textContent = message;
+  askColour();
+}
+function askColour() {
+  $("colour-question").hidden = false;
+  $("colour-count").textContent = "Colour " + (colourSeen.length + 1) + " of 3";
+  for (const button of document.querySelectorAll(".colour-choice"))
+    button.disabled = false;
+  void showPattern(colourPatterns[colourSeen.length]);
+}
+for (const button of document.querySelectorAll(".colour-choice"))
+  button.onclick = async () => {
+    const colour = button.dataset.colour;
+    if (!colour) {
+      $("colour-question").hidden = true;
+      $("colour-help").hidden = false;
+      $("colour-help").textContent =
+        "If the board shows white, a mix of colours, or nothing at all, the colour order can't fix it. Check that the ribbon cable is firmly in each panel's input connector and that the panels have power, and then start again.";
+      $("colour-fault").hidden = false;
+      return;
+    }
+    if (colourSeen.includes(colour)) {
+      startColours(
+        "You chose " +
+          colourWords[colour] +
+          " for two different colours, but each one lights differently. Look closely at the board, and answer again from the first colour.",
+      );
+      return;
+    }
+    colourSeen += colour;
+    $("colour-help").hidden = true;
+    if (colourSeen.length < 3) return askColour();
+    for (const choice of document.querySelectorAll(".colour-choice"))
+      choice.disabled = true;
+    await applyColours();
+  };
+async function applyColours() {
+  try {
+    const key = "led.rgb_sequence";
+    const current =
+      get(snapshot.values, key) ??
+      snapshot.fields.find((f) => f.key === key).default;
+    const { sequence } = await api("colour-order", "POST", {
+      current,
+      seen: colourSeen,
+    });
+    if (sequence === current) await showPattern("colours");
+    else {
+      notice("Restarting the display…");
+      await saveSetup({ [key]: sequence }, "colours");
+      notice("");
+    }
+    $("colour-question").hidden = true;
+    $("colour-check").hidden = false;
+  } catch (error) {
+    notice(error.message, "error");
+    startColours();
+  }
+}
+$("colours-yes").onclick = () => nextStep("colours");
+$("colours-no").onclick = () =>
+  startColours(
+    "Look at the board again, and choose the colour that it shows each time.",
+  );
+$("colours-restart").onclick = () => startColours();
+$("colours-skip").onclick = () => nextStep("colours");
+$("setup-station-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.submitter;
+  button.disabled = true;
+  try {
+    await saveSetup(readFields(stationKeys, "setup-"));
+    await nextStep("station");
+  } catch (error) {
+    notice(error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+$("setup-finish").onclick = () => nextStep("wifi");
 $("ssh-reload").onclick = () => {
   if (sshDirty && !confirm("Discard your unsaved SSH key changes and reload?"))
     return;
@@ -438,7 +817,12 @@ $("ssh-form").addEventListener("submit", async (event) => {
 // also must not accumulate while a network change is in progress. Explicit
 // refreshes after user actions still request fresh status independently.
 function pollStatus() {
-  if (!document.hidden && !$("app").hidden && statusRequests === 0) {
+  if (
+    !document.hidden &&
+    loaded &&
+    (!$("app").hidden || !$("setup").hidden) &&
+    statusRequests === 0
+  ) {
     void status();
   }
 }
@@ -483,6 +867,18 @@ async function status() {
         : data.board === "demo"
           ? "Preview mode"
           : data.board;
+    $("setup-board-state").hidden =
+      data.board === "active" || data.board === "demo";
+    $("setup-board-state").textContent =
+      "The display isn't running (" +
+      data.board +
+      "), so the board can't show test patterns. If it doesn't start within a minute, check the panel settings.";
+    $("setup-wifi-state").textContent =
+      n.mode === "connected"
+        ? "The board is connected" +
+          (n.ssid ? " to " + n.ssid : "") +
+          ". To use a different Wi-Fi network, choose it here. Otherwise, finish setup."
+        : "To show live departures, the board needs the internet. Choose your Wi-Fi network. When the board joins it, the setup hotspot turns off, so join the same network on this device.";
     $("demo-label").textContent = data.demo
       ? "Local demo · no hardware changes"
       : "";
@@ -570,6 +966,9 @@ $("wifi-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   $("connect").disabled = true;
   try {
+    // Joining the network takes the board off the setup hotspot, and this page
+    // with it, so setup has to be recorded as finished first.
+    if (!$("setup").hidden) await advance("done");
     const result = await api("network", "POST", {
       ssid: $("ssid").value,
       password: $("wifi-password").value,
@@ -617,11 +1016,11 @@ $("password-form").addEventListener("submit", async (event) => {
     return;
   }
   try {
-    await api("password", "POST", { password: $("new-password").value });
+    const result = await api("password", "POST", {
+      password: $("new-password").value,
+    });
     $("password-form").reset();
-    signedOut();
-    $("login-error").textContent =
-      "Password changed. Sign in with your new password.";
+    notice(result.message, "success");
   } catch (error) {
     notice(error.message, "error");
   }
@@ -894,5 +1293,8 @@ $("update-settings").addEventListener("submit", async (event) => {
   }
 });
 api("session")
-  .then((data) => (data.authenticated ? signedIn() : signedOut()))
+  .then((data) => {
+    session = data;
+    return render();
+  })
   .catch((error) => ($("login-error").textContent = error.message));

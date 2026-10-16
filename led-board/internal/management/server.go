@@ -17,12 +17,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/atomicfile"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/configschema"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/testpattern"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/update"
 	"github.com/pelletier/go-toml/v2"
 )
@@ -53,16 +55,19 @@ type Options struct {
 	Run                   Runner
 }
 type Server struct {
-	opts        Options
-	fields      []configschema.Field
-	wifi        *WiFi
-	updater     *update.Updater
-	sshPath     string
-	mu          sync.Mutex
-	sessions    map[string]time.Time
-	password    passwordRecord
-	loginWindow time.Time
-	loginCount  int
+	opts     Options
+	fields   []configschema.Field
+	wifi     *WiFi
+	updater  *update.Updater
+	sshPath  string
+	mu       sync.Mutex
+	sessions map[string]time.Time
+	password passwordRecord
+	// passwordDefault is whether the password is still the default, which blocks everything else until it changes.
+	passwordDefault bool
+	setupStep       string
+	loginWindow     time.Time
+	loginCount      int
 }
 
 func New(o Options) (*Server, error) {
@@ -87,6 +92,9 @@ func New(o Options) (*Server, error) {
 	if err = s.loadPassword(); err != nil {
 		return nil, err
 	}
+	if err = s.loadSetup(); err != nil {
+		return nil, err
+	}
 	s.wifi = NewWiFi(o)
 	s.updater = newUpdater(o)
 	return s, nil
@@ -102,7 +110,13 @@ func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/login", s.login)
 	mux.HandleFunc("GET /api/session", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, 200, map[string]bool{"authenticated": s.authenticated(r)})
+		if !s.authenticated(r) {
+			writeJSON(w, 200, map[string]bool{"authenticated": false})
+			return
+		}
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		writeJSON(w, 200, map[string]any{"authenticated": true, "passwordChangeRequired": s.passwordDefault, "setupStep": s.setupStep})
 	})
 	api := http.NewServeMux()
 	api.HandleFunc("POST /api/logout", s.logout)
@@ -156,15 +170,26 @@ func (s *Server) Handler() http.Handler {
 		writeJSON(w, 200, map[string]string{"message": "Board restarted."})
 	})
 	s.updateRoutes(api)
+	s.setupRoutes(api)
 	mux.Handle("/api/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !s.authenticated(r) {
 			fail(w, 401, errors.New("sign in to manage the board"))
+			return
+		}
+		if r.URL.Path != "/api/password" && r.URL.Path != "/api/logout" && s.passwordChangeRequired() {
+			fail(w, 403, errors.New("change the board password before you continue"))
 			return
 		}
 		api.ServeHTTP(w, r)
 	}))
 	assets, _ := fs.Sub(web, "web")
 	mux.Handle("/", http.FileServer(http.FS(assets)))
+	// The page shows each tab and setup step at its own address, so that a reload or a bookmark returns to it.
+	page := func(w http.ResponseWriter, r *http.Request) { http.ServeFileFS(w, r, assets, "index.html") }
+	for _, tab := range []string{"board", "network", "device", "updates", "developer"} {
+		mux.HandleFunc("GET /"+tab, page)
+	}
+	mux.HandleFunc("GET /setup/{step}", page)
 	protected := http.NewCrossOriginProtection().Handler(mux)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -231,8 +256,15 @@ func (s *Server) putConfig(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Revision string         `json:"revision"`
 		Values   map[string]any `json:"values"`
+		// TestPattern is shown once the board restarts. A board signalled to show one while it restarts could miss
+		// the signal.
+		TestPattern string `json:"testPattern"`
 	}
 	if !decode(w, r, &input) {
+		return
+	}
+	if input.TestPattern != "" && !slices.Contains(testpattern.Names, input.TestPattern) {
+		fail(w, 400, errors.New("unknown test pattern"))
 		return
 	}
 	s.mu.Lock()
@@ -275,6 +307,9 @@ func (s *Server) putConfig(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = atomicfile.Write(s.opts.ConfigPath+".bak", old, 0644); err == nil {
 		err = atomicfile.Write(s.opts.ConfigPath, data, 0644)
+	}
+	if err == nil {
+		err = s.writeTestPattern(input.TestPattern)
 	}
 	if err != nil {
 		fail(w, 500, err)
