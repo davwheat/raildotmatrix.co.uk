@@ -242,6 +242,12 @@ func (b *Board) geometry(details bool) geometry {
 		top := g.sepY + 1
 		g.secondY = top + (g.h-top-font.Infotec10x4.Height)/2
 		g.clockY = top + (g.h-top-g.clockFace(false).Height)/2
+		if g.clockStyle == "small" {
+			// Centring each on its own height leaves the text a dot above the small clock's digits, so share the
+			// clock's baseline while the descenders still fit.
+			text, clock := font.Infotec10x4, g.clockFace(false)
+			g.secondY = min(g.h-text.Height, g.clockY+clock.Baseline-text.Baseline)
+		}
 	}
 	g.infoSlide = (g.infoFace().Height*110 + 50) / 100
 	g.swapTravel = (g.lowerFace().Height*105 + 50) / 100

@@ -44,13 +44,22 @@ func TestCompactLowerRowVerticallyCentred(t *testing.T) {
 			for _, clock := range []string{"", "normal", "small-seconds", "small"} {
 				b := New(Config{Width: size[0], Height: size[1], PlatformBox: "2", SmallScrollingText: smallScrolling, ClockStyle: clock})
 				g := b.geo
-				for _, item := range []struct {
+				items := []struct {
 					name      string
 					y, height int
-				}{
-					{"service row", g.secondY, font.Infotec10x4.Height},
-					{"clock", g.clockY, g.clockFace(false).Height},
-				} {
+				}{{"clock", g.clockY, g.clockFace(false).Height}}
+				if g.clockStyle == "small" {
+					text, face := font.Infotec10x4, g.clockFace(false)
+					if g.secondY+text.Baseline != g.clockY+face.Baseline || g.secondY+text.Height > g.h {
+						t.Fatalf("%dx%d small scrolling=%v clock=%q: service row at %d is off the small clock's baseline or the board", g.w, g.h, smallScrolling, clock, g.secondY)
+					}
+				} else {
+					items = append(items, struct {
+						name      string
+						y, height int
+					}{"service row", g.secondY, font.Infotec10x4.Height})
+				}
+				for _, item := range items {
 					topGap := item.y - (g.sepY + 1)
 					bottomGap := g.h - (item.y + item.height)
 					if topGap < 0 || bottomGap < topGap || bottomGap-topGap > 1 {
