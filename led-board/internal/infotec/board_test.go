@@ -392,6 +392,35 @@ func TestPagesFadeOut(t *testing.T) {
 	}
 }
 
+func TestCallingPageFadesIn(t *testing.T) {
+	b := newTestBoard(t)
+	var appearAt, litAt time.Time
+	levels := map[int]bool{}
+	run(t, b, "busy-board", 10*time.Second, func(now time.Time, _ bool, _ *frame.Frame) {
+		info := b.last.info
+		if b.infoPage != 1 || !info.on || info.prefix == "" || !litAt.IsZero() {
+			return
+		}
+		if appearAt.IsZero() {
+			appearAt = now
+		}
+		levels[info.unlit] = true
+		if info.unlit == 0 {
+			litAt = now
+			return
+		}
+		if !b.NextTick(now).IsZero() {
+			t.Fatalf("at %v: board would sleep through the fade-in", now.Sub(fixtures.Clock))
+		}
+	})
+	if !levels[fadeLevels] || len(levels) < 20 {
+		t.Fatalf("fade-in levels seen: %v", levels)
+	}
+	if got := litAt.Sub(appearAt); got != callingFadeIn*time.Millisecond {
+		t.Fatalf("calling page took %v to fade in", got)
+	}
+}
+
 func TestCallingPointsScroll(t *testing.T) {
 	b := newTestBoard(t)
 	g := b.geo
@@ -424,11 +453,11 @@ func TestCallingPointsScroll(t *testing.T) {
 			}
 		}
 	})
-	// The information page holds for 8 s; the calling page then appears after 0.5 s and moves after 1 s.
+	// The information page holds for 8 s; the calling page then appears after 0.5 s and moves straight away.
 	if got := prefixAt.Sub(fixtures.Clock); got != (infoHold+pageAppearDelay)*time.Millisecond {
 		t.Fatalf("calling points prefix shown at %v", got)
 	}
-	if got := moveAt.Sub(fixtures.Clock); got != (infoHold+scrollPauseAtEnds)*time.Millisecond {
+	if got := moveAt.Sub(fixtures.Clock); got != (infoHold+pageAppearDelay)*time.Millisecond {
 		t.Fatalf("calling points started moving at %v", got)
 	}
 }

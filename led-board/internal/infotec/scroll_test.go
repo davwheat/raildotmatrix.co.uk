@@ -30,7 +30,7 @@ func TestScrollingFontControlsTextFit(t *testing.T) {
 		if small {
 			face = font.Infotec10x4
 		}
-		end := fixtures.Clock.Add(time.Duration(scrollPauseAtEnds+(face.Width(p.text)+b.info.outerW)*1000/DefaultScrollSpeed) * time.Millisecond)
+		end := fixtures.Clock.Add(time.Duration(pageAppearDelay+(face.Width(p.text)+b.info.outerW)*1000/DefaultScrollSpeed) * time.Millisecond)
 		b.info.advance(end.Add(-time.Millisecond))
 		if b.info.phase != scrollMoving {
 			t.Fatal("scroll finished before the last character left the row")

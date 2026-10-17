@@ -262,7 +262,7 @@ func (b *Board) drawInfo(f *frame.Frame, sc *scrollScene, base frame.RGB) {
 	g := &b.geo
 	c := g.infoBand()
 	y := g.infoY + sc.dy
-	colour := board.Scale(base, fadeSteps-sc.faded, fadeSteps)
+	colour := board.Scale(base, (fadeLevels-sc.unlit)*(fadeSteps-sc.faded), fadeLevels*fadeSteps)
 	board.DrawText(f, g.infoFace(), g.infoX, y, sc.prefix, colour, c)
 	b.infoText.Draw(f, g.infoFace(), sc.x, y, sc.text, colour, c.Intersect(board.Clip{X0: sc.clipX, X1: g.w, Y1: g.h}))
 }

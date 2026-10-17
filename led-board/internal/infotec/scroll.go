@@ -17,6 +17,9 @@ const (
 	pageAppearDelay = 500
 	// infoSlideIn is the info-in animation that lifts the service-information page into its row.
 	infoSlideIn = 200
+	// callingFadeIn is how long a calling page whose list scrolls takes to fade in once it appears, as the
+	// rows do after a slide-out.
+	callingFadeIn = arriveFade
 	// pageFade is the linear opacity transition of a page going out, and fadeSteps how many brightness steps
 	// it takes: one per refresh at the board's default 60 Hz.
 	pageFade  = 200
@@ -93,6 +96,9 @@ func (s *scroller) duration() int64 {
 		return s.hold
 	case s.phase == scrollMoving:
 		return int64(s.textW+s.outerW) * 1000 / int64(s.speed)
+	case s.phase == scrollWaiting && s.slide == 0:
+		// The list sets off as its prefix starts to fade in, so the two happen together.
+		return pageAppearDelay
 	default:
 		return scrollPauseAtEnds
 	}
@@ -121,13 +127,22 @@ func (s *scroller) advance(now time.Time) bool {
 	}
 }
 
+// entrance is how long the page takes to settle once it appears: a calling list that has to scroll fades its
+// prefix in, and every other page rises into its row.
+func (s *scroller) entrance() int64 {
+	if s.slide > 0 {
+		return infoSlideIn
+	}
+	return callingFadeIn
+}
+
 // scrollScene is where the page is drawn this tick: x is the text's left edge, clipX the left edge of the area
-// it is visible in, dy its offset while the page rises into the row, and faded how many of the fadeSteps of
-// brightness it has lost.
+// it is visible in, dy its offset while the page rises into the row, unlit how many of the fadeLevels of
+// brightness it has still to gain as it fades in, and faded how many of the fadeSteps it has lost as it fades out.
 type scrollScene struct {
 	prefix, text string
 	x, clipX, dy int
-	faded        int
+	unlit, faded int
 	on           bool
 }
 
@@ -149,6 +164,9 @@ func (s *scroller) scene(now time.Time) scrollScene {
 	sc := scrollScene{prefix: s.prefix, text: s.text, x: s.x0, clipX: s.x0, on: true}
 	if s.slide > 0 && e < pageAppearDelay+infoSlideIn {
 		sc.dy = int(int64(s.slide) * (pageAppearDelay + infoSlideIn - e) / infoSlideIn)
+	}
+	if s.slide == 0 && e < pageAppearDelay+callingFadeIn {
+		sc.unlit = int(int64(fadeLevels) * (pageAppearDelay + callingFadeIn - e) / callingFadeIn)
 	}
 	switch {
 	case s.static:

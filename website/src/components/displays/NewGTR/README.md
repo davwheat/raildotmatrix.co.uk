@@ -4,6 +4,7 @@
   - E.g., "Bedford" and "via St. Pancras Intl" swap every 3s
 - 2nd/3rd departures cycle approx. every 12-13s?
 - "Calling at:" is fixed in place when displayed, and is the same width as the ordinal + scheduled departure
+  - When the calling points scroll, they set off as "Calling at:" fades in over 0.5s. When they fit, the page rises into place
 
 The settings panel can replace the first ordinal with a platform box for any platform selection. With one requested platform the box is fixed;
 otherwise it follows the first service, leaving an unknown platform blank. The normal-font "Plat" label and larger platform number are centred as

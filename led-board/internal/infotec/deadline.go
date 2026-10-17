@@ -50,7 +50,7 @@ func (b *Board) nextStillTick(now, next time.Time, pixels bool) time.Time {
 	}
 	if elapsed := now.Sub(s.selected); elapsed < pageAppearDelay*time.Millisecond {
 		consider(s.selected.Add(pageAppearDelay * time.Millisecond))
-	} else if s.slide > 0 && elapsed < (pageAppearDelay+infoSlideIn)*time.Millisecond {
+	} else if elapsed < time.Duration(pageAppearDelay+s.entrance())*time.Millisecond {
 		return time.Time{}
 	}
 	if s.phase == scrollGone && now.Sub(s.start) < pageFade*time.Millisecond {
