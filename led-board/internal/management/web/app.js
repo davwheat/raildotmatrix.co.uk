@@ -1409,6 +1409,82 @@ function text(tag, content, className) {
   if (className) element.className = className;
   return element;
 }
+function externalLink(href, content) {
+  const link = text("a", content);
+  link.href = href;
+  link.target = "_blank";
+  link.rel = "noopener";
+  return link;
+}
+const inlineMarkdown =
+  /`([^`]+)`|\[([^\]]+)\]\(([^)\s]+)\)|\*\*(.+?)\*\*|(?<!\w)([*_])(?!\s)(.+?)(?<!\s)\5(?!\w)|(https?:\/\/[^\s<]*[^\s<.,:;"')\]])/g;
+function inline(parent, source) {
+  let end = 0;
+  for (const match of source.matchAll(inlineMarkdown)) {
+    const [whole, code, label, href, strong, , emphasis, url] = match;
+    parent.append(source.slice(end, match.index));
+    end = match.index + whole.length;
+    if (code) parent.append(text("code", code));
+    // A javascript: link would run with the signed-in management session.
+    else if (label && /^https?:\/\//i.test(href))
+      parent.append(inline(externalLink(href, ""), label));
+    else if (label) inline(parent, label);
+    else if (strong)
+      parent.append(inline(document.createElement("strong"), strong));
+    else if (emphasis)
+      parent.append(inline(document.createElement("em"), emphasis));
+    else parent.append(externalLink(url, url));
+  }
+  parent.append(source.slice(end));
+  return parent;
+}
+// GitHub keeps single line breaks in release notes, so this does too.
+function markdown(source) {
+  const box = document.createElement("div");
+  box.className = "release-notes";
+  let paragraph = null,
+    list = null,
+    fence = null;
+  for (const line of source.split(/\r?\n/)) {
+    if (fence) {
+      if (/^\s*```/.test(line)) fence = null;
+      else fence.textContent += line + "\n";
+      continue;
+    }
+    const heading = line.match(/^#{1,6}\s+(.*?)(\s+#+)?\s*$/),
+      item = line.match(/^\s*(?:[-*+]|(\d+)[.)])\s+(.*)$/);
+    if (!line.trim()) paragraph = null;
+    else if (/^\s*```/.test(line)) {
+      const pre = box.appendChild(document.createElement("pre"));
+      fence = pre.appendChild(document.createElement("code"));
+      paragraph = list = null;
+    } else if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) {
+      box.append(document.createElement("hr"));
+      paragraph = list = null;
+    } else if (heading) {
+      box.append(inline(document.createElement("h4"), heading[1]));
+      paragraph = list = null;
+    } else if (item) {
+      const tag = item[1] ? "OL" : "UL";
+      if (list?.tagName !== tag) {
+        list = box.appendChild(document.createElement(tag));
+        if (item[1]) list.start = Number(item[1]);
+      }
+      paragraph = list.appendChild(
+        inline(document.createElement("li"), item[2]),
+      );
+    } else if (paragraph) {
+      paragraph.append(document.createElement("br"));
+      inline(paragraph, line.trim());
+    } else {
+      paragraph = box.appendChild(
+        inline(document.createElement("p"), line.trim()),
+      );
+      list = null;
+    }
+  }
+  return box;
+}
 function showUpdateSettings(settings) {
   $("update-channel").value = settings.channel;
   $("update-schedule").value = settings.schedule;
@@ -1500,14 +1576,10 @@ function showAvailable(data) {
     if (value) facts.append(text("dt", term), text("dd", value));
   }
   box.append(facts);
-  if (a.notes) box.append(text("p", a.notes, "release-notes"));
+  if (a.notes) box.append(markdown(a.notes));
   if (a.url) {
-    const link = text("a", "View on GitHub");
-    link.href = a.url;
-    link.target = "_blank";
-    link.rel = "noopener";
     const paragraph = text("p", "");
-    paragraph.append(link);
+    paragraph.append(externalLink(a.url, "View on GitHub"));
     box.append(paragraph);
   }
   if (a.channel === "development" && a.newer) showCommits(box, a.commit);

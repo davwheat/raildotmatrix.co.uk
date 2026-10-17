@@ -52,6 +52,32 @@ try {
   await evaluate('signedOut();pollStatus()')
   if (!(await evaluate('statusCount===3'))) throw Error('Signed-out settings tab polled')
   console.log('Management polling: overlapping polls skipped; hidden and signed-out tabs skip polls; resume and explicit refresh work.')
+  const notes = [
+    'Built from [`6929e1a`](https://github.com/o/r/commit/6929e1a): feat(management): follow the *system* setting',
+    '',
+    '[Changes](https://github.com/o/r/compare/a...b)',
+    '',
+    "Boards install this build.\nIt hasn't been tried on a board.",
+    '',
+    "## What's Changed",
+    '* **fix**: keep snake_case_names by @x in https://github.com/o/r/pull/1.',
+    '',
+    '* [Bad](javascript:void0) link',
+    '```',
+    '<b>raw</b>',
+    '```',
+  ].join('\n')
+  const rendered = await evaluate(`markdown(${JSON.stringify(notes)}).innerHTML`)
+  const expected =
+    '<p>Built from <a href="https://github.com/o/r/commit/6929e1a" target="_blank" rel="noopener"><code>6929e1a</code></a>: feat(management): follow the <em>system</em> setting</p>' +
+    '<p><a href="https://github.com/o/r/compare/a...b" target="_blank" rel="noopener">Changes</a></p>' +
+    "<p>Boards install this build.<br>It hasn't been tried on a board.</p>" +
+    "<h4>What's Changed</h4>" +
+    '<ul><li><strong>fix</strong>: keep snake_case_names by @x in <a href="https://github.com/o/r/pull/1" target="_blank" rel="noopener">https://github.com/o/r/pull/1</a>.</li>' +
+    '<li>Bad link</li></ul>' +
+    '<pre><code>&lt;b&gt;raw&lt;/b&gt;\n</code></pre>'
+  if (rendered !== expected) throw Error(`Release notes rendered as:\n${rendered}\nwant:\n${expected}`)
+  console.log('Release notes: Markdown renders, and only web links are followed.')
 } finally {
   await browser.close()
   await site.close()

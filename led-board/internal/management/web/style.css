@@ -496,12 +496,13 @@ form > .password-input {
 }
 .release-notes,
 .diff {
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-size: 13px;
   line-height: 1.55;
 }
+.release-notes pre,
 .diff {
+  white-space: pre-wrap;
   font-family: ui-monospace, monospace;
   background: var(--surface);
   border: 1px solid var(--line);
