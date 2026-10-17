@@ -612,8 +612,11 @@ function renderOptions(api, fieldset, values) {
   const lists = inputs.map((input) => {
     const variant = structuredClone(values);
     set(variant, key, choiceValue(f, input.value));
+    // Each scene's times suit the default scroll speed, and a still can't show a speed anyway: at another speed, the
+    // text that the picture is about might not have scrolled into view yet, or might have scrolled away.
     const result = api.render({
       ...boardOptions(variant),
+      scrollSpeed: 0,
       fixture: scene.fixture ?? "busy-board",
       at: scene.at,
     });
