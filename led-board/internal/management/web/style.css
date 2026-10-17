@@ -6,12 +6,75 @@
     "Segoe UI",
     sans-serif;
   font-size: 14px;
-  color: #252525;
-  background: #fff;
-  --muted: #626262;
-  --line: #d7d7d7;
-  --accent: #165b9f;
+  color: var(--text);
+  background: var(--bg);
+  color-scheme: light dark;
   font-synthesis: none;
+  --bg: #fff;
+  --text: #252525;
+  --strong: #222;
+  --muted: #626262;
+  --faint: #777;
+  --hint-text: #555;
+  --surface: #f5f5f5;
+  --field-bg: #fff;
+  --hover: #eee;
+  --hover-soft: #f4f4f4;
+  --line: #d7d7d7;
+  --line-soft: #e6e6e6;
+  --disabled-line: #ddd;
+  --card-line: #ccc;
+  --control-line: #bbb;
+  --input-line: #aaa;
+  --line-strong: #888;
+  --control-text: #333;
+  --accent: #165b9f;
+  --accent-hover: #104c88;
+  --on-accent: #fff;
+  --link: #165b9f;
+  --inverse-bg: #222;
+  --inverse-text: #fff;
+  --error: #992d20;
+  --error-bg: #fff4f2;
+  --error-line: #d9a69e;
+  --success: #27592c;
+  --success-bg: #f2f8f1;
+  --success-line: #a8c3aa;
+  --swatch-line: rgba(0, 0, 0, 0.2);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17191c;
+    --text: #e3e3e3;
+    --strong: #f2f2f2;
+    --muted: #a4a7ab;
+    --faint: #8b8f95;
+    --hint-text: #bfc2c6;
+    --surface: #212429;
+    --field-bg: #1e2125;
+    --hover: #2c3036;
+    --hover-soft: #262a2f;
+    --line: #363a40;
+    --line-soft: #2c3035;
+    --disabled-line: #30343a;
+    --card-line: #43474e;
+    --control-line: #535860;
+    --input-line: #6c7179;
+    --line-strong: #858a92;
+    --control-text: #e3e3e3;
+    --accent: #2465a8;
+    --accent-hover: #1d5791;
+    --link: #7db5ef;
+    --inverse-bg: #e3e3e3;
+    --inverse-text: #17191c;
+    --error: #ff9d8f;
+    --error-bg: #351d19;
+    --error-line: #7a3a31;
+    --success: #94d69b;
+    --success-bg: #1a2d1c;
+    --success-line: #3f6b44;
+    --swatch-line: rgba(255, 255, 255, 0.3);
+  }
 }
 * {
   box-sizing: border-box;
@@ -23,7 +86,7 @@ body {
   margin: 0;
 }
 a {
-  color: var(--accent);
+  color: var(--link);
   text-underline-offset: 3px;
 }
 button,
@@ -35,7 +98,7 @@ select {
 button {
   cursor: pointer;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: 1px solid var(--accent);
   border-radius: 3px;
   padding: 8px 13px;
@@ -44,23 +107,23 @@ button {
   white-space: nowrap;
 }
 button:hover {
-  background: #104c88;
+  background: var(--accent-hover);
 }
 a.button {
   display: inline-flex;
   align-items: center;
-  border: 1px solid #bbb;
+  border: 1px solid var(--control-line);
   border-radius: 3px;
   padding: 8px 13px;
   min-height: 36px;
   font-weight: 500;
-  color: #333;
-  background: #fff;
+  color: var(--control-text);
+  background: var(--field-bg);
   text-decoration: none;
   white-space: nowrap;
 }
 a.button:hover {
-  background: #eee;
+  background: var(--hover);
 }
 .section-copy a.button {
   margin-top: 4px;
@@ -72,21 +135,21 @@ button:disabled {
 }
 button.quiet,
 button.secondary {
-  background: #fff;
-  color: #333;
-  border-color: #bbb;
+  background: var(--field-bg);
+  color: var(--control-text);
+  border-color: var(--control-line);
 }
 button.quiet:hover,
 button.secondary:hover {
-  background: #eee;
+  background: var(--hover);
 }
 :focus-visible {
-  outline: 2px solid #165b9f;
+  outline: 2px solid var(--link);
   outline-offset: 3px;
 }
 header {
   height: 55px;
-  background: #f5f5f5;
+  background: var(--surface);
   border-bottom: 1px solid var(--line);
   padding: 0 max(20px, calc((100vw - 1040px) / 2));
   display: flex;
@@ -95,7 +158,7 @@ header {
   gap: 20px;
 }
 .brand {
-  color: #222;
+  color: var(--strong);
   text-decoration: none;
   font-size: 17px;
   font-weight: 600;
@@ -176,7 +239,7 @@ nav {
 }
 nav a {
   padding: 10px 0;
-  color: #626262;
+  color: var(--muted);
   margin-bottom: -1px;
   min-height: 40px;
   font-weight: 500;
@@ -184,11 +247,11 @@ nav a {
   white-space: nowrap;
 }
 nav a:hover {
-  color: #222;
+  color: var(--strong);
 }
 nav .selected {
-  color: #222;
-  border-bottom: 2px solid #222;
+  color: var(--strong);
+  border-bottom: 2px solid var(--strong);
 }
 .section-heading {
   display: flex;
@@ -231,16 +294,16 @@ form > label {
 input:not([type="checkbox"]),
 textarea,
 select {
-  color: #222;
+  color: var(--strong);
   width: 100%;
   min-height: 36px;
-  border: 1px solid #aaa;
+  border: 1px solid var(--input-line);
   border-radius: 3px;
-  background: #fff;
+  background: var(--field-bg);
   padding: 7px 9px;
 }
 input::placeholder {
-  color: #777;
+  color: var(--faint);
 }
 textarea {
   display: block;
@@ -255,9 +318,9 @@ code {
 input:disabled,
 textarea:disabled,
 select:disabled {
-  color: #777;
-  background: #f5f5f5;
-  border-color: #ddd;
+  color: var(--faint);
+  background: var(--surface);
+  border-color: var(--disabled-line);
 }
 small,
 .field-help {
@@ -300,7 +363,7 @@ input[type="checkbox"] {
 .save-bar {
   position: sticky;
   bottom: 0;
-  background: #f5f5f5;
+  background: var(--surface);
   border: 1px solid var(--line);
   display: flex;
   justify-content: space-between;
@@ -336,9 +399,9 @@ input[type="checkbox"] {
   justify-content: space-between;
   gap: 12px;
   background: transparent;
-  color: #222;
+  color: var(--strong);
   border: 0;
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid var(--line-soft);
   border-radius: 0;
   text-align: left;
   padding: 13px 0;
@@ -350,7 +413,7 @@ input[type="checkbox"] {
   margin: 0;
 }
 .network-choice:hover {
-  background: #f4f4f4;
+  background: var(--hover-soft);
 }
 .small {
   font-size: 12px;
@@ -388,8 +451,8 @@ form > .password-input {
   text-transform: uppercase;
 }
 .hint {
-  border-left: 3px solid #bbb;
-  color: #555;
+  border-left: 3px solid var(--control-line);
+  color: var(--hint-text);
   font-size: 13px;
   line-height: 1.55;
   padding: 0 0 0 12px;
@@ -440,23 +503,23 @@ form > .password-input {
 }
 .diff {
   font-family: ui-monospace, monospace;
-  background: #f5f5f5;
+  background: var(--surface);
   border: 1px solid var(--line);
   padding: 10px 12px;
   max-height: 320px;
   overflow: auto;
 }
 .error-text {
-  color: #992d20;
+  color: var(--error);
 }
 .conflicts li,
 .commits li {
   margin-bottom: 8px;
 }
 .notice {
-  background: #f5f5f5;
-  border: 1px solid #ccc;
-  color: #333;
+  background: var(--surface);
+  border: 1px solid var(--card-line);
+  color: var(--control-text);
   padding: 12px 15px;
   font-size: 13px;
   line-height: 1.6;
@@ -464,14 +527,14 @@ form > .password-input {
   white-space: pre-wrap;
 }
 .notice.error {
-  background: #fff4f2;
-  color: #992d20;
-  border-color: #d9a69e;
+  background: var(--error-bg);
+  color: var(--error);
+  border-color: var(--error-line);
 }
 .notice.success {
-  background: #f2f8f1;
-  color: #27592c;
-  border-color: #a8c3aa;
+  background: var(--success-bg);
+  color: var(--success);
+  border-color: var(--success-line);
 }
 hr {
   border: 0;
@@ -492,7 +555,7 @@ hr {
   margin-top: 20px;
 }
 .login #login-error {
-  color: #992d20;
+  color: var(--error);
   font-size: 13px;
   margin-top: 15px;
 }
@@ -519,10 +582,10 @@ hr {
 }
 .steps li.done::before {
   content: "✓ ";
-  color: #27592c;
+  color: var(--success);
 }
 .steps li.current {
-  color: #222;
+  color: var(--strong);
   font-weight: 600;
 }
 .setup-step {
@@ -551,7 +614,7 @@ hr {
   margin-bottom: 10px;
 }
 .question {
-  color: #222;
+  color: var(--strong);
   font-size: 14px;
   font-weight: 500;
 }
@@ -577,19 +640,19 @@ hr {
   align-items: center;
   gap: 10px;
   padding: 16px 10px;
-  background: #fff;
-  color: #222;
-  border-color: #bbb;
+  background: var(--field-bg);
+  color: var(--strong);
+  border-color: var(--control-line);
   white-space: normal;
 }
 .colour-choice:hover {
-  background: #f4f4f4;
+  background: var(--hover-soft);
 }
 .swatch {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--swatch-line);
 }
 .swatch.red {
   background: #e01b1b;
@@ -604,7 +667,7 @@ hr {
   background: conic-gradient(#fff 0 25%, #ccc 0 50%, #fff 0 75%, #ccc 0);
 }
 .display-state {
-  color: #992d20;
+  color: var(--error);
 }
 .step-back {
   margin-top: 28px;
@@ -624,7 +687,7 @@ canvas.dots {
   position: sticky;
   top: 0;
   z-index: 3;
-  background: #fff;
+  background: var(--bg);
   padding: 14px 0 12px;
   border-bottom: 1px solid var(--line);
 }
@@ -656,21 +719,21 @@ canvas.dots {
   padding-bottom: 2px;
 }
 button.scene {
-  background: #fff;
-  color: #333;
-  border-color: #bbb;
+  background: var(--field-bg);
+  color: var(--control-text);
+  border-color: var(--control-line);
   border-radius: 999px;
   min-height: 30px;
   padding: 4px 11px;
   font-size: 12px;
 }
 button.scene:hover {
-  background: #eee;
+  background: var(--hover);
 }
 button.scene[aria-pressed="true"] {
-  background: #222;
-  border-color: #222;
-  color: #fff;
+  background: var(--inverse-bg);
+  border-color: var(--inverse-bg);
+  color: var(--inverse-text);
 }
 fieldset.visual {
   grid-column: 1 / -1;
@@ -700,14 +763,14 @@ fieldset.visual .option {
   gap: 8px;
   margin: 0;
   padding: 6px 6px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--card-line);
   border-radius: 4px;
   cursor: pointer;
   font-size: 13px;
-  background: #fff;
+  background: var(--field-bg);
 }
 .option:hover {
-  border-color: #888;
+  border-color: var(--line-strong);
 }
 .option input {
   position: absolute;
@@ -725,22 +788,22 @@ fieldset.visual .option {
   flex-shrink: 0;
   width: 12px;
   height: 12px;
-  border: 1px solid #888;
+  border: 1px solid var(--line-strong);
   border-radius: 50%;
   box-sizing: border-box;
 }
 .option:has(input:checked) {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent);
+  border-color: var(--link);
+  box-shadow: inset 0 0 0 1px var(--link);
 }
 .option:has(input:checked) span {
   font-weight: 600;
 }
 .option:has(input:checked) span::before {
-  border: 4px solid var(--accent);
+  border: 4px solid var(--link);
 }
 .option:has(input:focus-visible) {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--link);
   outline-offset: 2px;
 }
 
