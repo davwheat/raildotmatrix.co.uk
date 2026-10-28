@@ -1,12 +1,15 @@
-// Package setupdisplay shows connection instructions until a station is chosen.
+// Package setupdisplay shows connection instructions until a station is chosen, and again whenever a configured
+// board loses its Wi-Fi network.
 package setupdisplay
 
 import (
 	"encoding/json"
 	"os"
 	"slices"
+	"sync/atomic"
 	"time"
 
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/board"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
@@ -60,6 +63,20 @@ func Lines(s Status) []string {
 	}
 }
 
+// LostLines tells someone how to reconnect a configured board that couldn't join its saved network. The manager
+// stays on the setup hotspot until someone chooses a network again, so the board must say why it's there.
+func LostLines(s Status) []string {
+	if s.Clients == 0 && !reachable(s.IPs) {
+		switch s.Mode {
+		case "hotspot":
+			return []string{"Wi-Fi connection lost", "Connect to DepartureBoard", "Password: DotMatrix"}
+		case "starting":
+			return []string{"Wi-Fi connection lost", "Starting setup..."}
+		}
+	}
+	return Lines(s)
+}
+
 // The hotspot holds 192.168.4.1 while it is still starting, before any device can join it.
 func reachable(ips []string) bool {
 	return slices.ContainsFunc(ips, func(ip string) bool { return ip != "192.168.4.1" })
@@ -68,6 +85,8 @@ func reachable(ips []string) bool {
 type Board struct {
 	Path   string
 	Colour frame.RGB
+	// Lost shows LostLines in place of Lines.
+	Lost   bool
 	status Status
 	readAt time.Time
 	lines  []string
@@ -107,18 +126,9 @@ func (b *Board) NextTick(now time.Time) time.Time {
 }
 
 func (b *Board) Tick(now time.Time, f *frame.Frame) bool {
-	if now.Before(b.readAt) || now.Sub(b.readAt) >= time.Second {
-		if data, err := os.ReadFile(b.Path); err == nil {
-			var s Status
-			if json.Unmarshal(data, &s) == nil {
-				b.status = s
-				b.setLines(Lines(s))
-			}
-		}
-		b.readAt = now
-	}
+	b.poll(now)
 	if b.lines == nil {
-		b.setLines(Lines(b.status))
+		b.setLines(b.instructions(b.status))
 	}
 	lineHeight := font.Text.Height + 3
 	perPage := max(1, f.H/lineHeight)
@@ -148,6 +158,27 @@ func (b *Board) Tick(now time.Time, f *frame.Frame) bool {
 	return true
 }
 
+func (b *Board) poll(now time.Time) {
+	if !now.Before(b.readAt) && now.Sub(b.readAt) < time.Second {
+		return
+	}
+	if data, err := os.ReadFile(b.Path); err == nil {
+		var s Status
+		if json.Unmarshal(data, &s) == nil {
+			b.status = s
+			b.setLines(b.instructions(s))
+		}
+	}
+	b.readAt = now
+}
+
+func (b *Board) instructions(s Status) []string {
+	if b.Lost {
+		return LostLines(s)
+	}
+	return Lines(s)
+}
+
 // Status is polled once a second; text and font measurements stay valid between changes. In particular, a
 // client count change that leaves the same setup instructions on screen needs no new layout or redraw.
 func (b *Board) setLines(lines []string) {
@@ -161,4 +192,72 @@ func (b *Board) setLines(lines []string) {
 		b.widths[i] = font.Text.Width(line)
 	}
 	b.drawn = false
+}
+
+// Offline shows Setup in place of a configured board while the board is on the setup hotspot and has no feed.
+type Offline struct {
+	board.Board
+	Setup     Board
+	connected atomic.Bool
+	// The departure board draws into a frame of its own, so its record of what it drew stays true while Setup
+	// covers it, and it needs no full redraw when the feed returns.
+	own     *frame.Frame
+	showing bool
+}
+
+func (o *Offline) Update(v model.View) {
+	o.connected.Store(v.Connected)
+	o.Board.Update(v)
+}
+
+func (o *Offline) ServiceLimit() int { return board.ServiceLimit(o.Board) }
+
+func (o *Offline) Tick(now time.Time, f *frame.Frame) bool {
+	if o.own == nil || o.own.W != f.W || o.own.H != f.H {
+		o.own = frame.New(f.W, f.H)
+	}
+	changed := o.Board.Tick(now, o.own)
+	if o.lost(now) {
+		if !o.showing {
+			o.Setup.drawn = false
+		}
+		o.showing = true
+		return o.Setup.Tick(now, f)
+	}
+	if !changed && !o.showing {
+		return false
+	}
+	o.showing = false
+	copy(f.Pix, o.own.Pix)
+	return true
+}
+
+// The status file is only read while the feed is down, which is the only time it can change what's on screen. A
+// board on Ethernet keeps the hotspot up, so a feed outage there is not a lost connection unless someone has joined
+// the hotspot to fix it.
+func (o *Offline) lost(now time.Time) bool {
+	if o.connected.Load() {
+		return false
+	}
+	o.Setup.poll(now)
+	s := o.Setup.status
+	switch s.Mode {
+	case "hotspot", "starting", "unavailable":
+		return s.Clients > 0 || !reachable(s.IPs)
+	}
+	return false
+}
+
+func (o *Offline) NextTick(now time.Time) time.Time {
+	if o.showing {
+		return o.Setup.NextTick(now)
+	}
+	var next time.Time
+	if deadlines, ok := o.Board.(board.NextTicker); ok {
+		next = deadlines.NextTick(now)
+	}
+	if poll := o.Setup.readAt.Add(time.Second); !o.connected.Load() && !next.IsZero() && poll.Before(next) {
+		return poll
+	}
+	return next
 }

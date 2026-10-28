@@ -142,6 +142,8 @@ func main() {
 	}
 	if setup {
 		b = &setupdisplay.Board{Path: *setupStatus, Colour: colour}
+	} else if *setupStatus != "" && cfg.Fixture == "" {
+		b = &setupdisplay.Offline{Board: b, Setup: setupdisplay.Board{Path: *setupStatus, Colour: colour, Lost: true}}
 	}
 	if !v.IsSet("led.limit_refresh") {
 		opts.LimitRefreshRateHz = b.RefreshHz()

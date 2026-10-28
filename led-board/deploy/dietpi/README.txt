@@ -28,6 +28,10 @@ password. When a device joins the hotspot, it changes to setup URLs.
 When the last device leaves, it returns to the name/password prompt.
 On your home network, it shows departureboard.local and the assigned IP.
 
+If the board loses its Wi-Fi network later, it shows "Wi-Fi connection
+lost" and the hotspot name and password. Join the hotspot and choose a
+network again.
+
 The GUI edits all board and panel settings, validates them and restarts
 the display. Device settings let you change the web password, restart
 the display and run setup again. The hotspot password remains DotMatrix.

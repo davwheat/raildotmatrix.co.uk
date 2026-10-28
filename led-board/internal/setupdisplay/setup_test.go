@@ -10,8 +10,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/fixtures"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/font"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/formats"
 	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/frame"
+	"github.com/davwheat/raildotmatrix.co.uk/led-board/internal/model"
 )
 
 func TestSetupInstructions(t *testing.T) {
@@ -35,6 +38,141 @@ func TestSetupInstructions(t *testing.T) {
 				t.Fatalf("got %q, want %q", got, tc.want)
 			}
 		})
+	}
+}
+
+func TestLostConnectionInstructions(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		status Status
+		want   []string
+	}{
+		{"waiting for device", Status{Mode: "hotspot", IPs: []string{"192.168.4.1"}}, []string{"Wi-Fi connection lost", "Connect to DepartureBoard", "Password: DotMatrix"}},
+		{"hotspot activating", Status{Mode: "starting", IPs: []string{"192.168.4.1"}}, []string{"Wi-Fi connection lost", "Starting setup..."}},
+		{"device joined", Status{Mode: "hotspot", Clients: 1}, []string{"Setup available", "http://departureboard.local", "http://192.168.4.1"}},
+		{"wired fallback", Status{Mode: "hotspot", IPs: []string{"192.168.4.1", "10.0.0.8"}}, []string{"Setup available", "http://departureboard.local", "http://10.0.0.8"}},
+		{"no Wi-Fi or Ethernet", Status{Mode: "unavailable"}, []string{"Wi-Fi unavailable", "Retrying...", "Or connect Ethernet"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := LostLines(tc.status); !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// The departures must come back exactly as a board that never showed the instructions draws them, and skipping
+// ticks until NextTick must not delay the instructions or the departures.
+func TestOfflineShowsInstructionsOnlyOnTheHotspotWithoutAFeed(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "network.json")
+	config := formats.Config{Width: 256, Height: 64, ServiceCount: 3}
+	departures := fixtures.Steps("busy-board")[0]
+	phases := []struct {
+		name     string
+		mode     string
+		ethernet bool
+		view     model.View
+		covered  bool
+	}{
+		{"feed connected", "connected", false, departures, false},
+		{"Wi-Fi rejoining", "connecting", false, model.View{}, false},
+		{"on the hotspot", "hotspot", false, model.View{}, true},
+		{"joining a chosen network", "connecting", false, model.View{}, false},
+		{"back on the hotspot", "hotspot", false, model.View{}, true},
+		{"feed over Ethernet", "hotspot", true, departures, false},
+		{"feed down over Ethernet", "hotspot", true, model.View{}, false},
+		{"Ethernet unplugged", "hotspot", false, model.View{}, true},
+	}
+	for _, name := range formats.Names {
+		t.Run(name, func(t *testing.T) {
+			reference, _ := formats.New(name, config)
+			regularBoard, _ := formats.New(name, config)
+			scheduledBoard, _ := formats.New(name, config)
+			setup := Board{Path: path, Colour: frame.RGB{R: 230, G: 150}, Lost: true}
+			regular := &Offline{Board: regularBoard, Setup: setup}
+			scheduled := &Offline{Board: scheduledBoard, Setup: setup}
+			want, got, skipped := frame.New(config.Width, config.Height), frame.New(config.Width, config.Height), frame.New(config.Width, config.Height)
+			var next time.Time
+			for i, phase := range phases {
+				ips := []string{"192.168.4.1"}
+				if phase.ethernet {
+					ips = append(ips, "10.0.0.8")
+				}
+				data, _ := json.Marshal(Status{Mode: phase.mode, IPs: ips})
+				if err := os.WriteFile(path, data, 0644); err != nil {
+					t.Fatal(err)
+				}
+				// Only the feed wakes an idle board. A new status alone must be picked up by the poll deadline.
+				updated := i == 0 || !reflect.DeepEqual(phase.view, phases[i-1].view)
+				if updated {
+					for _, b := range []interface{ Update(model.View) }{reference, regular, scheduled} {
+						b.Update(phase.view)
+					}
+					next = time.Time{}
+				}
+				for tick := range 1000 {
+					now := fixtures.Clock.Add(time.Duration(i*1000+tick) * 5 * time.Millisecond)
+					reference.Tick(now, want)
+					regular.Tick(now, got)
+					if next.IsZero() || !now.Before(next) {
+						scheduled.Tick(now, skipped)
+						next = scheduled.NextTick(now)
+					}
+					if !skipped.Equal(got) {
+						t.Fatalf("%s, tick %d: postponed a visible change until %s", phase.name, tick, next)
+					}
+					// The status is read once a second, so a change to it alone can take that long to show.
+					if (tick >= 200 || updated) && got.Equal(want) == phase.covered {
+						t.Fatalf("%s, tick %d: instructions shown %t, want %t", phase.name, tick, !got.Equal(want), phase.covered)
+					}
+				}
+			}
+		})
+	}
+}
+
+type idleBoard struct{}
+
+func (idleBoard) Update(model.View)                 {}
+func (idleBoard) Tick(time.Time, *frame.Frame) bool { return false }
+func (idleBoard) RefreshHz() int                    { return 60 }
+func (idleBoard) NextTick(now time.Time) time.Time  { return now.Add(time.Hour) }
+
+func TestOfflineOnAnIdleBoard(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "network.json")
+	setStatus := func(mode string) {
+		data, _ := json.Marshal(Status{Mode: mode})
+		if err := os.WriteFile(path, data, 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// The instructions neither scroll nor page at this size, so nothing but the switch itself redraws them.
+	f, blank := frame.New(1024, 128), frame.New(1024, 128)
+	o := &Offline{Board: idleBoard{}, Setup: Board{Path: path, Colour: frame.RGB{R: 230, G: 150}, Lost: true}}
+	setStatus("connecting")
+	o.Update(model.View{})
+	now := time.Unix(700, 0)
+	o.Tick(now, f)
+	if next := o.NextTick(now); next.After(now.Add(time.Second)) {
+		t.Fatalf("next tick at %s, want a status poll within a second", next.Sub(now))
+	}
+	for _, mode := range []string{"hotspot", "connecting", "hotspot"} {
+		setStatus(mode)
+		now = now.Add(time.Second)
+		if !o.Tick(now, f) || f.Equal(blank) != (mode == "connecting") {
+			t.Fatalf("%s: instructions not shown or removed", mode)
+		}
+	}
+	o.Update(model.View{Connected: true})
+	if !o.Tick(now, f) || !f.Equal(blank) {
+		t.Fatal("instructions stayed after the feed returned")
+	}
+	if next := o.NextTick(now); !next.Equal(now.Add(time.Hour)) {
+		t.Fatalf("next tick at %s, want the board's own deadline while the feed is up", next.Sub(now))
+	}
+	o.Update(model.View{})
+	if !o.Tick(now, f) || f.Equal(blank) {
+		t.Fatal("unchanged instructions not shown again when the feed dropped")
 	}
 }
 

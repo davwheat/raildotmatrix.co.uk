@@ -102,6 +102,12 @@ that status once per second, so joining/leaving normally updates the instruction
 Long lines scroll and smaller panel layouts page through the instructions. Setting a station code
 switches to live departures; clearing it restores the setup display.
 
+If a configured board can't join its saved Wi-Fi network, the manager falls back to the hotspot. When
+the board then has no departures feed and no other network, it shows `Wi-Fi connection lost` /
+`Connect to DepartureBoard` / `Password: DotMatrix` in place of the departures. When a device joins the
+hotspot, the board shows the setup URLs. When the feed returns, for example over Ethernet, the
+departures replace the instructions.
+
 The setup test patterns work whatever the board shows. The manager writes the requested pattern to
 `/run/departure-board/test-pattern.json`, beside the network status, and sends the board `SIGUSR1`. The
 board also reads the file when it starts, so a pattern requested with a restart shows from the first
